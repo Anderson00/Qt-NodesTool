@@ -1,0 +1,21 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>file-document-edit-outline.svg</file>
+        <file>content-save-edit-outline.svg</file>
+        <file>content-save-cog-outline.svg</file>
+        <file>cog.svg</file>
+        <file>exit-to-app.svg</file>
+        <file>information.svg</file>
+        <file>pause.svg</file>
+        <file>play.svg</file>
+        <file>step-forward-2.svg</file>
+        <file>debug-step-over.svg</file>
+        <file>debug-step-into.svg</file>
+        <file>view-week.svg</file>
+        <file>view-grid.svg</file>
+        <file>chart-line.svg</file>
+        <file>stop.svg</file>
+        <file>fullscreen-exit.svg</file>
+        <file>fullscreen.svg</file>
+    </qresource>
+</RCC>

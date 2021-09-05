@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/"/>
+    <qresource prefix="/subwindows">
+        <file alias="DebuggerMain.qml">qml/subwindows/DebuggerMain.qml</file>
+    </qresource>
+    <qresource prefix="/components"/>
+</RCC>
