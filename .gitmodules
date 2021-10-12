@@ -9,3 +9,6 @@
 [submodule "extern/cxxopts"]
 	path = extern/cxxopts
 	url = https://github.com/jarro2783/cxxopts.git
+[submodule ".\\extern\\retdec"]
+	path = .\\extern\\retdec
+	url = https://github.com/avast/retdec
