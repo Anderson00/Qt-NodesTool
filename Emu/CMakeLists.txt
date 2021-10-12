@@ -4,7 +4,7 @@ find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Quick Gui Svg Sql Network Test REQ
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Svg Gui Sql Quick Network Test REQUIRED)
 
 #add_subdirectory(extern/retdec)
-#add_subdirectory(extern/unicorn)
+add_subdirectory(deps/unicorn-1.0.3)
 
 set(PROJECT_SOURCES
     src/main.cpp

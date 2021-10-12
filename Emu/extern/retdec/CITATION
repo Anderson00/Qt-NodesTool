@@ -1,5 +1,0 @@
-@Misc{RetDec,
-    author = {{Avast Software}},
-    title = {{RetDec}: A Retargetable Machine-Code Decompiler},
-    howpublished = {\url{https://retdec.com/}}
-}

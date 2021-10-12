@@ -1,7 +1,0 @@
-# Python
-__pycache__
-*.py[co]
-
-# Code coverage
-/coverage
-/.coverage
