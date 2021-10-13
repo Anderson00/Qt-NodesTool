@@ -35,15 +35,15 @@ else()
     endif()
 endif()
 
-target_link_libraries(Debugger PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick cxxopts unicorn retdec::fileformat)
+target_link_libraries(Debugger PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick cxxopts retdec::fileformat)
 
 #add_executable(Main main.cpp ${SOURCE_FILES_CURSES})
 
 #target_link_libraries (Main PUBLIC cxxopts unicorn capstone-shared)
-target_include_directories(Debugger PUBLIC
-                          "${PROJECT_BINARY_DIR}"
+target_include_directories(Debugger PUBLIC                          
                           "${PROJECT_SOURCE_DIR}/extern/unicorn/include"
                           "${PROJECT_SOURCE_DIR}/extern/retdec/include"
                           #"${PROJECT_SOURCE_DIR}/extern/capstone/include"
-                          "include/"
+                          "src/"
+                          "src/include"
                           )

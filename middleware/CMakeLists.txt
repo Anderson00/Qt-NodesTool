@@ -1,33 +1,32 @@
 cmake_minimum_required(VERSION 3.8)
+project(middleware VERSION 1.0.0 LANGUAGES CXX)
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Quick Gui Svg Sql Network Test REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Svg Gui Sql Quick Network Test REQUIRED)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
+
+if(CMAKE_VERSION VERSION_LESS "3.7.0")
+    set(CMAKE_INCLUDE_CURRENT_DIR ON)
+endif()
+
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Network REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Network REQUIRED)
 
 set(PROJECT_SOURCES
     src/main.cpp
+    src/utils.h
+    src/network/tcpserver.cpp src/network/tcpserver.h
     )
 
-if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(middleware
-        ${PROJECT_SOURCES}
+add_executable(middleware
+    ${PROJECT_SOURCES}
     )
-else()
-    if(ANDROID)
-        add_library(middleware SHARED
-            ${PROJECT_SOURCES}
-        )
-    else()
-        add_executable(middleware
-            ${PROJECT_SOURCES}
-        )
-    endif()
-endif()
 
-target_link_libraries(middleware PRIVATE Qt${QT_VERSION_MAJOR}::Core cxxopts)
+target_link_libraries(middleware Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Network cxxopts)
 
-#add_executable(Emu ${PROJECT_SOURCES})
-
-#target_link_libraries (Main PUBLIC cxxopts unicorn capstone-shared)
 target_include_directories(middleware PUBLIC
 
                           )

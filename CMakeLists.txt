@@ -21,16 +21,13 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-fPIE -fPIC)
 endif()
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
-
 #add_subdirectory(extern/zlib)
 add_subdirectory(extern/retdec)
 #add_subdirectory(extern/capstone)
-#add_subdirectory(extern/cxxopts)
+add_subdirectory(extern/cxxopts)
 add_subdirectory(valkyrieGUI)
 add_subdirectory(middleware)
-add_subdirectory(Emu)
+#add_subdirectory(Emu)
 
 if(WIN32)
 
