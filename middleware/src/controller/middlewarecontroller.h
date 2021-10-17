@@ -9,7 +9,7 @@ class MiddlewareController : public QObject
     Q_OBJECT
 public:
     enum OperationMode{
-        Lan, Network, Api
+        Lan, Network, Api, RestApi
     };
     Q_ENUM(OperationMode)
 

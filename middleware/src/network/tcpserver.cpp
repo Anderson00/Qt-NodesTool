@@ -25,19 +25,40 @@ TCPServer::~TCPServer()
 {
     this->m_server->close();
     delete this->m_server;
-
-    for(auto client : this->m_clients){
-        delete client;
-    }
 }
 
-void TCPServer::processTCPMessage(QTcpSocket *client, const QByteArray &bytes)
+void TCPServer::close()
+{
+    this->m_server->close();
+}
+
+void TCPServer::processTCPMessage(QTcpSocket *client, const QByteArray& bytes)
 {
     QJsonDocument doc = QJsonDocument::fromJson(bytes);
     if(doc.isNull() || doc.isEmpty() || !doc.isObject()){
-        qDebug() << "Client InvalidJSON:" << client->peerAddress().toString().append(":").append(client->peerPort()) << bytes;
+        qDebug() << "Client InvalidJSON:"
+                 << client->peerAddress().toString().append(":").append(client->peerPort())
+                 << bytes;
         // TODO: send JSON error to client
+        //       this->sendMessage(client, errorInvalidJson);
         return;
     }
     emit newMessage(client, doc.object());
+}
+
+void TCPServer::sendMessage(QTcpSocket *destination, QJsonObject message)
+{
+    destination->write(QJsonDocument(message).toJson(QJsonDocument::Compact));
+}
+
+void TCPServer::sendToAll(QList<QTcpSocket*> clients, QJsonObject message)
+{
+    for(QTcpSocket *tcpConn : qAsConst(clients)){
+        tcpConn->write(QJsonDocument(message).toJson(QJsonDocument::Compact));
+    }
+}
+
+void TCPServer::sendToAll(QJsonObject message)
+{
+    sendToAll(this->m_clients, message);
 }

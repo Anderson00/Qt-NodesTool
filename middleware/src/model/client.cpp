@@ -22,7 +22,7 @@ quint16 Client::port() const
     return this->m_client_socket->peerPort();
 }
 
-const QString &Client::uuid()
+const QString &Client::uuid() const
 {
     return this->m_uuid;
 }

@@ -13,7 +13,7 @@ public:
 
     QString ip()const;
     quint16 port()const;
-    const QString &uuid();
+    const QString &uuid()const;
 
     bool contains(const QString &key) const;
     const QString& get(const QString &key) const;
@@ -21,6 +21,11 @@ public:
 
     const QString& set(const QString &key, const QString &value);
     const QString& setReadOnly(const QString &key, const QString &value);
+
+    inline bool operator ==(const Client& client){
+        return (this->ip() == client.ip() && this->port() == client.port()) ||
+               (this->uuid() == client.uuid());
+    }
 
 private:
     QTcpSocket *m_client_socket;

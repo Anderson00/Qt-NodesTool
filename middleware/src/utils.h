@@ -12,7 +12,7 @@ namespace network {
 }
 
 namespace log {
-static QFile log_file("middleware.txt");
+static QFile log_file(QDateTime::currentDateTime().toString().append(".txt"));
 
 static void messageLogOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {

@@ -20,5 +20,8 @@ void MiddlewareController::init()
     case Api:
         qDebug() << "Api mode not implemented";
         break;
+    case RestApi:
+        qDebug() << "RestApi mode not implemented";
+        break;
     }
 }
