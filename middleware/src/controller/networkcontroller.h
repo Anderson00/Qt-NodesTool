@@ -13,13 +13,13 @@ public:
     explicit NetworkController(QObject *parent = nullptr);
     ~NetworkController();
 
-    const Client *getClient(const QString &ip, int port);
-    const Client *getClient(const QString &uuid);
+    Client *getClient(const QString &ip, int port);
+    Client *getClient(const QString &uuid);
 
 signals:
-    void messageReceived(const Client *client, QJsonObject message);
-    void clientDisconnect(const Client *client);
-    void clientConnected(const Client *client);
+    void messageReceived(Client *client, QJsonObject message);
+    void clientDisconnect(Client *client);
+    void clientConnected(Client *client);
 
 private slots:
     void processNewClient(QTcpSocket *client);

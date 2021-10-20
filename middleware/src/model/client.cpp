@@ -2,7 +2,7 @@
 #include <QHostAddress>
 #include <QUuid>
 
-Client::Client(QTcpSocket *socket, QObject *parent) : QObject(parent),
+Client::Client(QTcpSocket *socket, QObject *parent) : Agente(parent),
     m_client_socket(socket),
     m_uuid(QUuid::createUuid().toString(QUuid::WithoutBraces))
 {

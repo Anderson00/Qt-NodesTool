@@ -12,9 +12,9 @@ NetworkController::~NetworkController()
     this->m_server->close();
 }
 
-const Client *NetworkController::getClient(const QString &ip, int port)
+Client *NetworkController::getClient(const QString &ip, int port)
 {
-    for(const Client *client : this->m_clients){
+    for(Client *client : this->m_clients){
         if(client->ip() == ip && client->port() == port){
             return client;
         }
@@ -31,7 +31,7 @@ void NetworkController::processNewClient(QTcpSocket *client)
 
 void NetworkController::processNewMessage(QTcpSocket *client, QJsonObject message)
 {
-    const Client *sourceClient = this->getClient(client->peerAddress().toString(), client->peerPort());
+    Client *sourceClient = this->getClient(client->peerAddress().toString(), client->peerPort());
     if(sourceClient == nullptr){
         qInfo() << "Unknow client"
                 << client->peerAddress().toString().append(":").append(client->peerPort())

@@ -5,7 +5,9 @@
 #include <QTcpSocket>
 #include <QHash>
 
-class Client : public QObject
+#include "agente.h"
+
+class Client : public Agente
 {
     Q_OBJECT
 public:
