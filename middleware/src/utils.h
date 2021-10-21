@@ -12,12 +12,14 @@ namespace network {
 }
 
 namespace log {
-static QFile log_file(QDateTime::currentDateTime().toString().append(".txt"));
+static QFile log_file(QDateTime::currentDateTime().toString().replace(":","-").append(".txt"));
 
 static void messageLogOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
+
     if(!log_file.isOpen()){
         if(!mid::log::log_file.open(QIODevice::Append | QIODevice::Text)){
+            qDebug() << log_file.errorString();
             abort();
         }
     }
