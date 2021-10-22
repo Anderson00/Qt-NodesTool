@@ -6,6 +6,8 @@
 #include <src/network/tcpserver.h>
 #include <src/model/client.h>
 
+class Client;
+
 class NetworkController : public QObject
 {
     Q_OBJECT
@@ -22,16 +24,17 @@ signals:
     void clientConnected(Client *client);
     void clientReconnection(Client *client);
 
+public slots:
+    void sendMessage(Client *client, QJsonObject message);
+
 private slots:
     void processNewClient(QTcpSocket *client);
     void processClientReconnection(Client *client);
     void processClientDisconnection(Client *client);
     void processNewMessage(QTcpSocket *client, QJsonObject message);
 
-
 private:
     Client *getClientDisconnected(const Client *client);
-
 
     TCPServer *m_server;
     QList<Client*> m_clients;

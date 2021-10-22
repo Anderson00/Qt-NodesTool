@@ -24,6 +24,11 @@ Client *NetworkController::getClient(const QString &ip, int port)
     return nullptr;
 }
 
+void NetworkController::sendMessage(Client *client, QJsonObject message)
+{
+    this->m_server->sendMessage(client->m_client_socket, message);
+}
+
 void NetworkController::processNewClient(QTcpSocket *client)
 {
     Client *newClient = new Client(client, this);
@@ -52,8 +57,11 @@ void NetworkController::processClientDisconnection(Client *client)
     this->m_clientsDisconected.push_back(client);
     QTimer *timer = new QTimer(this);
     timer->setSingleShot(true);
-    timer->setInterval(300000); // 5 minutes
-    QObject::connect(timer, &QTimer::timeout, [&](){
+    int nParams = client->params().size();
+    nParams = (nParams == 0) ? 1 : nParams;
+
+    timer->setInterval(nParams * 60000); // nParams * 1 min
+    QObject::connect(timer, &QTimer::timeout, [this, timer, client](){
         qDebug() << "Clearing client data"
                  << client->toString();
         this->m_clientsDisconected.removeOne(client);

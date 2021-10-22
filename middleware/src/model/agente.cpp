@@ -22,12 +22,12 @@ QString Agente::toString() const
     return QString("Agent{").append(m_uuid).append("}");
 }
 
-QHash<QString, QString> Agente::params() const
+const QHash<QString, QString>& Agente::params() const
 {
     return this->m_params;
 }
 
-QHash<QString, QString> Agente::params(const QHash<QString, QString> &arg)
+const QHash<QString, QString>& Agente::params(const QHash<QString, QString> &arg)
 {
     return (this->m_params = arg);
 }

@@ -14,6 +14,10 @@ TCPServer::TCPServer(QObject *parent) : QObject(parent),
         QTcpSocket *client = this->m_server->nextPendingConnection();
         this->m_clients.push_back(client);
 
+        QObject::connect(client, &QTcpSocket::disconnected, this, [&](){
+            this->m_clients.removeOne(client);
+        });
+
         QObject::connect(client, &QTcpSocket::readyRead, this, [&](){
             processTCPMessage(client, client->readAll());
         });
@@ -48,13 +52,16 @@ void TCPServer::processTCPMessage(QTcpSocket *client, const QByteArray& bytes)
 
 void TCPServer::sendMessage(QTcpSocket *destination, QJsonObject message)
 {
-    destination->write(QJsonDocument(message).toJson(QJsonDocument::Compact));
+    if(destination != nullptr)
+        destination->write(QJsonDocument(message).toJson(QJsonDocument::Compact));
+    else
+        qDebug() << "Null pointer Destination(*QTcpSocket)";
 }
 
 void TCPServer::sendToAll(QList<QTcpSocket*> clients, QJsonObject message)
 {
     for(QTcpSocket *tcpConn : qAsConst(clients)){
-        tcpConn->write(QJsonDocument(message).toJson(QJsonDocument::Compact));
+        sendMessage(tcpConn, message);
     }
 }
 

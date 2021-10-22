@@ -27,8 +27,8 @@ public:
         return true;
     }
 
-    QHash<QString, QString> params() const;
-    QHash<QString, QString> params(const QHash<QString, QString>& arg);
+    const QHash<QString, QString>& params() const;
+    const QHash<QString, QString>& params(const QHash<QString, QString>& arg);
 
 signals:
 

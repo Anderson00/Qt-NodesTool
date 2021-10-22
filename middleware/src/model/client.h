@@ -6,16 +6,22 @@
 #include <QHash>
 
 #include "agente.h"
+#include <src/controller/networkcontroller.h>
+
+class NetworkController;
 
 class Client : public Agente
 {
     Q_OBJECT
+
+    friend NetworkController;
 public:
     explicit Client(QTcpSocket *socket, QObject *parent = nullptr);
     ~Client();
 
     QString ip()const;
     quint16 port()const;
+    QTcpSocket *socket();
 
     QString toString() const override;
 
