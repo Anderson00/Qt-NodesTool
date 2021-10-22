@@ -20,14 +20,23 @@ signals:
     void messageReceived(Client *client, QJsonObject message);
     void clientDisconnect(Client *client);
     void clientConnected(Client *client);
+    void clientReconnection(Client *client);
 
 private slots:
     void processNewClient(QTcpSocket *client);
+    void processClientReconnection(Client *client);
+    void processClientDisconnection(Client *client);
     void processNewMessage(QTcpSocket *client, QJsonObject message);
 
+
 private:
+    Client *getClientDisconnected(const Client *client);
+
+
     TCPServer *m_server;
     QList<Client*> m_clients;
+    QList<Client*> m_clientsDisconected;
+    QList<QTimer*> m_reconnectionTimeout;
 };
 
 #endif // NETWORKCONTROLLER_H

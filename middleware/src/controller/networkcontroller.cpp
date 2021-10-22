@@ -1,4 +1,5 @@
 #include "networkcontroller.h"
+#include <QTimer>
 
 NetworkController::NetworkController(QObject *parent) : QObject(parent),
     m_server(new TCPServer(this))
@@ -14,7 +15,7 @@ NetworkController::~NetworkController()
 
 Client *NetworkController::getClient(const QString &ip, int port)
 {
-    for(Client *client : this->m_clients){
+    for(Client *client : qAsConst(this->m_clients)){
         if(client->ip() == ip && client->port() == port){
             return client;
         }
@@ -25,8 +26,43 @@ Client *NetworkController::getClient(const QString &ip, int port)
 
 void NetworkController::processNewClient(QTcpSocket *client)
 {
-    this->m_clients.push_back(new Client(client, this));
-    emit clientConnected(this->m_clients.front());
+    Client *newClient = new Client(client, this);
+    processClientReconnection(newClient);
+
+    QObject::connect(newClient, &Client::disconnected, this, [&](){
+        processClientDisconnection(newClient);
+    }, Qt::QueuedConnection);
+
+    this->m_clients.push_back(newClient);
+    emit clientConnected(newClient);
+}
+
+void NetworkController::processClientReconnection(Client *client)
+{
+    Client *clientDisconnected = getClientDisconnected(client);
+
+    if(clientDisconnected != nullptr){
+        client->params(clientDisconnected->params());
+    }
+}
+
+void NetworkController::processClientDisconnection(Client *client)
+{
+
+    this->m_clientsDisconected.push_back(client);
+    QTimer *timer = new QTimer(this);
+    timer->setSingleShot(true);
+    timer->setInterval(300000); // 5 minutes
+    QObject::connect(timer, &QTimer::timeout, [&](){
+        qDebug() << "Clearing client data"
+                 << client->toString();
+        this->m_clientsDisconected.removeOne(client);
+        this->m_reconnectionTimeout.removeOne(timer);
+        delete timer;
+    });
+    this->m_reconnectionTimeout.push_back(timer);
+    timer->start();
+    emit clientDisconnect(client);
 }
 
 void NetworkController::processNewMessage(QTcpSocket *client, QJsonObject message)
@@ -39,5 +75,17 @@ void NetworkController::processNewMessage(QTcpSocket *client, QJsonObject messag
                 << "may be a Hacker!";
         return;
     }
+
     emit messageReceived(sourceClient, message);
+}
+
+Client *NetworkController::getClientDisconnected(const Client *client)
+{
+    for(Client *clientDisc : this->m_clientsDisconected){
+        if(clientDisc == client){
+            return clientDisc;
+        }
+    }
+
+    return nullptr;
 }

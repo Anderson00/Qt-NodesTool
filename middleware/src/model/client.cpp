@@ -1,15 +1,20 @@
 #include "client.h"
 #include <QHostAddress>
-#include <QUuid>
 
 Client::Client(QTcpSocket *socket, QObject *parent) : Agente(parent),
-    m_client_socket(socket),
-    m_uuid(QUuid::createUuid().toString(QUuid::WithoutBraces))
+    m_client_socket(socket)
 {
     assert(socket != nullptr);
     qDebug() << "Client Object created"
-             << ip().append(":").append(port())
-             << "UUID:" << this->m_uuid;
+             << ip().append(":").append(port());
+
+    QObject::connect(socket, &QTcpSocket::disconnected, this, &Client::disconnected);
+}
+
+Client::~Client()
+{
+    this->m_client_socket->close();
+    delete m_client_socket;
 }
 
 QString Client::ip() const
@@ -22,7 +27,7 @@ quint16 Client::port() const
     return this->m_client_socket->peerPort();
 }
 
-const QString &Client::uuid() const
+QString Client::toString() const
 {
-    return this->m_uuid;
+    return QString("Client{").append(ip().append(":").append(port()).append("}"));
 }

@@ -12,28 +12,33 @@ class Client : public Agente
     Q_OBJECT
 public:
     explicit Client(QTcpSocket *socket, QObject *parent = nullptr);
+    ~Client();
 
     QString ip()const;
     quint16 port()const;
-    const QString &uuid()const;
 
-    bool contains(const QString &key) const;
-    const QString& get(const QString &key) const;
-    const QString& keyFromValue(const QString &key) const;
+    QString toString() const override;
 
-    const QString& set(const QString &key, const QString &value);
-    const QString& setReadOnly(const QString &key, const QString &value);
+    inline bool operator ==(const Agente& agente) override {
+        const Client& client = static_cast<const Client&>(agente);
 
-    inline bool operator ==(const Client& client){
         return (this->ip() == client.ip() && this->port() == client.port()) ||
                (this->uuid() == client.uuid());
     }
 
+    inline bool operator ==(const Client* client) {
+        return (this->ip() == client->ip() && this->port() == client->port()) ||
+               (this->uuid() == client->uuid());
+    }
+
+    Client& operator=(const Client& other) = delete;
+    Client& operator=(const Client&& other) = delete;
+
+signals:
+    void disconnected();
+
 private:
     QTcpSocket *m_client_socket;
-    QHash<QString, QString> m_params;
-    QHash<QString, QString> m_params_read_only;
-    QString m_uuid;
 };
 
 #endif // CLIENTE_H

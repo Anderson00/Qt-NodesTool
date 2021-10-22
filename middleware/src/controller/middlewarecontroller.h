@@ -26,6 +26,7 @@ private:
     void init();
 
     OperationMode m_mode;
+    QList<Agente*> m_agentes;
     NetworkController *m_network_controller;
 };
 

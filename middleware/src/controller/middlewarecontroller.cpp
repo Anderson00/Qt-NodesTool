@@ -31,7 +31,7 @@ void MiddlewareController::init()
 
 void MiddlewareController::processAgentConnection(Agente *source)
 {
-
+    this->m_agentes.push_back(source);
 }
 
 void MiddlewareController::processRequest(Agente *source, QJsonObject request)
