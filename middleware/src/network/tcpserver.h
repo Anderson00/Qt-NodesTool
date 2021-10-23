@@ -14,6 +14,7 @@ public:
     explicit TCPServer(QObject *parent = nullptr);
     ~TCPServer();
 
+    bool isListening() const;
     void close();
 
 signals:

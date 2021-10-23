@@ -2,6 +2,8 @@
 #include <QCoreApplication>
 #include <iostream>
 #include <cxxopts.hpp>
+
+#include <src/controller/middlewarecontroller.h>
 #include "utils.h"
 
 int main(int argc, char **argv){
@@ -10,9 +12,6 @@ int main(int argc, char **argv){
 
     cxxopts::Options options("Middleware", "");
     options.add_options()
-//            ("b,bar", "Param bar", cxxopts::value<std::string>())
-//            ("d,debug", "Enable debugging", cxxopts::value<bool>()->default_value("false"))
-//            ("f,foo", "Param foo", cxxopts::value<int>()->default_value("10"))
             ("m,mode", "Mode of middleware: lan, network, http", cxxopts::value<std::string>()->default_value("lan"))
             ("h,help", "Print usage");
 
@@ -20,12 +19,13 @@ int main(int argc, char **argv){
 
     if(result.count("help")){
         qDebug() << QString::fromStdString(options.help());
-        qDebug() << "QString::fromStdString(options.help())";
-        std::cout << options.help() << std::endl;
+        //std::cout << options.help() << std::endl;
     }
 
     QCoreApplication app(argc, argv);
 
+    MiddlewareController midController(mid::convert::stdStringToOpMode(result["mode"].as<std::string>()), &app);
+    QObject::connect(&midController, &MiddlewareController::quit, &app, &QCoreApplication::quit);
 
     return app.exec();
 }

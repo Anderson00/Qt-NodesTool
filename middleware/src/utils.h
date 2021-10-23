@@ -1,12 +1,18 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <iostream>
 #include <QFile>
 #include <QString>
 #include <QDateTime>
 #include <QTextStream>
+#include <src/controller/middlewarecontroller.h>
 
 namespace mid {
+namespace convert {
+    MiddlewareController::OperationMode stdStringToOpMode(std::string mode);
+    MiddlewareController::OperationMode qStringToOpMode(QString mode);
+}
 namespace network {
     const int TCP_SERVER_PORT = 6969;
 }
@@ -16,7 +22,6 @@ static QFile log_file(QDateTime::currentDateTime().toString().replace(":","-").a
 
 static void messageLogOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
-
     if(!log_file.isOpen()){
         if(!mid::log::log_file.open(QIODevice::Append | QIODevice::Text)){
             qDebug() << log_file.errorString();
@@ -30,25 +35,28 @@ static void messageLogOutput(QtMsgType type, const QMessageLogContext &context, 
 
     QString dateFormat = "dd/MM/yyyy HH:mm:ss";
     QString fileDirCompacted(context.file);
+    QString buffer("");
 
     switch (type) {
     case QtDebugMsg:
-        out << "[Debug][" << QDateTime::currentDateTime().toString(dateFormat) << "] " << localMsg.constData() << " (" << fileDirCompacted << ":" << context.line << ", " << function << ")\r\n";
+        buffer.append("[Debug][").append(QDateTime::currentDateTime().toString(dateFormat)).append("] ").append(localMsg.constData()).append(" (").append(fileDirCompacted).append(":").append(QString::number(context.line)).append(", ").append(function).append(")\n");
         break;
     case QtInfoMsg:
-        out << "[Info][" << QDateTime::currentDateTime().toString(dateFormat) << "] " << localMsg.constData() << "(" << fileDirCompacted << ":" << context.line << ", " << function << ")\r\n";
+        buffer.append("[Info][").append(QDateTime::currentDateTime().toString(dateFormat)).append("] ").append(localMsg.constData()).append(" (").append(fileDirCompacted).append(":").append(context.line).append(", ").append(function).append(")");
         break;
     case QtWarningMsg:
-        out << "[Warning][" << QDateTime::currentDateTime().toString(dateFormat) << "] " << localMsg.constData() << "(" << fileDirCompacted << ":" << context.line << ", " << function << ")\r\n";
+        buffer.append("[Warning][").append(QDateTime::currentDateTime().toString(dateFormat)).append("] ").append(localMsg.constData()).append(" (").append(fileDirCompacted).append(":").append(context.line).append(", ").append(function).append(")");
         break;
     case QtCriticalMsg:
-        out << "[Critical][" << QDateTime::currentDateTime().toString(dateFormat) << "] " << localMsg.constData() << "(" << fileDirCompacted << ":" << context.line << ", " << function << ")\r\n";
+        buffer.append("[Critical][").append(QDateTime::currentDateTime().toString(dateFormat)).append("] ").append(localMsg.constData()).append(" (").append(fileDirCompacted).append(":").append(context.line).append(", ").append(function).append(")");
         break;
     case QtFatalMsg:
-        out << "[Fatal][" << QDateTime::currentDateTime().toString(dateFormat) << "] " << localMsg.constData() << "(" << fileDirCompacted << ":" << context.line << ", " << function << ")\r\n";
+        buffer.append("[Fatal][").append(QDateTime::currentDateTime().toString(dateFormat)).append("] ").append(localMsg.constData()).append(" (").append(fileDirCompacted).append(":").append(context.line).append(", ").append(function).append(")");
         break;
     }
 
+    std::cout << buffer.toStdString() << std::endl;
+    out << buffer;
     out.flush();
 }
 }

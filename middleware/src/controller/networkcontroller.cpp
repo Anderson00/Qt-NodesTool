@@ -6,6 +6,7 @@ NetworkController::NetworkController(QObject *parent) : QObject(parent),
 {
     QObject::connect(m_server, &TCPServer::newClient, this, &NetworkController::processNewClient);
     QObject::connect(m_server, &TCPServer::newMessage, this, &NetworkController::processNewMessage);
+
 }
 
 NetworkController::~NetworkController()

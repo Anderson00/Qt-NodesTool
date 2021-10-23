@@ -10,6 +10,8 @@ TCPServer::TCPServer(QObject *parent) : QObject(parent),
         abort();
     }
 
+    qDebug() << "TCPSever listening on" << mid::network::TCP_SERVER_PORT;
+
     QObject::connect(m_server, &QTcpServer::newConnection, this, [&](){
         QTcpSocket *client = this->m_server->nextPendingConnection();
         this->m_clients.push_back(client);
@@ -29,6 +31,11 @@ TCPServer::~TCPServer()
 {
     this->m_server->close();
     delete this->m_server;
+}
+
+bool TCPServer::isListening() const
+{
+    return this->m_server->isListening();
 }
 
 void TCPServer::close()

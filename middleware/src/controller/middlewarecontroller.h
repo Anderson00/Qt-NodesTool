@@ -10,13 +10,14 @@ class MiddlewareController : public QObject
     Q_OBJECT
 public:
     enum OperationMode{
-        Lan, Network, Api, RestApi
+        Lan, Network, Api, RestApi, Unknow
     };
     Q_ENUM(OperationMode)
 
-    explicit MiddlewareController(OperationMode mode = Lan, QObject *parent = nullptr);    
+    explicit MiddlewareController(OperationMode mode = Lan, QObject *parent = nullptr);
 
 signals:
+    void quit(int exitCode = 0);
 
 private slots:
     void processAgentConnection(Agente *source);

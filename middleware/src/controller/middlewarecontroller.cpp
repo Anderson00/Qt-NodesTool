@@ -1,4 +1,5 @@
 #include "middlewarecontroller.h"
+#include <QCoreApplication>
 
 MiddlewareController::MiddlewareController(OperationMode mode, QObject *parent) : QObject(parent),
     m_mode(mode)
@@ -8,6 +9,8 @@ MiddlewareController::MiddlewareController(OperationMode mode, QObject *parent) 
 
 void MiddlewareController::init()
 {
+    qDebug() << "Middleware initialization, mode:" << m_mode;
+
     switch (m_mode) {
     case Lan:{
         m_network_controller = new NetworkController(this);
@@ -19,12 +22,19 @@ void MiddlewareController::init()
         break;
     case Network:
         qDebug() << "Network mode not implemented";
+        emit quit();
         break;
     case Api:
         qDebug() << "Api mode not implemented";
+        emit quit();
         break;
     case RestApi:
         qDebug() << "RestApi mode not implemented";
+        emit quit();
+        break;
+    case Unknow:
+        qCritical() << "Unknow type of operation";
+        emit quit();
         break;
     }
 }
