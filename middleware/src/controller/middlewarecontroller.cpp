@@ -22,19 +22,19 @@ void MiddlewareController::init()
         break;
     case Network:
         qDebug() << "Network mode not implemented";
-        emit quit();
+        assert(false);
         break;
     case Api:
         qDebug() << "Api mode not implemented";
-        emit quit();
+        assert(false);
         break;
     case RestApi:
         qDebug() << "RestApi mode not implemented";
-        emit quit();
+        assert(false);
         break;
     case Unknow:
         qCritical() << "Unknow type of operation";
-        emit quit();
+        assert(false);
         break;
     }
 }
