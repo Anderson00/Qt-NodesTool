@@ -5,12 +5,17 @@
 #include <QHash>
 #include <QString>
 
+#include "agentecache.h"
+
 class Agente : public QObject
 {
     Q_OBJECT
 public:
-    explicit Agente(QObject *parent = nullptr);
+    explicit Agente(const QString& name, const QString& uuid = "", QObject *parent = nullptr);
     virtual ~Agente();
+
+    Agente& operator=(const Agente& other) = delete;
+    Agente& operator=(const Agente&& other) = delete;
 
     const QString &uuid()const;
 
@@ -35,6 +40,9 @@ signals:
 private:
     QHash<QString, QString> m_params;
     QString m_uuid;
+    QString m_name;
+
+    AgenteCache *m_cache;
 };
 
 #endif // AGENTE_H
