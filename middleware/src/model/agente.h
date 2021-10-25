@@ -19,13 +19,6 @@ public:
 
     const QString &uuid()const;
 
-    bool contains(const QString &key) const;
-    const QString& get(const QString &key) const;
-    const QString& keyFromValue(const QString &key) const;
-
-    const QString& set(const QString &key, const QString &value);
-    const QString& setReadOnly(const QString &key, const QString &value);
-
     virtual QString toString() const;
 
     virtual bool operator ==(const Agente& client){

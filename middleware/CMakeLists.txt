@@ -18,6 +18,9 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Network REQUIRED)
 set(PROJECT_SOURCES
     src/main.cpp
     src/utils.h src/utils.cpp
+    src/model/iobserver.h
+    src/model/isubject.h
+    src/model/agenteobserver.h src/model/agenteobserver.cpp
     src/model/cache.h src/model/cache.cpp
     src/model/agentecache.h src/model/agentecache.cpp
     src/model/agente.h src/model/agente.cpp

@@ -3,8 +3,10 @@
 
 #include <QObject>
 #include <QByteArray>
+#include <QList>
 #include <QString>
 #include "cache.h"
+#include "agenteobserver.h"
 
 class AgenteCache : public QObject
 {
@@ -13,7 +15,8 @@ public:
     explicit AgenteCache(QObject *parent = nullptr);
 
     bool registerKeyHook(const QString &key);
-    quint32 memoryCoast();
+    bool unRegisterKeyHook(const QString &key);
+    quint32 memoryCost();
 
 signals:
     void addeded(QString key, QByteArray value);
@@ -23,6 +26,8 @@ signals:
 private:
     Cache<QByteArray> *m_cache_general;
     Cache<QByteArray> *m_cache_reserved;
+
+    QList<AgenteObserver*> m_observers;
 };
 
 #endif // AGENTECACHE_H
