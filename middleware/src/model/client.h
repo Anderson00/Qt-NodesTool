@@ -14,6 +14,9 @@ public:
     Client(QTcpSocket *socket, QObject *parent = nullptr, const QString &name = "", const QString &uuid = "");
     ~Client();
 
+    Client& operator=(const Client& other) = delete;
+    Client& operator=(const Client&& other) = delete;
+
     QString ip()const;
     quint16 port()const;
     QTcpSocket *socket();
@@ -21,9 +24,6 @@ public:
     QString toString() const override;
 
     bool operator ==(const Agente& agente) override;
-
-    Client& operator=(const Client& other) = delete;
-    Client& operator=(const Client&& other) = delete;
 
 signals:
     void disconnected();

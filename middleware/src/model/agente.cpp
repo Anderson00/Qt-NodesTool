@@ -3,7 +3,8 @@
 #include <QDebug>
 
 Agente::Agente(const QString& name, const QString& uuid, QObject *parent) : QObject(parent),
-    m_name(name)
+    m_name(name),
+    m_cache(new AgenteCache(this))
 {
     QUuid uuidCheck(uuid);
     if(uuidCheck.variant() == QUuid::VarUnknown || uuid.isNull()){
@@ -17,7 +18,7 @@ Agente::Agente(const QString& name, const QString& uuid, QObject *parent) : QObj
 
 Agente::~Agente()
 {
-
+    delete this->m_cache;
 }
 
 const QString &Agente::uuid() const

@@ -27,7 +27,7 @@ Client *NetworkController::getClient(const QString &ip, int port)
 
 void NetworkController::sendMessage(Client *client, QJsonObject message)
 {
-    this->m_server->sendMessage(client->m_client_socket, message);
+    this->m_server->sendMessage(client->socket(), message);
 }
 
 void NetworkController::processNewClient(QTcpSocket *client)

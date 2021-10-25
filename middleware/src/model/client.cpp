@@ -30,6 +30,11 @@ quint16 Client::port() const
     return this->m_client_socket->peerPort();
 }
 
+QTcpSocket *Client::socket()
+{
+    return this->m_client_socket;
+}
+
 QString Client::toString() const
 {
     return QString("Client{").append(ip().append(":").append(port()).append("}"));
