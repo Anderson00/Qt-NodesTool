@@ -13,6 +13,7 @@ class AgenteCache : public QObject
     Q_OBJECT
 public:
     explicit AgenteCache(QObject *parent = nullptr);
+    ~AgenteCache();
 
     bool registerKeyHook(const QString &key);
     bool unRegisterKeyHook(const QString &key);

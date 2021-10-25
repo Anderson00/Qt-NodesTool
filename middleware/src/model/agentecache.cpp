@@ -7,6 +7,16 @@ AgenteCache::AgenteCache(QObject *parent) : QObject(parent)
 
 }
 
+AgenteCache::~AgenteCache()
+{
+    delete this->m_cache_general;
+    delete this->m_cache_reserved;
+
+    for(AgenteObserver *observer : qAsConst(this->m_observers)){
+        delete observer;
+    }
+}
+
 bool AgenteCache::registerKeyHook(const QString &key)
 {
     AgenteObserver *observer = new AgenteObserver(key, this);
@@ -21,6 +31,8 @@ bool AgenteCache::unRegisterKeyHook(const QString &key)
     for(AgenteObserver *observer : qAsConst(this->m_observers)){
         if(observer->key() == key){
             this->m_cache_general->detach(observer);
+            delete observer;
+            this->m_observers.removeOne(observer);
             return true;
         }
     }
