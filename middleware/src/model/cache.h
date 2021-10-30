@@ -7,12 +7,16 @@
 #include <QList>
 #include <QMutex>
 
+#include "agentecache.h"
 #include "isubject.h"
 #include "iobserver.h"
+
+class AgenteCache;
 
 template <typename T>
 class Cache : public ISubject<T>
 {
+    friend class AgenteCache;
 public:
     Cache();
 
@@ -22,10 +26,10 @@ public:
     bool contains(const QString &key) const;
     QString keyFromValue(const T &value) const;
 
-    const T& get(const QString &key) const;
-    const T& set(const QString &key, const T &value);
+    const T &get(const QString &key) const;
+    const T &set(const QString &key, const T &value);
 
-    int size();
+    int rowCount();
 
     //ISubject impls
     void attach(IObserver<T> *observer) override;
@@ -33,7 +37,9 @@ public:
 
 private:
     //ISubject impl
-    void notify(const QString &key, const T &newValue) override;
+    void notifyUpdate(const QString &key, const T &newValue) override;
+    void notifyRemoved(const QString &key) override;
+    void notifyAdded(const QString &key, const T &newValue) override;
 
     QHash<QString, T> m_general_data;
     QList<IObserver<T>*> m_observers;
@@ -46,9 +52,36 @@ Cache<T>::Cache()
 }
 
 template<typename T>
-int Cache<T>::size()
+bool Cache<T>::contains(const QString &key) const
 {
-    return this->m_general_data.count();
+    return this->m_general_data.contains(key);
+}
+
+
+template<typename T>
+const T &Cache<T>::get(const QString &key) const
+{
+    return this->m_general_data[key];
+}
+
+template<typename T>
+const T &Cache<T>::set(const QString &key, const T &value)
+{
+    bool isAddition = !this->m_general_data.contains(key);
+    this->m_general_data[key] = value;
+    if(isAddition){
+        this->notifyAdded(key, this->m_general_data[key]);
+    }else{
+        this->notifyUpdate(key, this->m_general_data[key]);
+    }
+
+    return this->m_general_data[key];
+}
+
+template<typename T>
+int Cache<T>::rowCount()
+{
+    return this->m_general_data.size();
 }
 
 template<typename T>
@@ -64,11 +97,31 @@ void Cache<T>::detach(IObserver<T> *observer)
 }
 
 template<typename T>
-void Cache<T>::notify(const QString &key, const T &newValue)
+void Cache<T>::notifyUpdate(const QString &key, const T &newValue)
 {
     for(IObserver<T> *observer : qAsConst(this->m_observers)){
         if(observer->key() == key){
             observer->update(key, newValue);
+        }
+    }
+}
+
+template<typename T>
+void Cache<T>::notifyRemoved(const QString &key)
+{
+    for(IObserver<T> *observer : qAsConst(this->m_observers)){
+        if(observer->key() == key){
+            observer->rowRemoved(key);
+        }
+    }
+}
+
+template<typename T>
+void Cache<T>::notifyAdded(const QString &key, const T &newValue)
+{
+    for(IObserver<T> *observer : qAsConst(this->m_observers)){
+        if(observer->key() == key){
+            observer->rowAddeded(key, newValue);
         }
     }
 }

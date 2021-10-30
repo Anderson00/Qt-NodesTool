@@ -12,12 +12,14 @@ public:
     explicit AgenteObserver(const QString &keyFilter, QObject *parent = nullptr);
 
 signals:
-    void cacheRowUpdated(QByteArray newValue);
+    void cacheRowUpdated(const QByteArray &newValue);
     void cacheRowRemoved(QString key);
+    void cacheRowAddeded(QString key);
 
 private:
     void update(const QString& key, const QByteArray &newValue) override;
     void rowRemoved(QString key) override;
+    void rowAddeded(QString key, const QByteArray &newValue) override;
 
 };
 

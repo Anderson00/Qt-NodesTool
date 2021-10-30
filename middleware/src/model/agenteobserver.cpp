@@ -10,10 +10,15 @@ AgenteObserver::AgenteObserver(const QString &keyFilter, QObject *parent) :
 
 void AgenteObserver::update(const QString &key, const QByteArray &newValue)
 {
-    emit cacheRowRemoved(newValue);
+    emit cacheRowUpdated(newValue);
 }
 
 void AgenteObserver::rowRemoved(QString key)
 {
     emit cacheRowRemoved(key);
+}
+
+void AgenteObserver::rowAddeded(QString key, const QByteArray &newValue)
+{
+    emit cacheRowAddeded(this->key());
 }
