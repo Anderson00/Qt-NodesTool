@@ -101,16 +101,45 @@ TEST_F(CacheTest, CacheObserverRowUpdated) {
     array2.push_back(0x12);
     array2.push_back(0x21);
 
-    AgenteObserver observer1("test22");
-    AgenteObserver observer2("test33");
-    cache->attach(&observer1);
-    cache->attach(&observer2);
+    AgenteObserver *observer1 = new AgenteObserver("test22");
+    AgenteObserver *observer2 = new AgenteObserver("test33");
+    cache->attach(observer1);
+    cache->attach(observer2);
 
-    QSignalSpy spyObserver1(&observer1, SIGNAL(cacheRowUpdated(const QByteArray &)));
-    QSignalSpy spyObserver2(&observer2, SIGNAL(cacheRowUpdated(const QByteArray &)));
+    QSignalSpy spyObserver1(observer1, SIGNAL(cacheRowUpdated(const QByteArray &)));
+    QSignalSpy spyObserver2(observer2, SIGNAL(cacheRowUpdated(const QByteArray &)));
 
     cache->set("test22", array);
     cache->set("test22", array2);
+
+    ASSERT_EQ(spyObserver1.count(), 1);
+    ASSERT_EQ(spyObserver2.count(), 0);
+
+}
+
+TEST_F(CacheTest, CacheObserverRowRemoved) {
+
+    QByteArray array;
+    array.push_back(0x11);
+    array.push_back(0x23);
+    array.push_back(0x13);
+    array.push_back(0x2A);
+
+    QByteArray array2;
+    array2.push_back(0x12);
+    array2.push_back(0x21);
+
+    AgenteObserver *observer1 = new AgenteObserver("test222");
+    AgenteObserver *observer2 = new AgenteObserver("test333");
+    cache->attach(observer1);
+    cache->attach(observer2);
+
+    QSignalSpy spyObserver1(observer1, SIGNAL(cacheRowRemoved(QString)));
+    QSignalSpy spyObserver2(observer2, SIGNAL(cacheRowRemoved(QString)));
+
+    cache->set("test222", array);
+    cache->set("test333", cache->get("test222"));
+    cache->remove("test222");
 
     ASSERT_EQ(spyObserver1.count(), 1);
     ASSERT_EQ(spyObserver2.count(), 0);

@@ -28,6 +28,7 @@ public:
 
     const T &get(const QString &key) const;
     const T &set(const QString &key, const T &value);
+    bool remove(const QString &key);
 
     int rowCount();
 
@@ -76,6 +77,19 @@ const T &Cache<T>::set(const QString &key, const T &value)
     }
 
     return this->m_general_data[key];
+}
+
+template<typename T>
+bool Cache<T>::remove(const QString &key)
+{
+    if(!m_general_data.contains(key)){
+        return false;
+    }
+
+    m_general_data.remove(key);
+    this->notifyRemoved(key);
+
+    return true;
 }
 
 template<typename T>
