@@ -112,6 +112,13 @@ TEST_F(CacheTest, CacheObserverRowUpdated) {
     cache->set("test22", array);
     cache->set("test22", array2);
 
+    const Cache<QByteArray> &cacheConst = *cache;
+    const QByteArray &row = cache->get("test22");
+    const QByteArray row2 = cacheConst.get("test22");
+
+    ASSERT_TRUE(row == row2 && row == array2);
+    ASSERT_FALSE(row == array);
+
     ASSERT_EQ(spyObserver1.count(), 1);
     ASSERT_EQ(spyObserver2.count(), 0);
 

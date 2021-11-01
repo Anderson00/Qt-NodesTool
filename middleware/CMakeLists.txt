@@ -27,7 +27,9 @@ set(PROJECT_SOURCES
     src/model/client.h src/model/client.cpp
     src/network/tcpserver.cpp src/network/tcpserver.h
     src/controller/middlewarecontroller.h src/controller/middlewarecontroller.cpp
+    src/controller/metamorphcontroller.h src/controller/metamorphcontroller.cpp
     src/controller/networkcontroller.h src/controller/networkcontroller.cpp
+    src/metamorph/metamorphprocess.h src/metamorph/metamorphprocess.cpp
     )
 
 add_executable(middleware

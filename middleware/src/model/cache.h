@@ -26,7 +26,8 @@ public:
     bool contains(const QString &key) const;
     QString keyFromValue(const T &value) const;
 
-    const T &get(const QString &key) const;
+    const T &get(const QString &key);
+    const T get(const QString &key) const;
     const T &set(const QString &key, const T &value);
     bool remove(const QString &key);
 
@@ -58,18 +59,26 @@ bool Cache<T>::contains(const QString &key) const
     return this->m_general_data.contains(key);
 }
 
+template<typename T>
+const T Cache<T>::get(const QString &key) const
+{
+    return m_general_data[key];
+}
 
 template<typename T>
-const T &Cache<T>::get(const QString &key) const
+const T &Cache<T>::get(const QString &key)
 {
-    return this->m_general_data[key];
+    return static_cast<T&>(m_general_data[key]);
 }
 
 template<typename T>
 const T &Cache<T>::set(const QString &key, const T &value)
 {
     bool isAddition = !this->m_general_data.contains(key);
+
     this->m_general_data[key] = value;
+
+
     if(isAddition){
         this->notifyAdded(key, this->m_general_data[key]);
     }else{
