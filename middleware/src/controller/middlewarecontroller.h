@@ -14,7 +14,9 @@ public:
     };
     Q_ENUM(OperationMode)
 
-    explicit MiddlewareController(OperationMode mode = Lan, QObject *parent = nullptr);
+    explicit MiddlewareController(OperationMode mode = Lan, const QString &filesPath = "", QObject *parent = nullptr);
+
+    QStringList filesList() const;
 
 signals:
     void quit(int exitCode = 0);
@@ -27,6 +29,7 @@ private:
     void init();
 
     OperationMode m_mode;
+    QString m_files_path;
     QList<Agente*> m_agentes;
     NetworkController *m_network_controller;
 };
