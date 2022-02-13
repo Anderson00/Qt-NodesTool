@@ -8,13 +8,14 @@
 #include <QtQml/QQmlContext>
 #include <QtQml/QQmlComponent>
 
-QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent)
+QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent),
+    m_qml_url(qmlUrl)
 {
     this->m_view = new QQuickView(this->windowHandle());
 
     if(qmlUrl.isValid()){
         this->view()->rootContext()->setContextProperty("window", this);
-        this->m_view->setSource(qmlUrl);
+        //this->m_view->setSource(qmlUrl);
     }
 
     this->setCentralWidget(QWidget::createWindowContainer(this->m_view, this));
@@ -68,8 +69,28 @@ QUrl QMLWindow::source()
     return this->m_view->source();
 }
 
+void QMLWindow::showWindow(const QVector<PropertyPair> &properties)
+{
+    setContextProperties(properties);
+}
+
+void QMLWindow::setContextProperties(const QVector<PropertyPair> &properties)
+{
+    for(const PropertyPair& pair : properties){
+        this->view()->rootContext()->setContextProperty(pair.name, pair.obj);
+    }
+    setQMLSourceUrl(this->m_qml_url);
+}
+
+void QMLWindow::setContextProperty(const QString &ctx, QObject *obj)
+{
+    this->m_view->rootContext()->setContextProperty(ctx, obj);
+    setQMLSourceUrl(this->m_qml_url);
+}
+
 void QMLWindow::setQMLSourceUrl(const QUrl &url)
 {
+    this->m_qml_url = url;
     this->m_view->setSource(url);
 }
 

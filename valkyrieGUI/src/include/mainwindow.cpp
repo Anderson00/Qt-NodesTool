@@ -10,6 +10,7 @@
 #include <QLabel>
 
 #include "subwindows/debuggermain.h"
+#include "subwindows/testconnectionwindow.h"
 #include "utils/xmlsavestate.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -19,7 +20,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     DebuggerMain *dMain = new DebuggerMain(this->ui->mdiArea);
+    TestConnectionWindow *testConn = new TestConnectionWindow(this->ui->mdiArea);
     this->ui->mdiArea->addSubWindow(dMain);
+    this->ui->mdiArea->addSubWindow(testConn);
 
     xml::XMLSaveState::instance()->setQMdiArea(this->ui->mdiArea);
     xml::XMLSaveState::instance()->addWidgetsToSave(dMain);

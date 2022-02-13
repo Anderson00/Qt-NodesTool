@@ -3,6 +3,7 @@
 
 #include <QMdiSubWindow>
 #include <QSettings>
+#include <QVector>
 
 #include "../qmlwindow.h"
 
@@ -20,6 +21,9 @@ public:
     QUrl source();
 
     virtual QString whoIAm() = 0;
+
+    void showWindow(const QVector<QMLWindow::PropertyPair> &properties = {});
+    void setContextProperty(const QString &ctx, QObject *obj);
 
 private slots:
     void saveState();

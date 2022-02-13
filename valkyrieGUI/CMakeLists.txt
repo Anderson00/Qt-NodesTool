@@ -7,12 +7,14 @@ set(PROJECT_SOURCES
     src/main.cpp
     resources/icons.qrc
     resources/qml.qrc
+    src/include/cliente/midclient.h src/include/cliente/midclient.cpp
     src/include/utils/xmlsavestate.cpp
     src/include/utils/xmlsavestate.h
     src/include/mainwindow.cpp
     src/include/mainwindow.ui
     src/include/qmlwindow.cpp
     src/include/qmlwindow.h
+    src/include/subwindows/testconnectionwindow.h src/include/subwindows/testconnectionwindow.cpp
     src/include/subwindows/qmlmdisubwindow.cpp
     src/include/subwindows/qmlmdisubwindow.h
     src/include/subwindows/debuggermain.cpp

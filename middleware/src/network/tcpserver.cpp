@@ -5,30 +5,35 @@
 TCPServer::TCPServer(QObject *parent) : QObject(parent),
     m_server(new QTcpServer(this))
 {
+    QObject::connect(m_server, &QTcpServer::newConnection, this, [&](){
+        QTcpSocket *client = this->m_server->nextPendingConnection();
+        if(client == nullptr)
+            return;
+
+        this->m_clients.push_back(client);
+
+        QObject::connect(client, &QTcpSocket::disconnected, this, [this, client](){
+            this->m_clients.removeOne(client);
+        });
+
+        QObject::connect(client, &QTcpSocket::readyRead, this, [this, client](){
+
+            processTCPMessage(client, client->readAll());
+        });
+        emit newClient(client);
+    });
+
     if(!m_server->listen(QHostAddress::Any, mid::network::TCP_SERVER_PORT)){
         qDebug() << m_server->errorString();
         abort();
     }
 
     qDebug() << "TCPSever listening on" << mid::network::TCP_SERVER_PORT;
-
-    QObject::connect(m_server, &QTcpServer::newConnection, this, [&](){
-        QTcpSocket *client = this->m_server->nextPendingConnection();
-        this->m_clients.push_back(client);
-
-        QObject::connect(client, &QTcpSocket::disconnected, this, [&](){
-            this->m_clients.removeOne(client);
-        });
-
-        QObject::connect(client, &QTcpSocket::readyRead, this, [&](){
-            processTCPMessage(client, client->readAll());
-        });
-        emit newClient(client);
-    });
 }
 
 TCPServer::~TCPServer()
 {
+    qDebug() << "Destroyed";
     this->m_server->close();
     delete this->m_server;
 }
@@ -45,6 +50,7 @@ void TCPServer::close()
 
 void TCPServer::processTCPMessage(QTcpSocket *client, const QByteArray& bytes)
 {
+    qDebug() << "processTCPMessage" << bytes.size();
     QJsonDocument doc = QJsonDocument::fromJson(bytes);
     if(doc.isNull() || doc.isEmpty() || !doc.isObject()){
         qDebug() << "Client InvalidJSON:"
@@ -59,9 +65,10 @@ void TCPServer::processTCPMessage(QTcpSocket *client, const QByteArray& bytes)
 
 void TCPServer::sendMessage(QTcpSocket *destination, QJsonObject message)
 {
-    if(destination != nullptr)
+    if(destination != nullptr){
         destination->write(QJsonDocument(message).toJson(QJsonDocument::Compact));
-    else
+        destination->flush();
+    }else
         qDebug() << "Null pointer Destination(*QTcpSocket)";
 }
 

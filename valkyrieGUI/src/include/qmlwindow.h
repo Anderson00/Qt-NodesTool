@@ -3,12 +3,15 @@
 
 #include <QMainWindow>
 #include <QObject>
+#include <QVector>
 #include <QQuickView>
 
 class QMLWindow : public QMainWindow
 {
     Q_OBJECT
 public:
+    struct PropertyPair { QString name; QObject *obj; };
+
     explicit QMLWindow(QWidget *parent = nullptr, const QUrl& qmlUrl = QUrl(""));
     virtual ~QMLWindow();
 
@@ -18,6 +21,10 @@ public:
     //Virtuals end
 
     QUrl source();
+
+    void showWindow(const QVector<PropertyPair> &properties = {});
+    void setContextProperties(const QVector<PropertyPair> &properties);
+    void setContextProperty(const QString &ctx, QObject *obj);
 
 protected:
     void setQMLSourceUrl(const QUrl& url);
@@ -31,6 +38,7 @@ signals:
 
 private:
     QQuickView *m_view;
+    QUrl m_qml_url;
 };
 
 #endif // QMLWINDOW_H

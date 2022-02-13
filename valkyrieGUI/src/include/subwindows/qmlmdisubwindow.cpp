@@ -26,6 +26,16 @@ QUrl QMLMdiSubWindow::source()
     return this->m_window->source();
 }
 
+void QMLMdiSubWindow::showWindow(const QVector<QMLWindow::PropertyPair> &properties)
+{
+    this->m_window->showWindow(properties);
+}
+
+void QMLMdiSubWindow::setContextProperty(const QString &ctx, QObject *obj)
+{
+    this->m_window->setContextProperty(ctx, obj);
+}
+
 void QMLMdiSubWindow::saveState()
 {
 

@@ -47,7 +47,7 @@ void NetworkController::processNewClient(QTcpSocket *client)
     Client *newClient = new Client(client, this);
     processClientReconnection(newClient);
 
-    QObject::connect(newClient, &Client::disconnected, this, [&](){
+    QObject::connect(newClient, &Client::disconnected, this, [this, newClient](){
         processClientDisconnection(newClient);
     }, Qt::QueuedConnection);
 
@@ -60,6 +60,8 @@ void NetworkController::processClientReconnection(Client *client)
     Client *clientDisconnected = getClientDisconnected(client);
 
     if(clientDisconnected != nullptr){
+        qDebug() << "Recovering params"
+                 << client->toString();
         client->params(clientDisconnected->params());
     }
 }
@@ -88,6 +90,7 @@ void NetworkController::processClientDisconnection(Client *client)
 
 void NetworkController::processNewMessage(QTcpSocket *client, QJsonObject message)
 {
+    qDebug() << "processNewMessage" << message;
     Client *sourceClient = this->getClient(client->peerAddress().toString(), client->peerPort());
     if(sourceClient == nullptr){
         qInfo() << "Unknow client"

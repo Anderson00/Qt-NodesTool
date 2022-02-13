@@ -35,6 +35,7 @@ void MiddlewareController::init()
         QObject::connect(m_network_controller, &NetworkController::clientConnected, this, &MiddlewareController::processAgentConnection);
         QObject::connect(m_network_controller, &NetworkController::messageReceived, this, &MiddlewareController::processRequest);
         QObject::connect(m_command_controller, &CommandController::resultReady, [this](Agente *agente, QJsonObject result) {
+            qDebug() << "resultReady" << result;
             Client *clientAgente = this->m_network_controller->getClient(agente->uuid());
             this->m_network_controller->sendMessage(clientAgente, result);
         });
@@ -71,6 +72,7 @@ void MiddlewareController::executeCommand(Agente *client, QJsonObject message)
 
 void MiddlewareController::processRequest(Agente *source, QJsonObject request)
 {
+    qDebug() << "Processed" << request;
     if(request.contains("cmd")){
         this->executeCommand(source, request);
     }
