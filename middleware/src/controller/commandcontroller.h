@@ -20,7 +20,6 @@ public slots:
 
 signals:
     void resultReady(Agente* agente, QJsonObject result);
-    void resultError(Agente* agente, QJsonObject result);
 
 private:
     void init();

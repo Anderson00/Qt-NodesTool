@@ -12,7 +12,7 @@ bool CommandController::executeCmd(Agente *agente, const QString &cmdName, QJson
     if(this->m_commands.contains(cmdName)){
         Command *cmd = this->m_commands[cmdName];
 
-        QObject::connect(cmd, &Command::result, [this, agente, cmd](QVariant result){
+        QObject::connect(cmd, &Command::result, [this, agente, cmd](QVariant result, bool error){
             QJsonArray array;
             if(result.canConvert<QString>()){
                 array.push_back(result.toString());
@@ -28,6 +28,11 @@ bool CommandController::executeCmd(Agente *agente, const QString &cmdName, QJson
                 {"cmd", cmd->cmdName()},
                 {"result", array}
             });
+
+            if(error){
+                message.insert("error", true);
+            }
+
             emit resultReady(agente, message);
         });
 

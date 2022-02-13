@@ -18,7 +18,7 @@ public slots:
     virtual void execute(QJsonArray params) = 0;
 
 signals:
-    void result(QVariant);
+    void result(QVariant, bool error = false);
 
 public:
     QString m_cmdName;
