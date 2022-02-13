@@ -4,6 +4,7 @@
 #include <QObject>
 #include <src/model/agente.h>
 #include <src/controller/networkcontroller.h>
+#include <src/controller/commandcontroller.h>
 
 class MiddlewareController : public QObject
 {
@@ -22,6 +23,7 @@ signals:
     void quit(int exitCode = 0);
 
 private slots:
+    void executeCommand(Agente *client, QJsonObject message);
     void processAgentConnection(Agente *source);
     void processRequest(Agente *source, QJsonObject request);
 
@@ -32,6 +34,7 @@ private:
     QString m_files_path;
     QList<Agente*> m_agentes;
     NetworkController *m_network_controller;
+    CommandController *m_command_controller;
 };
 
 #endif // MIDDLEWARECONTROLLER_H

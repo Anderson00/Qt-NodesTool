@@ -25,9 +25,21 @@ Client *NetworkController::getClient(const QString &ip, int port)
     return nullptr;
 }
 
+Client *NetworkController::getClient(const QString &uuid)
+{
+    for(Client *client : qAsConst(this->m_clients)){
+        if(client->uuid() == uuid){
+            return client;
+        }
+    }
+
+    return nullptr;
+}
+
 void NetworkController::sendMessage(Client *client, QJsonObject message)
 {
-    this->m_server->sendMessage(client->socket(), message);
+    if(client != nullptr)
+        this->m_server->sendMessage(client->socket(), message);
 }
 
 void NetworkController::processNewClient(QTcpSocket *client)
@@ -67,7 +79,7 @@ void NetworkController::processClientDisconnection(Client *client)
                  << client->toString();
         this->m_clientsDisconected.removeOne(client);
         this->m_reconnectionTimeout.removeOne(timer);
-        delete timer;
+        timer->deleteLater();
     });
     this->m_reconnectionTimeout.push_back(timer);
     timer->start();

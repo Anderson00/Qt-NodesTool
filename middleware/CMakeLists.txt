@@ -26,9 +26,12 @@ set(PROJECT_SOURCES
     src/model/agente.h src/model/agente.cpp
     src/model/client.h src/model/client.cpp
     src/network/tcpserver.cpp src/network/tcpserver.h
+    src/command/command.h src/command/command.cpp
+    src/command/localdirlscommand.h src/command/localdirlscommand.cpp
     src/controller/middlewarecontroller.h src/controller/middlewarecontroller.cpp
     src/controller/metamorphcontroller.h src/controller/metamorphcontroller.cpp
     src/controller/networkcontroller.h src/controller/networkcontroller.cpp
+    src/controller/commandcontroller.h src/controller/commandcontroller.cpp
     src/metamorph/metamorphprocess.h src/metamorph/metamorphprocess.cpp
     )
 
