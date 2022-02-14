@@ -7,7 +7,8 @@ TestConnectionWindow::TestConnectionWindow(QWidget *parent) :
     QMLMdiSubWindow(parent, QUrl("qrc:/subwindows/TestConnectionWindow.qml"))
 {
     this->setWindowTitle("Test Connection");
-    this->setBaseSize(400, 400);
+    this->setMinimumSize(300, 200);
+    this->resize(400, 400);
 
     this->m_client->connectToHost("127.0.0.1", 6969);
 

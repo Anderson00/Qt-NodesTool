@@ -5,12 +5,7 @@ import QtQuick.Controls.Material 2.12
 
 Rectangle {
     anchors.fill: parent
-    color: "#333"
-
-    Component.onCompleted: {
-        console.log(window);
-        console.log(midClient);
-    }
+    color: "#140f07"
 
     Connections {
         target: midClient
@@ -42,8 +37,6 @@ Rectangle {
         }
 
         function onResultCommand(message){
-            console.log(message);
-
             if(message){
                 resultArea.text += "Resposta: "+message["result"]+"\n";
             }
@@ -83,8 +76,8 @@ Rectangle {
             TextArea {
                 id: resultArea
 
-                color: "green"
-                background: Rectangle { color: "#000" }
+                color: "#e0e7f6"
+                background: Rectangle { color: "#21252f" }
                 enabled: false
 
             }
@@ -97,7 +90,7 @@ Rectangle {
                 id: stateText
                 Layout.preferredHeight: 25
                 Layout.alignment: Qt.AlignVCenter
-                color: "green"
+                color: "#e0e7f6"
                 Layout.fillWidth: true
                 text: "Initiated"
             }
