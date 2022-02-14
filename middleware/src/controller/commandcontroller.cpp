@@ -43,6 +43,15 @@ bool CommandController::executeCmd(Agente *agente, const QString &cmdName, QJson
         cmd->execute(params);
 
         return true;
+    }else {
+        QJsonObject message ({
+            {"cmd", cmdName},
+            {"error", true},
+            {"result", QJsonArray({"Command not found"})}
+        });
+
+        emit resultReady(agente, message);
+
     }
 
     return false;
