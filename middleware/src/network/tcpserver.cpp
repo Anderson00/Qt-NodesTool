@@ -33,7 +33,6 @@ TCPServer::TCPServer(QObject *parent) : QObject(parent),
 
 TCPServer::~TCPServer()
 {
-    qDebug() << "Destroyed";
     this->m_server->close();
     delete this->m_server;
 }
@@ -65,6 +64,7 @@ void TCPServer::processTCPMessage(QTcpSocket *client, const QByteArray& bytes)
 
 void TCPServer::sendMessage(QTcpSocket *destination, QJsonObject message)
 {
+    qDebug() << "Sending" << message;
     if(destination != nullptr){
         destination->write(QJsonDocument(message).toJson(QJsonDocument::Compact));
         destination->flush();
