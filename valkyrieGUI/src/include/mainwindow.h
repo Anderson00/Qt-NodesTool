@@ -31,6 +31,8 @@ private slots:
 
     void on_actionFullscreen_triggered();
 
+    void on_actionTest_Connection_triggered();
+
 private:
     Ui::MainWindow *ui;
 

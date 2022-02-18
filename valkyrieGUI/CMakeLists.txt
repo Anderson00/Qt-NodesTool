@@ -3,6 +3,16 @@ cmake_minimum_required(VERSION 3.8)
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Quick Gui Svg Sql Network Test REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Svg Gui Sql Quick Network Test REQUIRED)
 
+# Download & Configure Qaterial as part of your build system
+include(FetchContent)
+FetchContent_Declare(
+  Qaterial
+  GIT_REPOSITORY https://github.com/OlivierLDff/Qaterial.git
+  GIT_TAG        master
+  GIT_SHALLOW    1
+)
+FetchContent_MakeAvailable(Qaterial)
+
 set(PROJECT_SOURCES
     src/main.cpp
     resources/icons.qrc
@@ -21,6 +31,7 @@ set(PROJECT_SOURCES
     src/include/subwindows/debuggermain.h
     src/include/subwindows/debuggermain.ui)
 
+
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(Main
         ${PROJECT_SOURCES}
@@ -37,9 +48,10 @@ else()
     endif()
 endif()
 
-target_link_libraries(Debugger PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick cxxopts retdec::fileformat)
+target_link_libraries(Debugger PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick cxxopts retdec::fileformat Qaterial)
 
 #add_executable(Main main.cpp ${SOURCE_FILES_CURSES})
+set_target_properties(Debugger PROPERTIES AUTOMOC TRUE)
 
 #target_link_libraries (Main PUBLIC cxxopts unicorn capstone-shared)
 target_include_directories(Debugger PUBLIC                          

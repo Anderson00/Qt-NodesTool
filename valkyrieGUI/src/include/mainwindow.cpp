@@ -20,9 +20,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     DebuggerMain *dMain = new DebuggerMain(this->ui->mdiArea);
-    TestConnectionWindow *testConn = new TestConnectionWindow(this->ui->mdiArea);
     this->ui->mdiArea->addSubWindow(dMain);
-    this->ui->mdiArea->addSubWindow(testConn);
 
     xml::XMLSaveState::instance()->setQMdiArea(this->ui->mdiArea);
     xml::XMLSaveState::instance()->addWidgetsToSave(dMain);
@@ -60,3 +58,11 @@ void MainWindow::on_actionFullscreen_triggered()
         this->showNormal();
     }
 }
+
+void MainWindow::on_actionTest_Connection_triggered()
+{
+    TestConnectionWindow *testConn = new TestConnectionWindow(this->ui->mdiArea);
+    this->ui->mdiArea->addSubWindow(testConn);
+    testConn->setVisible(true);
+}
+

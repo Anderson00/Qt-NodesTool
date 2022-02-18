@@ -1,8 +1,10 @@
 <RCC>
     <qresource prefix="/"/>
+    <qresource prefix="/components">
+        <file alias="Accordion.qml">qml/components/Accordion.qml</file>
+    </qresource>
     <qresource prefix="/subwindows">
         <file alias="DebuggerMain.qml">qml/subwindows/DebuggerMain.qml</file>
         <file alias="TestConnectionWindow.qml">qml/subwindows/TestConnectionWindow.qml</file>
     </qresource>
-    <qresource prefix="/components"/>
 </RCC>

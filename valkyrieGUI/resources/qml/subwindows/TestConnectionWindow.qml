@@ -3,6 +3,8 @@ import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.0
 import QtQuick.Controls.Material 2.12
 
+import Qaterial 1.0 as Qaterial
+
 Rectangle {
     anchors.fill: parent
     color: "#140f07"
@@ -43,6 +45,7 @@ Rectangle {
         }
     }
 
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 8
@@ -50,15 +53,21 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true
             Layout.preferredHeight: 40
-            TextField {
+
+            Qaterial.TextField {
                 id: cmdLine
                 Layout.fillWidth: true
+                trailingContent: Qaterial.TextFieldButtonContainer
+                {
+                    Qaterial.TextFieldClearButton {
+                        visible: cmdLine.text.length > 0
+                    }
+                } // TextFieldButtonContainer
             }
 
-            Button {
+            Qaterial.RaisedButton {
                 id: btnAction
-                Layout.preferredWidth: 40
-                text: "Send"
+                text: "Send"                
                 onClicked: {
                     let cmdSplits = cmdLine.text.split(" ");
                     midClient.sendCommand(cmdSplits[0], cmdSplits.slice(1,cmdSplits.length))
@@ -68,16 +77,21 @@ Rectangle {
 
         ScrollView {
             id: scroll
+            clip: true
             Layout.fillHeight: true
             Layout.fillWidth: true
             ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+            background: Rectangle { color: "#21252f" }
 
 
             TextArea {
                 id: resultArea
+                width: scroll.parent.width
+                //height: scroll.height
 
                 color: "#e0e7f6"
                 background: Rectangle { color: "#21252f" }
+
                 enabled: false
 
             }
@@ -96,9 +110,9 @@ Rectangle {
             }
 
             TextField {
-                Layout.preferredHeight: stateText.height
-                Layout.preferredWidth: 120
                 id: ipConn
+                Layout.preferredHeight: stateText.height
+                Layout.preferredWidth: 120                
                 text: "127.0.0.1"
             }
 
@@ -107,7 +121,7 @@ Rectangle {
                 Layout.preferredHeight: stateText.height
                 text: "Ok"
                 onClicked: {
-                    midClient.retryConn(stateText.text, 6969);
+                    midClient.retryConn(ipConn.text, 6969);
                 }
             }
 

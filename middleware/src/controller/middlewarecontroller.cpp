@@ -34,11 +34,7 @@ void MiddlewareController::init()
         // TODO: connect signals
         QObject::connect(m_network_controller, &NetworkController::clientConnected, this, &MiddlewareController::processAgentConnection);
         QObject::connect(m_network_controller, &NetworkController::messageReceived, this, &MiddlewareController::processRequest);
-        QObject::connect(m_command_controller, &CommandController::resultReady, [this](Agente *agente, QJsonObject result) {
-            qDebug() << "resultReady" << result;
-            Client *clientAgente = this->m_network_controller->getClient(agente->uuid());
-            this->m_network_controller->sendMessage(clientAgente, result);
-        });
+        QObject::connect(m_command_controller, &CommandController::resultReady, this, &MiddlewareController::processCommandResult, Qt::QueuedConnection);
     }
         break;
     case Network:
@@ -76,4 +72,11 @@ void MiddlewareController::processRequest(Agente *source, QJsonObject request)
     if(request.contains("cmd")){
         this->executeCommand(source, request);
     }
+}
+
+void MiddlewareController::processCommandResult(Agente *agente, QJsonObject result)
+{
+    qDebug() << "resultReady" << result;
+    Client *clientAgente = this->m_network_controller->getClient(agente->uuid());
+    this->m_network_controller->sendMessage(clientAgente, result);
 }

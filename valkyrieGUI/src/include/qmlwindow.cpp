@@ -14,8 +14,8 @@ QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent),
     this->m_view = new QQuickView(this->windowHandle());
 
     if(qmlUrl.isValid()){
-        this->view()->rootContext()->setContextProperty("window", this);
-        //this->m_view->setSource(qmlUrl);
+        this->view()->rootContext()->setContextProperty("window", this);        
+        this->view()->engine()->addImportPath("qrc:///");
     }
 
     this->setCentralWidget(QWidget::createWindowContainer(this->m_view, this));

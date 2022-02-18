@@ -26,6 +26,7 @@ private slots:
     void executeCommand(Agente *client, QJsonObject message);
     void processAgentConnection(Agente *source);
     void processRequest(Agente *source, QJsonObject request);
+    void processCommandResult(Agente *agente, QJsonObject result);
 
 private:
     void init();
