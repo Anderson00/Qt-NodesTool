@@ -56,7 +56,7 @@ set_target_properties(Debugger PROPERTIES AUTOMOC TRUE)
 
 #target_link_libraries (Main PUBLIC cxxopts unicorn capstone-shared)
 target_include_directories(Debugger PUBLIC                          
-                          "${PROJECT_SOURCE_DIR}/extern/unicorn/include"
+                          #"${PROJECT_SOURCE_DIR}/extern/unicorn/include"
                           "${PROJECT_SOURCE_DIR}/extern/retdec/include"
                           #"${PROJECT_SOURCE_DIR}/extern/capstone/include"
                           "src/"

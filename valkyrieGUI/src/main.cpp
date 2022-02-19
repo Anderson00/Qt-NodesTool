@@ -2,11 +2,9 @@
 #include <QApplication>
 
 #include "include/mainwindow.h"
-#include <unicorn/unicorn.h>
+//#include <unicorn/unicorn.h>
 //#include <capstone/capstone.h>
 #include <retdec/fileformat/fileformat.h>
-#include <iostream>
-#include <fstream>
 #include <Qaterial/Qaterial.hpp>
 
 int main(int argc, char **argv)

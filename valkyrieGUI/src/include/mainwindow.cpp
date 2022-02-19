@@ -74,6 +74,7 @@ void MainWindow::on_actionTask_Manager_triggered()
         this->m_taskManager = new TaskManagerWindow(this->ui->mdiArea);
         QObject::connect(this->m_taskManager, &QObject::destroyed, [this](){
             this->ui->actionTask_Manager->setEnabled(true);
+            QObject::disconnect(this->m_taskManager);
             this->m_taskManager = nullptr;
         });
         this->ui->mdiArea->addSubWindow(m_taskManager);
