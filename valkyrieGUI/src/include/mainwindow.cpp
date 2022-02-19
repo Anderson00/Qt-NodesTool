@@ -11,6 +11,7 @@
 
 #include "subwindows/debuggermain.h"
 #include "subwindows/testconnectionwindow.h"
+#include "subwindows/taskmanagerwindow.h"
 #include "utils/xmlsavestate.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -64,5 +65,25 @@ void MainWindow::on_actionTest_Connection_triggered()
     TestConnectionWindow *testConn = new TestConnectionWindow(this->ui->mdiArea);
     this->ui->mdiArea->addSubWindow(testConn);
     testConn->setVisible(true);
+}
+
+
+void MainWindow::on_actionTask_Manager_triggered()
+{
+    if(this->m_taskManager == nullptr){
+        this->m_taskManager = new TaskManagerWindow(this->ui->mdiArea);
+        QObject::connect(this->m_taskManager, &QObject::destroyed, [this](){
+            this->ui->actionTask_Manager->setEnabled(true);
+            this->m_taskManager = nullptr;
+        });
+        this->ui->mdiArea->addSubWindow(m_taskManager);
+        m_taskManager->setVisible(true);
+        this->ui->actionTask_Manager->setEnabled(false);
+    }else{
+        this->ui->actionTask_Manager->setEnabled(true);
+        this->ui->mdiArea->removeSubWindow(this->m_taskManager);
+        delete m_taskManager;
+        this->m_taskManager = nullptr;
+    }
 }
 

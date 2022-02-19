@@ -261,6 +261,7 @@
     <addaction name="actiondocumentation"/>
     <addaction name="actionAbout"/>
     <addaction name="actionTest_Connection"/>
+    <addaction name="actionTask_Manager"/>
    </widget>
    <widget class="QMenu" name="menuDebug">
     <property name="title">
@@ -695,6 +696,18 @@
   <action name="actionTest_Connection">
    <property name="text">
     <string>Test Connection</string>
+   </property>
+  </action>
+  <action name="actionTask_Manager">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../../resources/icons.qrc">
+     <normaloff>:/icons/chart-line.svg</normaloff>:/icons/chart-line.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Task Manager</string>
    </property>
   </action>
  </widget>

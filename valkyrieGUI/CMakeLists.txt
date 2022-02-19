@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Quick Gui Svg Sql Network Test REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Svg Gui Sql Quick Network Test REQUIRED)
-
 # Download & Configure Qaterial as part of your build system
 include(FetchContent)
 FetchContent_Declare(
@@ -12,6 +9,9 @@ FetchContent_Declare(
   GIT_SHALLOW    1
 )
 FetchContent_MakeAvailable(Qaterial)
+
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Quick Gui Svg Sql Network Test Qaterial REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Svg Gui Sql Quick Network Test REQUIRED)
 
 set(PROJECT_SOURCES
     src/main.cpp
@@ -24,6 +24,7 @@ set(PROJECT_SOURCES
     src/include/mainwindow.ui
     src/include/qmlwindow.cpp
     src/include/qmlwindow.h
+    src/include/subwindows/taskmanagerwindow.h src/include/subwindows/taskmanagerwindow.cpp
     src/include/subwindows/testconnectionwindow.h src/include/subwindows/testconnectionwindow.cpp
     src/include/subwindows/qmlmdisubwindow.cpp
     src/include/subwindows/qmlmdisubwindow.h

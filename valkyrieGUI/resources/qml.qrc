@@ -6,5 +6,6 @@
     <qresource prefix="/subwindows">
         <file alias="DebuggerMain.qml">qml/subwindows/DebuggerMain.qml</file>
         <file alias="TestConnectionWindow.qml">qml/subwindows/TestConnectionWindow.qml</file>
+        <file alias="TaskManagerWindow.qml">qml/subwindows/TaskManagerWindow.qml</file>
     </qresource>
 </RCC>

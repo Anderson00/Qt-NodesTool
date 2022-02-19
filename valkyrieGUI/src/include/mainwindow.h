@@ -6,6 +6,7 @@
 #include <QMdiSubWindow>
 #include <QDialog>
 #include <QFileDialog>
+#include "subwindows/taskmanagerwindow.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -33,8 +34,11 @@ private slots:
 
     void on_actionTest_Connection_triggered();
 
+    void on_actionTask_Manager_triggered();
+
 private:
     Ui::MainWindow *ui;
+    TaskManagerWindow *m_taskManager = nullptr;
 
 };
 #endif // MAINWINDOW_H
