@@ -19,7 +19,13 @@ public:
     QString whoIAm() override;
 
 public slots:
+    // Current Process
     double totalUsage();
+    unsigned long totalProcessMemoryUsage();
+
+    // Global Memory
+    unsigned long totalSystemMemoryUsage();
+    unsigned long totalSystemMemory();
 
 signals:
 

@@ -123,3 +123,51 @@ double TaskManagerWindow::totalUsage()
 #endif
     return 0.0;
 }
+
+unsigned long TaskManagerWindow::totalProcessMemoryUsage()
+{
+#ifdef Q_OS_WIN
+
+
+
+    return 0;
+
+#endif
+    return 0;
+}
+
+unsigned long TaskManagerWindow::totalSystemMemoryUsage()
+{
+#ifdef Q_OS_WIN
+
+    MEMORYSTATUSEX memEx;
+    memEx.dwLength = sizeof(memEx);
+
+    if(GlobalMemoryStatusEx(&memEx) != 0){
+
+        return ((memEx.ullTotalPhys - memEx.ullAvailPhys) / 1024) / 1024;
+    }
+
+    return 0;
+
+#endif
+    return 0;
+}
+
+unsigned long TaskManagerWindow::totalSystemMemory()
+{
+#ifdef Q_OS_WIN
+
+    MEMORYSTATUSEX memEx;
+    memEx.dwLength = sizeof(memEx);
+
+    if(GlobalMemoryStatusEx(&memEx) != 0){
+
+        return (memEx.ullTotalPhys / 1024) / 1024;
+    }
+
+    return 0;
+
+#endif
+    return 0;
+}

@@ -33,6 +33,10 @@ Rectangle {
         onTriggered: {
             //console.log(count + " " + taskManager.totalUsage())
 
+            labelTotalMemoryUsage.text = taskManager.totalSystemMemoryUsage() + " MB"
+            progressTotalMemoryUsage.value = Number(taskManager.totalSystemMemoryUsage())
+            progressTotalMemoryUsagePercent.text = ((taskManager.totalSystemMemoryUsage() / taskManager.totalSystemMemory())*100).toFixed(0) + " %"
+
             let total = taskManager.totalUsage();
             cpuUsage = total;
             lineSerie.append(++count, total/1)
@@ -98,32 +102,47 @@ Rectangle {
 
 
         RowLayout {
-            visible: false
-            Repeater{
-                id: rowRepeater
-                delegate: ChartView {
-                    title: "Spline"
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    antialiasing: true
-                    backgroundColor: "#140f07"
+            Layout.fillWidth: true
+                //totalProcessMemoryUsage
+            Qaterial.Label {
+                id: labelTotalMemoryUsage
+                text: taskManager.totalSystemMemoryUsage() + " MB"
+            }
+            ProgressBar {
+                id: progressTotalMemoryUsage
+                Layout.fillWidth: true
+                from: 0
+                to: Number(taskManager.totalSystemMemory())
+                value: 0
+                Layout.preferredHeight: 20
+                height: 20
 
-                    // Define x-axis to be used with the series instead of default one
-                    ValueAxis {
-                        //id: valueAxis
-                        min: 2000
-                        max: 2011
-                        tickCount: 12
-                        labelFormat: "%.0f"
+                background: Rectangle {
+                    implicitWidth: 200
+                    implicitHeight: progressTotalMemoryUsage.height
+                    color: "#880E4F"
+                }
+
+                contentItem: Item {
+                    implicitWidth: 200
+                    implicitHeight: 4
+
+                    Rectangle {
+                        width: progressTotalMemoryUsage.visualPosition * parent.width
+                        height: progressTotalMemoryUsage.height
+                        radius: 2
+                        color: "#EC407A"
+
+
                     }
+                }
 
-                    AreaSeries {
-                        axisX: valueAxis
-                        upperSeries: LineSeries {
-
-                        }
-                    }
-                } // ChartView
+                Qaterial.Label {
+                    id: progressTotalMemoryUsagePercent
+                    anchors.centerIn: progressTotalMemoryUsage
+                    z: 100
+                    text: (taskManager.totalSystemMemoryUsage() / progressTotalMemoryUsage.value).toFixed(0) + " %"
+                }
             }
         } // RowLayout
 
