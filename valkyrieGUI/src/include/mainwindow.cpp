@@ -8,6 +8,7 @@
 #include <QMessageBox>
 #include <QDebug>
 #include <QLabel>
+#include <QScrollArea>
 
 #include "subwindows/debuggermain.h"
 #include "subwindows/testconnectionwindow.h"
@@ -17,11 +18,13 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , m_viewPort(new ViewPortWindow(this))
 {
     ui->setupUi(this);
 
     DebuggerMain *dMain = new DebuggerMain(this->ui->mdiArea);
     this->ui->mdiArea->addSubWindow(dMain);
+    this->ui->mdiArea->setViewport(this->m_viewPort);
 
     xml::XMLSaveState::instance()->setQMdiArea(this->ui->mdiArea);
     xml::XMLSaveState::instance()->addWidgetsToSave(dMain);

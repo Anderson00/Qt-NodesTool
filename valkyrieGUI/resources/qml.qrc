@@ -2,10 +2,13 @@
     <qresource prefix="/"/>
     <qresource prefix="/components">
         <file alias="Accordion.qml">qml/components/Accordion.qml</file>
+        <file alias="CustomSlider.qml">qml/components/CustomSlider.qml</file>
+        <file alias="CustomSliderVertical.qml">qml/components/CustomSliderVertical.qml</file>
     </qresource>
     <qresource prefix="/subwindows">
         <file alias="DebuggerMain.qml">qml/subwindows/DebuggerMain.qml</file>
         <file alias="TestConnectionWindow.qml">qml/subwindows/TestConnectionWindow.qml</file>
         <file alias="TaskManagerWindow.qml">qml/subwindows/TaskManagerWindow.qml</file>
+        <file alias="ViewPortWindow.qml">qml/subwindows/ViewPortWindow.qml</file>
     </qresource>
 </RCC>

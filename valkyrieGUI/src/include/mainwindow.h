@@ -7,6 +7,7 @@
 #include <QDialog>
 #include <QFileDialog>
 #include "subwindows/taskmanagerwindow.h"
+#include "viewportwindow.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -38,6 +39,7 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    ViewPortWindow *m_viewPort = nullptr;
     TaskManagerWindow *m_taskManager = nullptr;
 
 };

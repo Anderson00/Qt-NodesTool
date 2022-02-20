@@ -18,12 +18,11 @@ set(PROJECT_SOURCES
     resources/icons.qrc
     resources/qml.qrc
     src/include/cliente/midclient.h src/include/cliente/midclient.cpp
-    src/include/utils/xmlsavestate.cpp
-    src/include/utils/xmlsavestate.h
+    src/include/utils/xmlsavestate.h src/include/utils/xmlsavestate.cpp
     src/include/mainwindow.cpp
     src/include/mainwindow.ui
-    src/include/qmlwindow.cpp
-    src/include/qmlwindow.h
+    src/include/qmlwindow.h src/include/qmlwindow.cpp
+    src/include/viewportwindow.h src/include/viewportwindow.cpp
     src/include/subwindows/taskmanagerwindow.h src/include/subwindows/taskmanagerwindow.cpp
     src/include/subwindows/testconnectionwindow.h src/include/subwindows/testconnectionwindow.cpp
     src/include/subwindows/qmlmdisubwindow.cpp
