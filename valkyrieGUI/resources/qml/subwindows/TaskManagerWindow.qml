@@ -51,11 +51,24 @@ Rectangle {
                 charTotalUsage.axes[0].max = count
             }
 
+            grid.model = (function(){
+                let obj = taskManager.processMemoryCounters();
+                let vectKeys = Object.keys(obj);
+                let resultObj = [];
+                for(let index in vectKeys){
+                    let key = vectKeys[index];
+                    resultObj.push({"type": key, "val": obj[key] + ((key !== "PageFaultCount") ? " MB" : "")});
+                }
+                return resultObj;
+            }())
+
         }
     }
 
     ColumnLayout {
         anchors.fill: parent
+
+        anchors.margins: 8
 
         RowLayout{
             Layout.fillWidth: true
@@ -77,7 +90,6 @@ Rectangle {
 
                 ProgressBar {
                     Layout.fillWidth: true
-                    Layout.topMargin: 8
                     value: cpuUsage / 100
 
                 }
@@ -103,7 +115,7 @@ Rectangle {
 
         RowLayout {
             Layout.fillWidth: true
-                //totalProcessMemoryUsage
+            //totalProcessMemoryUsage
             Qaterial.Label {
                 id: labelTotalMemoryUsage
                 text: taskManager.totalSystemMemoryUsage() + " MB"
@@ -146,5 +158,38 @@ Rectangle {
             }
         } // RowLayout
 
-    } // ColumnLayout
+        GridView {
+            id: grid
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.alignment: Qt.AlignCenter
+            Layout.preferredHeight: 100
+
+            cellWidth: 150
+            cellHeight: 50
+            clip: true
+
+            //highlight: Rectangle { color: "lightsteelblue"; radius: 5 }
+
+            model: []
+            delegate: Column {
+                width: grid.cellWidth
+                height: grid.cellHeight
+                clip: true
+
+                Text {
+                    text: modelData.type
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    color: "#FFF"
+                }
+
+                Text {
+                    text: modelData.val
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    color: sliderTimeout.color
+                }
+            }
+
+        }
+    }
 }

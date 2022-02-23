@@ -2,11 +2,13 @@
 #define TASKMANAGERWINDOW_H
 
 #include <QObject>
+#include <QJsonObject>
 #include "qmlwindow.h"
 #include "qmlmdisubwindow.h"
 
 #ifdef Q_OS_WIN
 #include <windows.h>
+#include <psapi.h>
 #endif
 
 class TaskManagerWindow : public QMLMdiSubWindow
@@ -21,7 +23,7 @@ public:
 public slots:
     // Current Process
     double totalUsage();
-    unsigned long totalProcessMemoryUsage();
+    QJsonObject processMemoryCounters();
 
     // Global Memory
     unsigned long totalSystemMemoryUsage();

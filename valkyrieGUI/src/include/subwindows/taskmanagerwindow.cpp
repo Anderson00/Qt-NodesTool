@@ -4,6 +4,10 @@
 #include "qmlmdisubwindow.h"
 
 #ifdef Q_OS_WIN
+#include "Psapi.h"
+
+#define BYTE_TO_MB(x) ((x/1024)/1024)
+
 //Time conversion
 static __int64 file_time_2_utc(const FILETIME* ftime)
 {
@@ -111,7 +115,9 @@ QString TaskManagerWindow::whoIAm()
 
 void TaskManagerWindow::init()
 {
-
+#ifdef Q_OS_WIN
+    hProcess = OpenProcess(PROCESS_ALL_ACCESS, false, GetCurrentProcessId());
+#endif
 }
 
 double TaskManagerWindow::totalUsage()
@@ -124,16 +130,29 @@ double TaskManagerWindow::totalUsage()
     return 0.0;
 }
 
-unsigned long TaskManagerWindow::totalProcessMemoryUsage()
+QJsonObject TaskManagerWindow::processMemoryCounters()
 {
+    QJsonObject memoryCounters;
 #ifdef Q_OS_WIN
 
+    PROCESS_MEMORY_COUNTERS processMemoryCounters;
 
+    BOOL result = GetProcessMemoryInfo(hProcess, &processMemoryCounters, sizeof(processMemoryCounters));
 
-    return 0;
+    if(result){
+        memoryCounters.insert("PageFaultCount", (int)processMemoryCounters.PageFaultCount);
+        memoryCounters.insert("PeakWorkingSetSize", (int) BYTE_TO_MB(processMemoryCounters.PeakWorkingSetSize));
+        memoryCounters.insert("WorkingSetSize", (int) BYTE_TO_MB(processMemoryCounters.WorkingSetSize));
+        memoryCounters.insert("QuotaPeakPagedPoolUsage", (int) BYTE_TO_MB(processMemoryCounters.QuotaPeakPagedPoolUsage));
+        memoryCounters.insert("QuotaPagedPoolUsage", (int) BYTE_TO_MB(processMemoryCounters.QuotaPagedPoolUsage));
+        memoryCounters.insert("QuotaPeakNonPagedPoolUsage", (int) BYTE_TO_MB(processMemoryCounters.QuotaPeakNonPagedPoolUsage));
+        memoryCounters.insert("QuotaNonPagedPoolUsage", (int) BYTE_TO_MB(processMemoryCounters.QuotaNonPagedPoolUsage));
+        memoryCounters.insert("PagefileUsage", (int) BYTE_TO_MB(processMemoryCounters.PagefileUsage));
+        memoryCounters.insert("PeakPagefileUsage", (int) BYTE_TO_MB(processMemoryCounters.PeakPagefileUsage));
+    }
 
 #endif
-    return 0;
+    return memoryCounters;
 }
 
 unsigned long TaskManagerWindow::totalSystemMemoryUsage()
@@ -148,10 +167,10 @@ unsigned long TaskManagerWindow::totalSystemMemoryUsage()
         return ((memEx.ullTotalPhys - memEx.ullAvailPhys) / 1024) / 1024;
     }
 
-    return 0;
+    return -1;
 
 #endif
-    return 0;
+    return -1;
 }
 
 unsigned long TaskManagerWindow::totalSystemMemory()
@@ -166,8 +185,8 @@ unsigned long TaskManagerWindow::totalSystemMemory()
         return (memEx.ullTotalPhys / 1024) / 1024;
     }
 
-    return 0;
+    return -1;
 
 #endif
-    return 0;
+    return -1;
 }
