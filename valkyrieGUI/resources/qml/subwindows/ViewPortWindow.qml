@@ -1,52 +1,98 @@
 import QtQuick 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Controls.Material 2.12
+import QtQuick.Layouts 1.0
 
 import "../components"
+import Qaterial 1.0 as Qaterial
 
 Rectangle {
+    id: root
     property var tt: ""
     property var count: 0
+    property int minWgrid: 20
+    property int minZoom: 1
+    property int maxZoom: 6
     anchors.fill: parent
     clip: true
 
     color: '#27191c'
 
     Connections{
-        target: window
+        target: viewPort
 
-        function onWindowMaximizing(val){
-            console.log(val);
+        function fullScreenToogle(){
+           // console.log(val);
+        }
+    }
+    Column {
+        id: fullscreenFab
+        anchors.top: root.top
+        anchors.left: root.left
+        anchors.margins: 8
+        spacing: 2
+        z: 100
+
+        Qaterial.MiniFabButton {
+
+            icon.source: Qaterial.Icons.fullscreen
+            icon.color: Material.accentColor
+            flat: false
+
+
+            onClicked: {
+                if(icon.source == Qaterial.Icons.fullscreen)
+                    icon.source = Qaterial.Icons.fullscreenExit
+                else
+                    icon.source = Qaterial.Icons.fullscreen
+
+                viewPort.setFullScreen(true);
+            }
+        }
+
+        Qaterial.MiniFabButton {
+            icon.source: Qaterial.Icons.setCenter
+            icon.color: Material.accentColor
+            flat: false
+            opacity: (mycanvas.x == 0 && mycanvas.y == 0)? 0.3 : 1
+
+            onClicked: {
+                if(opacity == 1){
+                    mycanvas.x = 0;
+                    mycanvas.y = 0;
+                    sliderZoom.value = 1;
+                }
+            }
         }
     }
 
     CustomSlider {
         id: sliderZoom
-        from: 1
-        to: 10
-        value: 1
+        from: minZoom
+        to: maxZoom
+        value: minZoom
         z: 100
-        anchors.left: parent.left
+        anchors.left: fullscreenFab.right
         anchors.top: parent.top
         anchors.topMargin: 8
-        anchors.leftMargin: 8
+        prefix: "x"
 
         onValueChanged: {
-            mycanvas.wgrid = sliderZoom.value * 20
+            mycanvas.wgrid = sliderZoom.value * minWgrid
             mycanvas.requestPaint()
         }
     }
 
-
     CustomSliderVertical {
         id: slider2
+        visible: false
         from: 1
         to: 100
         value: 1
         z: 100
-        anchors.top: sliderZoom.bottom
-        anchors.topMargin: - 16
-        anchors.left: parent.left
+        anchors.top: fullscreenFab.bottom
+        anchors.topMargin: -8
+        anchors.left: fullscreenFab.left
         state: "left"
 
         onValueChanged: {
@@ -54,15 +100,19 @@ Rectangle {
         }
     }
 
-
-
     Canvas {
         id: mycanvas
         width: parent.width * (sliderZoom.value)
         height: parent.height * (sliderZoom.value)
-        property int wgrid: sliderZoom.value * 20
+        property int wgrid: sliderZoom.value * root.minWgrid;
+
+        Component.onCompleted: {
+            console.log(sliderZoom.value)
+            mycanvas.requestPaint()
+        }
 
         MouseArea {
+            id: dragArea
             anchors.fill: parent
 
             drag.smoothed: true
@@ -131,6 +181,21 @@ Rectangle {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: width/2 + (8-2)
         anchors.leftMargin: - width/2 - 3
+    }
+
+    CustomToolbar {
+        id: toolbar
+        anchors.bottom: parent.bottom
+
+        width: 350
+        height: 50
+        actions : [
+            {text: "OK", icon: "play", onClicked: ()=>{console.log(3232)} },
+            {text: "OK", icon: "stop", onClicked: ()=>{console.log(3232)} },
+            {text: "OK", onClicked: ()=>{console.log(3232)} },
+            {text: "OK", onClicked: ()=>{console.log(3232)} }
+        ]
+
     }
 
     Rectangle {

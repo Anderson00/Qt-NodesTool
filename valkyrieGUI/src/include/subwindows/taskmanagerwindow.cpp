@@ -146,7 +146,6 @@ QJsonObject TaskManagerWindow::processMemoryCounters()
         memoryCounters.insert("QuotaPeakPagedPoolUsage", (int) BYTE_TO_MB(processMemoryCounters.QuotaPeakPagedPoolUsage));
         memoryCounters.insert("QuotaPagedPoolUsage", (int) BYTE_TO_MB(processMemoryCounters.QuotaPagedPoolUsage));
         memoryCounters.insert("QuotaPeakNonPagedPoolUsage", (int) BYTE_TO_MB(processMemoryCounters.QuotaPeakNonPagedPoolUsage));
-        memoryCounters.insert("QuotaNonPagedPoolUsage", (int) BYTE_TO_MB(processMemoryCounters.QuotaNonPagedPoolUsage));
         memoryCounters.insert("PagefileUsage", (int) BYTE_TO_MB(processMemoryCounters.PagefileUsage));
         memoryCounters.insert("PeakPagefileUsage", (int) BYTE_TO_MB(processMemoryCounters.PeakPagefileUsage));
     }

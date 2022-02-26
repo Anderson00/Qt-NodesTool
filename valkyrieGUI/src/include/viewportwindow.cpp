@@ -5,11 +5,16 @@ ViewPortWindow::ViewPortWindow(QWidget *parent) :
 {
 
     this->showWindow(QVector<QMLWindow::PropertyPair>({
-                                                          //QMLWindow::PropertyPair({"name", this})
+                                                          QMLWindow::PropertyPair({"viewPort", this})
                                                       }));
 }
 
 ViewPortWindow::~ViewPortWindow()
 {
 
+}
+
+void ViewPortWindow::setFullScreen(bool isFull)
+{
+    emit this->fullScreenToogle();
 }

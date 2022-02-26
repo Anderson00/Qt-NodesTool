@@ -22,6 +22,8 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    QObject::connect(m_viewPort, &ViewPortWindow::fullScreenToogle, this, &MainWindow::on_actionFullscreen_triggered);
+
     DebuggerMain *dMain = new DebuggerMain(this->ui->mdiArea);
     this->ui->mdiArea->addSubWindow(dMain);
     this->ui->mdiArea->setViewport(this->m_viewPort);

@@ -4,6 +4,8 @@
         <file alias="Accordion.qml">qml/components/Accordion.qml</file>
         <file alias="CustomSlider.qml">qml/components/CustomSlider.qml</file>
         <file alias="CustomSliderVertical.qml">qml/components/CustomSliderVertical.qml</file>
+        <file alias="CustomToolbar.qml">qml/components/CustomToolbar.qml</file>
+        <file alias="Triangle.qml">qml/components/Triangle.qml</file>
     </qresource>
     <qresource prefix="/subwindows">
         <file alias="DebuggerMain.qml">qml/subwindows/DebuggerMain.qml</file>

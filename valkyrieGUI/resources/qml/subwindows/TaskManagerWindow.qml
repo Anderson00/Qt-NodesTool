@@ -77,6 +77,7 @@ Rectangle {
             Qaterial.Slider
             {
                 id: sliderTimeout
+                value: 0.5
                 Binding on value { when: !sliderTimeout.pressed; value: sliderTimeout.value;restoreMode: Binding.RestoreBindingOrValue }
                 orientation: Qt.Vertical
                 Layout.fillHeight: true
@@ -101,10 +102,12 @@ Rectangle {
                     Layout.fillHeight: true
                     antialiasing: true
                     backgroundColor: "#140f07"
+                    //plotAreaColor: "#EC407A"
                     animationOptions: ChartView.SeriesAnimations
 
                     LineSeries {
                         id: lineSerie
+                        color: "#EC407A"
                         name: ((sliderTimeout.value*(1000-100))+100).toFixed(0) + " ms"
                     }
                 } // ChartView
@@ -164,8 +167,9 @@ Rectangle {
             Layout.fillHeight: true
             Layout.alignment: Qt.AlignCenter
             Layout.preferredHeight: 100
+            interactive: false
 
-            cellWidth: 150
+            cellWidth: parent.width / 4
             cellHeight: 50
             clip: true
 
@@ -176,6 +180,7 @@ Rectangle {
                 width: grid.cellWidth
                 height: grid.cellHeight
                 clip: true
+                spacing: 8
 
                 Text {
                     text: modelData.type

@@ -8,6 +8,7 @@ import Qaterial 1.0 as Qaterial
 Item {
     id: root    
     //property alias orientation: slider.orientation;
+    property string prefix: ""
     property alias value: slider.value
     property alias from: slider.from
     property alias to: slider.to
@@ -25,7 +26,7 @@ Item {
 
         Qaterial.Label {
             id: labelFloating
-            text: slider.value.toFixed(0)
+            text: slider.value.toFixed(0) + prefix
             color: slider.color
         }
 

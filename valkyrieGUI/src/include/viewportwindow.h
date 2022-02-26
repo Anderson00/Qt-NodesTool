@@ -12,8 +12,11 @@ public:
     explicit ViewPortWindow(QWidget *parent = nullptr);
     ~ViewPortWindow();
 
-signals:
+public slots:
+    void setFullScreen(bool isFull);
 
+signals:
+    void fullScreenToogle();
 };
 
 #endif // VIEWPORTWINDOW_H
