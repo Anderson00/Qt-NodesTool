@@ -18,6 +18,17 @@ Rectangle {
 
     color: '#27191c'
 
+    MouseArea {
+        anchors.fill: parent
+
+        onWheel: {
+            if (wheel.angleDelta.y > 0)
+                sliderZoom.value += 0.1;
+            else
+               sliderZoom.value -= 0.1;
+        }
+    }
+
     Connections{
         target: viewPort
 
@@ -54,7 +65,7 @@ Rectangle {
             icon.source: Qaterial.Icons.setCenter
             icon.color: Material.accentColor
             flat: false
-            opacity: (mycanvas.x == 0 && mycanvas.y == 0)? 0.3 : 1
+            opacity: (mycanvas.x == 0 && mycanvas.y == 0 && sliderZoom.value == 1)? 0.3 : 1
 
             onClicked: {
                 if(opacity == 1){
@@ -72,6 +83,7 @@ Rectangle {
         to: maxZoom
         value: minZoom
         z: 100
+        color: Material.accentColor
         anchors.left: fullscreenFab.right
         anchors.top: parent.top
         anchors.topMargin: 8

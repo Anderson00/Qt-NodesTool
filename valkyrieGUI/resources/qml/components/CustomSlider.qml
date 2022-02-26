@@ -9,6 +9,7 @@ Item {
     id: root    
     //property alias orientation: slider.orientation;
     property string prefix: ""
+    property alias color: slider.color
     property alias value: slider.value
     property alias from: slider.from
     property alias to: slider.to
@@ -44,16 +45,6 @@ Item {
             to: 1.0
             duration: 500
         }
-
-        NumberAnimation {
-            id: animateOpacity2
-            target: labelFloatingBody
-            properties: "opacity"
-            from: 1.0
-            to: 0.0
-            duration: 200
-
-        }
     }
 
     RowLayout{
@@ -69,12 +60,6 @@ Item {
             Layout.fillWidth: true
 
             value: 5
-
-            onFocusChanged: {
-                if(slider.focus === false){
-                    animateOpacity2.start()
-                }
-            }
 
             onValueChanged: {
                 if(animateOpacity.running === false && labelFloatingBody.opacity !== 1.0){
