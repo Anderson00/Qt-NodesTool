@@ -10,11 +10,21 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(GOOGLETEST_DIR "${CMAKE_BUILD_DIRECTORY}/lib")
 set(ZLIB_INCLUDE_DIR extern/zlib)
 set(ZLIB_LIBRARY extern/zlib)
 set(OPENSSL_ROOT_DIR "C:\\Users\\ander\\Downloads\\OpenSSL\\1.1.1d")
 set(PERL_EXECUTABLE "C:\\Users\\ander\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\ActiveState\\ActiveState Perl-5.32 CLI")
 #set(ZLIB_INCLUDE_DIR extern/zlib)
+
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
+)
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
 
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -22,6 +32,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()
 
 #add_subdirectory(extern/zlib)
+add_subdirectory(tests)
 add_subdirectory(extern/retdec)
 #add_subdirectory(extern/capstone)
 add_subdirectory(extern/cxxopts)

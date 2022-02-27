@@ -7,7 +7,7 @@ Rectangle {
     property var count: 0
     anchors.fill: parent
 
-    color:'#222'
+    color:'#27191c'
 
     Connections{
         target: window
@@ -84,7 +84,7 @@ Rectangle {
             var ctx = getContext("2d")
             ctx.clearRect(0,0, parent.width, parent.height)
             ctx.lineWidth = 0.3
-            ctx.strokeStyle = "#000"
+            ctx.strokeStyle = "#114d4d"
             ctx.beginPath()
             var nrows = height/wgrid;
             for(var i=0; i < nrows+1; i++){

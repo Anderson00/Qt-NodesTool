@@ -25,9 +25,21 @@ Client *NetworkController::getClient(const QString &ip, int port)
     return nullptr;
 }
 
+Client *NetworkController::getClient(const QString &uuid)
+{
+    for(Client *client : qAsConst(this->m_clients)){
+        if(client->uuid() == uuid){
+            return client;
+        }
+    }
+
+    return nullptr;
+}
+
 void NetworkController::sendMessage(Client *client, QJsonObject message)
 {
-    this->m_server->sendMessage(client->m_client_socket, message);
+    if(client != nullptr)
+        this->m_server->sendMessage(client->socket(), message);
 }
 
 void NetworkController::processNewClient(QTcpSocket *client)
@@ -35,7 +47,7 @@ void NetworkController::processNewClient(QTcpSocket *client)
     Client *newClient = new Client(client, this);
     processClientReconnection(newClient);
 
-    QObject::connect(newClient, &Client::disconnected, this, [&](){
+    QObject::connect(newClient, &Client::disconnected, this, [this, newClient](){
         processClientDisconnection(newClient);
     }, Qt::QueuedConnection);
 
@@ -48,6 +60,8 @@ void NetworkController::processClientReconnection(Client *client)
     Client *clientDisconnected = getClientDisconnected(client);
 
     if(clientDisconnected != nullptr){
+        qDebug() << "Recovering params"
+                 << client->toString();
         client->params(clientDisconnected->params());
     }
 }
@@ -67,7 +81,7 @@ void NetworkController::processClientDisconnection(Client *client)
                  << client->toString();
         this->m_clientsDisconected.removeOne(client);
         this->m_reconnectionTimeout.removeOne(timer);
-        delete timer;
+        timer->deleteLater();
     });
     this->m_reconnectionTimeout.push_back(timer);
     timer->start();
@@ -76,6 +90,7 @@ void NetworkController::processClientDisconnection(Client *client)
 
 void NetworkController::processNewMessage(QTcpSocket *client, QJsonObject message)
 {
+    qDebug() << "processNewMessage" << message;
     Client *sourceClient = this->getClient(client->peerAddress().toString(), client->peerPort());
     if(sourceClient == nullptr){
         qInfo() << "Unknow client"

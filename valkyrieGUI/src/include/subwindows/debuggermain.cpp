@@ -10,9 +10,9 @@
 DebuggerMain::DebuggerMain(QWidget *parent) :
     QMLMdiSubWindow(parent, QUrl("qrc:/subwindows/DebuggerMain.qml"))
 {
-
     this->setWindowTitle("Debugger");
     this->setBaseSize(100, 100);
+    this->showWindow();
 }
 
 DebuggerMain::~DebuggerMain()

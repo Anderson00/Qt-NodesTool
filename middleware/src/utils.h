@@ -9,12 +9,15 @@
 #include <src/controller/middlewarecontroller.h>
 
 namespace mid {
+
+static const QString filesDirName = "Input";
+
 namespace convert {
-    MiddlewareController::OperationMode stdStringToOpMode(std::string mode);
-    MiddlewareController::OperationMode qStringToOpMode(QString mode);
+MiddlewareController::OperationMode stdStringToOpMode(std::string mode);
+MiddlewareController::OperationMode qStringToOpMode(QString mode);
 }
 namespace network {
-    const int TCP_SERVER_PORT = 6969;
+const int TCP_SERVER_PORT = 6969;
 }
 
 namespace log {
