@@ -137,10 +137,56 @@ Rectangle {
         }
 
         Rectangle{
+            id: mycanvasBody
             anchors.fill: parent
             border.width: 1
             border.color: "#96a0cd"
             color: "transparent"
+
+            ViewComponentRect {
+                id: view1
+                width: 100
+                height: 70
+                title: "File"
+
+                connections: [
+                    {name: "fileOpen", type: "unidirect"},
+                    {name: "fileClosed"},
+                    {name: "fileSize"}
+                ]
+
+                transform: Scale {
+                    origin.x: 0
+                    origin.y: 0
+                    xScale: sliderZoom.value
+                    yScale: sliderZoom.value
+                }
+
+
+            }
+
+            ViewComponentRect {
+                id: view2
+                width: 250
+                height: 250
+                borderColor: Material.accentColor
+
+                connections: [
+                    {name: "fileOpen", type: "unidirect"},
+                    {name: "fileClosed"},
+                    {name: "fileSize"}
+                ]
+
+                transform: Scale {
+                    origin.x: 0
+                    origin.y: 0
+                    xScale: sliderZoom.value
+                    yScale: sliderZoom.value
+                }
+
+
+            }
+
         }
 
         onPaint: {

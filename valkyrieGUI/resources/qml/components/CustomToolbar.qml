@@ -14,25 +14,6 @@ Rectangle {
     height: body.implicitHeight
     color: Qt.rgba(0.2, 0.2, 0.2, 0.3)
 
-//    x: -(root.width * 0.85)
-
-//    Behavior on x {
-//        NumberAnimation { duration: 100 }
-//    }
-
-//    MouseArea {
-//        id: area
-//        anchors.fill: parent
-//        hoverEnabled: true
-
-//        onClicked: {
-//            if(root.x < 0)
-//                root.x = 0
-//            else
-//                root.x = -(root.width * 0.85)
-//        }
-//    }
-
     Shape {
         id: shape
         antialiasing: true

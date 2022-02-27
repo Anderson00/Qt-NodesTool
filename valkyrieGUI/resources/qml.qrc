@@ -6,6 +6,7 @@
         <file alias="CustomSliderVertical.qml">qml/components/CustomSliderVertical.qml</file>
         <file alias="CustomToolbar.qml">qml/components/CustomToolbar.qml</file>
         <file alias="Triangle.qml">qml/components/Triangle.qml</file>
+        <file alias="ViewComponentRect.qml">qml/components/ViewComponentRect.qml</file>
     </qresource>
     <qresource prefix="/subwindows">
         <file alias="DebuggerMain.qml">qml/subwindows/DebuggerMain.qml</file>
