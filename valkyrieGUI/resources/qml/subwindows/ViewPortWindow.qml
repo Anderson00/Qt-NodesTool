@@ -18,6 +18,24 @@ Rectangle {
 
     color: '#27191c'
 
+    onWidthChanged: {
+        viewSubWindowsWidthHeightArea()
+    }
+
+    onHeightChanged: {
+        viewSubWindowsWidthHeightArea()
+    }
+
+    function viewSubWindowsWidthHeightArea(){
+        // TODO:
+        if(view3.x + view3.width > root.width){
+            view3.x = root.width - view3.width
+        }
+        if(view3.y + view3.height > root.height){
+            view3.y = root.height - view3.height
+        }
+    }
+
     MouseArea {
         anchors.fill: parent
 
@@ -114,13 +132,20 @@ Rectangle {
 
     Canvas {
         id: mycanvas
-        width: parent.width * (sliderZoom.value)
-        height: parent.height * (sliderZoom.value)
+        width: parent.width
+        height: parent.height
         property int wgrid: sliderZoom.value * root.minWgrid;
 
         Component.onCompleted: {
             console.log(sliderZoom.value)
             mycanvas.requestPaint()
+        }
+
+        transform: Scale {
+            origin.x: 0
+            origin.y: 0
+            xScale: sliderZoom.value
+            yScale: sliderZoom.value
         }
 
         MouseArea {
@@ -129,10 +154,6 @@ Rectangle {
 
             drag.smoothed: true
             drag.target: mycanvas
-            //drag.minimumX: -(mycanvas.width -  parent.width/2)
-            //drag.maximumX: mycanvas.width - parent.width
-            //drag.minimumY: -(mycanvas.height -  parent.height/2)
-            //drag.maximumY: mycanvas.height - parent.height
 
         }
 
@@ -143,48 +164,21 @@ Rectangle {
             border.color: "#96a0cd"
             color: "transparent"
 
-            ViewComponentRect {
-                id: view1
-                width: 100
-                height: 70
-                title: "File"
-
-                connections: [
-                    {name: "fileOpen", type: "unidirect"},
-                    {name: "fileClosed"},
-                    {name: "fileSize"}
-                ]
-
-                transform: Scale {
-                    origin.x: 0
-                    origin.y: 0
-                    xScale: sliderZoom.value
-                    yScale: sliderZoom.value
-                }
-
-
-            }
-
-            ViewComponentRect {
-                id: view2
+            ViewComponentRectV2 {
+                id: view3
                 width: 250
                 height: 250
                 borderColor: Material.accentColor
 
-                connections: [
-                    {name: "fileOpen", type: "unidirect"},
+                connectionsInput: [
+                    {name: "fileOpen"},
                     {name: "fileClosed"},
                     {name: "fileSize"}
                 ]
 
-                transform: Scale {
-                    origin.x: 0
-                    origin.y: 0
-                    xScale: sliderZoom.value
-                    yScale: sliderZoom.value
-                }
-
-
+                connectionsOutput: [
+                    {name: "Out(D)"},
+                ]
             }
 
         }
@@ -202,7 +196,7 @@ Rectangle {
             }
 
             var ncols = width / wgrid
-            for(var j=0; j < ncols+1; j++){
+            for(var j = 0; j < ncols+1; j++){
                 ctx.moveTo(wgrid*j, 0);
                 ctx.lineTo(wgrid*j, height);
             }
@@ -276,11 +270,11 @@ Rectangle {
             border.color: "#ccc"
             radius: 4
 
-            width: viewRect.width / 2
-            height: viewRect.height / 2
+            width: viewRect.width / sliderZoom.value
+            height: viewRect.height / sliderZoom.value
 
-            x: -(mycanvas.x / (viewRect.width*0.5));
-            y: -(mycanvas.y / (viewRect.height*0.5));
+            x: -(mycanvas.x / (viewRect.width * 0.3));
+            y: -(mycanvas.y / (viewRect.height * 0.3));
 
             onXChanged: {
                 progressX.value = (x+viewRect.width)%mycanvas.width;
