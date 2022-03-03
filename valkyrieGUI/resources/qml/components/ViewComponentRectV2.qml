@@ -14,6 +14,11 @@ Rectangle {
     property alias title: titleView.text
     property string borderColor: "green"
 
+    property double xPrev: 0.0
+    property double yPrev: 0.0
+
+    signal connectionSocketClicked(conn: var);
+
     color: Qt.rgba(0.2, 0.2, 0.2, 0.5)
     radius: 4
     border.width: 1
@@ -154,10 +159,11 @@ Rectangle {
             id: connectionsBody
             Layout.fillWidth: true
             spacing: 0
+            z:3
 
             Rectangle {
                 id: connectionsInputBody
-                Layout.preferredHeight: ((columnLayoutInputConns.height > columnLayoutInputConns.height)? columnLayoutInputConns.height: columnLayoutInputConns.height) + 4
+                Layout.preferredHeight: ((columnLayoutInputConns.height > columnLayoutOutputConns.height)? columnLayoutInputConns.height: columnLayoutOutputConns.height) + 4
                 Layout.fillWidth: true
 
                 color: "#444"
@@ -171,25 +177,45 @@ Rectangle {
                     anchors.topMargin: 2
 
                     Repeater {
-                        model: connectionsInput
-                        Row {
-                            Layout.alignment: Qt.AlignLeft
-                            spacing: 2
+                        Layout.fillWidth: true
+                        model: connectionsInput                        
+                        Item {
+                            width: parent.width
+                            height: rowInput.height
 
-                            Rectangle {
-                                id: connInConnCircle
-                                width: 4
-                                height: connInConnCircle.width
-                                radius: connInConnCircle.width
-                                color: stringToColour(connInName.text)
-                                anchors.verticalCenter: connInName.verticalCenter
+                            Component.onCompleted: {
+                                connectionsInput[index].circleConn = connInConnCircle
                             }
 
-                            Text {
-                                id: connInName
-                                font.pixelSize: 8
-                                color: "#ccc"
-                                text: modelData.name
+                            MouseArea {
+                                width: rowInput.width
+                                height: rowInput.height
+
+                                onClicked: {
+                                    root.connectionSocketClicked(connectionsInput[index])
+                                }
+                            }
+
+                            Row {
+                                id: rowInput
+                                Layout.alignment: Qt.AlignLeft
+                                spacing: 2
+
+                                Rectangle {
+                                    id: connInConnCircle
+                                    width: 4
+                                    height: connInConnCircle.width
+                                    radius: connInConnCircle.width
+                                    color: stringToColour(connInName.text)
+                                    anchors.verticalCenter: connInName.verticalCenter
+                                }
+
+                                Text {
+                                    id: connInName
+                                    font.pixelSize: 8
+                                    color: "#ccc"
+                                    text: modelData.name
+                                }
                             }
                         }
                     }
@@ -198,7 +224,7 @@ Rectangle {
 
             Rectangle {
                 id: connectionsOutputBody
-                Layout.preferredHeight: ((columnLayoutInputConns.height > columnLayoutInputConns.height)? columnLayoutInputConns.height: columnLayoutInputConns.height) + 4
+                Layout.preferredHeight: ((columnLayoutInputConns.height > columnLayoutOutputConns.height)? columnLayoutInputConns.height: columnLayoutOutputConns.height) + 4
                 Layout.fillWidth: true
 
                 color: "#222"
@@ -215,6 +241,10 @@ Rectangle {
                         Row {
                             Layout.alignment: Qt.AlignRight
                             spacing: 2
+
+                            Component.onCompleted: {
+                                connectionsOutput[index].circleConn = connOutConnCircle
+                            }
 
                             Text {
                                 id: connOutName

@@ -2,6 +2,7 @@ import QtQuick 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Controls.Material 2.12
 import QtQuick.Layouts 1.0
+import QtQuick.Shapes 1.15
 
 import "../components"
 import Qaterial 1.0 as Qaterial
@@ -13,6 +14,8 @@ Rectangle {
     property int minWgrid: 20
     property int minZoom: 1
     property int maxZoom: 6
+
+    property bool rightDrawerOpened: false
     anchors.fill: parent
     clip: true
 
@@ -36,8 +39,93 @@ Rectangle {
         }
     }
 
+    Keys.enabled: true
+    Keys.onPressed: {
+        console.log(event.key)
+        if (event.key == Qt.Key_Shift) {
+
+            event.accepted = true;
+        }
+    }
+
+    Qaterial.MiniFabButton {
+        id: fabRightMenu
+        anchors.right: parent.right
+        z: 100
+
+        icon.source: Qaterial.Icons.menu
+        icon.color: Material.accentColor
+        flat: false
+
+        onClicked: {
+            if(rightDrawerOpened)
+                drawer.close()
+            else
+                drawer.open()
+        }
+    }
+
+    Drawer {
+        id: drawer
+        width: 200
+        height: parent.height
+        modal: false
+        edge: Qt.RightEdge
+        interactive: false
+
+        onOpened: {
+            rightDrawerOpened = true
+        }
+
+        onClosed: {
+            rightDrawerOpened = false
+        }
+
+        onXChanged: {
+            fabRightMenu.anchors.rightMargin = parent.width - x
+            viewRect.anchors.rightMargin = fabRightMenu.anchors.rightMargin + 8
+        }
+
+        background: Rectangle {
+            color: Qt.rgba(0.2, 0.2, 0.2, 0.5)
+        }
+
+        // TODO: content, list of properties insipired in unity3d, blender, etc.
+        Label {
+            text: "Content goes here!"
+            anchors.centerIn: parent
+        }
+    }
+
+    MouseArea {
+        id: mouseAreaGlobal
+        anchors.fill: parent
+        hoverEnabled: true
+        propagateComposedEvents: true
+        z: 10
+        enabled: false
+
+        onClicked: {
+            // TODO: dinamic code, this is a prototype
+            // shapepath.startX = mouse.x;
+            // shapepath.startY = mouse.y;
+            mouseAreaGlobal.enabled = false
+        }
+
+        onPositionChanged: {
+            // TODO: dinamic code, this is a prototype
+            // shapepath.startX = mouse.x;
+            // shapepath.startY = mouse.y;
+        }
+    }
+
     MouseArea {
         anchors.fill: parent
+        hoverEnabled: true
+
+        onClicked: {            
+            root.focus = true
+        }
 
         onWheel: {
             if (wheel.angleDelta.y > 0)
@@ -155,6 +243,10 @@ Rectangle {
             drag.smoothed: true
             drag.target: mycanvas
 
+            onClicked: {
+                root.focus = true
+            }
+
         }
 
         Rectangle{
@@ -164,14 +256,48 @@ Rectangle {
             border.color: "#96a0cd"
             color: "transparent"
 
+            // TODO: dynamic Line and connections fucionality
+            // Prototype
+            Shape {
+                antialiasing: true
+                smooth: true
+                z: 1
+
+                ShapePath {
+                    id: shapepath
+                    strokeColor: "red"
+                    strokeWidth: 2
+                    fillColor: "transparent"
+                    capStyle: ShapePath.RoundCap
+
+                    startX: 0
+                    startY: 0
+
+                    PathLine {
+                        id: lineTest
+                        x: 0
+                        y: 50
+                    }
+                }
+            }
+
+            // TODO: dynamic views
             ViewComponentRectV2 {
                 id: view3
                 width: 250
                 height: 250
                 borderColor: Material.accentColor
 
+                onConnectionSocketClicked: {
+                    let qPointer = conn.circleConn.mapToItem(parent, 0, 0);
+                    lineTest.x = qPointer.x + conn.circleConn.width/2
+                    lineTest.y = qPointer.y + conn.circleConn.height/2
+
+                    mouseAreaGlobal.enabled = true
+                }
+
                 connectionsInput: [
-                    {name: "fileOpen"},
+                    {name: "Open(File)"},
                     {name: "fileClosed"},
                     {name: "fileSize"}
                 ]
@@ -244,7 +370,7 @@ Rectangle {
         actions : [
             {text: "OK", icon: "play", onClicked: ()=>{console.log(3232)} },
             {text: "OK", icon: "stop", onClicked: ()=>{console.log(3232)} },
-            {text: "OK", onClicked: ()=>{console.log(3232)} },
+            {text: "OK", icon: "debug-step-into", onClicked: ()=>{console.log(3232)} },
             {text: "OK", onClicked: ()=>{console.log(3232)} }
         ]
 
@@ -277,12 +403,12 @@ Rectangle {
             y: -(mycanvas.y / (viewRect.height * 0.3));
 
             onXChanged: {
-                progressX.value = (x+viewRect.width)%mycanvas.width;
+                progressX.value = Math.abs(x) % (viewRect.width+Math.abs(x));
 
             }
 
             onYChanged: {
-                progressY.value = (y+viewRect.height)%mycanvas.height;
+                progressY.value = Math.abs(y) % (viewRect.height + Math.abs(y));
             }
         }
     }
