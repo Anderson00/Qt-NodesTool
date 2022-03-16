@@ -2,6 +2,7 @@ import QtQuick 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Controls.Material 2.12
 import QtQuick.Layouts 1.0
+import QtQuick.Window 2.2
 
 import Qaterial 1.0 as Qaterial
 
@@ -29,6 +30,23 @@ Drawer {
             Layout.fillWidth: true
             height: 40
             color: "#222"
+
+            MouseArea {
+                width: parent.width
+                height: 5
+                cursorShape: Qt.ArrowCursor
+
+                drag.target: root
+                drag.axis: Drag.YAxis
+
+                onMouseYChanged: {
+                    let calc = root.height + (-1)*mouseY;
+                    if(calc >= 40 && calc <= Screen.height / 2){
+                        root.height = calc
+                    }
+
+                }
+            }
 
             RowLayout {
                 anchors.fill: parent
@@ -120,6 +138,37 @@ Drawer {
                 Item {
                     Layout.fillWidth: true
                 }
+
+                RowLayout {
+                    Qaterial.Icon {
+                        Layout.preferredHeight: 20
+                        icon: Qaterial.Icons.folder
+                    }
+                    Label {
+                        text: "2"
+                    }
+
+                    Qaterial.Icon {
+                        Layout.preferredHeight: 20
+                        icon: Qaterial.Icons.bug
+                    }
+                    Label {
+                        text: "33"
+                    }
+                }
+
+
+                Rectangle {
+                    id: divider
+
+                    width: 1
+                    height: parent.height - 16
+                    Layout.topMargin: 8
+                    Layout.bottomMargin: 8
+                    Layout.leftMargin: 16
+                    color: "#333"
+                }
+
 
                 Qaterial.AppBarButton{
                     Layout.preferredHeight: 20
