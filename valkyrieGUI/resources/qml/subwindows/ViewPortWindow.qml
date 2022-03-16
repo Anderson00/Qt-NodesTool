@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.0
 import QtQuick.Shapes 1.15
 
 import "../components"
+import "../components/bottomsheets"
 import Qaterial 1.0 as Qaterial
 
 Rectangle {
@@ -16,6 +17,7 @@ Rectangle {
     property int maxZoom: 6
 
     property bool rightDrawerOpened: false
+    property bool bottomDrawerOpened: false
     anchors.fill: parent
     clip: true
 
@@ -53,15 +55,53 @@ Rectangle {
         anchors.right: parent.right
         z: 100
 
-        icon.source: Qaterial.Icons.menu
+        icon.source: Qaterial.Icons.tune
         icon.color: Material.accentColor
         flat: false
+        radius: 0
 
         onClicked: {
             if(rightDrawerOpened)
                 drawer.close()
             else
                 drawer.open()
+        }
+    }
+
+    Qaterial.MiniFabButton {
+        id: fabBottomMenu
+        anchors.bottom: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        z: 100
+
+        icon.source: Qaterial.Icons.folderTable
+        icon.color: Material.accentColor
+        flat: false
+        radius: 0
+
+        onClicked: {
+            if(bottomDrawerOpened)
+                drawerFolder.close()
+            else
+                drawerFolder.open()
+        }
+    }
+
+    FolderBottomSheet {
+        id: drawerFolder
+
+        onOpened: {
+            bottomDrawerOpened = true
+        }
+
+        onClosed: {
+            bottomDrawerOpened = false
+        }
+
+        onYChanged: {
+            fabBottomMenu.anchors.bottomMargin = parent.height - y
+            toolbar.anchors.bottomMargin = parent.height - y
+            viewRect.anchors.bottomMargin = fabBottomMenu.anchors.bottomMargin + 8
         }
     }
 
@@ -356,8 +396,8 @@ Rectangle {
         rotation: -90
 
         anchors.left: viewRect.left
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: width/2 + (8-2)
+        anchors.bottom: viewRect.bottom
+        anchors.bottomMargin: width/2
         anchors.leftMargin: - width/2 - 3
     }
 
