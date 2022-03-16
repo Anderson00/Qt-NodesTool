@@ -36,7 +36,6 @@ Drawer {
                 height: 5
                 cursorShape: Qt.ArrowCursor
 
-                drag.target: root
                 drag.axis: Drag.YAxis
 
                 onMouseYChanged: {
