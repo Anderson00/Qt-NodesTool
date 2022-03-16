@@ -199,14 +199,5 @@ Drawer {
 
 
         }
-
-//        ColumnLayout {
-//            Layout.fillHeight: true
-//            Layout.fillWidth: true
-
-//            Label {
-//                text: "Content goes here!"
-//            }
-//        }
     }
 }
