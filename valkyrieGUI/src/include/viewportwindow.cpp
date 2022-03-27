@@ -1,11 +1,13 @@
 #include "viewportwindow.h"
+#include "behaviours/behaviourloader.h"
 
 ViewPortWindow::ViewPortWindow(QWidget *parent) :
     QMLWindow(parent, QUrl("qrc:/subwindows/ViewPortWindow.qml"))
 {
 
     this->showWindow(QVector<QMLWindow::PropertyPair>({
-                                                          QMLWindow::PropertyPair({"viewPort", this})
+                                                          QMLWindow::PropertyPair({"viewPort", this}),
+                                                          QMLWindow::PropertyPair({"behaviourLoader", BehaviourLoader::instance()})
                                                       }));
 }
 

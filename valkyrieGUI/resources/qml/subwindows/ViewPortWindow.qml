@@ -41,6 +41,10 @@ Rectangle {
         }
     }
 
+    function addWindow(){
+
+    }
+
     Keys.enabled: true
     Keys.onPressed: {
         console.log(event.key)
@@ -90,6 +94,8 @@ Rectangle {
     FolderBottomSheet {
         id: drawerFolder
 
+        viewPortWindow: root
+
         onOpened: {
             bottomDrawerOpened = true
         }
@@ -103,12 +109,12 @@ Rectangle {
             toolbar.anchors.bottomMargin = parent.height - y
             viewRect.anchors.bottomMargin = fabBottomMenu.anchors.bottomMargin + 8
         }
-    }
+    }    
 
     Drawer {
         id: drawer
         width: 200
-        height: parent.height
+        height: (parent.height - (parent.height - viewRect.y)) + viewRect.height + 8
         modal: false
         edge: Qt.RightEdge
         interactive: false
@@ -327,6 +333,24 @@ Rectangle {
                 width: 250
                 height: 250
                 borderColor: Material.accentColor
+
+                rootBodyColor: "transparent"
+                bodyComponent: ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: 8
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        TextField {
+                            Layout.fillWidth: true
+
+                        }
+                        Button {
+                            text: "Ok"
+                            flat: true
+                        }
+                    }
+                }
 
                 onConnectionSocketClicked: {
                     let qPointer = conn.circleConn.mapToItem(parent, 0, 0);

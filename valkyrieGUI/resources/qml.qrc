@@ -8,7 +8,8 @@
         <file alias="Triangle.qml">qml/components/Triangle.qml</file>
         <file alias="ViewComponentRect.qml">qml/components/ViewComponentRect.qml</file>
         <file alias="ViewComponentRectV2.qml">qml/components/ViewComponentRectV2.qml</file>
-        <file  alias="NewButton.qml">qml/components/NewButton.qml</file>
+        <file alias="NewButton.qml">qml/components/NewButton.qml</file>
+        <file alias="ViewComponentMini.qml">qml/components/ViewComponentMini.qml</file>
     </qresource>
     <qresource prefix="/subwindows">
         <file alias="DebuggerMain.qml">qml/subwindows/DebuggerMain.qml</file>

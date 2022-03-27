@@ -13,6 +13,8 @@ Rectangle {
     property var connectionsOutput: []
     property alias title: titleView.text
     property string borderColor: "green"
+    property alias rootBodyColor: rootBody.color
+    property alias bodyComponent: rootBodyLoader.sourceComponent
 
     property double xPrev: 0.0
     property double yPrev: 0.0
@@ -286,10 +288,9 @@ Rectangle {
                 }
             }
 
-            Text {
-                text: "Testando"
-                color: "#FFF"
-                anchors.centerIn: parent
+            Loader{
+                id: rootBodyLoader
+                anchors.fill: parent
             }
         }
     }
