@@ -13,9 +13,9 @@ class FileOpener : public Behaviours
 public:
     FileOpener();
 
-    static QMap<QString, QString> static_infos();
+    static QMap<QString, QVariant> static_infos();
 
-public:
+public slots:
     void openFile(QString filePath);
 
 signals:

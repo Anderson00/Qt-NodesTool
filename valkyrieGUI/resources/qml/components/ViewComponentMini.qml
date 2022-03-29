@@ -9,10 +9,32 @@ import Qaterial 1.0 as Qaterial
 
 Rectangle{
     id: card
+
+    property string name: ''
+    property string desc: ''
+    property int n_inputs: 0
+    property int n_outputs: 0
+
     color: "#222"
     border.width: 1
     border.color: Material.accentColor
     radius: 4
+
+    MouseArea {
+        anchors.fill: parent
+        hoverEnabled: true
+
+        onHoveredChanged: {
+            if(containsMouse)
+                card.color = "#333"
+            else
+                card.color = "#222"
+        }
+
+        onDoubleClicked: {
+
+        }
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -20,8 +42,10 @@ Rectangle{
         anchors.margins: 4
 
         Label {
+            Layout.fillWidth: true
             font.pixelSize: 16
-            text: "FileLoad"
+            text: card.name
+            elide: "ElideRight"
         }
 
         Rectangle {
@@ -41,7 +65,7 @@ Rectangle{
             }
 
             Label {
-                text: "3"
+                text: n_outputs
             }
 
             Qaterial.Icon {
@@ -50,12 +74,36 @@ Rectangle{
             }
 
             Label {
-                text: "1"
+                text: n_inputs
             }
         }
 
-        Item {
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.rightMargin: 4
+            height: 1
+            color: "#111"
+        }
+
+        Label {
+            Layout.fillWidth: true
             Layout.fillHeight: true
+            font.pixelSize: 12
+            text: card.desc
+            wrapMode: "WordWrap"
+            elide: "ElideRight"
+        }
+
+        RowLayout {
+            Button {
+                z: 10
+                Layout.preferredHeight: 30
+                text: "ok"
+
+                onClicked: {
+                    console.log("ewfewf")
+                }
+            }
         }
     }
 }

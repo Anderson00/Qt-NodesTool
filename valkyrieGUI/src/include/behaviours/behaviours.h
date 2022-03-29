@@ -13,7 +13,7 @@ class Behaviours : public QObject
 public:
     explicit Behaviours(QObject *parent = nullptr);
 
-    static QMap<QString, QString> static_infos();
+    static QMap<QString, QVariant> static_infos();
 
     virtual void loadConnections();
 

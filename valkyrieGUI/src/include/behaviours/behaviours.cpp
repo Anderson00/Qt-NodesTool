@@ -5,17 +5,35 @@ Behaviours::Behaviours(QObject *parent) : QObject(parent)
 
 }
 
-QMap<QString, QString> Behaviours::static_infos()
+QMap<QString, QVariant> Behaviours::static_infos()
 {
-    return QMap<QString, QString>();
+    return QMap<QString, QVariant>();
 }
 
 void Behaviours::loadConnections()
-{
+{    
+    QObject excludeConns;
+    const QMetaObject *metaObjectExclude = excludeConns.metaObject();
+    QList<QString> listOfExclusions;
+
+    int methodCountExclude = metaObjectExclude->methodCount();
+    for(int index = 0; index < methodCountExclude; index++){
+        QMetaMethod metaMethod = this->metaObject()->method(index);
+
+        switch (metaMethod.methodType()) {
+        case QMetaMethod::Slot:
+        case QMetaMethod::Signal:
+            listOfExclusions.push_back(metaMethod.methodSignature());
+            break;
+        }
+    }
+
     const QMetaObject *metaObject = this->metaObject();
     int methodCount = metaObject->methodCount();
     for(int index = 0; index < methodCount; index++){
         QMetaMethod metaMethod = this->metaObject()->method(index);
+
+        if(listOfExclusions.contains(metaMethod.methodSignature())) continue;
 
         if(metaMethod.methodType() == QMetaMethod::Slot){
             m_input_conns[metaMethod.methodSignature()] = metaMethod;

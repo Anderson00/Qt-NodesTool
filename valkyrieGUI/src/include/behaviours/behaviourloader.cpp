@@ -3,12 +3,14 @@
 #include <QDir>
 #include <QDirIterator>
 #include <QDebug>
+#include <QJsonArray>
 
 #include "behaviours/common/fileopener.h"
 
 BehaviourLoader *BehaviourLoader::m_instance = nullptr;
 
-BehaviourLoader::BehaviourLoader(QObject *parent) : QObject(parent)
+BehaviourLoader::BehaviourLoader(QObject *parent) : QObject(parent),
+    m_treeModelPaths(new qaterial::TreeModel(this))
 {
     createDirsIfNotExists();
     discoverAll();
@@ -36,25 +38,20 @@ Behaviours *BehaviourLoader::loadBehaviour(const QString identity)
     return nullptr;
 }
 
-QMap<QString, QMap<QString, QMap<QString, QString>>> BehaviourLoader::discoverAll()
+QJsonObject BehaviourLoader::discoverAll()
 {
     //   DirPath   |   Name   |     {Key    , Value}
-    QMap<QString, QMap<QString, QMap<QString, QString>>> result;
+    QJsonObject result;
     QDir dir("Behaviours");
     QFileInfoList infos = dir.entryInfoList();
 
-    typedef QMap<QString, QMap<QString, QString>> MapInfo;
-    typedef QMap<QString, QString> IndividualInfo;
-
-
     FileOpener fileOpener;
     fileOpener.loadConnections();
-    qDebug() << fileOpener.outputConns().keys().at(3);
+    qDebug() << fileOpener.inputConns().keys().size();
 
-    result["Debug/common"] = MapInfo({
-                                         {"FileLoader", FileOpener::static_infos()},
-                                         {"FileTest", IndividualInfo({})}
-                                     });
+    result["Debug/common"] = QJsonArray({
+                                            QJsonObject::fromVariantMap(QVariantMap(FileOpener::static_infos()))
+                                        });
 
     QDirIterator it("Behaviours", QDirIterator::Subdirectories);
     while (it.hasNext()) {
@@ -67,4 +64,38 @@ QMap<QString, QMap<QString, QMap<QString, QString>>> BehaviourLoader::discoverAl
     }
 
     return result;
+}
+
+qaterial::TreeElement* BehaviourLoader::discoverAllToTree()
+{
+    QJsonObject paths = discoverAll();
+
+    qaterial::TreeElement *root = new qaterial::TreeElement(this);
+
+    QStringList pathKeys = paths.keys();
+    for(QString key : pathKeys){
+        QStringList keySplit = key.split("/");
+        if(keySplit.length() > 0){
+            qaterial::TreeElement *element = new qaterial::TreeElement(m_treeModelPaths);
+            element->setText(keySplit[0]);
+            root->append(element);
+            this->m_treeModelPaths->append(element);
+            if(keySplit.length() > 1){
+                keySplit.removeAt(0);
+                auto *newTree = new qaterial::TreeElement(m_treeModelPaths);
+                element->append(newTree);
+
+                for(int i = 0; i < keySplit.size(); i++){
+                    newTree->setText(keySplit[i]);
+                    if(i < keySplit.size() - 1){
+                        auto *newTreeNext = new qaterial::TreeElement(m_treeModelPaths);
+                        newTree->append(newTreeNext);
+                        newTree = newTreeNext;
+                    }
+                }
+            }
+        }
+    }
+
+    return root->children();
 }

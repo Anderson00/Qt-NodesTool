@@ -273,17 +273,8 @@ Contrl.Drawer {
                         anchors.fill: parent
                         height: parent ? Math.min(contentHeight, parent.height) : contentHeight
 
-                        model: Qaterial.TreeModel {
-                            Qaterial.TreeElement
-                            {
-                                text: "Debug"
-                                Qaterial.TreeElement { text: "Common" }
-                                Qaterial.TreeElement { text: "Conditional" }
-                            }
-                            Qaterial.TreeElement {
-                                text: "Plugins"
-                                Qaterial.TreeElement { text: "CMakeLists.txt" }
-                            }
+                        Component.onCompleted: {
+                            treeView.model = behaviourLoader.discoverAllToTree();
                         }
 
                         itemDelegate: Qaterial.ItemDelegate
@@ -344,8 +335,9 @@ Contrl.Drawer {
 
                                     console.log("item: " + model.text + model)
 
-                                    console.log(Object.keys(treeView.model))
-                                    console.log(model.index)
+                                    console.log(behaviourLoader.discoverAll()["Debug/common"][0]['name'])
+                                    gridView.model = behaviourLoader.discoverAll()["Debug/common"];
+
                                 }
                             }
                         }
@@ -364,7 +356,7 @@ Contrl.Drawer {
                         id: gridView
                         clip: true
                         anchors.fill: parent
-                        model:[1,2,3,4,5,6,7,8,9,10]
+
 
                         anchors.topMargin: 8
                         anchors.leftMargin: 8
@@ -389,6 +381,12 @@ Contrl.Drawer {
                         cellHeight: 150
                         delegate: ViewComponentMini {
                             id: card
+
+                            name: modelData.name
+                            desc: modelData.desc
+                            n_inputs: modelData.inputs_count
+                            n_outputs: modelData.outputs_count
+
                             color: "#222"
                             border.width: 1
                             border.color: Material.accentColor
@@ -401,20 +399,11 @@ Contrl.Drawer {
                                 NumberAnimation {
                                     duration: 150
                                 }
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-
-                                onDoubleClicked: {
-
-                                }
-                            }
+                            }                            
                         }
                     }
                 }
             }
-
         }
     }
 }

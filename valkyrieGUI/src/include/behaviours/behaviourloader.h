@@ -4,8 +4,12 @@
 #include <QObject>
 #include <QList>
 #include <QDir>
+#include <QJsonObject>
 
 #include "behaviours.h"
+
+#include "Qaterial/Navigation/TreeElement.hpp"
+#include "Qaterial/Qaterial.hpp"
 
 //namespace behaviour {
 //namespace category {
@@ -24,8 +28,10 @@ class BehaviourLoader : public QObject
 public:
     static BehaviourLoader* instance();
 
+public slots:
     Behaviours *loadBehaviour(const QString identity);
-    QMap<QString, QMap<QString, QMap<QString, QString>>> discoverAll();
+    QJsonObject discoverAll();
+    qaterial::TreeElement* discoverAllToTree();
 
 signals:
 
@@ -34,6 +40,8 @@ private:
     explicit BehaviourLoader(QObject *parent = nullptr);
 
     void createDirsIfNotExists();
+
+    qaterial::TreeModel *m_treeModelPaths;
 
 };
 

@@ -6,10 +6,13 @@ FileOpener::FileOpener()
 
 }
 
-QMap<QString, QString> FileOpener::static_infos()
+QMap<QString, QVariant> FileOpener::static_infos()
 {
-    return QMap<QString, QString>({
-                                      {}
+    return QMap<QString, QVariant>({
+                                      {"name", "FileOpener"},
+                                      {"desc", "Open and manipulate files"},
+                                      {"inputs_count", "3"},
+                                      {"outputs_count", "2"}
                                   });
 }
 

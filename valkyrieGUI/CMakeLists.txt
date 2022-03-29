@@ -51,7 +51,7 @@ else()
     endif()
 endif()
 
-target_link_libraries(Debugger PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick cxxopts retdec::fileformat Qaterial)
+target_link_libraries(Debugger PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick cxxopts retdec::fileformat Qaterial QOlm::QOlm)
 
 #add_executable(Main main.cpp ${SOURCE_FILES_CURSES})
 set_target_properties(Debugger PROPERTIES AUTOMOC TRUE)
