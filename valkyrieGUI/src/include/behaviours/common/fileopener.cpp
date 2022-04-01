@@ -3,7 +3,9 @@
 
 FileOpener::FileOpener()
 {
-
+    this->addInputOutputExclusion(QList<QString>({
+                                               QString("openFile(QString)")
+                                           }));
 }
 
 QMap<QString, QVariant> FileOpener::static_infos()
@@ -11,8 +13,8 @@ QMap<QString, QVariant> FileOpener::static_infos()
     return QMap<QString, QVariant>({
                                       {"name", "FileOpener"},
                                       {"desc", "Open and manipulate files"},
-                                      {"inputs_count", "3"},
-                                      {"outputs_count", "2"}
+                                      {"inputs_count", "0"},
+                                      {"outputs_count", "1"}
                                   });
 }
 

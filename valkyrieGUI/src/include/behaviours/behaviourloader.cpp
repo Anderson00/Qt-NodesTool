@@ -81,12 +81,12 @@ qaterial::TreeElement* BehaviourLoader::discoverAllToTree()
             root->append(element);
             this->m_treeModelPaths->append(element);
             if(keySplit.length() > 1){
-                keySplit.removeAt(0);
                 auto *newTree = new qaterial::TreeElement(m_treeModelPaths);
                 element->append(newTree);
 
                 for(int i = 0; i < keySplit.size(); i++){
-                    newTree->setText(keySplit[i]);
+                    newTree->setText(keySplit.join(";"));
+                    keySplit.removeAt(0);
                     if(i < keySplit.size() - 1){
                         auto *newTreeNext = new qaterial::TreeElement(m_treeModelPaths);
                         newTree->append(newTreeNext);

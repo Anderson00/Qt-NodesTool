@@ -96,6 +96,11 @@ Rectangle {
 
         viewPortWindow: root
 
+        onBehaviourSelected: {
+            console.log(path);
+            console.log(infos)
+        }
+
         onOpened: {
             bottomDrawerOpened = true
         }

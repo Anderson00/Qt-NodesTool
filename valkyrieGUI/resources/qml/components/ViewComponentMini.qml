@@ -15,12 +15,15 @@ Rectangle{
     property int n_inputs: 0
     property int n_outputs: 0
 
+    signal doubleClicked();
+
     color: "#222"
     border.width: 1
     border.color: Material.accentColor
     radius: 4
 
     MouseArea {
+        id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
 
@@ -32,7 +35,7 @@ Rectangle{
         }
 
         onDoubleClicked: {
-
+            card.doubleClicked()
         }
     }
 

@@ -17,6 +17,8 @@ Contrl.Drawer {
     property var dragViewMini
     property QtObject selectedElement
 
+    signal behaviourSelected(string path, variant infos);
+
     property var icons: {'Debug': Qaterial.Icons.bug,
         'Plugins': Qaterial.Icons.codeBraces}
 
@@ -28,6 +30,19 @@ Contrl.Drawer {
 
     background: Rectangle {
         color: Qt.rgba(0.2, 0.2, 0.2, 0.8)
+    }
+
+    function getTextLabel(text){
+        let arr = text.split(";");
+        if(arr.length === 1)
+            return text;
+        if(arr.length > 1)
+            return arr[arr.length - 1];
+        return ""
+    }
+
+    function getPath(){
+        return breadcrumb.model.slice(1, breadcrumb.model.length).join('/')
     }
 
 //    ViewComponentMini {
@@ -82,41 +97,13 @@ Contrl.Drawer {
                     }
                 }
 
-                RowLayout {
-                    Layout.preferredHeight: 35
-                    Layout.leftMargin: 8
-
-                    Qaterial.Icon {
-                        Layout.preferredHeight: 20
-                        icon: Qaterial.Icons.magnify
-                    }
-
-                    Contrl.TextField {
-                        id: _nameInput
-                        Layout.preferredWidth: 200
-                        Layout.preferredHeight: 35
-                        placeholderText: "Search"
-
-                        trailingInline: true
-                        trailingContent: Qaterial.TextFieldButtonContainer
-                        {
-                            visible: _nameInput.text.trim().length > 0
-                            anchors.top: parent.top
-                            anchors.topMargin: 8
-                            Qaterial.TextFieldClearButton { height: 20;}
-                        } // TextFieldButtonContainer
-                        //title: "Search"
-                    } // TextField
-                }
-
                 Repeater {
                     id: breadcrumb
-                    visible: false
+                    Layout.leftMargin: 16
 
-                    model: ["home", "Debugging", "test"]
+                    model: ['home']
 
                     delegate: RowLayout {
-                        visible: false
 
                         Qaterial.Icon {
                             id: breadcrumbIcon
@@ -188,6 +175,45 @@ Contrl.Drawer {
                 }
 
                 RowLayout {
+                    id: searchBar
+                    Layout.preferredHeight: 35
+
+                    Qaterial.Icon {
+                        Layout.preferredHeight: 20
+                        icon: Qaterial.Icons.magnify
+                    }
+
+                    Contrl.TextField {
+                        id: _nameInput
+                        Layout.preferredWidth: 200
+                        Layout.preferredHeight: 35
+                        placeholderText: "Search"
+
+                        trailingInline: true
+                        trailingContent: Qaterial.TextFieldButtonContainer
+                        {
+                            visible: _nameInput.text.trim().length > 0
+                            anchors.top: parent.top
+                            anchors.topMargin: 8
+                            Qaterial.TextFieldClearButton { height: 20;}
+                        } // TextFieldButtonContainer
+                        //title: "Search"
+                    } // TextField
+                }
+
+                Rectangle {
+                    id: divider
+
+                    width: 1
+                    height: parent.height - 16
+                    Layout.topMargin: 8
+                    Layout.bottomMargin: 8
+                    Layout.leftMargin: 16
+                    Layout.rightMargin: 16
+                    color: "#333"
+                }
+
+                RowLayout {
                     Qaterial.Icon {
                         Layout.preferredHeight: 20
                         icon: Qaterial.Icons.folder
@@ -213,21 +239,21 @@ Contrl.Drawer {
                     }
                 }
 
-
                 Rectangle {
-                    id: divider
 
                     width: 1
                     height: parent.height - 16
                     Layout.topMargin: 8
                     Layout.bottomMargin: 8
                     Layout.leftMargin: 16
+                    Layout.rightMargin: 16
                     color: "#333"
                 }
 
-
                 Qaterial.AppBarButton{
                     Layout.preferredHeight: 20
+                    Layout.leftMargin: -16
+                    Layout.rightMargin: -16
                     icon.source: 'qrc:/Qaterial/Icons/plus'
                     icon.color: Material.accentColor
 
@@ -259,7 +285,6 @@ Contrl.Drawer {
             Contrl.SplitView {
                 anchors.fill: parent
                 orientation: Qt.Horizontal
-
 
                 Rectangle {
                     width: 200
@@ -310,12 +335,12 @@ Contrl.Drawer {
                                     source: root.icons[control.model ? control.model.text : ""] ?? ""
                                                                                                    color: Qaterial.Style.primaryTextColor()
 
-                                }
+                                }                                
 
                                 Qaterial.Label
                                 {
                                     Layout.fillWidth: true
-                                    text: control.model ? control.model.text : ""
+                                    text: control.model ? (getTextLabel(control.model.text)) : ""
                                     elide: Text.ElideRight
                                     verticalAlignment: Text.AlignVCenter
                                     Binding on color
@@ -327,18 +352,29 @@ Contrl.Drawer {
                             }
 
                             onClicked: function()
-                            {
+                            {                                
+                                let path = model.text.split(';');
+
+                                let breadcrumbModel = ['home']
+                                if(path.length > 1)
+                                    breadcrumbModel = breadcrumbModel.concat(path)
+
                                 if(model.children.count !== 0)
                                     model.expanded = !model.expanded
+
+                                    if(model.expanded){
+                                        breadcrumbModel = breadcrumbModel.concat(path)
+                                    }
+
                                 else{
                                     selectedElement = model
 
-                                    console.log("item: " + model.text + model)
-
-                                    console.log(behaviourLoader.discoverAll()["Debug/common"][0]['name'])
-                                    gridView.model = behaviourLoader.discoverAll()["Debug/common"];
-
+                                    path = path.join("/")
+                                    let infos = behaviourLoader.discoverAll()[path];
+                                    gridView.model = infos;
                                 }
+
+                                breadcrumb.model = breadcrumbModel
                             }
                         }
                     }
@@ -351,12 +387,10 @@ Contrl.Drawer {
                     //Layout.fillWidth: true
                     color: "transparent"
 
-
                     GridView {
                         id: gridView
                         clip: true
                         anchors.fill: parent
-
 
                         anchors.topMargin: 8
                         anchors.leftMargin: 8
@@ -386,6 +420,10 @@ Contrl.Drawer {
                             desc: modelData.desc
                             n_inputs: modelData.inputs_count
                             n_outputs: modelData.outputs_count
+
+                            onDoubleClicked: {
+                                behaviourSelected(getPath(), modelData)
+                            }
 
                             color: "#222"
                             border.width: 1
