@@ -2,7 +2,9 @@
 #define VIEWPORTWINDOW_H
 
 #include <QObject>
+#include <QHash>
 #include <QWidget>
+#include "behaviours/behaviours.h"
 #include "qmlwindow.h"
 
 class ViewPortWindow : public QMLWindow
@@ -17,6 +19,10 @@ public slots:
 
 signals:
     void fullScreenToogle();
+
+private:
+    //    UUID  , Behaviour
+    QHash<QString, Behaviours> m_behaviours;
 };
 
 #endif // VIEWPORTWINDOW_H

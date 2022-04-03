@@ -3,6 +3,7 @@
 
 FileOpener::FileOpener()
 {
+    this->setQmlBodyUrl(QUrl("qrc:/behaviours/common/FileOpener.qml"));
     this->addInputOutputExclusion(QList<QString>({
                                                QString("openFile(QString)")
                                            }));

@@ -7,6 +7,7 @@
 #include <QMap>
 #include <QList>
 #include <QString>
+#include <QUrl>
 
 class Behaviours : public QObject
 {
@@ -17,6 +18,7 @@ public:
     static QMap<QString, QVariant> static_infos();
 
     virtual void loadConnections();
+    const QUrl &qmlBodyUrl();
 
     const QMap<QString, QMetaMethod>& inputConns();
     const QMap<QString, QMetaMethod>& outputConns();
@@ -28,6 +30,8 @@ public:
     const QMetaMethod* getMetaMethodFromMethodSignature(const QString& signature);
 
     static const QString &getUuid();
+
+    void setQmlBodyUrl(const QUrl &newQmlBodyUrl);
 
 public slots:
 
@@ -41,6 +45,7 @@ protected:
 
 private:
     QString titulo;
+    QUrl m_qmlBodyUrl;
 
     QMap<QString, QMetaMethod> m_input_conns;
     QMap<QString, QMetaMethod> m_output_conns;

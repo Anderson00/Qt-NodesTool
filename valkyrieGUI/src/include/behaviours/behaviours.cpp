@@ -44,6 +44,11 @@ void Behaviours::loadConnections()
     }
 }
 
+const QUrl &Behaviours::qmlBodyUrl()
+{
+    return m_qmlBodyUrl;
+}
+
 const QMap<QString, QMetaMethod> &Behaviours::inputConns()
 {
     return this->m_input_conns;
@@ -93,6 +98,11 @@ void Behaviours::setOutputConns(QMap<QString, QMetaMethod> outputConns)
 void Behaviours::addInputOutputExclusion(const QList<QString>& exclusionConnections)
 {
     this->m_listOfExclusions.append(exclusionConnections);
+}
+
+void Behaviours::setQmlBodyUrl(const QUrl &newQmlBodyUrl)
+{
+    m_qmlBodyUrl = newQmlBodyUrl;
 }
 
 //QMap<QString, QString> Behaviours::infos()

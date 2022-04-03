@@ -1,5 +1,7 @@
 <RCC>
-    <qresource prefix="/"/>
+    <qresource prefix="/behaviours/common">
+        <file alias="FileOpener.qml">qml/behaviours/common/FileOpener.qml</file>
+    </qresource>
     <qresource prefix="/components">
         <file alias="Accordion.qml">qml/components/Accordion.qml</file>
         <file alias="CustomSlider.qml">qml/components/CustomSlider.qml</file>
