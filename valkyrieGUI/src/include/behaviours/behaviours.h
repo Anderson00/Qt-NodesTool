@@ -1,4 +1,4 @@
-#ifndef BEHAVIOURS_H
+﻿#ifndef BEHAVIOURS_H
 #define BEHAVIOURS_H
 
 #include <QMetaMethod>
@@ -12,13 +12,22 @@
 class Behaviours : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(QString title READ title CONSTANT)
+    Q_PROPERTY(QUrl qmlBodyUrl READ qmlBodyUrl CONSTANT)
 public:
+    enum Type{
+        CPP = 0, DLL, PYTHON
+    };
+    Q_ENUM(Type)
+
     explicit Behaviours(QObject *parent = nullptr);
 
     static QMap<QString, QVariant> static_infos();
 
+    virtual QMap<QString, QVariant> loadInfos() = 0;
     virtual void loadConnections();
     const QUrl &qmlBodyUrl();
+    const QString &title();
 
     const QMap<QString, QMetaMethod>& inputConns();
     const QMap<QString, QMetaMethod>& outputConns();
@@ -44,7 +53,9 @@ protected:
     void addInputOutputExclusion(const QList<QString>& exclusionConnections);
 
 private:
-    QString titulo;
+    void loaderOfInfosInFields();
+
+    QString m_title;
     QUrl m_qmlBodyUrl;
 
     QMap<QString, QMetaMethod> m_input_conns;

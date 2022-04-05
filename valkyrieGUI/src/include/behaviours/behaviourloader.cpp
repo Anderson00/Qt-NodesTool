@@ -33,8 +33,55 @@ BehaviourLoader *BehaviourLoader::instance()
     return m_instance;
 }
 
-Behaviours *BehaviourLoader::loadBehaviour(const QString identity)
+Behaviours *BehaviourLoader::loadBehaviourAux(const QJsonObject infos)
 {
+    if(infos.contains("type")){
+        int typeInteger = infos["type"].toInt(-1);
+        if(typeInteger == -1)
+            return nullptr;
+        Behaviours::Type type = static_cast<Behaviours::Type>(typeInteger);
+        switch(type) {
+        case Behaviours::CPP:
+            if(infos.contains("className")){
+                return loadBehaviourFromClassName(infos["className"].toString(""));
+            }
+            break;
+        case Behaviours::DLL:
+            break;
+        case Behaviours::PYTHON:
+            break;
+        }
+    }
+    return nullptr;
+}
+
+Behaviours *BehaviourLoader::loadBehaviourFromClassName(const QString &className)
+{
+    if(className == "FileOpener"){
+        return new FileOpener;
+    }else if(className == ""){
+
+    }
+
+    return nullptr;
+}
+
+Behaviours *BehaviourLoader::loadBehaviour(const QString &path, const QJsonObject infos)
+{
+    QJsonArray array = discoverAll()[path].toArray();
+    if(!array.isEmpty()){
+        for(QJsonValue value : array){
+            if(value.isObject()){
+                QJsonObject valueInfos = value.toObject();
+                for(QString key : valueInfos.keys()){
+                    if(infos.contains(key) && infos[key] == valueInfos[key]){
+                        return loadBehaviourAux(infos);
+                    }
+                }
+            }
+        }
+    }
+
     return nullptr;
 }
 

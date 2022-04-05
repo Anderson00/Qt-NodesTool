@@ -4,7 +4,7 @@
 
 Behaviours::Behaviours(QObject *parent) : QObject(parent)
 {
-
+    loaderOfInfosInFields();
 }
 
 QMap<QString, QVariant> Behaviours::static_infos()
@@ -47,6 +47,11 @@ void Behaviours::loadConnections()
 const QUrl &Behaviours::qmlBodyUrl()
 {
     return m_qmlBodyUrl;
+}
+
+const QString &Behaviours::title()
+{
+    return this->m_title;
 }
 
 const QMap<QString, QMetaMethod> &Behaviours::inputConns()
@@ -98,6 +103,13 @@ void Behaviours::setOutputConns(QMap<QString, QMetaMethod> outputConns)
 void Behaviours::addInputOutputExclusion(const QList<QString>& exclusionConnections)
 {
     this->m_listOfExclusions.append(exclusionConnections);
+}
+
+void Behaviours::loaderOfInfosInFields()
+{
+    QMap<QString, QVariant> infos = loadInfos();
+    qDebug() << "test" << infos.size();
+    this->m_title = infos["name"].toString();
 }
 
 void Behaviours::setQmlBodyUrl(const QUrl &newQmlBodyUrl)

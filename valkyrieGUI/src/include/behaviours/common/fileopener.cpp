@@ -1,18 +1,27 @@
 #include "fileopener.h"
 #include <QTextStream>
+#include <QDebug>
 
-FileOpener::FileOpener()
+FileOpener::FileOpener(QObject *parent) : Behaviours(parent)
 {
     this->setQmlBodyUrl(QUrl("qrc:/behaviours/common/FileOpener.qml"));
     this->addInputOutputExclusion(QList<QString>({
                                                QString("openFile(QString)")
-                                           }));
+                                                 }));
+}
+
+QMap<QString, QVariant> FileOpener::loadInfos()
+{
+    qDebug() << "AQUI";
+    return FileOpener::static_infos();
 }
 
 QMap<QString, QVariant> FileOpener::static_infos()
 {
     return QMap<QString, QVariant>({
                                       {"name", "FileOpener"},
+                                      {"type", Behaviours::Type::CPP},
+                                      {"className", "FileOpener"},
                                       {"desc", "Open and manipulate files"},
                                       {"inputs_count", "0"},
                                       {"outputs_count", "1"}

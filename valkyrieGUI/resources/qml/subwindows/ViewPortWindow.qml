@@ -31,6 +31,14 @@ Rectangle {
         viewSubWindowsWidthHeightArea()
     }
 
+    Connections {
+        target: viewPort
+
+        function onBehaviourAdded(obj){
+            console.log(obj.qmlBodyUrl + " " + obj.title)
+        }
+    }
+
     function viewSubWindowsWidthHeightArea(){
         // TODO:
         if(view3.x + view3.width > root.width){
@@ -97,8 +105,7 @@ Rectangle {
         viewPortWindow: root
 
         onBehaviourSelected: {
-            console.log(path);
-            console.log(infos)
+            console.log(viewPort.addBehaviour(path, infos))
         }
 
         onOpened: {

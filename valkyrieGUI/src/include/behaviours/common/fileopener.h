@@ -11,8 +11,9 @@ class FileOpener : public Behaviours
 {
     Q_OBJECT
 public:
-    FileOpener();
+    explicit FileOpener(QObject *parent = nullptr);
 
+    virtual QMap<QString, QVariant> loadInfos() override;
     static QMap<QString, QVariant> static_infos();
 
 public slots:

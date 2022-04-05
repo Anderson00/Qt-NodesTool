@@ -102,13 +102,7 @@ Rectangle {
             Menu {
                 id: menu
 
-                MenuItem {
-                    text: "close"
-                    icon.source: 'qrc:/Qaterial/Icons/close'
-                    onTriggered: {
-                        root.destroy()
-                    }
-                }
+                // Todo: repeater, dinamic items
 
                 MenuSeparator {}
 

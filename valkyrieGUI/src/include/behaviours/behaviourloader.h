@@ -29,7 +29,7 @@ public:
     static BehaviourLoader* instance();
 
 public slots:
-    Behaviours *loadBehaviour(const QString identity);
+    Behaviours *loadBehaviour(const QString &path, const QJsonObject infos);
     QJsonObject discoverAll();
     qaterial::TreeElement* discoverAllToTree();
 
@@ -40,6 +40,8 @@ private:
     explicit BehaviourLoader(QObject *parent = nullptr);
 
     void createDirsIfNotExists();
+    Behaviours *loadBehaviourAux(const QJsonObject infos);    
+    Behaviours *loadBehaviourFromClassName(const QString &className);
 
     qaterial::TreeModel *m_treeModelPaths;
 
