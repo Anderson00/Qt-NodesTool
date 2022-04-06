@@ -395,9 +395,7 @@ Rectangle {
                     }
 
                     onFrontTotalClicked: {
-                        let biggestZ = getBehaviourGreaterZ()
-                        if(biggestZ !== z)
-                            z = biggestZ + 1;
+                        z = getBehaviourGreaterZ() + 1;
                     }
 
                     onBackTotalClicked: {
