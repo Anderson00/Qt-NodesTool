@@ -9,17 +9,27 @@ import Qaterial 1.0 as Qaterial
 Rectangle {
     id: root
 
+    property var behaviourObject
+
     property var connectionsInput: []
     property var connectionsOutput: []
     property alias title: titleView.text
     property string borderColor: "green"
     property alias rootBodyColor: rootBody.color
     property alias bodyComponent: rootBodyLoader.sourceComponent
+    property alias bodySourceQML: rootBodyLoader.source
 
     property double xPrev: 0.0
     property double yPrev: 0.0
 
     signal connectionSocketClicked(conn: var);
+
+    // Menu
+    signal closeButtonClicked();
+    signal frontOneStepClicked();
+    signal backOneStepClicked();
+    signal frontTotalClicked();
+    signal backTotalClicked();
 
     color: Qt.rgba(0.2, 0.2, 0.2, 0.5)
     radius: 4
@@ -37,6 +47,11 @@ Rectangle {
             colour += ('00' + value.toString(16)).substr(-2);
         }
         return colour;
+    }
+
+    Component.onCompleted: {
+        root.title = behaviourObject.title
+        bodySourceQML = behaviourObject.qmlBodyUrl
     }
 
     MouseArea {
@@ -110,7 +125,39 @@ Rectangle {
                     text: "close"
                     icon.source: 'qrc:/Qaterial/Icons/close'
                     onTriggered: {
-                        root.destroy()
+                        closeButtonClicked()
+                    }
+                }
+
+                MenuItem {
+                    text: "front + 1"
+                    icon.source: 'qrc:/Qaterial/Icons/arrow-up'
+                    onTriggered: {
+                        frontOneStepClicked()
+                    }
+                }
+
+                MenuItem {
+                    text: "down - 1"
+                    icon.source: 'qrc:/Qaterial/Icons/arrow-down'
+                    onTriggered: {
+                        backOneStepClicked()
+                    }
+                }
+
+                MenuItem {
+                    text: "front max"
+                    icon.source: 'qrc:/Qaterial/Icons/flip-to-front'
+                    onTriggered: {
+                        frontTotalClicked()
+                    }
+                }
+
+                MenuItem {
+                    text: "back max"
+                    icon.source: 'qrc:/Qaterial/Icons/flip-to-back'
+                    onTriggered: {
+                        backTotalClicked()
                     }
                 }
             }
@@ -156,6 +203,7 @@ Rectangle {
             Layout.fillWidth: true
             spacing: 0
             z:3
+            visible: connectionsInput.length > 0 && connectionsOutput.length > 0
 
             Rectangle {
                 id: connectionsInputBody

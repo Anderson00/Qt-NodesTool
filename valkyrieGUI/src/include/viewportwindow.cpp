@@ -33,6 +33,7 @@ bool ViewPortWindow::addBehaviour(const QString &path, const QJsonObject infos)
     Behaviours *object = BehaviourLoader::instance()->loadBehaviour(path, infos);
     if(object != nullptr){
         this->m_behaviours[uuid] = object;
+        object->start();
         emit this->behaviourAdded(object);
         return true;
     }

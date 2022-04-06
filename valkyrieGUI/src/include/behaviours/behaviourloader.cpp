@@ -93,7 +93,7 @@ QJsonObject BehaviourLoader::discoverAll()
     QFileInfoList infos = dir.entryInfoList();
 
     FileOpener fileOpener;
-    fileOpener.loadConnections();
+    fileOpener.start();
     qDebug() << fileOpener.inputConns().keys().size();
 
     result["Debug/common"] = QJsonArray({

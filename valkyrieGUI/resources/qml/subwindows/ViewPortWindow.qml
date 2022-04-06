@@ -16,6 +16,9 @@ Rectangle {
     property int minZoom: 1
     property int maxZoom: 6
 
+    //Behaviours properties
+    property var behavioursZ: []
+
     property bool rightDrawerOpened: false
     property bool bottomDrawerOpened: false
     anchors.fill: parent
@@ -36,6 +39,8 @@ Rectangle {
 
         function onBehaviourAdded(obj){
             console.log(obj.qmlBodyUrl + " " + obj.title)
+            views.model.append(obj)
+            console.log(views.model.count)
         }
     }
 
@@ -51,6 +56,12 @@ Rectangle {
 
     function addWindow(){
 
+    }
+
+    function getBehaviourGreaterZ(){
+        let aux = []
+        aux = aux.concat(behavioursZ);
+        return aux.sort()[aux.length - 1];
     }
 
     Keys.enabled: true
@@ -340,6 +351,61 @@ Rectangle {
             }
 
             // TODO: dynamic views
+
+            Repeater {
+                id: views
+
+                model: ListModel{
+
+                }
+
+                delegate: ViewComponentRectV2 {
+                    width: 250
+                    height: 250
+
+                    borderColor: Material.accentColor
+                    rootBodyColor: "transparent"
+
+                    behaviourObject: model
+
+                    Component.onCompleted: {
+                        console.log(">>>>"+index)
+
+                        behavioursZ[index] = 0
+                    }
+
+                    onZChanged: {
+                        behavioursZ[index] = z
+                    }
+
+                    Component.onDestruction: {
+                        behavioursZ = behavioursZ.slice(0, index).concat(behavioursZ.slice(index + 1,behavioursZ.length))
+                    }
+
+                    onCloseButtonClicked: {
+                        views.model.remove(index)
+                    }
+
+                    onFrontOneStepClicked: {
+                        z += 1
+                    }
+
+                    onBackOneStepClicked: {
+                        z = ((z - 1) < 1) ? 0 : z - 1;
+                    }
+
+                    onFrontTotalClicked: {
+                        let biggestZ = getBehaviourGreaterZ()
+                        if(biggestZ !== z)
+                            z = biggestZ + 1;
+                    }
+
+                    onBackTotalClicked: {
+                        z = 0;
+                    }
+                }
+            }
+
             ViewComponentRectV2 {
                 id: view3
                 width: 250

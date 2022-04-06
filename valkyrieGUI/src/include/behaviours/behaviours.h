@@ -13,7 +13,8 @@ class Behaviours : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString title READ title CONSTANT)
-    Q_PROPERTY(QUrl qmlBodyUrl READ qmlBodyUrl CONSTANT)
+    Q_PROPERTY(QString qmlBodyUrl READ qmlBodyUrl CONSTANT)
+
 public:
     enum Type{
         CPP = 0, DLL, PYTHON
@@ -26,7 +27,7 @@ public:
 
     virtual QMap<QString, QVariant> loadInfos() = 0;
     virtual void loadConnections();
-    const QUrl &qmlBodyUrl();
+    const QString &qmlBodyUrl();
     const QString &title();
 
     const QMap<QString, QMetaMethod>& inputConns();
@@ -40,10 +41,10 @@ public:
 
     static const QString &getUuid();
 
-    void setQmlBodyUrl(const QUrl &newQmlBodyUrl);
+    void setQmlBodyUrl(const QString &newQmlBodyUrl);
 
 public slots:
-
+    void start();
 
 signals:
 
@@ -56,7 +57,7 @@ private:
     void loaderOfInfosInFields();
 
     QString m_title;
-    QUrl m_qmlBodyUrl;
+    QString m_qmlBodyUrl;
 
     QMap<QString, QMetaMethod> m_input_conns;
     QMap<QString, QMetaMethod> m_output_conns;
