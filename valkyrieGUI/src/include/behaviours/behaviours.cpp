@@ -3,8 +3,10 @@
 #include <QDebug>
 
 Behaviours::Behaviours(QObject *parent) : QObject(parent)
-{
-
+{    
+    addInputOutputExclusion(QList<QString>({
+                                               "start()"
+                                           }));
 }
 
 QMap<QString, QVariant> Behaviours::static_infos()
@@ -52,6 +54,16 @@ const QString &Behaviours::qmlBodyUrl()
 const QString &Behaviours::title()
 {
     return this->m_title;
+}
+
+double Behaviours::width()
+{
+    return this->m_width;
+}
+
+double Behaviours::height()
+{
+    return this->m_height;
 }
 
 const QMap<QString, QMetaMethod> &Behaviours::inputConns()
@@ -116,19 +128,26 @@ void Behaviours::setQmlBodyUrl(const QString &newQmlBodyUrl)
     m_qmlBodyUrl = newQmlBodyUrl;
 }
 
+void Behaviours::setTitle(QString title)
+{
+    this->m_title = title;
+    emit titleChanged(this->m_title);
+}
+
+void Behaviours::setWidth(double width)
+{
+    this->m_width = width;
+    emit widthChanged(width);
+}
+
+void Behaviours::setHeight(double height)
+{
+    this->m_height = height;
+    emit heightChanged(height);
+}
+
 void Behaviours::start()
 {
     loaderOfInfosInFields();
     loadConnections();
 }
-
-//QMap<QString, QString> Behaviours::infos()
-//{
-//    return QMap<QString, QString>({
-//                                      {"category", "common"},
-//                                      {"title", "FileLoader"},
-//                                      {"description", "Load files and output bytes"},
-//                                      {"inputs", "3"},
-//                                      {"outputs", "3"}
-//                                  });
-//}

@@ -39,7 +39,7 @@ Rectangle {
 
         function onBehaviourAdded(obj){
             console.log(obj.qmlBodyUrl + " " + obj.title)
-            views.model.append(obj)
+            views.model.append({'object':obj})
             console.log(views.model.count)
         }
     }
@@ -360,17 +360,15 @@ Rectangle {
                 }
 
                 delegate: ViewComponentRectV2 {
-                    width: 250
-                    height: 250
+                    //width: 250
+                    //height: 250
 
                     borderColor: Material.accentColor
                     rootBodyColor: "transparent"
 
-                    behaviourObject: model
+                    behaviourObject: model.object
 
                     Component.onCompleted: {
-                        console.log(">>>>"+index)
-
                         behavioursZ[index] = 0
                     }
 

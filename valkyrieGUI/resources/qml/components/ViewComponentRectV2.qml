@@ -31,6 +31,8 @@ Rectangle {
     signal frontTotalClicked();
     signal backTotalClicked();
 
+    width: 250
+    height: 250
     color: Qt.rgba(0.2, 0.2, 0.2, 0.5)
     radius: 4
     border.width: 1
@@ -50,8 +52,18 @@ Rectangle {
     }
 
     Component.onCompleted: {
-        root.title = behaviourObject.title
-        bodySourceQML = behaviourObject.qmlBodyUrl
+        root.title = Qt.binding(() => behaviourObject.title)
+        root.bodySourceQML = Qt.binding(() => behaviourObject.qmlBodyUrl)
+        root.width = Qt.binding(() => behaviourObject.width)
+        root.height = Qt.binding(() => behaviourObject.height)
+    }
+
+    Connections {
+        target: rootBodyLoader
+
+        function onLoaded(){
+            rootBodyLoader.item.behaviourObject = root.behaviourObject
+        }
     }
 
     MouseArea {
@@ -93,7 +105,7 @@ Rectangle {
             id: titleView
             Layout.fillWidth: true
 
-            text: "Titulo Janela"
+            text: ""
             font.pixelSize: 8
             color: root.borderColor
 

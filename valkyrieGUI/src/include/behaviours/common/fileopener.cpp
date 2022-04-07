@@ -4,6 +4,8 @@
 
 FileOpener::FileOpener(QObject *parent) : Behaviours(parent)
 {
+    this->setWidth(250);
+    this->setHeight(100);
     this->setQmlBodyUrl("qrc:/behaviours/common/FileOpener.qml");
     this->addInputOutputExclusion(QList<QString>({
                                                QString("openFile(QString)")
@@ -12,7 +14,6 @@ FileOpener::FileOpener(QObject *parent) : Behaviours(parent)
 
 QMap<QString, QVariant> FileOpener::loadInfos()
 {
-    qDebug() << "AQUI";
     return FileOpener::static_infos();
 }
 
