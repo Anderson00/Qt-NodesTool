@@ -8,7 +8,7 @@ Item {
     property var behaviourObject
 
     Component.onCompleted: {
-        debounce.start()
+        debounce.start();
     }
 
     Timer {
@@ -19,6 +19,7 @@ Item {
 
         onTriggered: {
             console.log(behaviourObject)
+            behaviourObject.contentHeight = 200
         }
     }
 
@@ -47,6 +48,10 @@ Item {
             icon.source: 'qrc:/Qaterial/Icons/folder-open'
             font.pixelSize: 12
             Layout.rightMargin: 8
+
+            onClicked: {
+                behaviourObject.contentHeight += 100
+            }
         }
     }
 }

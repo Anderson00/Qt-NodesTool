@@ -16,6 +16,8 @@ class Behaviours : public QObject
     Q_PROPERTY(QString qmlBodyUrl READ qmlBodyUrl CONSTANT)
     Q_PROPERTY(double width READ width WRITE setWidth NOTIFY widthChanged)
     Q_PROPERTY(double height READ height WRITE setHeight NOTIFY heightChanged)
+    Q_PROPERTY(double contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged)
+    Q_PROPERTY(double contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged)
 
 public:
     enum Type{
@@ -33,6 +35,8 @@ public:
     const QString &title();
     double width();
     double height();
+    double contentWidth();
+    double contentHeight();
 
     const QMap<QString, QMetaMethod>& inputConns();
     const QMap<QString, QMetaMethod>& outputConns();
@@ -49,6 +53,8 @@ public:
     void setTitle(QString title);
     void setWidth(double width);
     void setHeight(double height);
+    void setContentWidth(double width);
+    void setContentHeight(double width);
 
 public slots:
     void start();
@@ -57,6 +63,8 @@ signals:
     void titleChanged(QString newText);
     void widthChanged(double newWidth);
     void heightChanged(double newHeight);
+    void contentWidthChanged(double newWidth);
+    void contentHeightChanged(double newHeight);
 
 protected:
     void setInputConns(QMap<QString, QMetaMethod> inputConns);
@@ -69,6 +77,7 @@ private:
     QString m_title;
     QString m_qmlBodyUrl;
     double m_width, m_height;
+    double m_contentWidth = 0, m_contentHeight = 0;
 
     QMap<QString, QMetaMethod> m_input_conns;
     QMap<QString, QMetaMethod> m_output_conns;

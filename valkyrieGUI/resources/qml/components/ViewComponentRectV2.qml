@@ -31,8 +31,6 @@ Rectangle {
     signal frontTotalClicked();
     signal backTotalClicked();
 
-    width: 250
-    height: 250
     color: Qt.rgba(0.2, 0.2, 0.2, 0.5)
     radius: 4
     border.width: 1
@@ -55,7 +53,11 @@ Rectangle {
         root.title = Qt.binding(() => behaviourObject.title)
         root.bodySourceQML = Qt.binding(() => behaviourObject.qmlBodyUrl)
         root.width = Qt.binding(() => behaviourObject.width)
-        root.height = Qt.binding(() => behaviourObject.height)
+        root.height = Qt.binding(() => behaviourObject.contentHeight + topHeader.height + divider.height + topHeader.anchors.margins + connectionsBody.height)
+    }
+
+    onWidthChanged: {
+        behaviourObject.contentWidth = width
     }
 
     Connections {
@@ -64,6 +66,10 @@ Rectangle {
         function onLoaded(){
             rootBodyLoader.item.behaviourObject = root.behaviourObject
         }
+    }
+
+    Behavior on height {
+        NumberAnimation {duration: 250; easing.type: Easing.OutQuad}
     }
 
     MouseArea {
@@ -189,6 +195,7 @@ Rectangle {
             }
         }
     }
+
     Rectangle{
         id: divider
         color: root.border.color

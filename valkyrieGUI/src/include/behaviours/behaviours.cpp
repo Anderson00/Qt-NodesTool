@@ -66,6 +66,16 @@ double Behaviours::height()
     return this->m_height;
 }
 
+double Behaviours::contentWidth()
+{
+    return this->m_contentWidth;
+}
+
+double Behaviours::contentHeight()
+{
+    return this->m_contentHeight;
+}
+
 const QMap<QString, QMetaMethod> &Behaviours::inputConns()
 {
     return this->m_input_conns;
@@ -144,6 +154,18 @@ void Behaviours::setHeight(double height)
 {
     this->m_height = height;
     emit heightChanged(height);
+}
+
+void Behaviours::setContentWidth(double width)
+{
+    this->m_contentWidth = width;
+    emit contentWidthChanged(width);
+}
+
+void Behaviours::setContentHeight(double height)
+{
+    this->m_contentHeight = height;
+    emit contentHeightChanged(height);
 }
 
 void Behaviours::start()
