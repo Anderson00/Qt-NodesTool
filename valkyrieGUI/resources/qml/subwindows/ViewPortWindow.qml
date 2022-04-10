@@ -371,9 +371,6 @@ Rectangle {
                 }
 
                 delegate: ViewComponentRectV2 {
-                    //width: 250
-                    //height: 250
-
                     onXChanged: {
                         if(nodeOnFocus !== this)
                             nodeOnFocus = this
@@ -388,10 +385,6 @@ Rectangle {
                     rootBodyColor: "transparent"
 
                     behaviourObject: model.object
-
-                    onFocusChanged: {
-                        console.log(x + " " + y)
-                    }
 
                     Component.onCompleted: {
                         behavioursZ[index] = 0
