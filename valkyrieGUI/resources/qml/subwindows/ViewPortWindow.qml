@@ -16,8 +16,17 @@ Rectangle {
     property int minZoom: 1
     property int maxZoom: 6
 
+    // mouse properties
+    property var mouseXX
+    property var mouseYY
+
     //Behaviours properties
     property var behavioursZ: []
+    property var nodeOnFocus
+
+    onNodeOnFocusChanged: {
+        console.log(nodeOnFocus.behaviourObject.title)
+    }
 
     property bool rightDrawerOpened: false
     property bool bottomDrawerOpened: false
@@ -189,10 +198,13 @@ Rectangle {
     }
 
     MouseArea {
+        id: mouseZoom
         anchors.fill: parent
+        propagateComposedEvents: true
         hoverEnabled: true
 
-        onClicked: {            
+        onClicked: {
+            console.log('qwd')
             root.focus = true
         }
 
@@ -294,11 +306,10 @@ Rectangle {
         property int wgrid: sliderZoom.value * root.minWgrid;
 
         Component.onCompleted: {
-            console.log(sliderZoom.value)
             mycanvas.requestPaint()
         }
 
-        transform: Scale {
+        transform: Scale {            
             origin.x: 0
             origin.y: 0
             xScale: sliderZoom.value
@@ -363,10 +374,24 @@ Rectangle {
                     //width: 250
                     //height: 250
 
+                    onXChanged: {
+                        if(nodeOnFocus !== this)
+                            nodeOnFocus = this
+                    }
+
+                    onYChanged: {
+                        if(nodeOnFocus !== this)
+                            nodeOnFocus = this
+                    }
+
                     borderColor: Material.accentColor
                     rootBodyColor: "transparent"
 
                     behaviourObject: model.object
+
+                    onFocusChanged: {
+                        console.log(x + " " + y)
+                    }
 
                     Component.onCompleted: {
                         behavioursZ[index] = 0
@@ -401,50 +426,6 @@ Rectangle {
                     }
                 }
             }
-
-            ViewComponentRectV2 {
-                id: view3
-                width: 250
-                height: 250
-                borderColor: Material.accentColor
-
-                rootBodyColor: "transparent"
-                bodyComponent: ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 8
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        TextField {
-                            Layout.fillWidth: true
-
-                        }
-                        Button {
-                            text: "Ok"
-                            flat: true
-                        }
-                    }
-                }
-
-                onConnectionSocketClicked: {
-                    let qPointer = conn.circleConn.mapToItem(parent, 0, 0);
-                    lineTest.x = qPointer.x + conn.circleConn.width/2
-                    lineTest.y = qPointer.y + conn.circleConn.height/2
-
-                    mouseAreaGlobal.enabled = true
-                }
-
-                connectionsInput: [
-                    {name: "Open(File)"},
-                    {name: "fileClosed"},
-                    {name: "fileSize"}
-                ]
-
-                connectionsOutput: [
-                    {name: "Out(D)"},
-                ]
-            }
-
         }
 
         onPaint: {

@@ -8,6 +8,7 @@
 #include <QList>
 #include <QString>
 #include <QUrl>
+#include "connections.h"
 
 class Behaviours : public QObject
 {
@@ -18,7 +19,6 @@ class Behaviours : public QObject
     Q_PROPERTY(double height READ height WRITE setHeight NOTIFY heightChanged)
     Q_PROPERTY(double contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged)
     Q_PROPERTY(double contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged)
-
 public:
     enum Type{
         CPP = 0, DLL, PYTHON
@@ -38,14 +38,12 @@ public:
     double contentWidth();
     double contentHeight();
 
-    const QMap<QString, QMetaMethod>& inputConns();
-    const QMap<QString, QMetaMethod>& outputConns();
+    const QMap<QString, Connections*>& inputConns();
+    const QMap<QString, Connections*>& outputConns();
     const QList<QString>& listOfExclusions();
 
     int qtdInputs();
     int qtdOutputs();
-
-    const QMetaMethod* getMetaMethodFromMethodSignature(const QString& signature);
 
     static const QString &getUuid();
 
@@ -57,6 +55,10 @@ public:
     void setContentHeight(double width);
 
 public slots:
+    Connections* getConnectionFromMethodSignature(const QString& signature);
+    QList<QString> getInputsMethodSignature();
+    QList<QString> getOutputsMethodSignature();
+
     void start();
 
 signals:
@@ -67,8 +69,8 @@ signals:
     void contentHeightChanged(double newHeight);
 
 protected:
-    void setInputConns(QMap<QString, QMetaMethod> inputConns);
-    void setOutputConns(QMap<QString, QMetaMethod> outputConns);
+    void setInputConns(QMap<QString, Connections*> inputConns);
+    void setOutputConns(QMap<QString, Connections*> outputConns);
     void addInputOutputExclusion(const QList<QString>& exclusionConnections);
 
 private:
@@ -79,8 +81,8 @@ private:
     double m_width, m_height;
     double m_contentWidth = 0, m_contentHeight = 0;
 
-    QMap<QString, QMetaMethod> m_input_conns;
-    QMap<QString, QMetaMethod> m_output_conns;
+    QMap<QString, Connections*> m_input_conns;
+    QMap<QString, Connections*> m_output_conns;
 
     QList<QString> m_listOfExclusions;
 };

@@ -39,9 +39,9 @@ void Behaviours::loadConnections()
         if(this->m_listOfExclusions.contains(metaMethod.methodSignature())) continue;
 
         if(metaMethod.methodType() == QMetaMethod::Slot){
-            m_input_conns[metaMethod.methodSignature()] = metaMethod;
+            m_input_conns[metaMethod.methodSignature()] = new Connections(metaMethod, this);
         }else if(metaMethod.methodType() == QMetaMethod::Signal){
-            m_output_conns[metaMethod.methodSignature()] = metaMethod;
+            m_output_conns[metaMethod.methodSignature()] = new Connections(metaMethod, this);
         }
     }
 }
@@ -76,12 +76,12 @@ double Behaviours::contentHeight()
     return this->m_contentHeight;
 }
 
-const QMap<QString, QMetaMethod> &Behaviours::inputConns()
+const QMap<QString, Connections*> &Behaviours::inputConns()
 {
     return this->m_input_conns;
 }
 
-const QMap<QString, QMetaMethod> &Behaviours::outputConns()
+const QMap<QString, Connections*> &Behaviours::outputConns()
 {
     return this->m_output_conns;
 }
@@ -101,23 +101,33 @@ int Behaviours::qtdOutputs()
     return this->m_output_conns.size();
 }
 
-const QMetaMethod* Behaviours::getMetaMethodFromMethodSignature(const QString &signature)
+Connections* Behaviours::getConnectionFromMethodSignature(const QString &signature)
 {
     if(this->m_input_conns.contains(signature)){
-        return &this->m_input_conns[signature];
+        return this->m_input_conns[signature];
     }else if(this->m_output_conns.contains(signature)){
-        return &this->m_output_conns[signature];
+        return this->m_output_conns[signature];
     }
 
     return nullptr;
 }
 
-void Behaviours::setInputConns(QMap<QString, QMetaMethod> inputConns)
+QList<QString> Behaviours::getInputsMethodSignature()
+{
+    return this->m_input_conns.keys();
+}
+
+QList<QString> Behaviours::getOutputsMethodSignature()
+{
+    return this->m_output_conns.keys();
+}
+
+void Behaviours::setInputConns(QMap<QString, Connections*> inputConns)
 {
     this->m_input_conns = inputConns;
 }
 
-void Behaviours::setOutputConns(QMap<QString, QMetaMethod> outputConns)
+void Behaviours::setOutputConns(QMap<QString, Connections*> outputConns)
 {
     this->m_output_conns = outputConns;
 }

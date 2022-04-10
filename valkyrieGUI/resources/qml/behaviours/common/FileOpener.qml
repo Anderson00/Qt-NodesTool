@@ -19,7 +19,10 @@ Item {
 
         onTriggered: {
             console.log(behaviourObject)
-            behaviourObject.contentHeight = 200
+            //behaviourObject.contentHeight = 200
+
+            console.log(behaviourObject.getInputsMethodSignature())
+            console.log(behaviourObject.getOutputsMethodSignature())
         }
     }
 

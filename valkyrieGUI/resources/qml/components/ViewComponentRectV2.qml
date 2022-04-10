@@ -18,6 +18,7 @@ Rectangle {
     property alias rootBodyColor: rootBody.color
     property alias bodyComponent: rootBodyLoader.sourceComponent
     property alias bodySourceQML: rootBodyLoader.source
+    property bool animEnabled: false
 
     property double xPrev: 0.0
     property double yPrev: 0.0
@@ -49,11 +50,30 @@ Rectangle {
         return colour;
     }
 
+    function loadInputConns(){
+        let connObj = [];
+        let inputs = behaviourObject.getInputsMethodSignature();
+        inputs.forEach((input) => connObj.push({'name' : input}));
+
+        root.connectionsInput = connObj
+    }
+
+    function loadOutputConns(){
+        let connObj = [];
+        let outputs = behaviourObject.getOutputsMethodSignature();
+        outputs.forEach((output) => connObj.push({'name' : output}));
+
+        root.connectionsOutput = connObj
+    }
+
     Component.onCompleted: {
         root.title = Qt.binding(() => behaviourObject.title)
         root.bodySourceQML = Qt.binding(() => behaviourObject.qmlBodyUrl)
         root.width = Qt.binding(() => behaviourObject.width)
         root.height = Qt.binding(() => behaviourObject.contentHeight + topHeader.height + divider.height + topHeader.anchors.margins + connectionsBody.height)
+        loadInputConns()
+        loadOutputConns()
+        animEnabled = true
     }
 
     onWidthChanged: {
@@ -65,10 +85,17 @@ Rectangle {
 
         function onLoaded(){
             rootBodyLoader.item.behaviourObject = root.behaviourObject
+            //animEnabled = true
         }
     }
 
     Behavior on height {
+        enabled: animEnabled
+        NumberAnimation {duration: 250; easing.type: Easing.OutQuad}
+    }
+
+    Behavior on width {
+        enabled: animEnabled
         NumberAnimation {duration: 250; easing.type: Easing.OutQuad}
     }
 
@@ -86,10 +113,11 @@ Rectangle {
 
         drag.maximumX: parent.parent.width - width
         drag.maximumY: parent.parent.height - height
-
         acceptedButtons: Qt.AllButtons;
 
         onClicked: {
+            console.log('ckicled')
+
             if(pressedButtons & Qt.RightButton){
                 menu.open()
             }
@@ -251,6 +279,7 @@ Rectangle {
                             }
 
                             MouseArea {
+                                z: 10000
                                 width: rowInput.width
                                 height: rowInput.height
 
