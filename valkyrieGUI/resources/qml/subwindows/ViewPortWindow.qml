@@ -25,7 +25,9 @@ Rectangle {
     property var nodeOnFocus
 
     onNodeOnFocusChanged: {
-        console.log(nodeOnFocus.behaviourObject.title)
+        if(nodeOnFocus){
+            console.log(nodeOnFocus.behaviourObject.title)
+        }
     }
 
     property bool rightDrawerOpened: false
@@ -48,8 +50,8 @@ Rectangle {
 
         function onBehaviourAdded(obj){
             console.log(obj.qmlBodyUrl + " " + obj.title)
-            views.model.append({'object':obj})
-            console.log(views.model.count)
+            nodes.model.append({'object':obj})
+            console.log(nodes.model.count)
         }
     }
 
@@ -194,6 +196,8 @@ Rectangle {
             // TODO: dinamic code, this is a prototype
             // shapepath.startX = mouse.x;
             // shapepath.startY = mouse.y;
+            console.log(mouse.x);
+            console.log(mouse.y);
         }
     }
 
@@ -337,34 +341,39 @@ Rectangle {
             color: "transparent"
 
             // TODO: dynamic Line and connections fucionality
-            // Prototype
-            Shape {
-                antialiasing: true
-                smooth: true
-                z: 1
+            Repeater {
+                id: nodeConnections
 
-                ShapePath {
-                    id: shapepath
-                    strokeColor: "red"
-                    strokeWidth: 2
-                    fillColor: "transparent"
-                    capStyle: ShapePath.RoundCap
+                model: ListModel {
 
-                    startX: 0
-                    startY: 0
+                }
 
-                    PathLine {
-                        id: lineTest
-                        x: 0
-                        y: 50
+                delegate: Shape {
+                    antialiasing: true
+                    smooth: true
+                    z: 1
+
+                    ShapePath {
+                        id: shapepath
+                        strokeColor: "red"
+                        strokeWidth: 2
+                        fillColor: "transparent"
+                        capStyle: ShapePath.RoundCap
+
+                        startX: 0
+                        startY: 0
+
+                        PathLine {
+                            id: lineTest
+                            x: 0
+                            y: 50
+                        }
                     }
                 }
             }
 
-            // TODO: dynamic views
-
             Repeater {
-                id: views
+                id: nodes
 
                 model: ListModel{
 
@@ -379,6 +388,21 @@ Rectangle {
                     onYChanged: {
                         if(nodeOnFocus !== this)
                             nodeOnFocus = this
+                    }
+
+                    onFocusChanged: {
+                        if(focus)
+                            nodeOnFocus = this
+                    }
+
+                    onConnectionSocketClicked: {
+                        let qPointer = conn.circleConn.mapToItem(parent, 0, 0);
+                        //lineTest.x = qPointer.x + conn.circleConn.width/2
+                        //lineTest.y = qPointer.y + conn.circleConn.height/2
+                        //shapepath.strokeColor = conn.circleConn.color
+
+                        mouseAreaGlobal.enabled = true
+                        fogForNodeConnections.visible = true
                     }
 
                     borderColor: Material.accentColor
@@ -399,7 +423,7 @@ Rectangle {
                     }
 
                     onCloseButtonClicked: {
-                        views.model.remove(index)
+                        nodes.model.remove(index)
                     }
 
                     onFrontOneStepClicked: {
@@ -501,6 +525,54 @@ Rectangle {
 
         width: parent.width / 10
         height: parent.height / 10
+
+        Repeater {
+            model: nodes.model
+
+            delegate: Rectangle {
+                id: rectObj
+                width: model.object.width / 10
+                height: model.object.height / 10
+                radius: 4 / 10
+                x: model.object.x / 10
+                y: model.object.y / 10
+                opacity: 0.3
+                color: '#ccc'
+
+                SequentialAnimation{
+                    id: sequential
+                    running: (nodeOnFocus) ? nodeOnFocus.behaviourObject === model.object : false
+                    loops: Animation.Infinite
+
+                    onRunningChanged: {
+                        if(!running){
+                            opacity = 0.3
+                        }
+                    }
+
+                    NumberAnimation {
+                        id: animateOpacity
+                        target: rectObj
+                        property: "opacity"
+                        from: 0.5
+                        to: 1.0
+                        duration: 250
+                        //easing {type: Easing.OutBack; overshoot: 500}
+                    }
+
+                    NumberAnimation {
+                        id: animateOpacity2
+                        target: rectObj
+                        property: "opacity"
+                        from: 1.0
+                        to: 0.5
+                        duration: 250
+                        //easing {type: Easing.OutBack; overshoot: 500}
+                    }
+                }
+
+            }
+        }
 
         Rectangle {
             color: "transparent"

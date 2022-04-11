@@ -17,6 +17,8 @@ class Behaviours : public QObject
     Q_PROPERTY(QString qmlBodyUrl READ qmlBodyUrl CONSTANT)
     Q_PROPERTY(double width READ width WRITE setWidth NOTIFY widthChanged)
     Q_PROPERTY(double height READ height WRITE setHeight NOTIFY heightChanged)
+    Q_PROPERTY(double x READ x WRITE setX NOTIFY xChanged)
+    Q_PROPERTY(double y READ y WRITE setY NOTIFY yChanged)
     Q_PROPERTY(double contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged)
     Q_PROPERTY(double contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged)
 public:
@@ -35,6 +37,8 @@ public:
     const QString &title();
     double width();
     double height();
+    double x();
+    double y();
     double contentWidth();
     double contentHeight();
 
@@ -53,6 +57,8 @@ public:
     void setHeight(double height);
     void setContentWidth(double width);
     void setContentHeight(double width);
+    void setX(double x);
+    void setY(double y);
 
 public slots:
     Connections* getConnectionFromMethodSignature(const QString& signature);
@@ -67,6 +73,8 @@ signals:
     void heightChanged(double newHeight);
     void contentWidthChanged(double newWidth);
     void contentHeightChanged(double newHeight);
+    void xChanged(double newX);
+    void yChanged(double newY);
 
 protected:
     void setInputConns(QMap<QString, Connections*> inputConns);
@@ -79,6 +87,7 @@ private:
     QString m_title;
     QString m_qmlBodyUrl;
     double m_width, m_height;
+    double m_x = 0, m_y = 0;
     double m_contentWidth = 0, m_contentHeight = 0;
 
     QMap<QString, Connections*> m_input_conns;

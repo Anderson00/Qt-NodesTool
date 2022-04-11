@@ -17,6 +17,7 @@ public:
     static QMap<QString, QVariant> static_infos();
 
 public slots:
+    QString chooseFile(QString rootPath, QString filter);
     void openFile(QString filePath);
 
 signals:

@@ -1,15 +1,17 @@
 #include "fileopener.h"
 #include <QTextStream>
 #include <QDebug>
+#include <QFileDialog>
 
 FileOpener::FileOpener(QObject *parent) : Behaviours(parent)
 {
     this->setWidth(250);
     this->setHeight(100);
-    this->setContentHeight(100);
+    this->setContentHeight(150);
     this->setQmlBodyUrl("qrc:/behaviours/common/FileOpener.qml");
     this->addInputOutputExclusion(QList<QString>({
-                                               QString("openFile(QString)")
+                                                     "openFile(QString)",
+                                                     "chooseFile(QString,QString)"
                                                  }));
 }
 
@@ -27,7 +29,14 @@ QMap<QString, QVariant> FileOpener::static_infos()
                                       {"desc", "Open and manipulate files"},
                                       {"inputs_count", "0"},
                                       {"outputs_count", "1"}
-                                  });
+                                   });
+}
+
+QString FileOpener::chooseFile(QString rootPath, QString filter)
+{
+    QString fileName = QFileDialog::getOpenFileName(nullptr,
+        tr("Open Executable"), rootPath, filter);
+    return fileName;
 }
 
 void FileOpener::openFile(QString filePath)

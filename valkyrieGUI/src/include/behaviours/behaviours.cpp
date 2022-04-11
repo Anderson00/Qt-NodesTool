@@ -3,10 +3,9 @@
 #include <QDebug>
 
 Behaviours::Behaviours(QObject *parent) : QObject(parent)
-{    
-    addInputOutputExclusion(QList<QString>({
-                                               "start()"
-                                           }));
+{
+    this->m_x = 0;
+    this->m_y = 0;
 }
 
 QMap<QString, QVariant> Behaviours::static_infos()
@@ -15,19 +14,21 @@ QMap<QString, QVariant> Behaviours::static_infos()
 }
 
 void Behaviours::loadConnections()
-{    
-    QObject excludeConns;
-    const QMetaObject *metaObjectExclude = excludeConns.metaObject();
+{
+    const QMetaObject *metaObjectExclude = this->metaObject();
 
     int methodCountExclude = metaObjectExclude->methodCount();
     for(int index = 0; index < methodCountExclude; index++){
         QMetaMethod metaMethod = this->metaObject()->method(index);
+        QString className = metaMethod.enclosingMetaObject()->className();
 
-        switch (metaMethod.methodType()) {
-        case QMetaMethod::Slot:
-        case QMetaMethod::Signal:
-            this->m_listOfExclusions.push_back(metaMethod.methodSignature());
-            break;
+        if(className == "Behaviours" || className == "QObject"){
+            switch (metaMethod.methodType()) {
+            case QMetaMethod::Slot:
+            case QMetaMethod::Signal:
+                this->m_listOfExclusions.push_back(metaMethod.methodSignature());
+                break;
+            }
         }
     }
 
@@ -64,6 +65,16 @@ double Behaviours::width()
 double Behaviours::height()
 {
     return this->m_height;
+}
+
+double Behaviours::x()
+{
+    return this->m_x;
+}
+
+double Behaviours::y()
+{
+    return this->m_y;
 }
 
 double Behaviours::contentWidth()
@@ -176,6 +187,18 @@ void Behaviours::setContentHeight(double height)
 {
     this->m_contentHeight = height;
     emit contentHeightChanged(height);
+}
+
+void Behaviours::setX(double x)
+{
+    this->m_x = x;
+    emit xChanged(x);
+}
+
+void Behaviours::setY(double y)
+{
+    this->m_y = y;
+    emit yChanged(y);
 }
 
 void Behaviours::start()

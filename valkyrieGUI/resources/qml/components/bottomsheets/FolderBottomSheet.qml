@@ -269,10 +269,7 @@ Contrl.Drawer {
 
                     onClicked: {
                         gridMode = !gridMode
-
                         gridView.cellWidth = gridMode ? 150 : gridView.width
-                        //gridView.cellHeight = gridMode ? 150 : gridView.height
-
                     }
                 }
             }

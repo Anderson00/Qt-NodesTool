@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import QtQuick.Layouts 1.0
-import QtQuick.Controls 2.3
+import QtQuick.Controls 2.15
 import QtQuick.Controls.Material 2.12
 import QtGraphicalEffects 1.15
 
@@ -71,13 +71,36 @@ Rectangle {
         root.bodySourceQML = Qt.binding(() => behaviourObject.qmlBodyUrl)
         root.width = Qt.binding(() => behaviourObject.width)
         root.height = Qt.binding(() => behaviourObject.contentHeight + topHeader.height + divider.height + topHeader.anchors.margins + connectionsBody.height)
+        root.x = Qt.binding(() => behaviourObject.x)
+        root.y = Qt.binding(() => behaviourObject.y)
+
+        console.log(x + " " + y)
         loadInputConns()
         loadOutputConns()
         animEnabled = true
     }
 
+    onXChanged: {
+        behaviourObject.x = x
+    }
+
+    onYChanged: {
+        behaviourObject.y = y
+    }
+
     onWidthChanged: {
+        behaviourObjectConn.enabled = false
         behaviourObject.contentWidth = width
+        behaviourObjectConn.enabled = true
+    }
+
+    Connections {
+        id: behaviourObjectConn
+        target: behaviourObject
+
+        function onContentWidthChanged(){
+            behaviourObject.width = behaviourObject.contentWidth
+        }
     }
 
     Connections {
@@ -85,7 +108,6 @@ Rectangle {
 
         function onLoaded(){
             rootBodyLoader.item.behaviourObject = root.behaviourObject
-            //animEnabled = true
         }
     }
 
@@ -117,6 +139,7 @@ Rectangle {
 
         onClicked: {
             console.log('ckicled')
+            root.focus = true
 
             if(pressedButtons & Qt.RightButton){
                 menu.open()
@@ -250,112 +273,145 @@ Rectangle {
             Layout.fillWidth: true
             spacing: 0
             z:3
-            visible: connectionsInput.length > 0 && connectionsOutput.length > 0
+            visible: connectionsInput.length > 0 || connectionsOutput.length > 0
 
-            Rectangle {
-                id: connectionsInputBody
-                Layout.preferredHeight: ((columnLayoutInputConns.height > columnLayoutOutputConns.height)? columnLayoutInputConns.height: columnLayoutOutputConns.height) + 4
+            SplitView {
+                id: splitConns
+                orientation: Qt.Horizontal
                 Layout.fillWidth: true
+                Layout.preferredHeight: ((columnLayoutInputConns.height > columnLayoutOutputConns.height)? columnLayoutInputConns.height: columnLayoutOutputConns.height) + 4
 
-                color: "#444"
+                Rectangle {
+                    id: connectionsInputBody
+                    Layout.preferredHeight: ((columnLayoutInputConns.height > columnLayoutOutputConns.height)? columnLayoutInputConns.height: columnLayoutOutputConns.height) + 4
+                    Layout.fillWidth: true
+                    SplitView.minimumWidth: 10
+                    SplitView.preferredWidth: parent.width / 2
 
-                ColumnLayout {
-                    id: columnLayoutInputConns
-                    width: parent.width
-                    anchors.left: parent.left
-                    anchors.top: parent.top
-                    anchors.leftMargin: 4
-                    anchors.topMargin: 2
+                    color: "#444"
+                    ColumnLayout {
+                        id: columnLayoutInputConns
+                        width: parent.width
+                        anchors.left: parent.left
+                        anchors.top: parent.top
+                        anchors.leftMargin: 4
+                        anchors.topMargin: 2
 
-                    Repeater {
-                        Layout.fillWidth: true
-                        model: connectionsInput                        
-                        Item {
-                            width: parent.width
-                            height: rowInput.height
-
-                            Component.onCompleted: {
-                                connectionsInput[index].circleConn = connInConnCircle
-                            }
-
-                            MouseArea {
-                                z: 10000
-                                width: rowInput.width
+                        Repeater {
+                            Layout.fillWidth: true
+                            model: connectionsInput
+                            Item {
+                                width: parent.width
                                 height: rowInput.height
 
-                                onClicked: {
-                                    root.connectionSocketClicked(connectionsInput[index])
-                                }
-                            }
-
-                            Row {
-                                id: rowInput
-                                Layout.alignment: Qt.AlignLeft
-                                spacing: 2
-
-                                Rectangle {
-                                    id: connInConnCircle
-                                    width: 4
-                                    height: connInConnCircle.width
-                                    radius: connInConnCircle.width
-                                    color: stringToColour(connInName.text)
-                                    anchors.verticalCenter: connInName.verticalCenter
+                                Component.onCompleted: {
+                                    connectionsInput[index].circleConn = connInConnCircle
                                 }
 
-                                Text {
-                                    id: connInName
-                                    font.pixelSize: 8
-                                    color: "#ccc"
-                                    text: modelData.name
+                                MouseArea {
+                                    width: connectionsInputBody.width - 4
+                                    height: rowInput.height
+                                    preventStealing: true
+
+                                    onClicked: {
+                                        console.log(modelData.name)
+                                        root.connectionSocketClicked(connectionsInput[index])
+                                    }
+                                }
+
+                                Row {
+                                    id: rowInput
+                                    Layout.alignment: Qt.AlignLeft
+                                    spacing: 2
+
+                                    Rectangle {
+                                        id: connInConnCircle
+                                        width: 4
+                                        height: connInConnCircle.width
+                                        radius: connInConnCircle.width
+                                        color: stringToColour(connInName.text)
+                                        anchors.verticalCenter: connInName.verticalCenter
+                                    }
+
+                                    Text {
+                                        id: connInName
+                                        font.pixelSize: 8
+                                        color: "#ccc"
+                                        text: modelData.name
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            Rectangle {
-                id: connectionsOutputBody
-                Layout.preferredHeight: ((columnLayoutInputConns.height > columnLayoutOutputConns.height)? columnLayoutInputConns.height: columnLayoutOutputConns.height) + 4
-                Layout.fillWidth: true
+                Rectangle {
+                    clip: true
+                    id: connectionsOutputBody
+                    Layout.preferredHeight: ((columnLayoutInputConns.height > columnLayoutOutputConns.height)? columnLayoutInputConns.height: columnLayoutOutputConns.height) + 4
+                    Layout.fillWidth: true
+                    SplitView.minimumWidth: 10
+                    SplitView.preferredWidth: parent.width / 2
 
-                color: "#222"
+                    color: "#222"
 
-                ColumnLayout {
-                    id: columnLayoutOutputConns
-                    width: parent.width
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    anchors.rightMargin: 4
-                    anchors.topMargin: 2
-                    Repeater {
-                        model: connectionsOutput
-                        Row {
-                            Layout.alignment: Qt.AlignRight
-                            spacing: 2
-
-                            Component.onCompleted: {
-                                connectionsOutput[index].circleConn = connOutConnCircle
-                            }
-
-                            Text {
-                                id: connOutName
-                                font.pixelSize: 8
-                                color: "#ccc"
-                                text: modelData.name
-                            }
+                    ColumnLayout {
+                        id: columnLayoutOutputConns
+                        //width: parent.width
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        anchors.rightMargin: 4
+                        anchors.topMargin: 2
+                        Repeater {
+                            Layout.fillWidth: true
+                            model: connectionsOutput
 
                             Rectangle {
-                                id: connOutConnCircle
-                                width: 4
-                                height: connOutConnCircle.width
-                                radius: connOutConnCircle.width
-                                color: stringToColour(connOutName.text)
-                                anchors.verticalCenter: connOutName.verticalCenter
+                                width: connOutName.width + 8
+                                Layout.alignment: Qt.AlignRight
+                                height: connOutName.height
+                                color: 'transparent'
+
+                                Component.onCompleted: {
+                                    connectionsOutput[index].circleConn = connOutConnCircle
+                                }
+
+                                MouseArea {
+                                    width: connectionsOutputBody.width
+                                    height: connOutName.height
+
+                                    onClicked: {
+                                        console.log(modelData.name)
+                                        root.connectionSocketClicked(connectionsOutput[index])
+                                    }
+                                }
+
+                                Row {
+                                    id: rowOutput
+                                    anchors.right: parent.right
+                                    spacing: 2
+
+                                    Text {
+                                        id: connOutName
+                                        font.pixelSize: 8
+                                        color: "#ccc"
+                                        text: modelData.name
+                                    }
+
+                                    Rectangle {
+                                        id: connOutConnCircle
+                                        width: 4
+                                        height: connOutConnCircle.width
+                                        radius: connOutConnCircle.width
+                                        color: stringToColour(connOutName.text)
+                                        anchors.verticalCenter: connOutName.verticalCenter
+                                    }
+                                }
                             }
                         }
                     }
                 }
+
             }
         }
 
@@ -367,16 +423,6 @@ Rectangle {
             radius: root.radius
             clip: true
             color: "#333"
-
-            MouseArea {
-                id: rootBodyArea
-                anchors.fill: rootBody
-                //hoverEnabled: true
-                //cursorShape: rootBodyArea.containsMouse ? Qt.OpenHandCursor : Qt.ArrowCursor
-                onClicked: {
-                    console.log("Clicked")
-                }
-            }
 
             Loader{
                 id: rootBodyLoader

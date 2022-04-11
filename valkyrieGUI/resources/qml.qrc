@@ -12,6 +12,7 @@
         <file alias="ViewComponentRectV2.qml">qml/components/ViewComponentRectV2.qml</file>
         <file alias="NewButton.qml">qml/components/NewButton.qml</file>
         <file alias="ViewComponentMini.qml">qml/components/ViewComponentMini.qml</file>
+        <file alias="CustomTextField.qml">qml/components/CustomTextField.qml</file>
     </qresource>
     <qresource prefix="/subwindows">
         <file alias="DebuggerMain.qml">qml/subwindows/DebuggerMain.qml</file>
