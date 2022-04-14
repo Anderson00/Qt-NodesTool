@@ -73,8 +73,6 @@ Rectangle {
         root.height = Qt.binding(() => behaviourObject.contentHeight + topHeader.height + divider.height + topHeader.anchors.margins + connectionsBody.height)
         root.x = Qt.binding(() => behaviourObject.x)
         root.y = Qt.binding(() => behaviourObject.y)
-
-        console.log(x + " " + y)
         loadInputConns()
         loadOutputConns()
         animEnabled = true
@@ -92,6 +90,10 @@ Rectangle {
         behaviourObjectConn.enabled = false
         behaviourObject.contentWidth = width
         behaviourObjectConn.enabled = true
+    }
+
+    onHeightChanged: {
+        behaviourObject.height = root.height
     }
 
     Connections {
@@ -424,7 +426,7 @@ Rectangle {
             clip: true
             color: "#333"
 
-            Loader{
+            Loader {
                 id: rootBodyLoader
                 anchors.fill: parent
             }

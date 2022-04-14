@@ -19,6 +19,7 @@ Rectangle {
     // mouse properties
     property var mouseXX
     property var mouseYY
+    property bool isConnecting: false
 
     //Behaviours properties
     property var behavioursZ: []
@@ -49,9 +50,7 @@ Rectangle {
         target: viewPort
 
         function onBehaviourAdded(obj){
-            console.log(obj.qmlBodyUrl + " " + obj.title)
             nodes.model.append({'object':obj})
-            console.log(nodes.model.count)
         }
     }
 
@@ -190,6 +189,7 @@ Rectangle {
             // shapepath.startX = mouse.x;
             // shapepath.startY = mouse.y;
             mouseAreaGlobal.enabled = false
+            isConnecting = false
         }
 
         onPositionChanged: {
@@ -198,6 +198,10 @@ Rectangle {
             // shapepath.startY = mouse.y;
             console.log(mouse.x);
             console.log(mouse.y);
+
+
+
+            //mouseX = mycanvas.mapToItem()
         }
     }
 
@@ -213,6 +217,8 @@ Rectangle {
         }
 
         onWheel: {
+            if(isConnecting)
+                return;
             if (wheel.angleDelta.y > 0)
                 sliderZoom.value += 0.1;
             else
@@ -253,6 +259,7 @@ Rectangle {
         }
 
         Qaterial.MiniFabButton {
+            id: centerButton
             icon.source: Qaterial.Icons.setCenter
             icon.color: Material.accentColor
             flat: false
@@ -274,6 +281,7 @@ Rectangle {
         to: maxZoom
         value: minZoom
         z: 100
+        enabled: !isConnecting
         color: Material.accentColor
         anchors.left: fullscreenFab.right
         anchors.top: parent.top
@@ -281,6 +289,8 @@ Rectangle {
         prefix: "x"
 
         onValueChanged: {
+            if(isConnecting)
+                return;
             mycanvas.wgrid = sliderZoom.value * minWgrid
             mycanvas.requestPaint()
         }
@@ -324,8 +334,9 @@ Rectangle {
             id: dragArea
             anchors.fill: parent
 
+            //drag.active: !isConnecting
             drag.smoothed: true
-            drag.target: mycanvas
+            drag.target: isConnecting ? undefined : mycanvas
 
             onClicked: {
                 root.focus = true
@@ -353,20 +364,42 @@ Rectangle {
                     smooth: true
                     z: 1
 
+                    property var circleConnPoint
+
+                    Component.onCompleted: {
+                        circleConnPoint = model.circleConn.mapToItem(parent, 0, 0);
+                    }
+
+                    Connections {
+                        target: model.node
+
+                        function onCloseButtonClicked(){
+                            nodeConnections.model.remove(index)
+                        }
+
+                        function onXChanged(){
+                            circleConnPoint = model.circleConn.mapToItem(parent, 0, 0);
+                        }
+
+                        function onYChanged(){
+                            circleConnPoint = model.circleConn.mapToItem(parent, 0, 0);
+                        }
+                    }
+
                     ShapePath {
                         id: shapepath
-                        strokeColor: "red"
+                        strokeColor: model.circleConn.color
                         strokeWidth: 2
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
 
-                        startX: 0
-                        startY: 0
+                        startX: circleConnPoint.x
+                        startY: circleConnPoint.y
 
                         PathLine {
                             id: lineTest
-                            x: 0
-                            y: 50
+                            x:  mouseAreaGlobal.mouseX
+                            y: mouseAreaGlobal.mouseY
                         }
                     }
                 }
@@ -401,8 +434,13 @@ Rectangle {
                         //lineTest.y = qPointer.y + conn.circleConn.height/2
                         //shapepath.strokeColor = conn.circleConn.color
 
+                        isConnecting = true
+                        mycanvas.x = 0;
+                        mycanvas.y = 0;
+                        sliderZoom.value = 1;
+                        nodeConnections.model.append({node: this, circleConn: conn.circleConn})
                         mouseAreaGlobal.enabled = true
-                        fogForNodeConnections.visible = true
+                        //fogForNodeConnections.visible = true
                     }
 
                     borderColor: Material.accentColor

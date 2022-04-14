@@ -4,7 +4,7 @@
 #include "include/mainwindow.h"
 //#include <unicorn/unicorn.h>
 //#include <capstone/capstone.h>
-#include <retdec/fileformat/fileformat.h>
+//#include <retdec/fileformat/fileformat.h>
 #include <Qaterial/Qaterial.hpp>
 
 int main(int argc, char **argv)

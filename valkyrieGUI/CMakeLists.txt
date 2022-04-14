@@ -52,7 +52,7 @@ else()
     endif()
 endif()
 
-target_link_libraries(Debugger PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick cxxopts retdec::fileformat Qaterial QOlm::QOlm)
+target_link_libraries(Debugger PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick cxxopts Qaterial QOlm::QOlm)
 
 #add_executable(Main main.cpp ${SOURCE_FILES_CURSES})
 set_target_properties(Debugger PROPERTIES AUTOMOC TRUE)
@@ -60,7 +60,7 @@ set_target_properties(Debugger PROPERTIES AUTOMOC TRUE)
 #target_link_libraries (Main PUBLIC cxxopts unicorn capstone-shared)
 target_include_directories(Debugger PUBLIC                          
                           #"${PROJECT_SOURCE_DIR}/extern/unicorn/include"
-                          "${PROJECT_SOURCE_DIR}/extern/retdec/include"
+                          #"${PROJECT_SOURCE_DIR}/extern/retdec/include"
                           #"${PROJECT_SOURCE_DIR}/extern/capstone/include"
                           "src/"
                           "src/include"
