@@ -201,6 +201,16 @@ void Behaviours::setY(double y)
     emit yChanged(y);
 }
 
+QQuickItem *Behaviours::viewRect()
+{
+    return this->m_viewRectangle;
+}
+
+void Behaviours::setViewRectangle(QQuickItem *view)
+{
+    this->m_viewRectangle = view;
+}
+
 void Behaviours::start()
 {
     loaderOfInfosInFields();

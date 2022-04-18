@@ -20,6 +20,8 @@ Rectangle {
     property var mouseXX
     property var mouseYY
     property bool isConnecting: false
+    property var shapeConn
+    property var finalPoint
 
     //Behaviours properties
     property var behavioursZ: []
@@ -56,6 +58,7 @@ Rectangle {
 
     function viewSubWindowsWidthHeightArea(){
         // TODO:
+        return;
         if(view3.x + view3.width > root.width){
             view3.x = root.width - view3.width
         }
@@ -72,6 +75,17 @@ Rectangle {
         let aux = []
         aux = aux.concat(behavioursZ);
         return aux.sort()[aux.length - 1];
+    }
+
+    function detectNodeByMousePosition(x: double, y : double){
+        for(let i = 0; i < nodes.model.count; i++){
+            let node = nodes.model.get(i)['object'];
+            if((x >= node.x && x <= (node.width + node.x)) &&
+               (y >= node.y && y <= (node.height + node.y))){
+                return node;
+            }
+        }
+        return undefined;
     }
 
     Keys.enabled: true
@@ -180,7 +194,8 @@ Rectangle {
         id: mouseAreaGlobal
         anchors.fill: parent
         hoverEnabled: true
-        propagateComposedEvents: true
+        propagateComposedEvents: false
+        preventStealing: true
         z: 10
         enabled: false
 
@@ -190,18 +205,43 @@ Rectangle {
             // shapepath.startY = mouse.y;
             mouseAreaGlobal.enabled = false
             isConnecting = false
+            console.log(shapeConn.circleConnPoint2)
+
+            let node = detectNodeByMousePosition(mouse.x, mouse.y)
+            let viewRect = (node)? node.viewRect : undefined
+            let conn;
+            if(viewRect){
+                conn = viewRect.connectionOnXYPosition(mouse.x, mouse.y)
+                if(conn){
+                    shapeConn.circleConn2 = conn.circleConn
+                    shapeConn.viewRectConn2 = node
+                    console.log(conn)
+                }else{
+                    nodeConnections.model.remove(nodeConnections.model.count - 1)
+                }
+            }else {
+                nodeConnections.model.remove(nodeConnections.model.count - 1)
+            }
+
+            shapeConn = undefined;
+            mouse.accepted = false
         }
 
         onPositionChanged: {
             // TODO: dinamic code, this is a prototype
             // shapepath.startX = mouse.x;
             // shapepath.startY = mouse.y;
-            console.log(mouse.x);
-            console.log(mouse.y);
+            mouseXX = mouse.x;
+            mouseYY = mouse.y;
 
+            mouse.accepted = false
 
-
-            //mouseX = mycanvas.mapToItem()
+            let node = detectNodeByMousePosition(mouse.x, mouse.y)
+            let viewRect = (node)? node.viewRect : undefined
+            let conn;
+            if(viewRect){
+                conn = viewRect.connectionOnXYPosition(mouse.x, mouse.y)
+            }
         }
     }
 
@@ -360,14 +400,26 @@ Rectangle {
                 }
 
                 delegate: Shape {
+                    id: shape
                     antialiasing: true
                     smooth: true
-                    z: 1
+                    z: Number.MAX_VALUE
 
                     property var circleConnPoint
+                    property var circleConnPoint2
+                    property var circleConn2
+                    property var viewRectConn2
 
                     Component.onCompleted: {
                         circleConnPoint = model.circleConn.mapToItem(parent, 0, 0);
+                        shapeConn = shape;
+                    }
+
+                    onCircleConn2Changed: {
+                        if(circleConn2)
+                            circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0);
+                        else
+                            nodeConnections.model.remove(index)
                     }
 
                     Connections {
@@ -386,6 +438,18 @@ Rectangle {
                         }
                     }
 
+                    Connections {
+                        target: viewRectConn2
+
+                        function onXChanged(){
+                            circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0);
+                        }
+
+                        function onYChanged(){
+                            circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0);
+                        }
+                    }
+
                     ShapePath {
                         id: shapepath
                         strokeColor: model.circleConn.color
@@ -393,13 +457,13 @@ Rectangle {
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
 
-                        startX: circleConnPoint.x
-                        startY: circleConnPoint.y
+                        startX: circleConnPoint.x + model.circleConn.width/2
+                        startY: circleConnPoint.y + model.circleConn.height/2
 
                         PathLine {
                             id: lineTest
-                            x:  mouseAreaGlobal.mouseX
-                            y: mouseAreaGlobal.mouseY
+                            x: circleConn2 ? circleConnPoint2.x + circleConn2.width/2 : mouseAreaGlobal.mouseX
+                            y: circleConn2 ? circleConnPoint2.y + circleConn2.width/2 : mouseAreaGlobal.mouseY
                         }
                     }
                 }
@@ -413,6 +477,7 @@ Rectangle {
                 }
 
                 delegate: ViewComponentRectV2 {
+
                     onXChanged: {
                         if(nodeOnFocus !== this)
                             nodeOnFocus = this
@@ -450,6 +515,8 @@ Rectangle {
 
                     Component.onCompleted: {
                         behavioursZ[index] = 0
+                        console.log(this)
+                        model.object.setViewRectangle(this)
                     }
 
                     onZChanged: {
@@ -565,6 +632,62 @@ Rectangle {
         height: parent.height / 10
 
         Repeater {
+            id: viewRectGhostConns
+            model: ListModel {
+
+            }
+
+            delegate: Shape {
+                antialiasing: true
+                smooth: true
+                z: Number.MAX_VALUE
+
+                Component.onCompleted: {
+                    //circleConnPoint = model.rect.mapToItem(parent, 0, 0);
+                }
+
+                Connections {
+                    target: model.rect1
+
+                    function onXChanged(){
+                        //circleConnPoint = model.circleConn.mapToItem(parent, 0, 0);
+                    }
+
+                    function onYChanged(){
+                        //circleConnPoint = model.circleConn.mapToItem(parent, 0, 0);
+                    }
+                }
+
+                Connections {
+                    target:  model.rect2
+
+                    function onXChanged(){
+                        //circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0);
+                    }
+
+                    function onYChanged(){
+                        //circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0);
+                    }
+                }
+
+                ShapePath {
+                    strokeColor: "red"
+                    strokeWidth: 2
+                    fillColor: "transparent"
+                    capStyle: ShapePath.RoundCap
+
+                    startX: model.rect1.x
+                    startY: model.rect1.y
+
+                    PathLine {
+                        x: model.rect2.x
+                        y: model.rect2.y
+                    }
+                }
+            }
+        }
+
+        Repeater {
             model: nodes.model
 
             delegate: Rectangle {
@@ -577,7 +700,11 @@ Rectangle {
                 opacity: 0.3
                 color: '#ccc'
 
-                SequentialAnimation{
+                Component.onCompleted: {
+                    //viewRectGhostConns.model.append({rect1: this, rect2: parent.parent});
+                }
+
+                SequentialAnimation {
                     id: sequential
                     running: (nodeOnFocus) ? nodeOnFocus.behaviourObject === model.object : false
                     loops: Animation.Infinite

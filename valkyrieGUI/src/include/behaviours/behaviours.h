@@ -8,6 +8,7 @@
 #include <QList>
 #include <QString>
 #include <QUrl>
+#include <QtQuick/QQuickItem>
 #include "connections.h"
 
 class Behaviours : public QObject
@@ -21,6 +22,8 @@ class Behaviours : public QObject
     Q_PROPERTY(double y READ y WRITE setY NOTIFY yChanged)
     Q_PROPERTY(double contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged)
     Q_PROPERTY(double contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged)
+
+    Q_PROPERTY(QQuickItem *viewRect READ viewRect CONSTANT)
 public:
     enum Type{
         CPP = 0, DLL, PYTHON
@@ -59,8 +62,10 @@ public:
     void setContentHeight(double width);
     void setX(double x);
     void setY(double y);
+    QQuickItem *viewRect();
 
 public slots:
+    void setViewRectangle(QQuickItem *view);
     Connections* getConnectionFromMethodSignature(const QString& signature);
     QList<QString> getInputsMethodSignature();
     QList<QString> getOutputsMethodSignature();
@@ -92,6 +97,8 @@ private:
 
     QMap<QString, Connections*> m_input_conns;
     QMap<QString, Connections*> m_output_conns;
+
+    QQuickItem *m_viewRectangle;
 
     QList<QString> m_listOfExclusions;
 };

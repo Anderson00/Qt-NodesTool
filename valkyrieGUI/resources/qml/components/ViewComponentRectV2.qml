@@ -50,6 +50,24 @@ Rectangle {
         return colour;
     }
 
+    function connectionOnXYPosition(x:double, y:double) {
+        let connJoint = [];
+        connJoint = connJoint.concat(connectionsInput);
+        connJoint = connJoint.concat(connectionsOutput);
+
+        for(let i = 0; i < connJoint.length; i++){
+            let conn = connJoint[i].connArea;
+            let connPos = conn.mapToItem(this.parent, 0, 0);
+
+            if((x >= connPos.x && x <= (conn.width + connPos.x)) &&
+               (y >= connPos.y && y <= (conn.height + connPos.y))){
+                return connJoint[i];
+            }
+        }
+
+        return undefined;
+    }
+
     function loadInputConns(){
         let connObj = [];
         let inputs = behaviourObject.getInputsMethodSignature();
@@ -302,11 +320,14 @@ Rectangle {
                         Repeater {
                             Layout.fillWidth: true
                             model: connectionsInput
-                            Item {
-                                width: parent.width
+                            Rectangle {
+                                id: inputArea
+                                width: connInName.width + connInConnCircle.width
                                 height: rowInput.height
+                                color: 'transparent'
 
                                 Component.onCompleted: {
+                                    connectionsInput[index].connArea = inputArea
                                     connectionsInput[index].circleConn = connInConnCircle
                                 }
 
@@ -369,12 +390,14 @@ Rectangle {
                             model: connectionsOutput
 
                             Rectangle {
+                                id: outputArea
                                 width: connOutName.width + 8
                                 Layout.alignment: Qt.AlignRight
                                 height: connOutName.height
                                 color: 'transparent'
 
                                 Component.onCompleted: {
+                                    connectionsOutput[index].connArea = outputArea
                                     connectionsOutput[index].circleConn = connOutConnCircle
                                 }
 
