@@ -64,7 +64,10 @@ Item {
 
                 onClicked: {
                     let rootText = rootPath.text ?? '.'
-                    fileUrl.text = behaviourObject.chooseFile(rootText, filter.text)
+                    let infos = behaviourObject.chooseFile(rootText, filter.text);
+                    fileUrl.text = infos['filePath'];
+                    fileName.text = infos['fileName'];
+                    fileSize.text = (infos['size'] / 1024 / 1024).toFixed(2) + " MB"
                 }
             }
         }

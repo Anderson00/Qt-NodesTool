@@ -167,116 +167,135 @@ Rectangle {
         }
     }
 
-    RowLayout{
-        id: topHeader
+    Rectangle {
+        id: topHeaderRect
         anchors.left: root.left
         anchors.top: root.top
         anchors.right: root.right
+        anchors.bottom: body.top
         height: titleView.height + 8
-        //width: parent.width
-        anchors.margins: 4
-        anchors.bottomMargin: 0
+        radius: root.radius - 1
+        anchors.margins: root.border.width
+        //anchors.bottomMargin: -radius
+
         z: 1
+        color: root.focus ? root.border.color : root.color
 
-        Text {
-            id: titleView
-            Layout.fillWidth: true
+        RowLayout{
+            id: topHeader
 
-            text: ""
-            font.pixelSize: 8
-            color: root.borderColor
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.margins: 4
+            anchors.bottomMargin: 0
 
-        }
+            width: parent.width
+            //height: parent.height + 8
 
-        Rectangle {
-            Layout.preferredHeight: 10
-            width: 10
-            color: Qt.rgba(0.2, 0.2, 0.2, 0.5)
-            radius: 10
+            Text {
+                id: titleView
+                Layout.fillWidth: true
 
-            MouseArea {
-                anchors.fill: parent
-                z: 2
+                text: ""
+                font.pixelSize: 8
+                color: root.borderColor
 
-                onClicked: {
-                    menu.open()
-                }
             }
 
-            Menu {
-                id: menu
+            Rectangle {
+                Layout.preferredHeight: 10
+                width: 10
+                color: Qt.rgba(0.2, 0.2, 0.2, 0.5)
+                radius: 10
 
-                // Todo: repeater, dinamic items
+                MouseArea {
+                    anchors.fill: parent
+                    z: 2
 
-                MenuSeparator {}
-
-                MenuItem {
-                    text: "close"
-                    icon.source: 'qrc:/Qaterial/Icons/close'
-                    onTriggered: {
-                        closeButtonClicked()
+                    onClicked: {
+                        menu.open()
                     }
                 }
 
-                MenuItem {
-                    text: "front + 1"
-                    icon.source: 'qrc:/Qaterial/Icons/arrow-up'
-                    onTriggered: {
-                        frontOneStepClicked()
+                Menu {
+                    id: menu
+
+                    // Todo: repeater, dinamic items
+
+                    MenuSeparator {}
+
+                    MenuItem {
+                        text: "close"
+                        icon.source: 'qrc:/Qaterial/Icons/close'
+                        onTriggered: {
+                            closeButtonClicked()
+                        }
+                    }
+
+                    MenuItem {
+                        text: "front + 1"
+                        icon.source: 'qrc:/Qaterial/Icons/arrow-up'
+                        onTriggered: {
+                            frontOneStepClicked()
+                        }
+                    }
+
+                    MenuItem {
+                        text: "down - 1"
+                        icon.source: 'qrc:/Qaterial/Icons/arrow-down'
+                        onTriggered: {
+                            backOneStepClicked()
+                        }
+                    }
+
+                    MenuItem {
+                        text: "front max"
+                        icon.source: 'qrc:/Qaterial/Icons/flip-to-front'
+                        onTriggered: {
+                            frontTotalClicked()
+                        }
+                    }
+
+                    MenuItem {
+                        text: "back max"
+                        icon.source: 'qrc:/Qaterial/Icons/flip-to-back'
+                        onTriggered: {
+                            backTotalClicked()
+                        }
                     }
                 }
 
-                MenuItem {
-                    text: "down - 1"
-                    icon.source: 'qrc:/Qaterial/Icons/arrow-down'
-                    onTriggered: {
-                        backOneStepClicked()
-                    }
-                }
-
-                MenuItem {
-                    text: "front max"
-                    icon.source: 'qrc:/Qaterial/Icons/flip-to-front'
-                    onTriggered: {
-                        frontTotalClicked()
-                    }
-                }
-
-                MenuItem {
-                    text: "back max"
-                    icon.source: 'qrc:/Qaterial/Icons/flip-to-back'
-                    onTriggered: {
-                        backTotalClicked()
-                    }
-                }
-            }
-
-            Column{
-                anchors.centerIn: parent
-                spacing: 1
-                Repeater {
-                    model: 3
-                    Rectangle {
-                        width: 2
-                        height: width
-                        radius: width
-                        color: root.borderColor
+                Column{
+                    anchors.centerIn: parent
+                    spacing: 1
+                    Repeater {
+                        model: 3
+                        Rectangle {
+                            width: 2
+                            height: width
+                            radius: width
+                            color: root.borderColor
+                        }
                     }
                 }
             }
         }
     }
+
+
 
     Rectangle{
         id: divider
         color: root.border.color
         height: 1
-        anchors.top: topHeader.bottom
+        anchors.top: topHeaderRect.bottom
         anchors.left: parent.left
         anchors.right: parent.right
     }
 
     ColumnLayout {
+        id: body
         anchors.top: divider.bottom
         anchors.left: parent.left
         anchors.right: parent.right

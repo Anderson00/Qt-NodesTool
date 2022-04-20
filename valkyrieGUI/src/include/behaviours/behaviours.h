@@ -84,6 +84,7 @@ signals:
 protected:
     void setInputConns(QMap<QString, Connections*> inputConns);
     void setOutputConns(QMap<QString, Connections*> outputConns);
+    void addOutputConn(QString outputName, Connections* outputConn);
     void addInputOutputExclusion(const QList<QString>& exclusionConnections);
 
 private:

@@ -2,6 +2,7 @@
 #define FILEOPENER_H
 
 #include <QString>
+#include <QJsonObject>
 #include <QByteArray>
 #include <QMap>
 #include <QFile>
@@ -17,7 +18,7 @@ public:
     static QMap<QString, QVariant> static_infos();
 
 public slots:
-    QString chooseFile(QString rootPath, QString filter);
+    QJsonObject chooseFile(QString rootPath, QString filter);
     void openFile(QString filePath);
 
 signals:

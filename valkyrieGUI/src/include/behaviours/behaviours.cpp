@@ -143,6 +143,11 @@ void Behaviours::setOutputConns(QMap<QString, Connections*> outputConns)
     this->m_output_conns = outputConns;
 }
 
+void Behaviours::addOutputConn(QString outputName, Connections *outputConn)
+{
+    this->m_output_conns[outputName] = outputConn;
+}
+
 void Behaviours::addInputOutputExclusion(const QList<QString>& exclusionConnections)
 {
     this->m_listOfExclusions.append(exclusionConnections);

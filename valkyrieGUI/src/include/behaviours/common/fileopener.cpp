@@ -32,11 +32,23 @@ QMap<QString, QVariant> FileOpener::static_infos()
                                    });
 }
 
-QString FileOpener::chooseFile(QString rootPath, QString filter)
+QJsonObject FileOpener::chooseFile(QString rootPath, QString filter)
 {
+    QJsonObject result;
     QString fileName = QFileDialog::getOpenFileName(nullptr,
         tr("Open Executable"), rootPath, filter);
-    return fileName;
+
+    result["filePath"] = fileName;
+    QFileInfo info(fileName);
+    if(info.isFile()){
+        result["type"] = info.suffix();
+    }else if(info.isDir()){
+        result["type"] = "Dir";
+    }
+    result["size"] = info.size();
+    result["fileName"] = info.fileName();
+
+    return result;
 }
 
 void FileOpener::openFile(QString filePath)

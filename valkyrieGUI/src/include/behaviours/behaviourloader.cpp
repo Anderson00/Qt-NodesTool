@@ -6,6 +6,7 @@
 #include <QJsonArray>
 
 #include "behaviours/common/fileopener.h"
+#include "behaviours/logic/hub.h"
 
 BehaviourLoader *BehaviourLoader::m_instance = nullptr;
 
@@ -59,8 +60,8 @@ Behaviours *BehaviourLoader::loadBehaviourFromClassName(const QString &className
 {
     if(className == "FileOpener"){
         return new FileOpener;
-    }else if(className == ""){
-
+    }else if(className == "Hub"){
+        return new Hub;
     }
 
     return nullptr;
@@ -99,6 +100,10 @@ QJsonObject BehaviourLoader::discoverAll()
     result["Debug/common"] = QJsonArray({
                                             QJsonObject::fromVariantMap(QVariantMap(FileOpener::static_infos()))
                                         });
+
+    result["Debug/logic"] = QJsonArray({
+                                           QJsonObject::fromVariantMap(QVariantMap(Hub::static_infos()))
+                                       });
 
     QDirIterator it("Behaviours", QDirIterator::Subdirectories);
     while (it.hasNext()) {
