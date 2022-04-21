@@ -10,9 +10,6 @@ Hub::Hub(QObject *parent) : Behaviours(parent)
     this->addInputOutputExclusion(QList<QString>({
 
                                                  }));
-
-    addOutputConn("test1", new Connections(QMetaMethod(),this));
-    addOutputConn("test2", new Connections(QMetaMethod(),this));
 }
 
 QMap<QString, QVariant> Hub::loadInfos()
@@ -32,7 +29,7 @@ QMap<QString, QVariant> Hub::static_infos()
                                    });
 }
 
-void Hub::input(QByteArray bytes)
+void Hub::input(QVariant variant)
 {
 
 }

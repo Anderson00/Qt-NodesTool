@@ -50,6 +50,10 @@ Rectangle {
         return colour;
     }
 
+    function extractParams(text){
+        return text.slice(text.indexOf('('), text.length - 1)
+    }
+
     function connectionOnXYPosition(x:double, y:double) {
         let connJoint = [];
         connJoint = connJoint.concat(connectionsInput);
@@ -158,11 +162,11 @@ Rectangle {
         acceptedButtons: Qt.AllButtons;
 
         onClicked: {
-            console.log('ckicled')
             root.focus = true
 
             if(pressedButtons & Qt.RightButton){
                 menu.open()
+                root.focus = true
             }
         }
     }
@@ -173,6 +177,7 @@ Rectangle {
         anchors.top: root.top
         anchors.right: root.right
         anchors.bottom: body.top
+        width: parent.width + 4
         height: titleView.height + 8
         radius: root.radius - 1
         anchors.margins: root.border.width
@@ -180,6 +185,13 @@ Rectangle {
 
         z: 1
         color: root.focus ? root.border.color : root.color
+
+        Rectangle {
+            anchors.bottom: topHeaderRect.bottom
+            width: parent.width
+            height: root.radius
+            color: topHeaderRect.color
+        }
 
         RowLayout{
             id: topHeader
@@ -199,7 +211,7 @@ Rectangle {
 
                 text: ""
                 font.pixelSize: 8
-                color: root.borderColor
+                color: root.focus? "#333" : root.borderColor
 
             }
 
@@ -220,6 +232,14 @@ Rectangle {
 
                 Menu {
                     id: menu
+
+                    onOpened: {
+                        root.focus = true
+                    }
+
+                    onAboutToHide: {
+                        root.focus = true
+                    }
 
                     // Todo: repeater, dinamic items
 
@@ -318,7 +338,7 @@ Rectangle {
                 id: splitConns
                 orientation: Qt.Horizontal
                 Layout.fillWidth: true
-                Layout.preferredHeight: ((columnLayoutInputConns.height > columnLayoutOutputConns.height)? columnLayoutInputConns.height: columnLayoutOutputConns.height) + 4
+                Layout.preferredHeight: ((columnLayoutInputConns.height > columnLayoutOutputConns.height)? columnLayoutInputConns.height : columnLayoutOutputConns.height) + 8
 
                 Rectangle {
                     id: connectionsInputBody
@@ -328,6 +348,7 @@ Rectangle {
                     SplitView.preferredWidth: parent.width / 2
 
                     color: "#444"
+
                     ColumnLayout {
                         id: columnLayoutInputConns
                         width: parent.width
@@ -370,8 +391,8 @@ Rectangle {
                                         id: connInConnCircle
                                         width: 4
                                         height: connInConnCircle.width
-                                        radius: connInConnCircle.width
-                                        color: stringToColour(connInName.text)
+                                        radius: connInConnCircle.width                                        
+                                        color: stringToColour(extractParams(connInName.text))
                                         anchors.verticalCenter: connInName.verticalCenter
                                     }
 
@@ -440,14 +461,14 @@ Rectangle {
                                         font.pixelSize: 8
                                         color: "#ccc"
                                         text: modelData.name
-                                    }
+                                    }                                    
 
                                     Rectangle {
                                         id: connOutConnCircle
                                         width: 4
                                         height: connOutConnCircle.width
                                         radius: connOutConnCircle.width
-                                        color: stringToColour(connOutName.text)
+                                        color: stringToColour(extractParams(connOutName.text))
                                         anchors.verticalCenter: connOutName.verticalCenter
                                     }
                                 }

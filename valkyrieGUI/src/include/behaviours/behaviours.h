@@ -80,6 +80,8 @@ signals:
     void contentHeightChanged(double newHeight);
     void xChanged(double newX);
     void yChanged(double newY);
+    void inputConnected(QString, Connections*);
+    void outputConnected(QString, Connections*);
 
 protected:
     void setInputConns(QMap<QString, Connections*> inputConns);

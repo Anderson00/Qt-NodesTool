@@ -215,7 +215,9 @@ Rectangle {
                 if(conn){
                     shapeConn.circleConn2 = conn.circleConn
                     shapeConn.viewRectConn2 = node
-                    console.log(conn)
+
+                    //TODO:
+                    //node.
                 }else{
                     nodeConnections.model.remove(nodeConnections.model.count - 1)
                 }
@@ -391,7 +393,6 @@ Rectangle {
             border.color: "#96a0cd"
             color: "transparent"
 
-            // TODO: dynamic Line and connections fucionality
             Repeater {
                 id: nodeConnections
 
@@ -479,11 +480,13 @@ Rectangle {
                 delegate: ViewComponentRectV2 {
 
                     onXChanged: {
+                        this.focus = true
                         if(nodeOnFocus !== this)
                             nodeOnFocus = this
                     }
 
                     onYChanged: {
+                        this.focus = true
                         if(nodeOnFocus !== this)
                             nodeOnFocus = this
                     }
@@ -491,6 +494,8 @@ Rectangle {
                     onFocusChanged: {
                         if(focus)
                             nodeOnFocus = this
+                        else
+                            nodeOnFocus = undefined
                     }
 
                     onConnectionSocketClicked: {

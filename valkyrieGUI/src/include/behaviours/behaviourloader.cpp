@@ -6,6 +6,7 @@
 #include <QJsonArray>
 
 #include "behaviours/common/fileopener.h"
+#include "behaviours/common/hexviewer.h"
 #include "behaviours/logic/hub.h"
 
 BehaviourLoader *BehaviourLoader::m_instance = nullptr;
@@ -62,6 +63,8 @@ Behaviours *BehaviourLoader::loadBehaviourFromClassName(const QString &className
         return new FileOpener;
     }else if(className == "Hub"){
         return new Hub;
+    }else if(className == "HexViewer"){
+        return new HexViewer;
     }
 
     return nullptr;
@@ -98,7 +101,8 @@ QJsonObject BehaviourLoader::discoverAll()
     qDebug() << fileOpener.inputConns().keys().size();
 
     result["Debug/common"] = QJsonArray({
-                                            QJsonObject::fromVariantMap(QVariantMap(FileOpener::static_infos()))
+                                            QJsonObject::fromVariantMap(QVariantMap(FileOpener::static_infos())),
+                                            QJsonObject::fromVariantMap(QVariantMap(HexViewer::static_infos()))
                                         });
 
     result["Debug/logic"] = QJsonArray({
@@ -124,14 +128,24 @@ qaterial::TreeElement* BehaviourLoader::discoverAllToTree()
 
     qaterial::TreeElement *root = new qaterial::TreeElement(this);
 
+    QMap<QString, qaterial::TreeElement*> roots;
+
     QStringList pathKeys = paths.keys();
     for(QString key : pathKeys){
         QStringList keySplit = key.split("/");
         if(keySplit.length() > 0){
-            qaterial::TreeElement *element = new qaterial::TreeElement(m_treeModelPaths);
+            qaterial::TreeElement *element;
+            if(roots.contains(keySplit[0])){
+                element = roots[keySplit[0]];
+            }else{
+                element = new qaterial::TreeElement(m_treeModelPaths);
+                roots[keySplit[0]] = element;
+                root->append(element);
+                this->m_treeModelPaths->append(element);
+            }
+
             element->setText(keySplit[0]);
-            root->append(element);
-            this->m_treeModelPaths->append(element);
+
             if(keySplit.length() > 1){
                 auto *newTree = new qaterial::TreeElement(m_treeModelPaths);
                 element->append(newTree);
