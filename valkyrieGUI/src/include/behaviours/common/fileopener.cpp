@@ -38,6 +38,9 @@ QJsonObject FileOpener::chooseFile(QString rootPath, QString filter)
     QString fileName = QFileDialog::getOpenFileName(nullptr,
         tr("Open Executable"), rootPath, filter);
 
+    if(fileName.isEmpty())
+        return result;
+
     result["filePath"] = fileName;
     QFileInfo info(fileName);
     if(info.isFile()){
@@ -47,6 +50,8 @@ QJsonObject FileOpener::chooseFile(QString rootPath, QString filter)
     }
     result["size"] = info.size();
     result["fileName"] = info.fileName();
+
+    openFile(fileName);
 
     return result;
 }

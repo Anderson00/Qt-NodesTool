@@ -40,9 +40,9 @@ void Behaviours::loadConnections()
         if(this->m_listOfExclusions.contains(metaMethod.methodSignature())) continue;
 
         if(metaMethod.methodType() == QMetaMethod::Slot){
-            m_input_conns[metaMethod.methodSignature()] = new Connections(metaMethod, this);
+            m_input_conns[metaMethod.methodSignature()] = new Connections(this, metaMethod, this);
         }else if(metaMethod.methodType() == QMetaMethod::Signal){
-            m_output_conns[metaMethod.methodSignature()] = new Connections(metaMethod, this);
+            m_output_conns[metaMethod.methodSignature()] = new Connections(this, metaMethod, this);
         }
     }
 }
@@ -121,6 +121,21 @@ Connections* Behaviours::getConnectionFromMethodSignature(const QString &signatu
     }
 
     return nullptr;
+}
+
+bool Behaviours::addConnection(const QString &sender, Behaviours *target, const QString &receiver)
+{
+    qDebug() << "addConnection" << target << sender << receiver;
+
+    Connections *connections = this->getConnectionFromMethodSignature(sender);
+    if(connections != nullptr){
+        qDebug() << connections;
+        Connections *outputConn = target->getConnectionFromMethodSignature(receiver);
+        if(outputConn != nullptr){
+            return connections->addConnection(target, outputConn->metaMethod());
+        }
+    }
+    return false;
 }
 
 QList<QString> Behaviours::getInputsMethodSignature()

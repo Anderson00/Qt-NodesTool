@@ -2,7 +2,9 @@
 #define CONNECTIONS_H
 
 #include <QObject>
+#include <QList>
 #include <QMetaMethod>
+#include <model/connectionmodel.h>
 
 class Connections : public QObject
 {
@@ -15,19 +17,22 @@ public:
     };
     Q_ENUM(ConnMethodType)
 
-    explicit Connections(QMetaMethod metaMethod, QObject *parent = nullptr);
+    explicit Connections(QObject *obj, QMetaMethod metaMethod, QObject *parent = nullptr);
 
     QString methodSignature();
     ConnMethodType methodType();
+    QMetaMethod metaMethod();
 
 public slots:
-    //bool addConnection();
+    bool addConnection(QObject *output, QMetaMethod metaMethod);
 
 signals:
 
 
 private:
+    QObject *m_obj;
     QMetaMethod m_metaMethod;
+    QList<ConnectionModel*> m_connections;
 };
 
 #endif // CONNECTIONS_H

@@ -24,10 +24,12 @@ set(PROJECT_SOURCES
     src/include/qmlwindow.h src/include/qmlwindow.cpp
     src/include/viewportwindow.h src/include/viewportwindow.cpp
     src/include/behaviours/common/fileopener.h src/include/behaviours/common/fileopener.cpp
+    src/include/behaviours/common/processesviewer.h src/include/behaviours/common/processesviewer.cpp
     src/include/behaviours/common/hexviewer.h src/include/behaviours/common/hexviewer.cpp
     src/include/behaviours/logic/hub.h src/include/behaviours/logic/hub.cpp
     src/include/behaviours/behaviourloader.h src/include/behaviours/behaviourloader.cpp
     src/include/behaviours/connections.h src/include/behaviours/connections.cpp
+    src/include/model/connectionmodel.h src/include/model/connectionmodel.cpp
     src/include/behaviours/behaviours.h src/include/behaviours/behaviours.cpp
     src/include/subwindows/taskmanagerwindow.h src/include/subwindows/taskmanagerwindow.cpp
     src/include/subwindows/testconnectionwindow.h src/include/subwindows/testconnectionwindow.cpp

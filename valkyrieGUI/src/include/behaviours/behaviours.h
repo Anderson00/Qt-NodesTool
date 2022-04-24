@@ -67,6 +67,7 @@ public:
 public slots:
     void setViewRectangle(QQuickItem *view);
     Connections* getConnectionFromMethodSignature(const QString& signature);
+    bool addConnection(const QString& sender, Behaviours *target, const QString& receiver);
     QList<QString> getInputsMethodSignature();
     QList<QString> getOutputsMethodSignature();
 

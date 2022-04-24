@@ -210,6 +210,7 @@ Rectangle {
             let node = detectNodeByMousePosition(mouse.x, mouse.y)
             let viewRect = (node)? node.viewRect : undefined
             let conn;
+            let lastConnection = nodeConnections.model.count - 1;
             if(viewRect){
                 conn = viewRect.connectionOnXYPosition(mouse.x, mouse.y)
                 if(conn){
@@ -218,11 +219,20 @@ Rectangle {
 
                     //TODO:
                     //node.
+                    nodeConnections.model.set(lastConnection, {node2: node, methodSignature2: conn.name})
+
+                    let node1 = nodeConnections.model.get(lastConnection);
+                    let isValid = node1['node'].behaviourObject.addConnection(node1['methodSignature1'], node1['node2'], node1['methodSignature2'])
+                    if(isValid){
+                        // TODO:
+                    }else{
+                        nodeConnections.model.remove(lastConnection)
+                    }
                 }else{
-                    nodeConnections.model.remove(nodeConnections.model.count - 1)
+                    nodeConnections.model.remove(lastConnection)
                 }
             }else {
-                nodeConnections.model.remove(nodeConnections.model.count - 1)
+                nodeConnections.model.remove(lastConnection)
             }
 
             shapeConn = undefined;
@@ -419,8 +429,10 @@ Rectangle {
                     onCircleConn2Changed: {
                         if(circleConn2)
                             circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0);
-                        else
+                        else{
+                            // TODO: remove connection in CPP/Behaviour
                             nodeConnections.model.remove(index)
+                        }
                     }
 
                     Connections {
@@ -499,16 +511,11 @@ Rectangle {
                     }
 
                     onConnectionSocketClicked: {
-                        let qPointer = conn.circleConn.mapToItem(parent, 0, 0);
-                        //lineTest.x = qPointer.x + conn.circleConn.width/2
-                        //lineTest.y = qPointer.y + conn.circleConn.height/2
-                        //shapepath.strokeColor = conn.circleConn.color
-
                         isConnecting = true
                         mycanvas.x = 0;
                         mycanvas.y = 0;
                         sliderZoom.value = 1;
-                        nodeConnections.model.append({node: this, circleConn: conn.circleConn})
+                        nodeConnections.model.append({methodSignature1: conn.name, node: this, circleConn: conn.circleConn, node2: null, methodSignature2: null})
                         mouseAreaGlobal.enabled = true
                         //fogForNodeConnections.visible = true
                     }
@@ -520,7 +527,6 @@ Rectangle {
 
                     Component.onCompleted: {
                         behavioursZ[index] = 0
-                        console.log(this)
                         model.object.setViewRectangle(this)
                     }
 

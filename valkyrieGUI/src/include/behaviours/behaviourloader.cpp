@@ -7,6 +7,7 @@
 
 #include "behaviours/common/fileopener.h"
 #include "behaviours/common/hexviewer.h"
+#include "behaviours/common/processesviewer.h"
 #include "behaviours/logic/hub.h"
 
 BehaviourLoader *BehaviourLoader::m_instance = nullptr;
@@ -65,6 +66,8 @@ Behaviours *BehaviourLoader::loadBehaviourFromClassName(const QString &className
         return new Hub;
     }else if(className == "HexViewer"){
         return new HexViewer;
+    }else if(className == "ProcessesViewer"){
+        return new ProcessesViewer;
     }
 
     return nullptr;
@@ -102,6 +105,7 @@ QJsonObject BehaviourLoader::discoverAll()
 
     result["Debug/common"] = QJsonArray({
                                             QJsonObject::fromVariantMap(QVariantMap(FileOpener::static_infos())),
+                                            QJsonObject::fromVariantMap(QVariantMap(ProcessesViewer::static_infos())),
                                             QJsonObject::fromVariantMap(QVariantMap(HexViewer::static_infos()))
                                         });
 
