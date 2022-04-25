@@ -13,7 +13,7 @@ public:
     static QMap<QString, QVariant> static_infos();
 
 public slots:
-    void input(QVariant variant);
+    void input(QByteArray variant);
 
 signals:
 

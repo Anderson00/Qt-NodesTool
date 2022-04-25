@@ -23,6 +23,9 @@ public slots:
 
 signals:
     void output(QByteArray bytes);
+
+private:
+    QString m_filePath;
 };
 
 #endif // FILEOPENER_H

@@ -24,7 +24,8 @@ public:
     QMetaMethod metaMethod();
 
 public slots:
-    bool addConnection(QObject *output, QMetaMethod metaMethod);
+    ConnectionModel *addConnection(QObject *output, QMetaMethod metaMethod);
+    ConnectionModel *addConnection(ConnectionModel* conn);
 
 signals:
 

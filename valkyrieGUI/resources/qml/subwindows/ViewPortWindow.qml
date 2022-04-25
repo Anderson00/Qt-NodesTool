@@ -29,7 +29,7 @@ Rectangle {
 
     onNodeOnFocusChanged: {
         if(nodeOnFocus){
-            console.log(nodeOnFocus.behaviourObject.title)
+            console.log('>>' + nodeOnFocus.behaviourObject.title)
         }
     }
 
@@ -101,6 +101,7 @@ Rectangle {
         id: fabRightMenu
         anchors.right: parent.right
         z: 100
+        opacity: (nodeOnFocus)? 1 : 0.3
 
         icon.source: Qaterial.Icons.tune
         icon.color: Material.accentColor
@@ -108,10 +109,12 @@ Rectangle {
         radius: 0
 
         onClicked: {
-            if(rightDrawerOpened)
-                drawer.close()
-            else
-                drawer.open()
+            if(opacity === 1){
+                if(rightDrawerOpened)
+                    drawer.close()
+                else
+                    drawer.open()
+            }
         }
     }
 
@@ -158,13 +161,16 @@ Rectangle {
         }
     }    
 
-    Drawer {
+    NodeSettings {
         id: drawer
         width: 200
         height: (parent.height - (parent.height - viewRect.y)) + viewRect.height + 8
         modal: false
         edge: Qt.RightEdge
         interactive: false
+
+        viewPortWindow: root
+        selectedObjectView: nodeOnFocus
 
         onOpened: {
             rightDrawerOpened = true
@@ -179,15 +185,6 @@ Rectangle {
             viewRect.anchors.rightMargin = fabRightMenu.anchors.rightMargin + 8
         }
 
-        background: Rectangle {
-            color: Qt.rgba(0.2, 0.2, 0.2, 0.5)
-        }
-
-        // TODO: content, list of properties insipired in unity3d, blender, etc.
-        Label {
-            text: "Content goes here!"
-            anchors.centerIn: parent
-        }
     }
 
     MouseArea {
@@ -504,10 +501,9 @@ Rectangle {
                     }
 
                     onFocusChanged: {
+                        console.log(">>>>>>> focus:" + this.focus)
                         if(focus)
                             nodeOnFocus = this
-                        else
-                            nodeOnFocus = undefined
                     }
 
                     onConnectionSocketClicked: {

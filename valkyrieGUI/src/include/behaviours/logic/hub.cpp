@@ -29,7 +29,7 @@ QMap<QString, QVariant> Hub::static_infos()
                                    });
 }
 
-void Hub::input(QVariant variant)
+void Hub::input(QByteArray variant)
 {
 
 }

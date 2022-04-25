@@ -6,7 +6,7 @@ Connections::Connections(QObject *obj, QMetaMethod metaMethod, QObject *parent) 
     m_obj(obj),
     m_metaMethod(metaMethod)
 {
-     qDebug() << ">>>>> " <<this->metaMethod().methodSignature();
+
 }
 
 QString Connections::methodSignature()
@@ -24,9 +24,27 @@ QMetaMethod Connections::metaMethod()
     return this->m_metaMethod;
 }
 
-bool Connections::addConnection(QObject *output, QMetaMethod metaMethod)
+ConnectionModel* Connections::addConnection(QObject *output, QMetaMethod metaMethod)
 {
-    ConnectionModel *connectionModel = new ConnectionModel(this->m_obj, this->m_metaMethod, output, metaMethod);
-    this->m_connections.push_back(connectionModel);
-    return connectionModel->isValid();
+    ConnectionModel *connectionModel = new ConnectionModel(this->m_obj, this->m_metaMethod, output, metaMethod);    
+    if(!connectionModel->isValid()){
+        delete connectionModel;
+        connectionModel = nullptr;
+    }else{
+        this->m_connections.push_back(connectionModel);
+        QObject::connect(connectionModel, &QObject::destroyed, [this, connectionModel](){
+            this->m_connections.removeOne(connectionModel);
+            qDebug() << "removed" << connectionModel;
+        });
+    }
+    return connectionModel;
+}
+
+ConnectionModel *Connections::addConnection(ConnectionModel *conn)
+{
+    this->m_connections.push_back(conn);
+    QObject::connect(conn, &QObject::destroyed, [this, conn](){
+        this->m_connections.removeOne(conn);
+    });
+    return conn;
 }

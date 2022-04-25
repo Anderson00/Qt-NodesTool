@@ -132,7 +132,17 @@ bool Behaviours::addConnection(const QString &sender, Behaviours *target, const 
         qDebug() << connections;
         Connections *outputConn = target->getConnectionFromMethodSignature(receiver);
         if(outputConn != nullptr){
-            return connections->addConnection(target, outputConn->metaMethod());
+            ConnectionModel *model = connections->addConnection(target, outputConn->metaMethod());
+            if(model != nullptr){
+                if(isInputMethodSignature(sender)){
+                    emit inputConnected(model);
+                    target->outputConnected(model);
+                }else if(isOutputMethodSignature(sender)){
+                    emit outputConnected(model);
+                    target->inputConnected(model);
+                }//else //TODO: ????
+            }
+            return model != nullptr;
         }
     }
     return false;
@@ -146,6 +156,17 @@ QList<QString> Behaviours::getInputsMethodSignature()
 QList<QString> Behaviours::getOutputsMethodSignature()
 {
     return this->m_output_conns.keys();
+}
+
+bool Behaviours::isInputMethodSignature(const QString &signature)
+{
+
+    return getInputsMethodSignature().contains(signature);
+}
+
+bool Behaviours::isOutputMethodSignature(const QString &signature)
+{
+    return getOutputsMethodSignature().contains(signature);
 }
 
 void Behaviours::setInputConns(QMap<QString, Connections*> inputConns)

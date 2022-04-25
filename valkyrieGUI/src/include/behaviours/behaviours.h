@@ -70,6 +70,8 @@ public slots:
     bool addConnection(const QString& sender, Behaviours *target, const QString& receiver);
     QList<QString> getInputsMethodSignature();
     QList<QString> getOutputsMethodSignature();
+    bool isInputMethodSignature(const QString& signature);
+    bool isOutputMethodSignature(const QString& signature);
 
     void start();
 
@@ -81,8 +83,8 @@ signals:
     void contentHeightChanged(double newHeight);
     void xChanged(double newX);
     void yChanged(double newY);
-    void inputConnected(QString, Connections*);
-    void outputConnected(QString, Connections*);
+    void inputConnected(ConnectionModel*);
+    void outputConnected(ConnectionModel*);
 
 protected:
     void setInputConns(QMap<QString, Connections*> inputConns);

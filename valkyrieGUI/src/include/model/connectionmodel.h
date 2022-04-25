@@ -15,6 +15,14 @@ public:
         return this->m_connection;
     }
 
+    const QMetaObject::Connection &connection() const;
+    void setConnection(const QMetaObject::Connection &newConnection);
+
+    QObject *output() const;
+    QObject *input() const;
+    const QMetaMethod &signal() const;
+    const QMetaMethod &slot() const;
+
 signals:
 
 private:

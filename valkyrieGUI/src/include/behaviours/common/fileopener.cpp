@@ -13,6 +13,10 @@ FileOpener::FileOpener(QObject *parent) : Behaviours(parent)
                                                      "openFile(QString)",
                                                      "chooseFile(QString,QString)"
                                                  }));
+
+    QObject::connect(this, &FileOpener::outputConnected, [this](){
+        this->openFile(this->m_filePath);
+    });
 }
 
 QMap<QString, QVariant> FileOpener::loadInfos()
@@ -51,6 +55,7 @@ QJsonObject FileOpener::chooseFile(QString rootPath, QString filter)
     result["size"] = info.size();
     result["fileName"] = info.fileName();
 
+    m_filePath = fileName;
     openFile(fileName);
 
     return result;

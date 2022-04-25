@@ -20,11 +20,7 @@ Item {
         interval: 50
 
         onTriggered: {
-            console.log(behaviourObject)
-            //behaviourObject.contentHeight = 200
 
-            console.log(behaviourObject.getInputsMethodSignature())
-            console.log(behaviourObject.getOutputsMethodSignature())
         }
     }
 
@@ -65,7 +61,6 @@ Item {
                 onClicked: {
                     let rootText = rootPath.text ?? '.'
                     let infos = behaviourObject.chooseFile(rootText, filter.text);
-                    console.log(infos['filePath'])
                     if(infos['filePath']){
                         fileUrl.text = infos['filePath'];
                         fileName.text = infos['fileName'];
