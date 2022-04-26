@@ -2,10 +2,11 @@
 #include <model/connectionmodel.h>
 #include <QDebug>
 
-Connections::Connections(QObject *obj, QMetaMethod metaMethod, QObject *parent) : QObject(parent),
+Connections::Connections(Behaviours *obj, QMetaMethod metaMethod, QObject *parent) : QObject(parent),
     m_obj(obj),
     m_metaMethod(metaMethod)
 {
+
 
 }
 
@@ -24,14 +25,20 @@ QMetaMethod Connections::metaMethod()
     return this->m_metaMethod;
 }
 
-ConnectionModel* Connections::addConnection(QObject *output, QMetaMethod metaMethod)
+ConnectionModel* Connections::addConnection(Behaviours *output, QMetaMethod metaMethod)
 {
-    ConnectionModel *connectionModel = new ConnectionModel(this->m_obj, this->m_metaMethod, output, metaMethod);    
+    ConnectionModel *connectionModel = new ConnectionModel(this->m_obj, this->m_metaMethod, output, metaMethod);
     if(!connectionModel->isValid()){
         delete connectionModel;
         connectionModel = nullptr;
     }else{
-        this->m_connections.push_back(connectionModel);
+        Connections *connOutput = output->getConnectionFromMethodSignature(metaMethod.methodSignature());
+        if(connOutput != nullptr){
+            this->m_connections.push_back(connectionModel);
+            connOutput->addConnection(connectionModel);
+        }else{
+            return nullptr;
+        }
         QObject::connect(connectionModel, &QObject::destroyed, [this, connectionModel](){
             this->m_connections.removeOne(connectionModel);
             qDebug() << "removed" << connectionModel;

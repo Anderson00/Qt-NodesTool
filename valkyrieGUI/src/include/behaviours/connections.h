@@ -5,6 +5,10 @@
 #include <QList>
 #include <QMetaMethod>
 #include <model/connectionmodel.h>
+#include <behaviours/behaviours.h>
+
+class Behaviours;
+class ConnectionModel;
 
 class Connections : public QObject
 {
@@ -17,21 +21,21 @@ public:
     };
     Q_ENUM(ConnMethodType)
 
-    explicit Connections(QObject *obj, QMetaMethod metaMethod, QObject *parent = nullptr);
+    explicit Connections(Behaviours *obj, QMetaMethod metaMethod, QObject *parent = nullptr);
 
     QString methodSignature();
     ConnMethodType methodType();
     QMetaMethod metaMethod();
 
 public slots:
-    ConnectionModel *addConnection(QObject *output, QMetaMethod metaMethod);
+    ConnectionModel *addConnection(Behaviours *output, QMetaMethod metaMethod);
     ConnectionModel *addConnection(ConnectionModel* conn);
 
 signals:
 
 
 private:
-    QObject *m_obj;
+    Behaviours *m_obj;
     QMetaMethod m_metaMethod;
     QList<ConnectionModel*> m_connections;
 };

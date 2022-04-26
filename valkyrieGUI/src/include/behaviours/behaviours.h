@@ -11,6 +11,9 @@
 #include <QtQuick/QQuickItem>
 #include "connections.h"
 
+class ConnectionModel;
+class Connections;
+
 class Behaviours : public QObject
 {
     Q_OBJECT

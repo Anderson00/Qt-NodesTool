@@ -90,7 +90,6 @@ Rectangle {
 
     Keys.enabled: true
     Keys.onPressed: {
-        console.log(event.key)
         if (event.key == Qt.Key_Shift) {
 
             event.accepted = true;
