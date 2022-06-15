@@ -23,6 +23,14 @@ set(PROJECT_SOURCES
     src/include/mainwindow.ui
     src/include/qmlwindow.h src/include/qmlwindow.cpp
     src/include/viewportwindow.h src/include/viewportwindow.cpp
+    src/include/behaviours/common/fileopener.h src/include/behaviours/common/fileopener.cpp
+    src/include/behaviours/common/processesviewer.h src/include/behaviours/common/processesviewer.cpp
+    src/include/behaviours/common/hexviewer.h src/include/behaviours/common/hexviewer.cpp
+    src/include/behaviours/logic/hub.h src/include/behaviours/logic/hub.cpp
+    src/include/behaviours/behaviourloader.h src/include/behaviours/behaviourloader.cpp
+    src/include/behaviours/connections.h src/include/behaviours/connections.cpp
+    src/include/model/connectionmodel.h src/include/model/connectionmodel.cpp
+    src/include/behaviours/behaviours.h src/include/behaviours/behaviours.cpp
     src/include/subwindows/taskmanagerwindow.h src/include/subwindows/taskmanagerwindow.cpp
     src/include/subwindows/testconnectionwindow.h src/include/subwindows/testconnectionwindow.cpp
     src/include/subwindows/qmlmdisubwindow.cpp
@@ -48,7 +56,7 @@ else()
     endif()
 endif()
 
-target_link_libraries(Debugger PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick cxxopts retdec::fileformat Qaterial)
+target_link_libraries(Debugger PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick cxxopts Qaterial QOlm::QOlm)
 
 #add_executable(Main main.cpp ${SOURCE_FILES_CURSES})
 set_target_properties(Debugger PROPERTIES AUTOMOC TRUE)
@@ -56,7 +64,7 @@ set_target_properties(Debugger PROPERTIES AUTOMOC TRUE)
 #target_link_libraries (Main PUBLIC cxxopts unicorn capstone-shared)
 target_include_directories(Debugger PUBLIC                          
                           #"${PROJECT_SOURCE_DIR}/extern/unicorn/include"
-                          "${PROJECT_SOURCE_DIR}/extern/retdec/include"
+                          #"${PROJECT_SOURCE_DIR}/extern/retdec/include"
                           #"${PROJECT_SOURCE_DIR}/extern/capstone/include"
                           "src/"
                           "src/include"

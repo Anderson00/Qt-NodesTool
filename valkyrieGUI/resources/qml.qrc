@@ -1,5 +1,9 @@
 <RCC>
-    <qresource prefix="/"/>
+    <qresource prefix="/behaviours/common">
+        <file alias="FileOpener.qml">qml/behaviours/common/FileOpener.qml</file>
+        <file alias="HexViewer.qml">qml/behaviours/common/HexViewer.qml</file>
+        <file alias="ProcessesViewer.qml">qml/behaviours/common/ProcessesViewer.qml</file>        
+    </qresource>
     <qresource prefix="/components">
         <file alias="Accordion.qml">qml/components/Accordion.qml</file>
         <file alias="CustomSlider.qml">qml/components/CustomSlider.qml</file>
@@ -7,11 +11,22 @@
         <file alias="CustomToolbar.qml">qml/components/CustomToolbar.qml</file>
         <file alias="Triangle.qml">qml/components/Triangle.qml</file>
         <file alias="ViewComponentRect.qml">qml/components/ViewComponentRect.qml</file>
+        <file alias="ViewComponentRectV2.qml">qml/components/ViewComponentRectV2.qml</file>
+        <file alias="NewButton.qml">qml/components/NewButton.qml</file>
+        <file alias="ViewComponentMini.qml">qml/components/ViewComponentMini.qml</file>
+        <file alias="CustomTextField.qml">qml/components/CustomTextField.qml</file>
     </qresource>
     <qresource prefix="/subwindows">
         <file alias="DebuggerMain.qml">qml/subwindows/DebuggerMain.qml</file>
         <file alias="TestConnectionWindow.qml">qml/subwindows/TestConnectionWindow.qml</file>
         <file alias="TaskManagerWindow.qml">qml/subwindows/TaskManagerWindow.qml</file>
         <file alias="ViewPortWindow.qml">qml/subwindows/ViewPortWindow.qml</file>
+    </qresource>
+    <qresource prefix="/components/bottomsheets">
+        <file alias="FolderBottomSheet.qml">qml/components/bottomsheets/FolderBottomSheet.qml</file>
+        <file alias="NodeSettings.qml">qml/components/bottomsheets/NodeSettings.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours">
+        <file alias="BaseBehaviour.qml">qml/behaviours/BaseBehaviour.qml</file>
     </qresource>
 </RCC>
