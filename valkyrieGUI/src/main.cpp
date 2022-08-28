@@ -6,6 +6,7 @@
 //#include <capstone/capstone.h>
 //#include <retdec/fileformat/fileformat.h>
 #include <Qaterial/Qaterial.hpp>
+#include <model/tablemodel.h>
 
 int main(int argc, char **argv)
 {
@@ -17,6 +18,8 @@ int main(int argc, char **argv)
     // Load Qaterial.
     qaterial::loadQmlResources();
     qaterial::registerQmlTypes();
+
+    //qmlRegisterType<TableModel>("TableModel", 1, 0, "TableModel");
 
     MainWindow w;
     w.show();
