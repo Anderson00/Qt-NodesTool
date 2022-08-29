@@ -1,96 +1,103 @@
 import QtQuick 2.4
+import QtQuick.Controls 2.0
+import QtQuick.Controls.Material 2.12
+import QtQuick.Controls.Material.impl 2.12
+import QtQuick.Layouts 1.0
+import QtGraphicalEffects 1.15
+import Qaterial 1.0 as Qaterial
 
-Column {
-    width: parent.width
-    height: parent.height
+ColumnLayout {
+    id: root
+    width: parent.width + 8
+    height: 40
+    spacing: 0
 
-    property alias model: columnRepeater.model
+    property alias title: buttonBody.text
+    property alias loader: loaderBody.sourceComponent
+    property  int loaderHeight
+    property bool opened: false
 
-    Repeater {
-        id: columnRepeater
-        delegate: accordion
-    }
+    // TODO: extract this component
+    Button {
+        id: buttonBody
+        Layout.preferredWidth: root.width
+        Layout.preferredHeight: 40
 
-    Component {
-        id: accordion
-        Column {
-            width: parent.width
+        onClicked: {
+            root.opened = !root.opened
+        }
 
-            Item {
-                id: infoRow
+        background: Rectangle{
+            color: "#222"
+            anchors.fill: parent
+        }
 
-                width: parent.width
-                height: childrenRect.height
-                property bool expanded: false
-
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: infoRow.expanded = !infoRow.expanded
-                    enabled: modelData.children ? true : false
-                }
-
-                Image {
-                    id: carot
-
-                    anchors {
-                        top: parent.top
-                        left: parent.left
-                        margins: 5
-                    }
-
-                    sourceSize.width: 16
-                    sourceSize.height: 16
-                    source: 'images/triangle.svg'
-                    visible: modelData.children ? true : false
-                    transform: Rotation {
-                        origin.x: 5
-                        origin.y: 10
-                        angle: infoRow.expanded ? 90 : 0
-                        Behavior on angle { NumberAnimation { duration: 150 } }
-                    }
-                }
-
-                Text {
-                    anchors {
-                        left: carot.visible ? carot.right : parent.left
-                        top: parent.top
-                        margins: 5
-                    }
-
-                    font.pointSize: 12
-                    visible: parent.visible
-
-                    color: 'white'
-                    text: modelData.label
-                }
-
-                Text {
-                    font.pointSize: 12
-                    visible: infoRow.visible
-
-                    color: 'white'
-                    text: modelData.value
-
-                    anchors {
-                        top: parent.top
-                        right: parent.right
-                        margins: 5
-                    }
-                }
+        contentItem: RowLayout{
+            anchors.fill: parent
+            Label {
+                id: titleLabel
+                text: buttonBody.text
+                Layout.fillWidth: true
+                Layout.leftMargin: 8
+                Layout.alignment: Qt.AlignCenter
+                color: Material.accentColor
+                font.pixelSize: 12
             }
 
-            ListView {
-                id: subentryColumn
-                x: 20
-                width: parent.width - x
-                height: childrenRect.height * opacity
-                visible: opacity > 0
-                opacity: infoRow.expanded ? 1 : 0
-                delegate: accordion
-                model: modelData.children ? modelData.children : []
-                interactive: false
-                Behavior on opacity { NumberAnimation { duration: 200 } }
+            Image {
+                id: iconArrow
+                Layout.preferredHeight: 20
+                Layout.preferredWidth: 20
+
+                source: `qrc:/Qaterial/Icons/arrow-down.svg`
+                rotation: root.opened? 180 : 0
+
+                ColorOverlay {
+                    anchors.fill: iconArrow
+                    source: iconArrow
+                    color: Material.accentColor
+                }
             }
         }
+
+        Ripple {
+            id: ripple
+            anchors.horizontalCenter: parent.horizontalCenter
+            clipRadius: 0
+            width: parent.width
+            height: 40
+            pressed: buttonBody.pressed
+            active: buttonBody.down || buttonBody.visualFocus || buttonBody.hovered
+            color: "#20FFFFFF"
+            layer.enabled: true
+            layer.effect: OpacityMask {
+                maskSource: Rectangle
+                {
+                    width: ripple.width
+                    height: ripple.height
+                    radius: 0
+                }
+            }
+        }
+    }
+
+
+    Rectangle {
+        id: loaderBackground
+        color: "#444"
+        Layout.preferredWidth: parent.width
+        Layout.preferredHeight: root.opened ? loaderBody.height : 0
+        clip: true
+
+        Behavior on Layout.preferredHeight {
+            NumberAnimation { duration: 300; easing.type: Easing.OutQuad }
+        }
+
+        Loader {
+            id: loaderBody
+            width: parent.width
+            height: loaderHeight
+        }
+
     }
 }

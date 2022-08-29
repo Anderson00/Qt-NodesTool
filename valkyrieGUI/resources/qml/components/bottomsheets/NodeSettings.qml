@@ -127,6 +127,48 @@ Drawer {
                         }
                     }
                 }
+
+                Accordion {
+                    title: 'Inputs'
+                    Layout.leftMargin: -5
+                    loaderHeight: 50
+                    loader: Component {
+                        ColumnLayout {
+                            id: bodyLayout
+                            anchors.fill: parent
+                            height: 50
+
+                            Label {
+                                text: "TESTANDO"
+                            }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.leftMargin: -5
+                    height: 1
+                    color: "#111"
+                }
+
+                Accordion {
+                    title: 'Outputs'
+                    Layout.leftMargin: -5
+                    loaderHeight: 100
+                    loader: Component {
+                        ColumnLayout {
+                            id: bodyLayout2
+                            anchors.fill: parent
+                            height: 100
+
+                            Label {
+                                text: "TESTANDO Out"
+                            }
+                        }
+                    }
+                }
+
             }
         }
     }
