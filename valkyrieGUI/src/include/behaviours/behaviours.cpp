@@ -20,7 +20,7 @@ void Behaviours::loadConnections()
     int methodCountExclude = metaObjectExclude->methodCount();
     for(int index = 0; index < methodCountExclude; index++){
         QMetaMethod metaMethod = this->metaObject()->method(index);
-        QString className = metaMethod.enclosingMetaObject()->className();
+        QString className = metaMethod.enclosingMetaObject()->className();        
 
         if(className == "Behaviours" || className == "QObject"){
             switch (metaMethod.methodType()) {
