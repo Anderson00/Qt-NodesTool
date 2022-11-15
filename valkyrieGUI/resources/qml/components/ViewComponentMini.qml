@@ -100,6 +100,7 @@ Rectangle{
         RowLayout {
             Button {
                 z: 10
+                visible: false
                 Layout.preferredHeight: 30
                 text: "ok"
 

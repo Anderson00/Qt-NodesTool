@@ -8,6 +8,8 @@
 #include "behaviours/common/fileopener.h"
 #include "behaviours/common/hexviewer.h"
 #include "behaviours/common/processesviewer.h"
+#include "behaviours/common/linechartviewer.h"
+#include "behaviours/common/randomgeneratorviwer.h"
 #include "behaviours/logic/hub.h"
 
 BehaviourLoader *BehaviourLoader::m_instance = nullptr;
@@ -68,6 +70,10 @@ Behaviours *BehaviourLoader::loadBehaviourFromClassName(const QString &className
         return new HexViewer;
     }else if(className == "ProcessesViewer"){
         return new ProcessesViewer;
+    }else if(className == "LineChartViewer"){
+        return new LineChartViewer;
+    }else if(className == "RandomGeneratorViwer"){
+        return new RandomGeneratorViwer;
     }
 
     return nullptr;
@@ -99,14 +105,12 @@ QJsonObject BehaviourLoader::discoverAll()
     QDir dir("Behaviours");
     QFileInfoList infos = dir.entryInfoList();
 
-    FileOpener fileOpener;
-    fileOpener.start();
-    qDebug() << fileOpener.inputConns().keys().size();
-
     result["Debug/common"] = QJsonArray({
                                             QJsonObject::fromVariantMap(QVariantMap(FileOpener::static_infos())),
                                             QJsonObject::fromVariantMap(QVariantMap(ProcessesViewer::static_infos())),
-                                            QJsonObject::fromVariantMap(QVariantMap(HexViewer::static_infos()))
+                                            QJsonObject::fromVariantMap(QVariantMap(HexViewer::static_infos())),
+                                            QJsonObject::fromVariantMap(QVariantMap(LineChartViewer::static_infos())),
+                                            QJsonObject::fromVariantMap(QVariantMap(RandomGeneratorViwer::static_infos()))
                                         });
 
     result["Debug/logic"] = QJsonArray({

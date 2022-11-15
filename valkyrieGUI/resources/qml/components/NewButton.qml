@@ -2,13 +2,20 @@ import QtQuick 2.9
 import QtQuick.Templates 2.2 as T
 import QtQuick.Controls 2.2
 import QtQuick.Controls.impl 2.2
+import QtQuick.Layouts 1.0
 import QtQuick.Controls.Material 2.2
 import QtQuick.Controls.Material.impl 2.2
+
+import Qaterial 1.0 as Qaterial
 
 Button {
     id: control
 
     property string textColor: "#fff"
+    property int radius: 2
+    property string backgroundColor: Material.primaryColor
+    property string iconSource: ''
+    property int iconSize: 18
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             contentItem.implicitWidth + leftPadding + rightPadding)
@@ -23,15 +30,30 @@ Button {
 
     Material.elevation: flat ? control.down || control.hovered ? 2 : 0
                              : control.down ? 8 : 2
-    Material.background: flat ? "transparent" : undefined
+    Material.background: flat ? "transparent" : control.backgroundColor
 
-    contentItem: Text {
-        text: control.text
-        font: control.font
-        color: textColor
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        elide: Text.ElideRight
+    contentItem: RowLayout {
+        anchors.fill: parent.Center
+
+        Qaterial.Icon {
+            id: btIcon
+            Layout.preferredHeight: control.iconSize
+            Layout.fillWidth: true
+            icon: control.iconSource
+            antialiasing: true
+        }
+
+        Label {
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignCenter
+            visible: btIcon.icon ? false : true
+            text: control.text
+            font: control.font
+            color: textColor
+            elide: Text.ElideRight
+            verticalAlignment: Label.AlignVCenter
+            horizontalAlignment: Label.AlignHCenter
+        }
     }
 
     // TODO: Add a proper ripple/ink effect for mouse/touch input and focus state
@@ -43,10 +65,8 @@ Button {
         y: 6
         width: parent.width
         height: parent.height - 12
-        radius: parent.width
-        color: !control.enabled ? control.Material.hintTextColor :
-            control.flat && control.highlighted ? control.Material.accentColor :
-            control.highlighted ? control.Material.primaryHighlightedTextColor : control.Material.foreground
+        radius: control.radius
+        color: control.backgroundColor
 
 
         Ripple {

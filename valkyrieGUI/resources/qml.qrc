@@ -2,7 +2,9 @@
     <qresource prefix="/behaviours/common">
         <file alias="FileOpener.qml">qml/behaviours/common/FileOpener.qml</file>
         <file alias="HexViewer.qml">qml/behaviours/common/HexViewer.qml</file>
-        <file alias="ProcessesViewer.qml">qml/behaviours/common/ProcessesViewer.qml</file>        
+        <file alias="ProcessesViewer.qml">qml/behaviours/common/ProcessesViewer.qml</file>
+        <file alias="LineChartViewer.qml">qml/behaviours/common/LineChartViewer.qml</file>
+        <file alias="RandomGeneratorViwer.qml">qml/behaviours/common/RandomGeneratorViwer.qml</file>
     </qresource>
     <qresource prefix="/components">
         <file alias="Accordion.qml">qml/components/Accordion.qml</file>
