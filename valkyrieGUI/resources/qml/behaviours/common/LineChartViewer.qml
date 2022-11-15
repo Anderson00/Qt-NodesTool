@@ -64,9 +64,7 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             antialiasing: true
-            //backgroundColor: "transparent"
             backgroundColor: "#140f07"
-            //plotAreaColor: "#EC407A"
             animationOptions: ChartView.NoAnimation
 
             LineSeries {
@@ -82,23 +80,5 @@ Item {
             }
         }
 
-    }
-
-    property int count: 0
-    Button {
-        text: "ADD"
-        visible: false
-        onClicked: {
-            let appendedY = 203;
-            lineSerie.append(count++, appendedY)
-
-            charTotalUsage.axes[0].min = 0
-            charTotalUsage.axes[0].max = count
-            charTotalUsage.axes[1].max = appendedY
-            charTotalUsage.axes[0].tickCount = 5
-            charTotalUsage.axes[1].min = 0
-
-            charTotalUsage.update()
-        }
     }
 }

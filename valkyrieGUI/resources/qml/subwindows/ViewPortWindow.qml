@@ -611,6 +611,7 @@ Rectangle {
     CustomToolbar {
         id: toolbar
         anchors.bottom: parent.bottom
+        visible: false
 
         width: 350
         height: 50
