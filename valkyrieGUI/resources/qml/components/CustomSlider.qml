@@ -9,7 +9,8 @@ Item {
     id: root    
     //property alias orientation: slider.orientation;
     property string prefix: ""
-    property alias color: slider.color
+    property string color: ""
+    //property alias color: slider.color
     property alias value: slider.value
     property alias from: slider.from
     property alias to: slider.to

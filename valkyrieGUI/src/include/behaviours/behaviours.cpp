@@ -1,6 +1,7 @@
 #include "behaviours.h"
 
 #include <QDebug>
+#include <model/connectionmodel.h>
 
 Behaviours::Behaviours(QObject *parent) : QObject(parent)
 {
@@ -167,6 +168,32 @@ bool Behaviours::isInputMethodSignature(const QString &signature)
 bool Behaviours::isOutputMethodSignature(const QString &signature)
 {
     return getOutputsMethodSignature().contains(signature);
+}
+
+ QList<Behaviours*> Behaviours::getAllBehavioursConnected()
+{
+    QList<Behaviours*> result;
+
+    for(Connections* it : this->m_input_conns){
+        for(ConnectionModel * connModel : it->getAllConnections()){
+
+            if(connModel->input() != this)
+                result.push_back(connModel->input());
+            if(connModel->output() != this)
+                result.push_back(connModel->output());
+        }
+    }
+
+    for(Connections* it : this->m_output_conns){
+        for(ConnectionModel * connModel : it->getAllConnections()){
+            if(connModel->input() != this)
+                result.push_back(connModel->input());
+            if(connModel->output() != this)
+                result.push_back(connModel->output());
+        }
+    }
+
+    return result;
 }
 
 void Behaviours::setInputConns(QMap<QString, Connections*> inputConns)

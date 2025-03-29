@@ -14,7 +14,7 @@ class CacheTest : public ::testing::Test
 {
 public:
     static Cache<QByteArray> *cache;
-    static QApplication *app;
+    static QCoreApplication *app;
 
     static void SetUpTestSuite() {
         cache = new Cache<QByteArray>;

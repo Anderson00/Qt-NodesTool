@@ -6,7 +6,7 @@ import QtQuick.Shapes 1.15
 
 import "../components"
 import "../components/bottomsheets"
-import Qaterial 1.0 as Qaterial
+import Qaterial as Qaterial
 
 Rectangle {
     id: root
@@ -26,6 +26,10 @@ Rectangle {
     //Behaviours properties
     property var behavioursZ: []
     property var nodeOnFocus
+
+    property var rectsArray: ListModel {}
+
+    signal nodeConnected(var node1, var node2)
 
     onNodeOnFocusChanged: {
         if(nodeOnFocus){
@@ -221,6 +225,7 @@ Rectangle {
                     let isValid = node1['node'].behaviourObject.addConnection(node1['methodSignature1'], node1['node2'], node1['methodSignature2'])
                     if(isValid){
                         // TODO:
+                        nodeConnected(node, shapeConn.viewRectConn2)
                     }else{
                         nodeConnections.model.remove(lastConnection)
                     }
@@ -260,7 +265,6 @@ Rectangle {
         hoverEnabled: true
 
         onClicked: {
-            console.log('qwd')
             root.focus = true
         }
 
@@ -420,12 +424,13 @@ Rectangle {
                     Component.onCompleted: {
                         circleConnPoint = model.circleConn.mapToItem(parent, 0, 0);
                         shapeConn = shape;
+
                     }
 
                     onCircleConn2Changed: {
-                        if(circleConn2)
+                        if(circleConn2){
                             circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0);
-                        else{
+                        }else{
                             // TODO: remove connection in CPP/Behaviour
                             nodeConnections.model.remove(index)
                         }
@@ -481,11 +486,19 @@ Rectangle {
             Repeater {
                 id: nodes
 
-                model: ListModel{
+                property var objectToDelete;
 
+                model: ListModel{
+                    onCountChanged: {
+                        if(nodes.objectToDelete){
+                            viewPort.removeBehaviourObject(nodes.objectToDelete);
+                            nodes.objectToDelete = null;
+                        }
+                    }
                 }
 
                 delegate: ViewComponentRectV2 {
+                    id: viewComponentRectV2
 
                     onXChanged: {
                         this.focus = true
@@ -500,7 +513,6 @@ Rectangle {
                     }
 
                     onFocusChanged: {
-                        console.log(">>>>>>> focus:" + this.focus)
                         if(focus)
                             nodeOnFocus = this
                     }
@@ -523,6 +535,9 @@ Rectangle {
                     Component.onCompleted: {
                         behavioursZ[index] = 0
                         model.object.setViewRectangle(this)
+
+                        behaviourObject.x = mycanvasBody.width/2 - width/2
+                        behaviourObject.y = mycanvasBody.height/2 - height/2
                     }
 
                     onZChanged: {
@@ -534,7 +549,8 @@ Rectangle {
                     }
 
                     onCloseButtonClicked: {
-                        nodes.model.remove(index)
+                        nodes.objectToDelete = model.object
+                        nodes.model.remove(index);
                     }
 
                     onFrontOneStepClicked: {
@@ -645,51 +661,63 @@ Rectangle {
             }
 
             delegate: Shape {
+                visible: model.rect1 && model.rect2
                 antialiasing: true
                 smooth: true
                 z: Number.MAX_VALUE
 
+                property var circleConnPoint
+                property var circleConnPoint2
+
                 Component.onCompleted: {
-                    //circleConnPoint = model.rect.mapToItem(parent, 0, 0);
+                    circleConnPoint = model.rect1.mapToItem(parent, 0, 0);
+                    circleConnPoint2 = model.rect2.mapToItem(parent, 0, 0);
                 }
 
                 Connections {
                     target: model.rect1
 
                     function onXChanged(){
-                        //circleConnPoint = model.circleConn.mapToItem(parent, 0, 0);
+                        circleConnPoint =  model.rect1.mapToItem(parent, 0, 0);
                     }
 
                     function onYChanged(){
-                        //circleConnPoint = model.circleConn.mapToItem(parent, 0, 0);
+                        circleConnPoint =  model.rect1.mapToItem(parent, 0, 0);
                     }
                 }
 
                 Connections {
-                    target:  model.rect2
+                    target: model.rect2
 
                     function onXChanged(){
-                        //circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0);
+                        circleConnPoint2 =  model.rect2.mapToItem(parent, 0, 0);
                     }
 
                     function onYChanged(){
-                        //circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0);
+                        circleConnPoint2 =  model.rect2.mapToItem(parent, 0, 0);
                     }
                 }
-
                 ShapePath {
                     strokeColor: "red"
                     strokeWidth: 2
                     fillColor: "transparent"
                     capStyle: ShapePath.RoundCap
 
-                    startX: model.rect1.x
-                    startY: model.rect1.y
+                    startX: (circleConnPoint.x + (model.rect1.width)/2)
+                    startY: (circleConnPoint.y + (model.rect1.height)/2)
 
                     PathLine {
-                        x: model.rect2.x
-                        y: model.rect2.y
+                        x: model.rect2 ? (circleConnPoint2.x + (model.rect2.width)/2) : 0
+                        y: model.rect2 ? (circleConnPoint2.y + (model.rect2.width)/2) : 0
                     }
+
+                    // startX: (circleConnPoint.x)
+                    // startY: (circleConnPoint.y)
+
+                    // PathLine {
+                    //     x: model.rect2 ? (circleConnPoint2.x): 0
+                    //     y: model.rect2 ? (circleConnPoint2.y): 0
+                    // }
                 }
             }
         }
@@ -708,7 +736,41 @@ Rectangle {
                 color: '#ccc'
 
                 Component.onCompleted: {
-                    //viewRectGhostConns.model.append({rect1: this, rect2: parent.parent});
+                    let uuid = viewPort.getUUIDFromBehaviour(model.object);
+                    rectsArray.append({'uuid': uuid, 'rectObjTarget': this});
+                }
+
+                Connections {
+                    target: root
+
+                    function onNodeConnected(node1, node2){
+                        let arr = model.object.getAllBehavioursConnected()
+                        for(let i = 0; i < arr.length; i++){
+                            let uuid = viewPort.getUUIDFromBehaviour(arr[i]);
+
+                            for(let j = 0; j < root.rectsArray.count; j++){
+                                let obj = root.rectsArray.get(j);
+                                if(obj['uuid'] === uuid){
+                                    if(viewRectGhostConns.model.count > 0){
+                                        for(let k = 0; k < viewRectGhostConns.model.count; k++){
+                                            if(viewRectGhostConns.model.get(k).rect1 !== rectObj
+                                                    && viewRectGhostConns.model.get(k).rect2 !== rectObj){
+                                                viewRectGhostConns.model.append({rect1: rectObj, rect2: obj['rectObjTarget']});
+                                            }
+                                        }
+                                    }else{
+                                        viewRectGhostConns.model.append({rect1: rectObj, rect2: obj['rectObjTarget']});
+                                    }
+
+
+                                }
+
+                            }
+
+                        }
+
+                        console.log(model.object.getAllBehavioursConnected())
+                    }
                 }
 
                 SequentialAnimation {

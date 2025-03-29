@@ -10,6 +10,11 @@ Connections::Connections(Behaviours *obj, QMetaMethod metaMethod, QObject *paren
 
 }
 
+Connections::~Connections()
+{
+    qDebug() << "CONNNN deleted";
+}
+
 QString Connections::methodSignature()
 {
     return this->m_metaMethod.methodSignature();
@@ -54,4 +59,9 @@ ConnectionModel *Connections::addConnection(ConnectionModel *conn)
         this->m_connections.removeOne(conn);
     });
     return conn;
+}
+
+QList<ConnectionModel *> Connections::getAllConnections()
+{
+    return this->m_connections;
 }

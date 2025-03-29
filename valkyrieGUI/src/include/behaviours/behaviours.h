@@ -76,6 +76,8 @@ public slots:
     bool isInputMethodSignature(const QString& signature);
     bool isOutputMethodSignature(const QString& signature);
 
+    QList<Behaviours*> getAllBehavioursConnected();
+
     void start();
 
 signals:

@@ -71,7 +71,7 @@ public:
         return QAbstractTableModel::flags(index) | Qt::ItemIsEditable;
     }
 
-    QList< QPair<QString, QString> > TableModel::getList()
+    QList< QPair<QString, QString> > getList()
     {
 
         return listOfPairs;

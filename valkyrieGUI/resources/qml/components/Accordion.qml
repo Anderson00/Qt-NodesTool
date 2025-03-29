@@ -3,7 +3,7 @@ import QtQuick.Controls 2.0
 import QtQuick.Controls.Material 2.12
 import QtQuick.Controls.Material.impl 2.12
 import QtQuick.Layouts 1.0
-import QtGraphicalEffects 1.15
+import Qt5Compat.GraphicalEffects
 import Qaterial 1.0 as Qaterial
 
 ColumnLayout {

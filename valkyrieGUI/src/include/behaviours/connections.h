@@ -22,6 +22,7 @@ public:
     Q_ENUM(ConnMethodType)
 
     explicit Connections(Behaviours *obj, QMetaMethod metaMethod, QObject *parent = nullptr);
+    ~Connections();
 
     QString methodSignature();
     ConnMethodType methodType();
@@ -30,6 +31,7 @@ public:
 public slots:
     ConnectionModel *addConnection(Behaviours *output, QMetaMethod metaMethod);
     ConnectionModel *addConnection(ConnectionModel* conn);
+    QList<ConnectionModel *> getAllConnections();
 
 signals:
 

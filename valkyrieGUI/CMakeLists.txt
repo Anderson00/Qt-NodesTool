@@ -1,17 +1,19 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.16)
 
 # Download & Configure Qaterial as part of your build system
 include(FetchContent)
 FetchContent_Declare(
   Qaterial
   GIT_REPOSITORY https://github.com/OlivierLDff/Qaterial.git
-  GIT_TAG        master
+  GIT_TAG        v1.5.2
   GIT_SHALLOW    1
 )
 FetchContent_MakeAvailable(Qaterial)
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Quick Gui Svg Sql Network Test Qaterial REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Svg Gui Sql Quick Network Test REQUIRED)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick Gui Svg Sql Network Test Qaterial)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Core Svg Gui Sql Quick Network Xml QuickControls2 Core5Compat Test)
+
+qt_standard_project_setup()
 
 set(PROJECT_SOURCES
     src/main.cpp
@@ -43,29 +45,22 @@ set(PROJECT_SOURCES
     src/include/subwindows/debuggermain.ui)
 
 
-if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(Main
-        ${PROJECT_SOURCES}
-    )
-else()
-    if(ANDROID)
-        add_library(Debugger SHARED
-            ${PROJECT_SOURCES}
-        )
-    else()
-        add_executable(Debugger
-            ${PROJECT_SOURCES}
-        )
-    endif()
-endif()
+qt_add_executable(Debugger
+    ${PROJECT_SOURCES}
+)
 
-target_link_libraries(Debugger PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick cxxopts Qaterial QOlm::QOlm)
+target_link_libraries(Debugger PRIVATE Qt6::Widgets Qt6::Core Qt6::Quick Qt6::Xml cxxopts Qaterial QOlm::QOlm)
 
 #add_executable(Main main.cpp ${SOURCE_FILES_CURSES})
-set_target_properties(Debugger PROPERTIES AUTOMOC TRUE)
+set_target_properties(Debugger PROPERTIES
+    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+    MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+    MACOSX_BUNDLE TRUE
+    WIN32_EXECUTABLE TRUE
+    AUTOMOC TRUE)
 
 #target_link_libraries (Main PUBLIC cxxopts unicorn capstone-shared)
-target_include_directories(Debugger PUBLIC                          
+target_include_directories(Debugger PUBLIC
                           #"${PROJECT_SOURCE_DIR}/extern/unicorn/include"
                           #"${PROJECT_SOURCE_DIR}/extern/retdec/include"
                           #"${PROJECT_SOURCE_DIR}/extern/capstone/include"

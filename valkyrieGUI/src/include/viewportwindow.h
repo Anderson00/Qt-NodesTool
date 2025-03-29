@@ -20,10 +20,16 @@ public:
 public slots:
     void setFullScreen(bool isFull);
     bool addBehaviour(const QString &path, const QJsonObject infos);
+    bool removeBehaviourFromUUID(const QString &uuid);
+    bool removeBehaviourObject(Behaviours * object);
+
+    Behaviours* searchBehaviourFromUUID(const QString &uuid);
+    QString getUUIDFromBehaviour(Behaviours * object);
 
 signals:
     void fullScreenToogle();
     void behaviourAdded(Behaviours *behaviour);
+    void behaviourConnection(Behaviours *source, Behaviours *target);
 
 private:
     //    UUID  , Behaviour
