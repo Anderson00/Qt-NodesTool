@@ -34,7 +34,7 @@ bool ViewPortWindow::addBehaviour(const QString &path, const QJsonObject infos)
     if(object != nullptr){
         this->m_behaviours[uuid] = object;
 
-        auto lambdaFun = [&](ConnectionModel * model){
+        auto lambdaFun = [&, object](ConnectionModel * model){
             Behaviours * output = model->output();
             Behaviours * input = model->input();
 

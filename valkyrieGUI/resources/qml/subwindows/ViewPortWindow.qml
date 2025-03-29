@@ -58,6 +58,10 @@ Rectangle {
         function onBehaviourAdded(obj){
             nodes.model.append({'object':obj})
         }
+
+        function onBehaviourConnection(source, target){
+            console.log("Source = "+ source + " target = "+ target)
+        }
     }
 
     function viewSubWindowsWidthHeightArea(){
@@ -761,15 +765,9 @@ Rectangle {
                                     }else{
                                         viewRectGhostConns.model.append({rect1: rectObj, rect2: obj['rectObjTarget']});
                                     }
-
-
                                 }
-
                             }
-
                         }
-
-                        console.log(model.object.getAllBehavioursConnected())
                     }
                 }
 
