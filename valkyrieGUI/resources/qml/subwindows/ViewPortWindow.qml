@@ -61,6 +61,25 @@ Rectangle {
 
         function onBehaviourConnection(source, target){
             console.log("Source = "+ source + " target = "+ target)
+
+            let sourceUUID = viewPort.getUUIDFromBehaviour(source);
+            let targetUUID = viewPort.getUUIDFromBehaviour(target);
+
+            let sourceObject;
+            let targetObject;
+            for(let i = 0; i < rectsArray.count; i++){
+                if(rectsArray.get(i)["uuid"] === sourceUUID) {
+                    sourceObject = rectsArray.get(i)["rectObjTarget"];
+                }
+
+                if(rectsArray.get(i)["uuid"] === targetUUID){
+                    targetObject = rectsArray.get(i)["rectObjTarget"];
+                }
+            }
+
+            if(sourceObject && targetObject){
+                viewRectGhostConns.model.append({rect1: sourceObject, rect2: targetObject});
+            }
         }
     }
 
@@ -668,6 +687,7 @@ Rectangle {
                 visible: model.rect1 && model.rect2
                 antialiasing: true
                 smooth: true
+                opacity: 0.3
                 z: Number.MAX_VALUE
 
                 property var circleConnPoint
@@ -702,7 +722,8 @@ Rectangle {
                     }
                 }
                 ShapePath {
-                    strokeColor: "red"
+                    strokeColor: '#ccc'
+
                     strokeWidth: 2
                     fillColor: "transparent"
                     capStyle: ShapePath.RoundCap
@@ -711,17 +732,9 @@ Rectangle {
                     startY: (circleConnPoint.y + (model.rect1.height)/2)
 
                     PathLine {
-                        x: model.rect2 ? (circleConnPoint2.x + (model.rect2.width)/2) : 0
-                        y: model.rect2 ? (circleConnPoint2.y + (model.rect2.width)/2) : 0
+                        x: (circleConnPoint2.x + (model.rect2.width)/2)
+                        y: (circleConnPoint2.y + (model.rect2.height)/2)
                     }
-
-                    // startX: (circleConnPoint.x)
-                    // startY: (circleConnPoint.y)
-
-                    // PathLine {
-                    //     x: model.rect2 ? (circleConnPoint2.x): 0
-                    //     y: model.rect2 ? (circleConnPoint2.y): 0
-                    // }
                 }
             }
         }
@@ -742,33 +755,6 @@ Rectangle {
                 Component.onCompleted: {
                     let uuid = viewPort.getUUIDFromBehaviour(model.object);
                     rectsArray.append({'uuid': uuid, 'rectObjTarget': this});
-                }
-
-                Connections {
-                    target: root
-
-                    function onNodeConnected(node1, node2){
-                        let arr = model.object.getAllBehavioursConnected()
-                        for(let i = 0; i < arr.length; i++){
-                            let uuid = viewPort.getUUIDFromBehaviour(arr[i]);
-
-                            for(let j = 0; j < root.rectsArray.count; j++){
-                                let obj = root.rectsArray.get(j);
-                                if(obj['uuid'] === uuid){
-                                    if(viewRectGhostConns.model.count > 0){
-                                        for(let k = 0; k < viewRectGhostConns.model.count; k++){
-                                            if(viewRectGhostConns.model.get(k).rect1 !== rectObj
-                                                    && viewRectGhostConns.model.get(k).rect2 !== rectObj){
-                                                viewRectGhostConns.model.append({rect1: rectObj, rect2: obj['rectObjTarget']});
-                                            }
-                                        }
-                                    }else{
-                                        viewRectGhostConns.model.append({rect1: rectObj, rect2: obj['rectObjTarget']});
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
 
                 SequentialAnimation {

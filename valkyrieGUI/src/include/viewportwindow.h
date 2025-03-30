@@ -26,6 +26,7 @@ public slots:
     Behaviours* searchBehaviourFromUUID(const QString &uuid);
     QString getUUIDFromBehaviour(Behaviours * object);
 
+
 signals:
     void fullScreenToogle();
     void behaviourAdded(Behaviours *behaviour);

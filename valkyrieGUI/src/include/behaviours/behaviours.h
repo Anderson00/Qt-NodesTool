@@ -90,6 +90,8 @@ signals:
     void yChanged(double newY);
     void inputConnected(ConnectionModel*);
     void outputConnected(ConnectionModel*);
+    void inputDesconected(Behaviours* from);
+    void outputDesconected(Behaviours* from);
 
 protected:
     void setInputConns(QMap<QString, Connections*> inputConns);
