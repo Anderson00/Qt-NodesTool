@@ -5,6 +5,7 @@
         <file alias="ProcessesViewer.qml">qml/behaviours/common/ProcessesViewer.qml</file>
         <file alias="LineChartViewer.qml">qml/behaviours/common/LineChartViewer.qml</file>
         <file alias="RandomGeneratorViwer.qml">qml/behaviours/common/RandomGeneratorViwer.qml</file>
+        <file alias="ComponentsViewer.qml">qml/behaviours/common/ComponentsViewer.qml</file>
     </qresource>
     <qresource prefix="/components">
         <file alias="Accordion.qml">qml/components/Accordion.qml</file>
@@ -17,6 +18,8 @@
         <file alias="NewButton.qml">qml/components/NewButton.qml</file>
         <file alias="ViewComponentMini.qml">qml/components/ViewComponentMini.qml</file>
         <file alias="CustomTextField.qml">qml/components/CustomTextField.qml</file>
+        <file alias="IconButton.qml">qml/components/IconButton.qml</file>
+        <file alias="RippleEffectBackground.qml">qml/components/RippleEffectBackground.qml</file>
     </qresource>
     <qresource prefix="/subwindows">
         <file alias="DebuggerMain.qml">qml/subwindows/DebuggerMain.qml</file>

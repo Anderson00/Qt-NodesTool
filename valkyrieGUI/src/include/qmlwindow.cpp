@@ -7,6 +7,9 @@
 #include <QtQml/QQmlApplicationEngine>
 #include <QtQml/QQmlContext>
 #include <QtQml/QQmlComponent>
+#include <QUuid>
+#include "model/thememanager.h"
+#include "model/subtheme.h"
 
 QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent),
     m_qml_url(qmlUrl)
@@ -14,8 +17,21 @@ QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent),
     this->m_view = new QQuickView(this->windowHandle());
 
     if(qmlUrl.isValid()){
+
+        qmlRegisterSingletonType<ThemeManager>(
+            "App.Theme",
+            1, 0,
+            "ThemeManager",
+            ThemeManager::qmlSingletonProvider
+        );
+
+        m_subTheme = new SubTheme(QUuid::createUuid().toString(QUuid::WithoutBraces));
+        ThemeManager::instance()->addSubTheme(m_subTheme);
+
+        this->view()->rootContext()->setContextProperty("theme", m_subTheme);
         this->view()->rootContext()->setContextProperty("window", this);        
         this->view()->engine()->addImportPath("qrc:///");
+        this->view()->engine()->addImportPath("components");
     }
 
     this->setCentralWidget(QWidget::createWindowContainer(this->m_view, this));
@@ -25,6 +41,8 @@ QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent),
 
 QMLWindow::~QMLWindow()
 {
+    ThemeManager::instance()->removeSubTheme(m_subTheme);
+    delete m_subTheme;
     delete m_view;
 }
 

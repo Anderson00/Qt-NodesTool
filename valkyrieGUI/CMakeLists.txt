@@ -12,6 +12,8 @@ FetchContent_MakeAvailable(Qaterial)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick Gui Svg Sql Network Test Qaterial)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Svg Gui Sql Quick Network Xml QuickControls2 Core5Compat Test)
+find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core)
 
 qt_standard_project_setup()
 
@@ -26,6 +28,7 @@ set(PROJECT_SOURCES
     src/include/qmlwindow.h src/include/qmlwindow.cpp
     src/include/viewportwindow.h src/include/viewportwindow.cpp
     src/include/behaviours/common/fileopener.h src/include/behaviours/common/fileopener.cpp
+    src/include/behaviours/common/cameraviewer.h src/include/behaviours/common/cameraviewer.cpp
     src/include/behaviours/common/processesviewer.h src/include/behaviours/common/processesviewer.cpp
     src/include/behaviours/common/hexviewer.h src/include/behaviours/common/hexviewer.cpp
     src/include/behaviours/common/linechartviewer.h src/include/behaviours/common/linechartviewer.cpp
@@ -35,6 +38,9 @@ set(PROJECT_SOURCES
     src/include/behaviours/connections.h src/include/behaviours/connections.cpp
     src/include/model/tablemodel.h src/include/model/tablemodel.cpp
     src/include/model/connectionmodel.h src/include/model/connectionmodel.cpp
+    src/include/model/thememanager.h src/include/model/thememanager.cpp
+    src/include/model/abstracttheme.h src/include/model/abstracttheme.cpp
+    src/include/model/subtheme.h src/include/model/subtheme.cpp
     src/include/behaviours/behaviours.h src/include/behaviours/behaviours.cpp
     src/include/subwindows/taskmanagerwindow.h src/include/subwindows/taskmanagerwindow.cpp
     src/include/subwindows/testconnectionwindow.h src/include/subwindows/testconnectionwindow.cpp
@@ -42,14 +48,18 @@ set(PROJECT_SOURCES
     src/include/subwindows/qmlmdisubwindow.h
     src/include/subwindows/debuggermain.cpp
     src/include/subwindows/debuggermain.h
-    src/include/subwindows/debuggermain.ui)
+    src/include/subwindows/debuggermain.ui
+)
 
 
 qt_add_executable(Debugger
     ${PROJECT_SOURCES}
+    src/include/behaviours/common/componentsviewer.h src/include/behaviours/common/componentsviewer.cpp
 )
 
 target_link_libraries(Debugger PRIVATE Qt6::Widgets Qt6::Core Qt6::Quick Qt6::Xml cxxopts Qaterial QOlm::QOlm)
+target_link_libraries(Debugger PRIVATE Qt6::Core)
+target_link_libraries(Debugger PRIVATE Qt6::Core)
 
 #add_executable(Main main.cpp ${SOURCE_FILES_CURSES})
 set_target_properties(Debugger PROPERTIES
@@ -64,6 +74,7 @@ target_include_directories(Debugger PUBLIC
                           #"${PROJECT_SOURCE_DIR}/extern/unicorn/include"
                           #"${PROJECT_SOURCE_DIR}/extern/retdec/include"
                           #"${PROJECT_SOURCE_DIR}/extern/capstone/include"
+                          "${CMAKE_SOURCE_DIR}/middleware/include"
                           "src/"
                           "src/include"
                           )

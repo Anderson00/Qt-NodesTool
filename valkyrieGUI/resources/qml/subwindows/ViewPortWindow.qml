@@ -3,6 +3,7 @@ import QtQuick.Controls 2.12
 import QtQuick.Controls.Material 2.12
 import QtQuick.Layouts 1.0
 import QtQuick.Shapes 1.15
+import App.Theme 1.0
 
 import "../components"
 import "../components/bottomsheets"
@@ -42,7 +43,7 @@ Rectangle {
     anchors.fill: parent
     clip: true
 
-    color: '#27191c'
+    color: ThemeManager.backgroundColor
 
     onWidthChanged: {
         viewSubWindowsWidthHeightArea()
@@ -50,6 +51,10 @@ Rectangle {
 
     onHeightChanged: {
         viewSubWindowsWidthHeightArea()
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
     }
 
     Connections {
@@ -130,7 +135,7 @@ Rectangle {
         opacity: (nodeOnFocus)? 1 : 0.3
 
         icon.source: Qaterial.Icons.tune
-        icon.color: Material.accentColor
+        icon.color: ThemeManager.primaryColor
         flat: false
         radius: 0
 
@@ -151,7 +156,7 @@ Rectangle {
         z: 100
 
         icon.source: Qaterial.Icons.folderTable
-        icon.color: Material.accentColor
+        icon.color: ThemeManager.primaryColor
         flat: false
         radius: 0
 
@@ -301,13 +306,6 @@ Rectangle {
         }
     }
 
-    Connections{
-        target: viewPort
-
-        function fullScreenToogle(){
-           // console.log(val);
-        }
-    }
     Column {
         id: fullscreenFab
         anchors.top: root.top
@@ -319,12 +317,12 @@ Rectangle {
         Qaterial.MiniFabButton {
 
             icon.source: Qaterial.Icons.fullscreen
-            icon.color: Material.accentColor
+            icon.color: ThemeManager.accentColor
             flat: false
 
 
             onClicked: {
-                if(icon.source == Qaterial.Icons.fullscreen)
+                if(icon.source === Qaterial.Icons.fullscreen)
                     icon.source = Qaterial.Icons.fullscreenExit
                 else
                     icon.source = Qaterial.Icons.fullscreen
@@ -336,7 +334,7 @@ Rectangle {
         Qaterial.MiniFabButton {
             id: centerButton
             icon.source: Qaterial.Icons.setCenter
-            icon.color: Material.accentColor
+            icon.color: ThemeManager.accentColor
             flat: false
             opacity: (mycanvas.x == 0 && mycanvas.y == 0 && sliderZoom.value == 1)? 0.3 : 1
 
@@ -357,7 +355,7 @@ Rectangle {
         value: minZoom
         z: 100
         enabled: !isConnecting
-        color: Material.accentColor
+        color: ThemeManager.primaryColor
         anchors.left: fullscreenFab.right
         anchors.top: parent.top
         anchors.topMargin: 8
@@ -423,7 +421,7 @@ Rectangle {
             id: mycanvasBody
             anchors.fill: parent
             border.width: 1
-            border.color: "#96a0cd"
+            border.color: ThemeManager.primaryColor
             color: "transparent"
 
             Repeater {
@@ -523,6 +521,18 @@ Rectangle {
                 delegate: ViewComponentRectV2 {
                     id: viewComponentRectV2
 
+                    Connections {
+                        target: mycanvasBody
+
+                        function onWidthChanged() {
+                            viewComponentRectV2.x = clamp(viewComponentRectV2.x, 0, mycanvasBody.width - viewComponentRectV2.width)
+                        }
+
+                        function onHeightChanged() {
+                            viewComponentRectV2.y = clamp(viewComponentRectV2.y, 0, mycanvasBody.height - viewComponentRectV2.height)
+                        }
+                    }
+
                     onXChanged: {
                         this.focus = true
                         if(nodeOnFocus !== this)
@@ -550,7 +560,7 @@ Rectangle {
                         //fogForNodeConnections.visible = true
                     }
 
-                    borderColor: Material.accentColor
+                    borderColor: ThemeManager.primaryColor
                     rootBodyColor: "transparent"
 
                     behaviourObject: model.object
@@ -599,7 +609,7 @@ Rectangle {
             var ctx = getContext("2d")
             ctx.clearRect(0,0, width, height)
             ctx.lineWidth = 0.3
-            ctx.strokeStyle = "#114d4d"
+            ctx.strokeStyle = "#535C27"
             ctx.beginPath()
             var nrows = height / wgrid;
             for(var i = 0; i < nrows+1; i++){

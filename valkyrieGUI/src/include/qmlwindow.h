@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QVector>
 #include <QQuickView>
+#include "model/subtheme.h"
 
 class QMLWindow : public QMainWindow
 {
@@ -39,6 +40,7 @@ signals:
 private:
     QQuickView *m_view;
     QUrl m_qml_url;
+    SubTheme *m_subTheme;
 };
 
 #endif // QMLWINDOW_H

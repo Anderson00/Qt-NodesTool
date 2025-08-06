@@ -212,7 +212,6 @@ Rectangle {
                 text: ""
                 font.pixelSize: 8
                 color: root.focus? "#333" : root.borderColor
-
             }
 
             Rectangle {
@@ -243,7 +242,7 @@ Rectangle {
 
                     // Todo: repeater, dinamic items
 
-                    MenuSeparator {}
+                    //MenuSeparator {}
 
                     MenuItem {
                         text: "close"
@@ -302,8 +301,6 @@ Rectangle {
             }
         }
     }
-
-
 
     Rectangle{
         id: divider
@@ -446,7 +443,6 @@ Rectangle {
                                     height: connOutName.height
 
                                     onClicked: {
-                                        console.log(modelData.name)
                                         root.connectionSocketClicked(connectionsOutput[index])
                                     }
                                 }
@@ -476,7 +472,6 @@ Rectangle {
                         }
                     }
                 }
-
             }
         }
 
