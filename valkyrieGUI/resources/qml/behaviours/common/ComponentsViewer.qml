@@ -44,5 +44,11 @@ Item {
             iconSource: "qrc:/icons/play"
             text: "testando"
         }
+        
+        NewButton {
+            iconSource: "qrc:/icons/clo"
+            text: "testando"
+            iconSize: 12
+        }
     }
 }

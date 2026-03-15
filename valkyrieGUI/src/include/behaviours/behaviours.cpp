@@ -274,6 +274,16 @@ QQuickItem *Behaviours::viewRect()
     return this->m_viewRectangle;
 }
 
+void Behaviours::save()
+{
+
+}
+
+void Behaviours::load()
+{
+
+}
+
 void Behaviours::setViewRectangle(QQuickItem *view)
 {
     this->m_viewRectangle = view;

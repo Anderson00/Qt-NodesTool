@@ -10,11 +10,12 @@
 #include <QUrl>
 #include <QtQuick/QQuickItem>
 #include "connections.h"
+#include "utils/nodeserialize.h"
 
 class ConnectionModel;
 class Connections;
 
-class Behaviours : public QObject
+class Behaviours : public QObject, Presets::NodeSerialize
 {
     Q_OBJECT
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged)
@@ -66,6 +67,9 @@ public:
     void setX(double x);
     void setY(double y);
     QQuickItem *viewRect();
+
+    void save() override;
+    void load() override;
 
 public slots:
     void setViewRectangle(QQuickItem *view);

@@ -386,6 +386,11 @@ Rectangle {
         }
     }
 
+    Rectangle {
+        id: containerCanvas
+        width: parent.width
+        height: parent.height
+        color: "transparent"
     Canvas {
         id: mycanvas
         width: parent.width
@@ -396,7 +401,7 @@ Rectangle {
             mycanvas.requestPaint()
         }
 
-        transform: Scale {            
+        transform: Scale {
             origin.x: 0
             origin.y: 0
             xScale: sliderZoom.value
@@ -423,6 +428,8 @@ Rectangle {
             border.width: 1
             border.color: ThemeManager.primaryColor
             color: "transparent"
+
+            //scale: sliderZoom.value
 
             Repeater {
                 id: nodeConnections
@@ -626,6 +633,7 @@ Rectangle {
             ctx.stroke()
         }
     }
+    }
 
     ProgressBar {
         id: progressX
@@ -681,128 +689,32 @@ Rectangle {
         anchors.rightMargin: 8
         color: "transparent"
         border.width: 2
-        border.color: "#96a0cd"
+        border.color: ThemeManager.primaryColor
         radius: 4
 
-        width: parent.width / 10
-        height: parent.height / 10
+        width: parent.width / 8
+        height: parent.height / 8
 
-        Repeater {
-            id: viewRectGhostConns
-            model: ListModel {
+        Rectangle {
+            id: previewContainer
+            anchors.fill: parent
+            anchors.margins: viewRect.border.width
+            color: "transparent"
+            clip: true
+            radius: 4
 
-            }
-
-            delegate: Shape {
-                visible: model.rect1 && model.rect2
-                antialiasing: true
-                smooth: true
-                opacity: 0.3
-                z: Number.MAX_VALUE
-
-                property var circleConnPoint
-                property var circleConnPoint2
-
-                Component.onCompleted: {
-                    circleConnPoint = model.rect1.mapToItem(parent, 0, 0);
-                    circleConnPoint2 = model.rect2.mapToItem(parent, 0, 0);
-                }
-
-                Connections {
-                    target: model.rect1
-
-                    function onXChanged(){
-                        circleConnPoint =  model.rect1.mapToItem(parent, 0, 0);
-                    }
-
-                    function onYChanged(){
-                        circleConnPoint =  model.rect1.mapToItem(parent, 0, 0);
-                    }
-                }
-
-                Connections {
-                    target: model.rect2
-
-                    function onXChanged(){
-                        circleConnPoint2 =  model.rect2.mapToItem(parent, 0, 0);
-                    }
-
-                    function onYChanged(){
-                        circleConnPoint2 =  model.rect2.mapToItem(parent, 0, 0);
-                    }
-                }
-                ShapePath {
-                    strokeColor: '#ccc'
-
-                    strokeWidth: 2
-                    fillColor: "transparent"
-                    capStyle: ShapePath.RoundCap
-
-                    startX: (circleConnPoint.x + (model.rect1.width)/2)
-                    startY: (circleConnPoint.y + (model.rect1.height)/2)
-
-                    PathLine {
-                        x: (circleConnPoint2.x + (model.rect2.width)/2)
-                        y: (circleConnPoint2.y + (model.rect2.height)/2)
-                    }
-                }
-            }
-        }
-
-        Repeater {
-            model: nodes.model
-
-            delegate: Rectangle {
-                id: rectObj
-                width: model.object.width / 10
-                height: model.object.height / 10
-                radius: 4 / 10
-                x: model.object.x / 10
-                y: model.object.y / 10
-                opacity: 0.3
-                color: '#ccc'
-
-                Component.onCompleted: {
-                    let uuid = viewPort.getUUIDFromBehaviour(model.object);
-                    rectsArray.append({'uuid': uuid, 'rectObjTarget': this});
-                }
-
-                SequentialAnimation {
-                    id: sequential
-                    running: (nodeOnFocus) ? nodeOnFocus.behaviourObject === model.object : false
-                    loops: Animation.Infinite
-
-                    onRunningChanged: {
-                        if(!running){
-                            opacity = 0.3
-                        }
-                    }
-
-                    NumberAnimation {
-                        id: animateOpacity
-                        target: rectObj
-                        property: "opacity"
-                        from: 0.5
-                        to: 1.0
-                        duration: 250
-                        //easing {type: Easing.OutBack; overshoot: 500}
-                    }
-
-                    NumberAnimation {
-                        id: animateOpacity2
-                        target: rectObj
-                        property: "opacity"
-                        from: 1.0
-                        to: 0.5
-                        duration: 250
-                        //easing {type: Easing.OutBack; overshoot: 500}
-                    }
-                }
-
+            ShaderEffectSource {
+                id: previewSource
+                sourceItem: containerCanvas
+                anchors.fill: parent
+                scale: 1
+                mipmap: true
+                anchors.centerIn: parent
             }
         }
 
         Rectangle {
+            visible: false
             color: "transparent"
             border.width: 1
             border.color: "#ccc"

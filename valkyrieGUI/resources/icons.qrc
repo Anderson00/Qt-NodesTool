@@ -17,5 +17,6 @@
         <file>stop.svg</file>
         <file>fullscreen-exit.svg</file>
         <file>fullscreen.svg</file>
+        <file>close.svg</file>
     </qresource>
 </RCC>

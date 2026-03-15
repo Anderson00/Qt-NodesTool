@@ -5,7 +5,6 @@
 #include <QList>
 #include <QMetaMethod>
 #include <model/connectionmodel.h>
-#include <behaviours/behaviours.h>
 
 class Behaviours;
 class ConnectionModel;

@@ -23,6 +23,7 @@ set(PROJECT_SOURCES
     resources/qml.qrc
     src/include/cliente/midclient.h src/include/cliente/midclient.cpp
     src/include/utils/xmlsavestate.h src/include/utils/xmlsavestate.cpp
+    src/include/utils/nodeserialize.h src/include/utils/nodeserialize.cpp
     src/include/mainwindow.cpp
     src/include/mainwindow.ui
     src/include/qmlwindow.h src/include/qmlwindow.cpp
