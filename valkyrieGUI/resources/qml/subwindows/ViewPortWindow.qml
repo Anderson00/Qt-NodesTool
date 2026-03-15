@@ -190,7 +190,7 @@ Rectangle {
             toolbar.anchors.bottomMargin = parent.height - y
             viewRect.anchors.bottomMargin = fabBottomMenu.anchors.bottomMargin + 8
         }
-    }    
+    }
 
     NodeSettings {
         id: drawer
@@ -292,17 +292,31 @@ Rectangle {
         propagateComposedEvents: true
         hoverEnabled: true
 
+        property real zoomMouseX: 0
+        property real zoomMouseY: 0
+
         onClicked: {
             root.focus = true
+        }
+
+        onPositionChanged: {
+            zoomMouseX = mouse.x
+            zoomMouseY = mouse.y
         }
 
         onWheel: {
             if(isConnecting)
                 return;
-            if (wheel.angleDelta.y > 0)
-                sliderZoom.value += 0.1;
-            else
-               sliderZoom.value -= 0.1;
+
+            let oldZoom = sliderZoom.value
+            let newZoom = oldZoom + (wheel.angleDelta.y > 0 ? 0.1 : -0.1)
+            newZoom = Math.max(sliderZoom.from, Math.min(sliderZoom.to, newZoom))
+
+            // Definir a origem do zoom na posição do mouse
+            canvasScale.origin.x = mouseZoom.zoomMouseX
+            canvasScale.origin.y = mouseZoom.zoomMouseY
+
+            sliderZoom.value = newZoom
         }
     }
 
@@ -391,248 +405,247 @@ Rectangle {
         width: parent.width
         height: parent.height
         color: "transparent"
-    Canvas {
-        id: mycanvas
-        width: parent.width
-        height: parent.height
-        property int wgrid: sliderZoom.value * root.minWgrid;
 
-        Component.onCompleted: {
-            mycanvas.requestPaint()
-        }
+        Canvas {
+            id: mycanvas
+            width: parent.width
+            height: parent.height
+            property real wgrid: root.minWgrid / sliderZoom.value;
 
-        transform: Scale {
-            origin.x: 0
-            origin.y: 0
-            xScale: sliderZoom.value
-            yScale: sliderZoom.value
-        }
-
-        MouseArea {
-            id: dragArea
-            anchors.fill: parent
-
-            //drag.active: !isConnecting
-            drag.smoothed: true
-            drag.target: isConnecting ? undefined : mycanvas
-
-            onClicked: {
-                root.focus = true
+            Component.onCompleted: {
+                mycanvas.requestPaint()
             }
 
-        }
+            transform: Scale {
+                id: canvasScale
+                origin.x: 0
+                origin.y: 0
+                xScale: sliderZoom.value
+                yScale: sliderZoom.value
+            }
 
-        Rectangle{
-            id: mycanvasBody
-            anchors.fill: parent
-            border.width: 1
-            border.color: ThemeManager.primaryColor
-            color: "transparent"
+            MouseArea {
+                id: dragArea
+                anchors.fill: parent
 
-            //scale: sliderZoom.value
+                drag.smoothed: true
+                drag.target: isConnecting ? undefined : mycanvas
 
-            Repeater {
-                id: nodeConnections
-
-                model: ListModel {
-
+                onClicked: {
+                    root.focus = true
                 }
 
-                delegate: Shape {
-                    id: shape
-                    antialiasing: true
-                    smooth: true
-                    z: Number.MAX_VALUE
+            }
 
-                    property var circleConnPoint
-                    property var circleConnPoint2
-                    property var circleConn2
-                    property var viewRectConn2
+            Rectangle{
+                id: mycanvasBody
+                anchors.fill: parent
+                border.width: 1
+                border.color: ThemeManager.primaryColor
+                color: "transparent"
 
-                    Component.onCompleted: {
-                        circleConnPoint = model.circleConn.mapToItem(parent, 0, 0);
-                        shapeConn = shape;
+                Repeater {
+                    id: nodeConnections
+
+                    model: ListModel {
 
                     }
 
-                    onCircleConn2Changed: {
-                        if(circleConn2){
-                            circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0);
-                        }else{
-                            // TODO: remove connection in CPP/Behaviour
-                            nodeConnections.model.remove(index)
-                        }
-                    }
+                    delegate: Shape {
+                        id: shape
+                        antialiasing: true
+                        smooth: true
+                        z: Number.MAX_VALUE
 
-                    Connections {
-                        target: model.node
+                        property var circleConnPoint
+                        property var circleConnPoint2
+                        property var circleConn2
+                        property var viewRectConn2
 
-                        function onCloseButtonClicked(){
-                            nodeConnections.model.remove(index)
-                        }
-
-                        function onXChanged(){
+                        Component.onCompleted: {
                             circleConnPoint = model.circleConn.mapToItem(parent, 0, 0);
+                            shapeConn = shape;
+
                         }
 
-                        function onYChanged(){
-                            circleConnPoint = model.circleConn.mapToItem(parent, 0, 0);
+                        onCircleConn2Changed: {
+                            if(circleConn2){
+                                circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0);
+                            }else{
+                                // TODO: remove connection in CPP/Behaviour
+                                nodeConnections.model.remove(index)
+                            }
+                        }
+
+                        Connections {
+                            target: model.node
+
+                            function onCloseButtonClicked(){
+                                nodeConnections.model.remove(index)
+                            }
+
+                            function onXChanged(){
+                                circleConnPoint = model.circleConn.mapToItem(parent, 0, 0);
+                            }
+
+                            function onYChanged(){
+                                circleConnPoint = model.circleConn.mapToItem(parent, 0, 0);
+                            }
+                        }
+
+                        Connections {
+                            target: viewRectConn2
+
+                            function onXChanged(){
+                                circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0);
+                            }
+
+                            function onYChanged(){
+                                circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0);
+                            }
+                        }
+
+                        ShapePath {
+                            id: shapepath
+                            strokeColor: model.circleConn.color
+                            strokeWidth: 2
+                            fillColor: "transparent"
+                            capStyle: ShapePath.RoundCap
+
+                            startX: circleConnPoint.x + model.circleConn.width/2
+                            startY: circleConnPoint.y + model.circleConn.height/2
+
+                            PathLine {
+                                id: lineTest
+                                x: circleConn2 ? circleConnPoint2.x + circleConn2.width/2 : mouseAreaGlobal.mouseX
+                                y: circleConn2 ? circleConnPoint2.y + circleConn2.width/2 : mouseAreaGlobal.mouseY
+                            }
+                        }
+                    }
+                }
+
+                Repeater {
+                    id: nodes
+
+                    property var objectToDelete;
+
+                    model: ListModel{
+                        onCountChanged: {
+                            if(nodes.objectToDelete){
+                                viewPort.removeBehaviourObject(nodes.objectToDelete);
+                                nodes.objectToDelete = null;
+                            }
                         }
                     }
 
-                    Connections {
-                        target: viewRectConn2
+                    delegate: ViewComponentRectV2 {
+                        id: viewComponentRectV2
 
-                        function onXChanged(){
-                            circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0);
+                        Connections {
+                            target: mycanvasBody
+
+                            function onWidthChanged() {
+                                viewComponentRectV2.x = clamp(viewComponentRectV2.x, 0, mycanvasBody.width - viewComponentRectV2.width)
+                            }
+
+                            function onHeightChanged() {
+                                viewComponentRectV2.y = clamp(viewComponentRectV2.y, 0, mycanvasBody.height - viewComponentRectV2.height)
+                            }
                         }
 
-                        function onYChanged(){
-                            circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0);
+                        onXChanged: {
+                            this.focus = true
+                            if(nodeOnFocus !== this)
+                                nodeOnFocus = this
                         }
-                    }
 
-                    ShapePath {
-                        id: shapepath
-                        strokeColor: model.circleConn.color
-                        strokeWidth: 2
-                        fillColor: "transparent"
-                        capStyle: ShapePath.RoundCap
+                        onYChanged: {
+                            this.focus = true
+                            if(nodeOnFocus !== this)
+                                nodeOnFocus = this
+                        }
 
-                        startX: circleConnPoint.x + model.circleConn.width/2
-                        startY: circleConnPoint.y + model.circleConn.height/2
+                        onFocusChanged: {
+                            if(focus)
+                                nodeOnFocus = this
+                        }
 
-                        PathLine {
-                            id: lineTest
-                            x: circleConn2 ? circleConnPoint2.x + circleConn2.width/2 : mouseAreaGlobal.mouseX
-                            y: circleConn2 ? circleConnPoint2.y + circleConn2.width/2 : mouseAreaGlobal.mouseY
+                        onConnectionSocketClicked: {
+                            isConnecting = true
+                            mycanvas.x = 0;
+                            mycanvas.y = 0;
+                            sliderZoom.value = 1;
+                            nodeConnections.model.append({methodSignature1: conn.name, node: this, circleConn: conn.circleConn, node2: null, methodSignature2: null})
+                            mouseAreaGlobal.enabled = true
+                            //fogForNodeConnections.visible = true
+                        }
+
+                        borderColor: ThemeManager.primaryColor
+                        rootBodyColor: "transparent"
+
+                        behaviourObject: model.object
+
+                        Component.onCompleted: {
+                            behavioursZ[index] = 0
+                            model.object.setViewRectangle(this)
+
+                            behaviourObject.x = mycanvasBody.width/2 - width/2
+                            behaviourObject.y = mycanvasBody.height/2 - height/2
+                        }
+
+                        onZChanged: {
+                            behavioursZ[index] = z
+                        }
+
+                        Component.onDestruction: {
+                            behavioursZ = behavioursZ.slice(0, index).concat(behavioursZ.slice(index + 1,behavioursZ.length))
+                        }
+
+                        onCloseButtonClicked: {
+                            nodes.objectToDelete = model.object
+                            nodes.model.remove(index);
+                        }
+
+                        onFrontOneStepClicked: {
+                            z += 1
+                        }
+
+                        onBackOneStepClicked: {
+                            z = ((z - 1) < 1) ? 0 : z - 1;
+                        }
+
+                        onFrontTotalClicked: {
+                            z = getBehaviourGreaterZ() + 1;
+                        }
+
+                        onBackTotalClicked: {
+                            z = 0;
                         }
                     }
                 }
             }
 
-            Repeater {
-                id: nodes
-
-                property var objectToDelete;
-
-                model: ListModel{
-                    onCountChanged: {
-                        if(nodes.objectToDelete){
-                            viewPort.removeBehaviourObject(nodes.objectToDelete);
-                            nodes.objectToDelete = null;
-                        }
-                    }
+            onPaint: {
+                var ctx = getContext("2d")
+                ctx.clearRect(0,0, width, height)
+                ctx.lineWidth = 0.3 / sliderZoom.value
+                ctx.strokeStyle = "#535C27"
+                ctx.beginPath()
+                var nrows = height / wgrid;
+                for(var i = 0; i < nrows+1; i++){
+                    ctx.moveTo(0, wgrid*i);
+                    ctx.lineTo(width, wgrid*i);
                 }
 
-                delegate: ViewComponentRectV2 {
-                    id: viewComponentRectV2
-
-                    Connections {
-                        target: mycanvasBody
-
-                        function onWidthChanged() {
-                            viewComponentRectV2.x = clamp(viewComponentRectV2.x, 0, mycanvasBody.width - viewComponentRectV2.width)
-                        }
-
-                        function onHeightChanged() {
-                            viewComponentRectV2.y = clamp(viewComponentRectV2.y, 0, mycanvasBody.height - viewComponentRectV2.height)
-                        }
-                    }
-
-                    onXChanged: {
-                        this.focus = true
-                        if(nodeOnFocus !== this)
-                            nodeOnFocus = this
-                    }
-
-                    onYChanged: {
-                        this.focus = true
-                        if(nodeOnFocus !== this)
-                            nodeOnFocus = this
-                    }
-
-                    onFocusChanged: {
-                        if(focus)
-                            nodeOnFocus = this
-                    }
-
-                    onConnectionSocketClicked: {
-                        isConnecting = true
-                        mycanvas.x = 0;
-                        mycanvas.y = 0;
-                        sliderZoom.value = 1;
-                        nodeConnections.model.append({methodSignature1: conn.name, node: this, circleConn: conn.circleConn, node2: null, methodSignature2: null})
-                        mouseAreaGlobal.enabled = true
-                        //fogForNodeConnections.visible = true
-                    }
-
-                    borderColor: ThemeManager.primaryColor
-                    rootBodyColor: "transparent"
-
-                    behaviourObject: model.object
-
-                    Component.onCompleted: {
-                        behavioursZ[index] = 0
-                        model.object.setViewRectangle(this)
-
-                        behaviourObject.x = mycanvasBody.width/2 - width/2
-                        behaviourObject.y = mycanvasBody.height/2 - height/2
-                    }
-
-                    onZChanged: {
-                        behavioursZ[index] = z
-                    }
-
-                    Component.onDestruction: {
-                        behavioursZ = behavioursZ.slice(0, index).concat(behavioursZ.slice(index + 1,behavioursZ.length))
-                    }
-
-                    onCloseButtonClicked: {
-                        nodes.objectToDelete = model.object
-                        nodes.model.remove(index);
-                    }
-
-                    onFrontOneStepClicked: {
-                        z += 1
-                    }
-
-                    onBackOneStepClicked: {
-                        z = ((z - 1) < 1) ? 0 : z - 1;
-                    }
-
-                    onFrontTotalClicked: {
-                        z = getBehaviourGreaterZ() + 1;
-                    }
-
-                    onBackTotalClicked: {
-                        z = 0;
-                    }
+                var ncols = width / wgrid
+                for(var j = 0; j < ncols+1; j++){
+                    ctx.moveTo(wgrid*j, 0);
+                    ctx.lineTo(wgrid*j, height);
                 }
+                ctx.closePath()
+                ctx.stroke()
             }
         }
-
-        onPaint: {
-            var ctx = getContext("2d")
-            ctx.clearRect(0,0, width, height)
-            ctx.lineWidth = 0.3
-            ctx.strokeStyle = "#535C27"
-            ctx.beginPath()
-            var nrows = height / wgrid;
-            for(var i = 0; i < nrows+1; i++){
-                ctx.moveTo(0, wgrid*i);
-                ctx.lineTo(width, wgrid*i);
-            }
-
-            var ncols = width / wgrid
-            for(var j = 0; j < ncols+1; j++){
-                ctx.moveTo(wgrid*j, 0);
-                ctx.lineTo(wgrid*j, height);
-            }
-            ctx.closePath()
-            ctx.stroke()
-        }
-    }
     }
 
     ProgressBar {
