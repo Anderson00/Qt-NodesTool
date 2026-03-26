@@ -29,15 +29,11 @@ jobs:
           arch: 'win64_msvc2019_64'
           cache: 'true'
 
-      - name: Install CMake
-        run: choco install cmake --version=3.28.0 -y
-        shell: powershell
-
       - name: Configure CMake
         run: |
           mkdir -p build
           cd build
-          cmake -G "Visual Studio 17 2022" -A x64 -DCMAKE_POLICY_VERSION=3.25 ..
+          cmake -G "Visual Studio 17 2022" -A x64 ..
 
       - name: Build
         run: |
