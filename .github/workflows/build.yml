@@ -1,0 +1,60 @@
+name: Build
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            vcvars: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Auxiliary\\Build\\vcvars64.bat"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.5.3'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2019_64'
+          modules: 'qtmultimedia qtnetwork'
+          cache: 'true'
+
+      - name: Install CMake
+        uses: cmake-js/setup-cmake@v3
+        with:
+          cmake-version: '3.27'
+
+      - name: Configure CMake
+        run: |
+          mkdir -p build
+          cd build
+          cmake -G "Visual Studio 16 2019" -A x64 ..
+
+      - name: Build
+        run: |
+          cd build
+          cmake --build . --config Release
+
+      - name: Run Tests
+        run: |
+          cd build
+          ctest --output-on-failure -C Release
+        continue-on-error: true
+
+      - name: Upload Build Artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts-${{ matrix.os }}
+          path: build/
