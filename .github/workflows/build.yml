@@ -137,7 +137,8 @@ jobs:
           $qtRuntimeDlls = @(
             "Qt6Core.dll", "Qt6Gui.dll", "Qt6Widgets.dll", "Qt6Sql.dll",
             "Qt6Network.dll", "Qt6Concurrent.dll", "Qt6PrintSupport.dll",
-            "Qt6Qml.dll", "Qt6QmlModels.dll", "Qt6Quick.dll", "Qt6QuickControls2.dll"
+            "Qt6Qml.dll", "Qt6QmlModels.dll", "Qt6Quick.dll", "Qt6QuickControls2.dll",
+            "Qt6OpenGL.dll", "Qt6QuickTemplates2.dll"
           )
           foreach ($dll in $qtRuntimeDlls) {
             $dllPath = Join-Path $qtBinPath $dll
