@@ -37,10 +37,14 @@ private slots:
 
     void on_actionTask_Manager_triggered();
 
+    void on_actionShow_fps_toggled(bool arg1);
+
 private:
     Ui::MainWindow *ui;
     ViewPortWindow *m_viewPort = nullptr;
     TaskManagerWindow *m_taskManager = nullptr;
+
+
 
 };
 #endif // MAINWINDOW_H

@@ -90,3 +90,8 @@ void MainWindow::on_actionTask_Manager_triggered()
     }
 }
 
+void MainWindow::on_actionShow_fps_toggled(bool arg1)
+{
+    this->m_viewPort->setShowFps(arg1);
+}
+

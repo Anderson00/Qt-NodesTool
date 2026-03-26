@@ -401,6 +401,36 @@ Rectangle {
     }
 
     Rectangle {
+        id: fpsCounterContainer
+        visible: viewPort.showFps
+        color: ThemeManager.primaryColor
+        opacity: 0.5
+        width: 100
+        height: 50
+        anchors.horizontalCenter: parent.horizontalCenter
+        radius: 8
+
+        ColumnLayout {
+            anchors.fill: parent
+            Layout.alignment: Qt.AlignCenter
+
+            Label {
+                id: fpsCounter
+                color: "#EAEAEA"
+                text: `${viewPort.fpsCount} FPS`
+                Layout.alignment: Qt.AlignCenter
+            }
+
+            Label {
+                id: fpsTime
+                color: "#EAEAEA"
+                text: `${viewPort.fpsCount > 0? (1000/viewPort.fpsCount).toFixed(2) : 0} ms`
+                Layout.alignment: Qt.AlignCenter
+            }
+        }
+    }
+
+    Rectangle {
         id: containerCanvas
         width: parent.width
         height: parent.height

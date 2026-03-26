@@ -5,11 +5,15 @@
 ViewPortWindow::ViewPortWindow(QWidget *parent) :
     QMLWindow(parent, QUrl("qrc:/subwindows/ViewPortWindow.qml"))
 {
+    this->m_frameTimer = new QTimer(this);
+    this->m_frameTimer->setTimerType(Qt::PreciseTimer);
+    this->m_frameTimer->setInterval(1000);
 
     this->showWindow(QVector<QMLWindow::PropertyPair>({
                                                           QMLWindow::PropertyPair({"viewPort", this}),
                                                           QMLWindow::PropertyPair({"behaviourLoader", BehaviourLoader::instance()})
                                                       }));
+
 }
 
 ViewPortWindow::~ViewPortWindow()
@@ -20,6 +24,46 @@ ViewPortWindow::~ViewPortWindow()
 QHash<QString, Behaviours *> ViewPortWindow::behaviours()
 {
     return this->m_behaviours;
+}
+
+bool ViewPortWindow::showFps()
+{
+    return this->m_showFps;
+}
+
+void ViewPortWindow::setShowFps(bool state)
+{
+    this->m_showFps = state;
+    emit showFpsChanged();
+
+    disconnect(this->m_timerTriggerConn);
+    disconnect(this->m_frameSwappedConn);
+
+    if(state == true){
+        this->m_timerTriggerConn = connect(this->m_frameTimer, &QTimer::timeout, [&](){
+            this->setFpsCount(m_frameCount);
+            m_frameCount = 0;
+        });
+
+        this->m_frameSwappedConn = connect(this->view(), &QQuickView::frameSwapped, [&](){
+            this->m_frameCount++;
+        });
+
+        this->m_frameTimer->start();
+    } else {
+        this->m_frameTimer->stop();
+    }
+}
+
+int ViewPortWindow::fpsCount()
+{
+    return this->m_fpsCount;
+}
+
+void ViewPortWindow::setFpsCount(int value)
+{
+    this->m_fpsCount = value;
+    emit fpsCountChanged();
 }
 
 void ViewPortWindow::setFullScreen(bool isFull)

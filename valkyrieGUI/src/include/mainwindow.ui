@@ -57,7 +57,7 @@
      <x>0</x>
      <y>0</y>
      <width>1260</width>
-     <height>20</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -146,6 +146,7 @@
     <addaction name="separator"/>
     <addaction name="menuOutput"/>
     <addaction name="menuCharts"/>
+    <addaction name="actionShow_fps"/>
    </widget>
    <widget class="QMenu" name="menuBuild">
     <property name="title">
@@ -522,6 +523,17 @@
    </property>
    <property name="text">
     <string>Task Manager</string>
+   </property>
+  </action>
+  <action name="actionShow_fps">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show fps</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
    </property>
   </action>
  </widget>
