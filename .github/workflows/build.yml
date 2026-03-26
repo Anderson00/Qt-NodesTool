@@ -19,10 +19,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: Initialize Git Submodules
-        run: git submodule update --init --recursive
-        continue-on-error: true
+        with:
+          submodules: recursive
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
