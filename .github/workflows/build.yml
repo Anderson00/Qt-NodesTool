@@ -48,15 +48,51 @@ jobs:
           cd build
           cmake --build . --config Release
 
+      - name: Deploy Qt Dependencies
+        run: |
+          $env:PATH = "D:\a\Qt-NodesTool\Qt\6.5.3\msvc2019_64\bin;$env:PATH"
+          $releaseDir = "build\Release"
+          if (Test-Path $releaseDir) {
+            $exeFiles = Get-ChildItem -Path $releaseDir -Filter "*.exe" -Recurse
+            foreach ($exe in $exeFiles) {
+              Write-Host "Deploying: $($exe.FullName)"
+              & "D:\a\Qt-NodesTool\Qt\6.5.3\msvc2019_64\bin\windeployqt.exe" --release "$($exe.FullName)"
+            }
+          }
+        shell: powershell
+
       - name: Run Tests
         run: |
           cd build
           ctest --output-on-failure -C Release
         continue-on-error: true
 
+      - name: Prepare Release Package
+        run: |
+          $buildDir = "build\Release"
+          $packageDir = "release-package"
+          New-Item -ItemType Directory -Path $packageDir -Force | Out-Null
+          
+          # Copy all EXE files
+          $exeFiles = Get-ChildItem -Path $buildDir -Filter "*.exe" -Recurse
+          foreach ($exe in $exeFiles) {
+            Copy-Item -Path $exe.FullName -Destination $packageDir -Force
+          }
+          
+          # Copy all DLL files
+          $dllFiles = Get-ChildItem -Path $buildDir -Filter "*.dll" -Recurse
+          foreach ($dll in $dllFiles) {
+            Copy-Item -Path $dll.FullName -Destination $packageDir -Force
+          }
+          
+          # List contents
+          Write-Host "Release package contents:"
+          Get-ChildItem -Path $packageDir
+        shell: powershell
+
       - name: Upload Build Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts-${{ matrix.os }}
-          path: build/
+          path: release-package/
