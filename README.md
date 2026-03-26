@@ -1,5 +1,7 @@
 # Qt-NodesTool
 
+[![Build](https://github.com/Anderson00/Qt-NodesTool/actions/workflows/build.yml/badge.svg)](https://github.com/Anderson00/Qt-NodesTool/actions/workflows/build.yml)
+
 Qt-NodesTool is a project designed to leverage the capabilities of Qt for advanced tool development. This project is built using **Qt 6.5.3 MSVC2019 - 64bits**, ensuring performance and compatibility with modern systems.
 
 

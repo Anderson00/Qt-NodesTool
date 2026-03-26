@@ -33,16 +33,16 @@ static void messageLogOutput(QtMsgType type, const QMessageLogContext &context, 
         buffer.append("[Debug][").append(QDateTime::currentDateTime().toString(dateFormat)).append("] ").append(localMsg.constData()).append(" (").append(fileDirCompacted).append(":").append(QString::number(context.line)).append(", ").append(function).append(")\n");
         break;
     case QtInfoMsg:
-        buffer.append("[Info][").append(QDateTime::currentDateTime().toString(dateFormat)).append("] ").append(localMsg.constData()).append(" (").append(fileDirCompacted).append(":").append(QString::number(context.line)).append(", ").append(function).append(")");
+        buffer.append("[Info][").append(QDateTime::currentDateTime().toString(dateFormat)).append("] ").append(localMsg.constData()).append(" (").append(fileDirCompacted).append(":").append(QString::number(context.line)).append(", ").append(function).append(")\n");
         break;
     case QtWarningMsg:
-        buffer.append("[Warning][").append(QDateTime::currentDateTime().toString(dateFormat)).append("] ").append(localMsg.constData()).append(" (").append(fileDirCompacted).append(":").append(QString::number(context.line)).append(", ").append(function).append(")");
+        buffer.append("[Warning][").append(QDateTime::currentDateTime().toString(dateFormat)).append("] ").append(localMsg.constData()).append(" (").append(fileDirCompacted).append(":").append(QString::number(context.line)).append(", ").append(function).append(")\n");
         break;
     case QtCriticalMsg:
-        buffer.append("[Critical][").append(QDateTime::currentDateTime().toString(dateFormat)).append("] ").append(localMsg.constData()).append(" (").append(fileDirCompacted).append(":").append(QString::number(context.line)).append(", ").append(function).append(")");
+        buffer.append("[Critical][").append(QDateTime::currentDateTime().toString(dateFormat)).append("] ").append(localMsg.constData()).append(" (").append(fileDirCompacted).append(":").append(QString::number(context.line)).append(", ").append(function).append(")\n");
         break;
     case QtFatalMsg:
-        buffer.append("[Fatal][").append(QDateTime::currentDateTime().toString(dateFormat)).append("] ").append(localMsg.constData()).append(" (").append(fileDirCompacted).append(":").append(QString::number(context.line)).append(", ").append(function).append(")");
+        buffer.append("[Fatal][").append(QDateTime::currentDateTime().toString(dateFormat)).append("] ").append(localMsg.constData()).append(" (").append(fileDirCompacted).append(":").append(QString::number(context.line)).append(", ").append(function).append(")\n");
         break;
     }
 
