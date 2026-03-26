@@ -69,25 +69,35 @@ jobs:
 
       - name: Prepare Release Package
         run: |
-          $buildDir = "build\Release"
           $packageDir = "release-package"
           New-Item -ItemType Directory -Path $packageDir -Force | Out-Null
           
-          # Copy all EXE files
-          $exeFiles = Get-ChildItem -Path $buildDir -Filter "*.exe" -Recurse
+          Write-Host "Looking for executables and DLLs..."
+          
+          # Find and copy EXE files from the entire build directory
+          $exeFiles = Get-ChildItem -Path "build" -Filter "*.exe" -Recurse -ErrorAction SilentlyContinue
+          Write-Host "Found $($exeFiles.Count) EXE files"
           foreach ($exe in $exeFiles) {
+            Write-Host "Copying: $($exe.FullName)"
             Copy-Item -Path $exe.FullName -Destination $packageDir -Force
           }
           
-          # Copy all DLL files
-          $dllFiles = Get-ChildItem -Path $buildDir -Filter "*.dll" -Recurse
+          # Find and copy DLL files from the entire build directory
+          $dllFiles = Get-ChildItem -Path "build" -Filter "*.dll" -Recurse -ErrorAction SilentlyContinue
+          Write-Host "Found $($dllFiles.Count) DLL files"
           foreach ($dll in $dllFiles) {
+            Write-Host "Copying: $($dll.FullName)"
             Copy-Item -Path $dll.FullName -Destination $packageDir -Force
           }
           
-          # List contents
+          # List final contents
           Write-Host "Release package contents:"
-          Get-ChildItem -Path $packageDir
+          if (Test-Path $packageDir) {
+            Get-ChildItem -Path $packageDir
+            Write-Host "Total files: $($(Get-ChildItem -Path $packageDir).Count)"
+          } else {
+            Write-Host "ERROR: $packageDir directory not found!"
+          }
         shell: powershell
 
       - name: Upload Build Artifacts
