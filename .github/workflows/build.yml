@@ -131,8 +131,15 @@ jobs:
               Copy-Item -Path "$qtPluginsPath\*" -Destination $packageDir -Recurse -Force
               Write-Host "Plugins copied successfully"
             }
-          }
-          
+          }          
+          # Ensure QtQuick.Controls QML plugin is copied
+          $qmlPath = "$qtPath\qml\QtQuick\Controls"
+          if (Test-Path $qmlPath) {
+            $qmlDest = "$packageDir\qml\QtQuick\Controls"
+            Write-Host "Copying QtQuick.Controls QML from: $qmlPath"
+            Copy-Item -Path $qmlPath -Destination $qmlDest -Recurse -Force -ErrorAction SilentlyContinue
+            Write-Host "QtQuick.Controls QML copied"
+          }          
           Write-Host "`n========== Copying Qt Runtime DLLs =========="
           $qtRuntimeDlls = @(
             "Qt6Core.dll", "Qt6Gui.dll", "Qt6Widgets.dll", "Qt6Sql.dll",
