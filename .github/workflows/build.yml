@@ -103,25 +103,16 @@ jobs:
           }
           
           Write-Host "`nAfter filtering: $($filteredExes.Count) application EXE files`n"
-          Write-Host "========== Strategy: Process main EXE with windeployqt, copy others =========="
+          Write-Host "========== Processing all EXEs with windeployqt =========="
           
-          if ($filteredExes.Count -gt 0) {
-            $mainExe = $filteredExes[0]
-            Write-Host "`n[MAIN] Processing: $($mainExe.Name) with full windeployqt"
-            Copy-Item -Path $mainExe.FullName -Destination $packageDir -Force
-            Write-Host "Copied EXE: $($mainExe.Name)"
-            
-            Write-Host "Running windeployqt..."
-            $exePath = "$packageDir\$($mainExe.Name)"
-            & "$qtBinPath\windeployqt.exe" --release --qmldir $qmlSourcePath $exePath 2>&1 | Write-Host
-            Write-Host "windeployqt completed"
-          }
-          
-          Write-Host "`n========== Copying remaining EXEs =========="
-          for ($i = 1; $i -lt $filteredExes.Count; $i++) {
-            $exe = $filteredExes[$i]
-            Write-Host "Copying: $($exe.Name)"
+          foreach ($exe in $filteredExes) {
+            Write-Host "`n[PROCESSING] $($exe.Name)"
             Copy-Item -Path $exe.FullName -Destination $packageDir -Force
+            Write-Host "  Copied EXE"
+            
+            Write-Host "  Running windeployqt with full QML support..."
+            $exePath = "$packageDir\$($exe.Name)"
+            & "$qtBinPath\windeployqt.exe" --release --qmldir $qmlSourcePath $exePath 2>&1 | Write-Host
           }
           
           Write-Host "`n========== Copying complete Qt bin folder (all DLLs) =========="
@@ -131,16 +122,8 @@ jobs:
             if (-not (Test-Path $dest)) {
               Copy-Item -Path $_.FullName -Destination $packageDir -Force
               Write-Host "  Copied: $($_.Name)"
-            }
-          }
-          
-          Write-Host "`n========== Copying OpenGL and Graphics DLLs =========="
-          $graphicsDlls = @("libEGL.dll", "libGLESv2.dll", "opengl32.dll", "d3dcompiler_47.dll")
-          foreach ($dll in $graphicsDlls) {
-            $dllPath = Join-Path $qtBinPath $dll
-            if (Test-Path $dllPath) {
-              Copy-Item -Path $dllPath -Destination $packageDir -Force
-              Write-Host "  Copied: $dll"
+            } else {
+              Write-Host "  Already present: $($_.Name)"
             }
           }
           
@@ -152,7 +135,7 @@ jobs:
               Copy-Item -Path "$qtPluginsPath\*" -Destination $packageDir -Recurse -Force
               Write-Host "Plugins copied"
             } else {
-              Write-Host "Plugins already present from windeployqt"
+              Write-Host "Plugins already present"
             }
           }
           
@@ -163,14 +146,14 @@ jobs:
               Copy-Item -Path $qmlSourcePath -Destination $qmlDest -Recurse -Force
               Write-Host "QML modules copied"
             } else {
-              Write-Host "QML modules already present from windeployqt"
+              Write-Host "QML modules already present"
             }
           }
           
           # Copy lib folder if it exists (contains additional DLLs)
           $libPath = "$qtPath\lib"
           if (Test-Path $libPath) {
-            Write-Host "Copying lib folder..."
+            Write-Host "Scanning lib folder..."
             Get-ChildItem -Path $libPath -Filter "*.dll" -ErrorAction SilentlyContinue | ForEach-Object {
               $dest = "$packageDir\$($_.Name)"
               if (-not (Test-Path $dest)) {
