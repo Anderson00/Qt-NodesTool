@@ -22,6 +22,7 @@ jobs:
 
       - name: Initialize Git Submodules
         run: git submodule update --init --recursive
+        continue-on-error: true
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
