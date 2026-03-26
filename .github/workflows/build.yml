@@ -74,17 +74,16 @@ jobs:
           $qtPath = "D:\a\Qt-NodesTool\Qt\6.5.3\msvc2019_64"
           $qtBinPath = "$qtPath\bin"
           $qtPluginsPath = "$qtPath\plugins"
+          $qmlSourcePath = "$qtPath\qml"
           $ErrorActionPreference = "SilentlyContinue"
           
           New-Item -ItemType Directory -Path $packageDir -Force | Out-Null
           
           Write-Host "Looking for application executables..."
           
-          # Get all EXE files from build directory
           $allExeFiles = Get-ChildItem -Path "build" -Filter "*.exe" -Recurse -ErrorAction SilentlyContinue
           Write-Host "Found $($allExeFiles.Count) total EXE files"
           
-          # Filter to only relevant executables
           $excludePatterns = @("CompilerIdC", "CompilerIdCXX", "CMakeFiles")
           $filteredExes = @()
           
@@ -99,89 +98,66 @@ jobs:
             }
             if ($shouldInclude) {
               $filteredExes += $exe
-              Write-Host "Including: $($exe.Name) from $($exe.DirectoryName)"
+              Write-Host "Including: $($exe.Name)"
             }
           }
           
           Write-Host "`nAfter filtering: $($filteredExes.Count) application EXE files`n"
+          Write-Host "========== Strategy: Process main EXE with windeployqt, copy others =========="
           
-          foreach ($exe in $filteredExes) {
-            Write-Host "========== Processing: $($exe.Name) =========="
-            Write-Host "Source: $($exe.FullName)"
+          if ($filteredExes.Count -gt 0) {
+            $mainExe = $filteredExes[0]
+            Write-Host "`n[MAIN] Processing: $($mainExe.Name) with full windeployqt"
+            Copy-Item -Path $mainExe.FullName -Destination $packageDir -Force
+            Write-Host "Copied EXE: $($mainExe.Name)"
             
-            # Copy EXE to package
-            Copy-Item -Path $exe.FullName -Destination $packageDir -Force
-            Write-Host "Copied to: $packageDir\$($exe.Name)"
-            
-            # Run windeployqt
             Write-Host "Running windeployqt..."
-            $windeploycmd = "$qtBinPath\windeployqt.exe"
-            $exePath = "$packageDir\$($exe.Name)"
-          $qmlSourcePath = "$qtPath\qml"
-          & $windeploycmd --release --qmldir $qmlSourcePath $exePath 2>&1 | Write-Host
-            Write-Host "Windeployqt finished with exit code: $LASTEXITCODE"
-            Write-Host ""
+            $exePath = "$packageDir\$($mainExe.Name)"
+            & "$qtBinPath\windeployqt.exe" --release --qmldir $qmlSourcePath $exePath 2>&1 | Write-Host
+            Write-Host "windeployqt completed"
           }
           
-          Write-Host "========== Copying Qt plugins =========="
-          # Copy Qt plugins directory
+          Write-Host "`n========== Copying remaining EXEs =========="
+          for ($i = 1; $i -lt $filteredExes.Count; $i++) {
+            $exe = $filteredExes[$i]
+            Write-Host "Copying: $($exe.Name)"
+            Copy-Item -Path $exe.FullName -Destination $packageDir -Force
+          }
+          
+          Write-Host "`n========== Copying complete Qt bin folder (all DLLs) =========="
+          Write-Host "Copying all Qt DLLs from: $qtBinPath"
+          Get-ChildItem -Path $qtBinPath -Filter "*.dll" -ErrorAction SilentlyContinue | ForEach-Object {
+            $dest = "$packageDir\$($_.Name)"
+            if (-not (Test-Path $dest)) {
+              Copy-Item -Path $_.FullName -Destination $packageDir -Force
+              Write-Host "  Copied: $($_.Name)"
+            }
+          }
+          
+          Write-Host "`n========== Ensuring plugins and qml folders =========="
           if (Test-Path $qtPluginsPath) {
             $pluginsDest = "$packageDir\plugins"
             if (-not (Test-Path $pluginsDest)) {
-              Write-Host "Copying plugins from: $qtPluginsPath"
+              Write-Host "Copying plugins..."
               Copy-Item -Path "$qtPluginsPath\*" -Destination $packageDir -Recurse -Force
-              Write-Host "Plugins copied successfully"
+              Write-Host "Plugins copied"
+            } else {
+              Write-Host "Plugins already present from windeployqt"
             }
           }
           
-          # Copy entire QML directory (critical for QtQuick.Controls and all QML modules)
-          $qmlSourcePath = "$qtPath\qml"
           if (Test-Path $qmlSourcePath) {
             $qmlDest = "$packageDir\qml"
             if (-not (Test-Path $qmlDest)) {
-              Write-Host "Copying complete QML modules from: $qmlSourcePath"
-              Copy-Item -Path $qmlSourcePath -Destination $qmlDest -Recurse -Force -ErrorAction SilentlyContinue
-              Write-Host "QML modules copied successfully"
-            }
-          }          
-          Write-Host "`n========== Copying Qt Runtime DLLs =========="
-          $qtRuntimeDlls = @(
-            "Qt6Core.dll", "Qt6Gui.dll", "Qt6Widgets.dll", "Qt6Sql.dll",
-            "Qt6Network.dll", "Qt6Concurrent.dll", "Qt6PrintSupport.dll",
-            "Qt6Qml.dll", "Qt6QmlModels.dll", "Qt6Quick.dll", "Qt6QuickControls2.dll",
-            "Qt6OpenGL.dll", "Qt6QuickTemplates2.dll", "Qt6ShaderTools.dll"
-          )
-          foreach ($dll in $qtRuntimeDlls) {
-            $dllPath = Join-Path $qtBinPath $dll
-            if (Test-Path $dllPath) {
-              Copy-Item -Path $dllPath -Destination $packageDir -Force
-              Write-Host "Copied: $dll"
+              Write-Host "Copying QML modules..."
+              Copy-Item -Path $qmlSourcePath -Destination $qmlDest -Recurse -Force
+              Write-Host "QML modules copied"
+            } else {
+              Write-Host "QML modules already present from windeployqt"
             }
           }
           
-          Write-Host "`n========== Copying Runtime Files =========="
-          Get-ChildItem -Path $qtBinPath -Filter "vccorlib*.dll" -ErrorAction SilentlyContinue | ForEach-Object {
-            Copy-Item -Path $_.FullName -Destination $packageDir -Force
-            Write-Host "Copied: $($_.Name)"
-          }
-          
-          Get-ChildItem -Path $qtBinPath -Filter "msvcp*.dll" -ErrorAction SilentlyContinue | ForEach-Object {
-            Copy-Item -Path $_.FullName -Destination $packageDir -Force
-            Write-Host "Copied: $($_.Name)"
-          }
-          
-          Get-ChildItem -Path $qtBinPath -Filter "vcruntime*.dll" -ErrorAction SilentlyContinue | ForEach-Object {
-            Copy-Item -Path $_.FullName -Destination $packageDir -Force
-            Write-Host "Copied: $($_.Name)"
-          }
-          
-          # Copy any d3d or graphic related DLLs
-          Get-ChildItem -Path $qtBinPath -Filter "d3d*.dll" -ErrorAction SilentlyContinue | ForEach-Object {
-            Copy-Item -Path $_.FullName -Destination $packageDir -Force
-            Write-Host "Copied: $($_.Name)"
-          }
-          
-          Write-Host "`n========== Copying Custom DLLs from build =========="
+          Write-Host "`n========== Copying custom build DLLs =========="
           Get-ChildItem -Path "build" -Filter "*.dll" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.FullName -notlike "*CMakeFiles*" } | ForEach-Object {
             Copy-Item -Path $_.FullName -Destination $packageDir -Force
             Write-Host "Copied: $($_.Name)"
@@ -198,12 +174,11 @@ jobs:
             Write-Host "  [+] $($_.Name)" 
           }
           
-          Write-Host "`nQt Core DLLs:"
-          Get-ChildItem -Path $packageDir -Filter "Qt6*.dll" -ErrorAction SilentlyContinue | ForEach-Object { 
-            Write-Host "  [+] $($_.Name)" 
-          }
+          Write-Host "`nQt DLLs in package:"
+          $qtDllCount = @(Get-ChildItem -Path $packageDir -Filter "Qt6*.dll" -ErrorAction SilentlyContinue).Count
+          Write-Host "  Total: $qtDllCount DLLs"
           
-          Write-Host "`nSubdirectories:"
+          Write-Host "`nDirectories:"
           Get-ChildItem -Path $packageDir -Directory -ErrorAction SilentlyContinue | ForEach-Object { 
             Write-Host "  [DIR] $($_.Name)" 
           }
