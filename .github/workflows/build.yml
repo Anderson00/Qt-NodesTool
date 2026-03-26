@@ -35,7 +35,28 @@ jobs:
           target: 'desktop'
           arch: 'win64_msvc2019_64'
           modules: 'qt5compat qtshadertools qtcharts'
-          cache: 'true'
+          cache: 'false'
+
+      - name: Verify Qt Installation
+        run: |
+          $qtPath = "D:\a\Qt-NodesTool\Qt\6.5.3\msvc2019_64"
+          Write-Host "Qt bin contents:"
+          Get-ChildItem "$qtPath\bin" -Filter "Qt6Charts*" -ErrorAction SilentlyContinue
+          Write-Host "`nQML QtCharts:"
+          if (Test-Path "$qtPath\qml\QtCharts") {
+            Get-ChildItem "$qtPath\qml\QtCharts" -Recurse
+          } else {
+            Write-Host "WARNING: QtCharts QML module not found!"
+            Write-Host "Available QML modules:"
+            Get-ChildItem "$qtPath\qml" -Directory | ForEach-Object { Write-Host "  $($_.Name)" }
+          }
+          Write-Host "`nQt.labs:"
+          if (Test-Path "$qtPath\qml\Qt\labs") {
+            Get-ChildItem "$qtPath\qml\Qt\labs" -Directory
+          } else {
+            Write-Host "WARNING: Qt.labs not found!"
+          }
+        shell: powershell
 
       - name: Configure CMake
         run: |
@@ -78,6 +99,15 @@ jobs:
           $ErrorActionPreference = "SilentlyContinue"
           
           New-Item -ItemType Directory -Path $packageDir -Force | Out-Null
+          
+          # Create qt.conf to tell the app where to find plugins and QML modules
+          $qtConf = @"
+[Paths]
+Plugins = .
+Imports = qml
+Qml2Imports = qml
+"@
+          $qtConf | Out-File -FilePath "$packageDir\qt.conf" -Encoding utf8
           
           Write-Host "Looking for application executables..."
           
