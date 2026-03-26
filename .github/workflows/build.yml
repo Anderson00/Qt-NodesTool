@@ -74,6 +74,8 @@ jobs:
           $qtPath = "D:\a\Qt-NodesTool\Qt\6.5.3\msvc2019_64"
           $qtBinPath = "$qtPath\bin"
           $qtPluginsPath = "$qtPath\plugins"
+          $ErrorActionPreference = "SilentlyContinue"
+          
           New-Item -ItemType Directory -Path $packageDir -Force | Out-Null
           
           Write-Host "Looking for application executables..."
@@ -82,7 +84,7 @@ jobs:
           $allExeFiles = Get-ChildItem -Path "build" -Filter "*.exe" -Recurse -ErrorAction SilentlyContinue
           Write-Host "Found $($allExeFiles.Count) total EXE files"
           
-          # Filter to only relevant executables (exclude CMake compiler tests)
+          # Filter to only relevant executables
           $excludePatterns = @("CompilerIdC", "CompilerIdCXX", "CMakeFiles")
           $filteredExes = @()
           
@@ -97,32 +99,41 @@ jobs:
             }
             if ($shouldInclude) {
               $filteredExes += $exe
+              Write-Host "Including: $($exe.Name) from $($exe.DirectoryName)"
             }
           }
           
-          Write-Host "After filtering: $($filteredExes.Count) application EXE files"
+          Write-Host "`nAfter filtering: $($filteredExes.Count) application EXE files`n"
           
           foreach ($exe in $filteredExes) {
-            Write-Host "Processing: $($exe.FullName)"
-            Copy-Item -Path $exe.FullName -Destination $packageDir -Force
+            Write-Host "========== Processing: $($exe.Name) =========="
+            Write-Host "Source: $($exe.FullName)"
             
-            Write-Host "Deploying Qt dependencies for: $($exe.Name)"
-            & "$qtBinPath\windeployqt.exe" --release --qmldir . "$packageDir\$($exe.Name)" 2>&1 | ForEach-Object { Write-Host $_ }
+            # Copy EXE to package
+            Copy-Item -Path $exe.FullName -Destination $packageDir -Force
+            Write-Host "Copied to: $packageDir\$($exe.Name)"
+            
+            # Run windeployqt
+            Write-Host "Running windeployqt..."
+            $windeploycmd = "$qtBinPath\windeployqt.exe"
+            $exePath = "$packageDir\$($exe.Name)"
+            & $windeploycmd --release --qmldir . $exePath 2>&1 | Write-Host
+            Write-Host "Windeployqt finished with exit code: $LASTEXITCODE"
+            Write-Host ""
           }
           
-          # Copy Qt plugins directory (critical for QML and Controls)
+          Write-Host "========== Copying Qt plugins =========="
+          # Copy Qt plugins directory
           if (Test-Path $qtPluginsPath) {
-            Write-Host "Copying Qt plugins from: $qtPluginsPath"
             $pluginsDest = "$packageDir\plugins"
             if (-not (Test-Path $pluginsDest)) {
-              Copy-Item -Path $qtPluginsPath -Destination $pluginsDest -Recurse -Force -ErrorAction SilentlyContinue
-              Write-Host "Plugins copied to: $pluginsDest"
-            } else {
-              Write-Host "Plugins directory already exists, skipping..."
+              Write-Host "Copying plugins from: $qtPluginsPath"
+              Copy-Item -Path "$qtPluginsPath\*" -Destination $packageDir -Recurse -Force
+              Write-Host "Plugins copied successfully"
             }
           }
           
-          # Copy Qt runtime DLLs explicitly
+          Write-Host "`n========== Copying Qt Runtime DLLs =========="
           $qtRuntimeDlls = @(
             "Qt6Core.dll", "Qt6Gui.dll", "Qt6Widgets.dll", "Qt6Sql.dll",
             "Qt6Network.dll", "Qt6Concurrent.dll", "Qt6PrintSupport.dll",
@@ -131,44 +142,49 @@ jobs:
           foreach ($dll in $qtRuntimeDlls) {
             $dllPath = Join-Path $qtBinPath $dll
             if (Test-Path $dllPath) {
-              Write-Host "Copying Qt DLL: $dll"
-              Copy-Item -Path $dllPath -Destination $packageDir -Force -ErrorAction SilentlyContinue
+              Copy-Item -Path $dllPath -Destination $packageDir -Force
+              Write-Host "Copied: $dll"
             }
           }
           
-          # Copy Visual C++ runtime DLLs
-          $vcRuntimeDlls = Get-ChildItem -Path $qtBinPath -Filter "vccorlib*.dll" -ErrorAction SilentlyContinue
-          $vcRuntimeDlls += Get-ChildItem -Path $qtBinPath -Filter "msvcp*.dll" -ErrorAction SilentlyContinue
-          $vcRuntimeDlls += Get-ChildItem -Path $qtBinPath -Filter "vcruntime*.dll" -ErrorAction SilentlyContinue
-          foreach ($dll in $vcRuntimeDlls) {
-            Write-Host "Copying runtime: $($dll.Name)"
-            Copy-Item -Path $dll.FullName -Destination $packageDir -Force -ErrorAction SilentlyContinue
+          Write-Host "`n========== Copying Runtime Files =========="
+          Get-ChildItem -Path $qtBinPath -Filter "vccorlib*.dll" -ErrorAction SilentlyContinue | ForEach-Object {
+            Copy-Item -Path $_.FullName -Destination $packageDir -Force
+            Write-Host "Copied: $($_.Name)"
           }
           
-          # Find and copy any custom DLL files from the build directory
-          $dllFiles = Get-ChildItem -Path "build" -Filter "*.dll" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.FullName -notlike "*CMakeFiles*" }
-          Write-Host "Found $($dllFiles.Count) custom DLL files in build directory"
-          foreach ($dll in $dllFiles) {
-            Write-Host "Copying custom DLL: $($dll.FullName)"
-            Copy-Item -Path $dll.FullName -Destination $packageDir -Force
+          Get-ChildItem -Path $qtBinPath -Filter "msvcp*.dll" -ErrorAction SilentlyContinue | ForEach-Object {
+            Copy-Item -Path $_.FullName -Destination $packageDir -Force
+            Write-Host "Copied: $($_.Name)"
           }
           
-          # List final contents
-          Write-Host "`n========== Release package structure =========="
-          if (Test-Path $packageDir) {
-            $files = @(Get-ChildItem -Path $packageDir -Recurse -File)
-            Write-Host "Total files: $($files.Count)"
-            $dirs = @(Get-ChildItem -Path $packageDir -Recurse -Directory)
-            Write-Host "Total directories: $($dirs.Count)"
-            Write-Host "`nDirectory tree:"
-            Get-ChildItem -Path $packageDir -Recurse | ForEach-Object { 
-              $level = ($_.FullName -split '\\').count - ($packageDir -split '\\').count
-              $indent = "  " * $level
-              Write-Host "$indent$($_.Name)"
-            }
-          } else {
-            Write-Host "ERROR: $packageDir directory not found!"
+          Get-ChildItem -Path $qtBinPath -Filter "vcruntime*.dll" -ErrorAction SilentlyContinue | ForEach-Object {
+            Copy-Item -Path $_.FullName -Destination $packageDir -Force
+            Write-Host "Copied: $($_.Name)"
           }
+          
+          Write-Host "`n========== Copying Custom DLLs from build =========="
+          Get-ChildItem -Path "build" -Filter "*.dll" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.FullName -notlike "*CMakeFiles*" } | ForEach-Object {
+            Copy-Item -Path $_.FullName -Destination $packageDir -Force
+            Write-Host "Copied: $($_.Name)"
+          }
+          
+          Write-Host "`n========== FINAL PACKAGE CONTENTS =========="
+          $files = @(Get-ChildItem -Path $packageDir -Recurse -File -ErrorAction SilentlyContinue)
+          $dirs = @(Get-ChildItem -Path $packageDir -Recurse -Directory -ErrorAction SilentlyContinue)
+          Write-Host "Total files: $($files.Count)"
+          Write-Host "Total directories: $($dirs.Count)`n"
+          
+          Write-Host "Executables:"
+          Get-ChildItem -Path $packageDir -Filter "*.exe" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  ✓ $($_.Name)" }
+          
+          Write-Host "`nQt Core DLLs:"
+          Get-ChildItem -Path $packageDir -Filter "Qt6*.dll" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  ✓ $($_.Name)" }
+          
+          Write-Host "`nSubdirectories:"
+          Get-ChildItem -Path $packageDir -Directory -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  📁 $($_.Name)" }
+          
+          Write-Host "`n✓ Package preparation completed!"
         shell: powershell
 
       - name: Upload Build Artifacts
