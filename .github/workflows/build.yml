@@ -34,7 +34,7 @@ jobs:
           host: 'windows'
           target: 'desktop'
           arch: 'win64_msvc2019_64'
-          modules: 'qt5compat'
+          modules: 'qt5compat qtshadertools'
           cache: 'true'
 
       - name: Configure CMake
