@@ -71,10 +71,12 @@ jobs:
       - name: Prepare Release Package
         run: |
           $packageDir = "release-package"
-          $qtBinPath = "D:\a\Qt-NodesTool\Qt\6.5.3\msvc2019_64\bin"
+          $qtPath = "D:\a\Qt-NodesTool\Qt\6.5.3\msvc2019_64"
+          $qtBinPath = "$qtPath\bin"
+          $qtPluginsPath = "$qtPath\plugins"
           New-Item -ItemType Directory -Path $packageDir -Force | Out-Null
           
-          Write-Host "Looking for executables and DLLs..."
+          Write-Host "Looking for executables and dependencies..."
           
           # Find and copy EXE files from the entire build directory
           $exeFiles = Get-ChildItem -Path "build" -Filter "*.exe" -Recurse -ErrorAction SilentlyContinue
@@ -85,13 +87,22 @@ jobs:
             
             # Apply windeployqt to copy Qt dependencies next to the EXE
             Write-Host "Deploying Qt dependencies for: $($exe.Name)"
-            & "$qtBinPath\windeployqt.exe" --release "$packageDir\$($exe.Name)"
+            & "$qtBinPath\windeployqt.exe" --release --qmldir . "$packageDir\$($exe.Name)"
+          }
+          
+          # Copy Qt plugins directory (critical for QML and Controls)
+          if (Test-Path $qtPluginsPath) {
+            Write-Host "Copying Qt plugins from: $qtPluginsPath"
+            $pluginsDest = "$packageDir\plugins"
+            Copy-Item -Path $qtPluginsPath -Destination $pluginsDest -Recurse -Force -ErrorAction SilentlyContinue
+            Write-Host "Plugins copied to: $pluginsDest"
           }
           
           # Copy Qt runtime DLLs explicitly
           $qtRuntimeDlls = @(
             "Qt6Core.dll", "Qt6Gui.dll", "Qt6Widgets.dll", "Qt6Sql.dll",
-            "Qt6Network.dll", "Qt6Concurrent.dll", "Qt6PrintSupport.dll"
+            "Qt6Network.dll", "Qt6Concurrent.dll", "Qt6PrintSupport.dll",
+            "Qt6Qml.dll", "Qt6QmlModels.dll"
           )
           foreach ($dll in $qtRuntimeDlls) {
             $dllPath = Join-Path $qtBinPath $dll
@@ -108,6 +119,14 @@ jobs:
             Copy-Item -Path $dll.FullName -Destination $packageDir -Force
           }
           
+          # Copy msvcp and vcruntime DLLs
+          $runtimeDlls = Get-ChildItem -Path $qtBinPath -Filter "msvcp*.dll" -ErrorAction SilentlyContinue
+          $runtimeDlls += Get-ChildItem -Path $qtBinPath -Filter "vcruntime*.dll" -ErrorAction SilentlyContinue
+          foreach ($dll in $runtimeDlls) {
+            Write-Host "Copying runtime: $($dll.Name)"
+            Copy-Item -Path $dll.FullName -Destination $packageDir -Force -ErrorAction SilentlyContinue
+          }
+          
           # Find and copy any other DLL files from the build directory
           $dllFiles = Get-ChildItem -Path "build" -Filter "*.dll" -Recurse -ErrorAction SilentlyContinue
           Write-Host "Found $($dllFiles.Count) DLL files in build directory"
@@ -117,10 +136,13 @@ jobs:
           }
           
           # List final contents
-          Write-Host "Release package contents:"
+          Write-Host "`nRelease package structure:"
           if (Test-Path $packageDir) {
-            Get-ChildItem -Path $packageDir | ForEach-Object { Write-Host $_.Name }
-            Write-Host "Total files: $($(Get-ChildItem -Path $packageDir).Count)"
+            Get-ChildItem -Path $packageDir -Recurse | ForEach-Object { 
+              $relativePath = $_.FullName -replace [regex]::Escape($packageDir)
+              Write-Host $relativePath 
+            }
+            Write-Host "`nTotal files: $($(Get-ChildItem -Path $packageDir -Recurse -File).Count)"
           } else {
             Write-Host "ERROR: $packageDir directory not found!"
           }
