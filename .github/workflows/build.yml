@@ -191,6 +191,7 @@ jobs:
           }
           
           Write-Host "`n[SUCCESS] Package preparation completed!"
+          exit 0
         shell: powershell
 
       - name: Upload Build Artifacts
