@@ -31,7 +31,7 @@ jobs:
           cache: 'true'
 
       - name: Install CMake
-        uses: cmake-js/setup-cmake@v3
+        uses: actions/setup-cmake@v3
         with:
           cmake-version: '3.27'
 
@@ -54,7 +54,7 @@ jobs:
 
       - name: Upload Build Artifacts
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-artifacts-${{ matrix.os }}
           path: build/
