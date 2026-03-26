@@ -20,6 +20,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Initialize Git Submodules
+        run: git submodule update --init --recursive
+
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
@@ -27,6 +30,7 @@ jobs:
           host: 'windows'
           target: 'desktop'
           arch: 'win64_msvc2019_64'
+          modules: 'qt5compat'
           cache: 'true'
 
       - name: Configure CMake
