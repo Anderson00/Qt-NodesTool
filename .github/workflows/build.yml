@@ -176,15 +176,21 @@ jobs:
           Write-Host "Total directories: $($dirs.Count)`n"
           
           Write-Host "Executables:"
-          Get-ChildItem -Path $packageDir -Filter "*.exe" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  ✓ $($_.Name)" }
+          Get-ChildItem -Path $packageDir -Filter "*.exe" -ErrorAction SilentlyContinue | ForEach-Object { 
+            Write-Host "  [+] $($_.Name)" 
+          }
           
           Write-Host "`nQt Core DLLs:"
-          Get-ChildItem -Path $packageDir -Filter "Qt6*.dll" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  ✓ $($_.Name)" }
+          Get-ChildItem -Path $packageDir -Filter "Qt6*.dll" -ErrorAction SilentlyContinue | ForEach-Object { 
+            Write-Host "  [+] $($_.Name)" 
+          }
           
           Write-Host "`nSubdirectories:"
-          Get-ChildItem -Path $packageDir -Directory -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  📁 $($_.Name)" }
+          Get-ChildItem -Path $packageDir -Directory -ErrorAction SilentlyContinue | ForEach-Object { 
+            Write-Host "  [DIR] $($_.Name)" 
+          }
           
-          Write-Host "`n✓ Package preparation completed!"
+          Write-Host "`n[SUCCESS] Package preparation completed!"
         shell: powershell
 
       - name: Upload Build Artifacts
