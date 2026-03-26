@@ -117,7 +117,8 @@ jobs:
             Write-Host "Running windeployqt..."
             $windeploycmd = "$qtBinPath\windeployqt.exe"
             $exePath = "$packageDir\$($exe.Name)"
-            & $windeploycmd --release --qmldir . $exePath 2>&1 | Write-Host
+          $qmlSourcePath = "$qtPath\qml"
+          & $windeploycmd --release --qmldir $qmlSourcePath $exePath 2>&1 | Write-Host
             Write-Host "Windeployqt finished with exit code: $LASTEXITCODE"
             Write-Host ""
           }
@@ -131,21 +132,24 @@ jobs:
               Copy-Item -Path "$qtPluginsPath\*" -Destination $packageDir -Recurse -Force
               Write-Host "Plugins copied successfully"
             }
-          }          
-          # Ensure QtQuick.Controls QML plugin is copied
-          $qmlPath = "$qtPath\qml\QtQuick\Controls"
-          if (Test-Path $qmlPath) {
-            $qmlDest = "$packageDir\qml\QtQuick\Controls"
-            Write-Host "Copying QtQuick.Controls QML from: $qmlPath"
-            Copy-Item -Path $qmlPath -Destination $qmlDest -Recurse -Force -ErrorAction SilentlyContinue
-            Write-Host "QtQuick.Controls QML copied"
+          }
+          
+          # Copy entire QML directory (critical for QtQuick.Controls and all QML modules)
+          $qmlSourcePath = "$qtPath\qml"
+          if (Test-Path $qmlSourcePath) {
+            $qmlDest = "$packageDir\qml"
+            if (-not (Test-Path $qmlDest)) {
+              Write-Host "Copying complete QML modules from: $qmlSourcePath"
+              Copy-Item -Path $qmlSourcePath -Destination $qmlDest -Recurse -Force -ErrorAction SilentlyContinue
+              Write-Host "QML modules copied successfully"
+            }
           }          
           Write-Host "`n========== Copying Qt Runtime DLLs =========="
           $qtRuntimeDlls = @(
             "Qt6Core.dll", "Qt6Gui.dll", "Qt6Widgets.dll", "Qt6Sql.dll",
             "Qt6Network.dll", "Qt6Concurrent.dll", "Qt6PrintSupport.dll",
             "Qt6Qml.dll", "Qt6QmlModels.dll", "Qt6Quick.dll", "Qt6QuickControls2.dll",
-            "Qt6OpenGL.dll", "Qt6QuickTemplates2.dll"
+            "Qt6OpenGL.dll", "Qt6QuickTemplates2.dll", "Qt6ShaderTools.dll"
           )
           foreach ($dll in $qtRuntimeDlls) {
             $dllPath = Join-Path $qtBinPath $dll
@@ -167,6 +171,12 @@ jobs:
           }
           
           Get-ChildItem -Path $qtBinPath -Filter "vcruntime*.dll" -ErrorAction SilentlyContinue | ForEach-Object {
+            Copy-Item -Path $_.FullName -Destination $packageDir -Force
+            Write-Host "Copied: $($_.Name)"
+          }
+          
+          # Copy any d3d or graphic related DLLs
+          Get-ChildItem -Path $qtBinPath -Filter "d3d*.dll" -ErrorAction SilentlyContinue | ForEach-Object {
             Copy-Item -Path $_.FullName -Destination $packageDir -Force
             Write-Host "Copied: $($_.Name)"
           }
