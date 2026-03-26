@@ -134,6 +134,16 @@ jobs:
             }
           }
           
+          Write-Host "`n========== Copying OpenGL and Graphics DLLs =========="
+          $graphicsDlls = @("libEGL.dll", "libGLESv2.dll", "opengl32.dll", "d3dcompiler_47.dll")
+          foreach ($dll in $graphicsDlls) {
+            $dllPath = Join-Path $qtBinPath $dll
+            if (Test-Path $dllPath) {
+              Copy-Item -Path $dllPath -Destination $packageDir -Force
+              Write-Host "  Copied: $dll"
+            }
+          }
+          
           Write-Host "`n========== Ensuring plugins and qml folders =========="
           if (Test-Path $qtPluginsPath) {
             $pluginsDest = "$packageDir\plugins"
@@ -154,6 +164,19 @@ jobs:
               Write-Host "QML modules copied"
             } else {
               Write-Host "QML modules already present from windeployqt"
+            }
+          }
+          
+          # Copy lib folder if it exists (contains additional DLLs)
+          $libPath = "$qtPath\lib"
+          if (Test-Path $libPath) {
+            Write-Host "Copying lib folder..."
+            Get-ChildItem -Path $libPath -Filter "*.dll" -ErrorAction SilentlyContinue | ForEach-Object {
+              $dest = "$packageDir\$($_.Name)"
+              if (-not (Test-Path $dest)) {
+                Copy-Item -Path $_.FullName -Destination $packageDir -Force
+                Write-Host "  Copied from lib: $($_.Name)"
+              }
             }
           }
           
