@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.14
 import QtQuick.Window 2.2
 import QtQuick 2.14
 import QtQml 2.14
+import App.Theme 1.0
 
 import Qaterial 1.0 as Qaterial
 
@@ -19,7 +20,7 @@ Rectangle{
 
     color: "#222"
     border.width: 1
-    border.color: Material.accentColor
+    border.color: ThemeManager.primaryColor
     radius: 4
 
     MouseArea {

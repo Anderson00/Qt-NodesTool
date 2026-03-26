@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.14
 import QtQuick.Window 2.2
 import QtQuick 2.14
 import QtQml 2.14
+import App.Theme 1.0
 
 import Qaterial 1.0 as Qaterial
 
@@ -89,7 +90,7 @@ Contrl.Drawer {
                     Layout.preferredHeight: 20
                     enabled: false
                     icon.source: `qrc:/Qaterial/Icons/arrow-left`
-                    icon.color: Material.accentColor
+                    icon.color: ThemeManager.primaryColor
                     Layout.alignment: Qt.AlignLeft
 
                     onClicked: {
@@ -117,7 +118,7 @@ Contrl.Drawer {
 
                                 onHoveredChanged: {
                                     if(hovered)
-                                        parent.color = Material.accentColor
+                                        parent.color = ThemeManager.primaryColor
                                     else
                                         parent.color = "#fff"
                                 }
@@ -143,7 +144,7 @@ Contrl.Drawer {
 
                                 onHoveredChanged: {
                                     if(hovered)
-                                        parent.color = Material.accentColor
+                                        parent.color = ThemeManager.primaryColor
                                     else
                                         parent.color = "#fff"
 
@@ -255,7 +256,7 @@ Contrl.Drawer {
                     Layout.leftMargin: -16
                     Layout.rightMargin: -16
                     icon.source: 'qrc:/Qaterial/Icons/plus'
-                    icon.color: Material.accentColor
+                    icon.color: ThemeManager.primaryColor
 
                     onClicked: {
 
@@ -265,7 +266,7 @@ Contrl.Drawer {
                 Qaterial.AppBarButton{
                     Layout.preferredHeight: 20
                     icon.source: gridMode ? 'qrc:/Qaterial/Icons/view-list' : 'qrc:/Qaterial/Icons/view-grid'
-                    icon.color: Material.accentColor
+                    icon.color: ThemeManager.primaryColor
 
                     onClicked: {
                         gridMode = !gridMode
@@ -343,7 +344,7 @@ Contrl.Drawer {
                                     Binding on color
                                     {
                                         when: model === root.selectedElement
-                                        value: Qaterial.Style.accentColor
+                                        value: ThemeManager.primaryColor
                                     }
                                 }
                             }
@@ -404,7 +405,7 @@ Contrl.Drawer {
                                 width: 100
                                 implicitHeight:4
                                 radius: implicitHeight/2
-                                color: Material.accentColor
+                                color: ThemeManager.primaryColor
                             }
                         }
 
@@ -424,7 +425,7 @@ Contrl.Drawer {
 
                             color: "#222"
                             border.width: 1
-                            border.color: Material.accentColor
+                            border.color: ThemeManager.primaryColor
                             radius: 4
                             width: gridView.cellWidth - 8
                             height: gridView.cellHeight - 8
