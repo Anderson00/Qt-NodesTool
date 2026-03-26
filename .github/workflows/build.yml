@@ -101,13 +101,7 @@ jobs:
           New-Item -ItemType Directory -Path $packageDir -Force | Out-Null
           
           # Create qt.conf to tell the app where to find plugins and QML modules
-          $qtConf = @"
-[Paths]
-Plugins = .
-Imports = qml
-Qml2Imports = qml
-"@
-          $qtConf | Out-File -FilePath "$packageDir\qt.conf" -Encoding utf8
+          "[Paths]`nPlugins = .`nImports = qml`nQml2Imports = qml" | Out-File -FilePath "$packageDir\qt.conf" -Encoding utf8
           
           Write-Host "Looking for application executables..."
           
