@@ -40,21 +40,67 @@ jobs:
       - name: Verify Qt Installation
         run: |
           $qtPath = "D:\a\Qt-NodesTool\Qt\6.5.3\msvc2019_64"
-          Write-Host "Qt bin contents:"
+          
+          Write-Host "=== Qt Charts DLLs ==="
           Get-ChildItem "$qtPath\bin" -Filter "Qt6Charts*" -ErrorAction SilentlyContinue
-          Write-Host "`nQML QtCharts:"
+          
+          Write-Host "`n=== QML QtCharts ==="
           if (Test-Path "$qtPath\qml\QtCharts") {
             Get-ChildItem "$qtPath\qml\QtCharts" -Recurse
           } else {
-            Write-Host "WARNING: QtCharts QML module not found!"
-            Write-Host "Available QML modules:"
-            Get-ChildItem "$qtPath\qml" -Directory | ForEach-Object { Write-Host "  $($_.Name)" }
+            Write-Host "QtCharts QML NOT FOUND - will install manually"
           }
-          Write-Host "`nQt.labs:"
+          
+          Write-Host "`n=== Qt.labs ==="
           if (Test-Path "$qtPath\qml\Qt\labs") {
             Get-ChildItem "$qtPath\qml\Qt\labs" -Directory
           } else {
-            Write-Host "WARNING: Qt.labs not found!"
+            Write-Host "Qt.labs NOT FOUND"
+          }
+          
+          Write-Host "`n=== All QML directories ==="
+          Get-ChildItem "$qtPath\qml" -Directory -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  $($_.Name)" }
+          
+          Write-Host "`n=== All Qt.labs directories ==="
+          Get-ChildItem "$qtPath\qml\Qt\labs" -Directory -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  $($_.Name)" }
+        shell: powershell
+
+      - name: Install missing QML modules via aqtinstall
+        run: |
+          pip install aqtinstall
+          $qtPath = "D:\a\Qt-NodesTool\Qt\6.5.3\msvc2019_64"
+          
+          # Check if QtCharts QML module is missing and install archives
+          if (-not (Test-Path "$qtPath\qml\QtCharts")) {
+            Write-Host "QtCharts QML module missing, installing additional archives..."
+            python -m aqt install-qt windows desktop 6.5.3 win64_msvc2019_64 --outputdir "D:\a\Qt-NodesTool\Qt" --archives qtcharts
+            
+            # Verify after install
+            if (Test-Path "$qtPath\qml\QtCharts") {
+              Write-Host "QtCharts QML module installed successfully"
+              Get-ChildItem "$qtPath\qml\QtCharts"
+            } else {
+              Write-Host "Still missing. Listing all available archives..."
+              python -m aqt list-qt windows desktop --archives 6.5.3 win64_msvc2019_64 --modules qtcharts
+            }
+          } else {
+            Write-Host "QtCharts QML module already present"
+          }
+          
+          # Check Qt.labs.qmlmodels
+          if (-not (Test-Path "$qtPath\qml\Qt\labs\qmlmodels")) {
+            Write-Host "Qt.labs.qmlmodels missing, installing qtdeclarative..."
+            python -m aqt install-qt windows desktop 6.5.3 win64_msvc2019_64 --outputdir "D:\a\Qt-NodesTool\Qt" --archives qtdeclarative
+            
+            if (Test-Path "$qtPath\qml\Qt\labs\qmlmodels") {
+              Write-Host "Qt.labs.qmlmodels installed successfully"
+            } else {
+              Write-Host "Still missing after install"
+              Write-Host "Available Qt.labs:"
+              Get-ChildItem "$qtPath\qml\Qt\labs" -Directory -ErrorAction SilentlyContinue
+            }
+          } else {
+            Write-Host "Qt.labs.qmlmodels already present"
           }
         shell: powershell
 
