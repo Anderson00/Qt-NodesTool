@@ -11,9 +11,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Qaterial)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick Gui Svg Sql Network Test Qaterial)
-find_package(Qt6 REQUIRED COMPONENTS Widgets Core Svg Gui Sql Quick Network Xml QuickControls2 Core5Compat Test)
-find_package(Qt6 REQUIRED COMPONENTS Core)
-find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Core Svg Gui Sql Quick Network Xml QuickControls2 Core5Compat Test Charts Qml)
 
 qt_standard_project_setup()
 
@@ -58,9 +56,7 @@ qt_add_executable(Debugger
     src/include/behaviours/common/componentsviewer.h src/include/behaviours/common/componentsviewer.cpp
 )
 
-target_link_libraries(Debugger PRIVATE Qt6::Widgets Qt6::Core Qt6::Quick Qt6::Xml cxxopts Qaterial QOlm::QOlm)
-target_link_libraries(Debugger PRIVATE Qt6::Core)
-target_link_libraries(Debugger PRIVATE Qt6::Core)
+target_link_libraries(Debugger PRIVATE Qt6::Widgets Qt6::Core Qt6::Quick Qt6::Xml Qt6::Charts Qt6::Qml cxxopts Qaterial QOlm::QOlm)
 
 #add_executable(Main main.cpp ${SOURCE_FILES_CURSES})
 set_target_properties(Debugger PROPERTIES
