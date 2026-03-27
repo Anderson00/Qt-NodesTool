@@ -40,6 +40,7 @@ set(PROJECT_SOURCES
     src/include/model/thememanager.h src/include/model/thememanager.cpp
     src/include/model/abstracttheme.h src/include/model/abstracttheme.cpp
     src/include/model/subtheme.h src/include/model/subtheme.cpp
+    src/include/model/globalproperties.h src/include/model/globalproperties.cpp
     src/include/behaviours/behaviours.h src/include/behaviours/behaviours.cpp
     src/include/subwindows/taskmanagerwindow.h src/include/subwindows/taskmanagerwindow.cpp
     src/include/subwindows/testconnectionwindow.h src/include/subwindows/testconnectionwindow.cpp

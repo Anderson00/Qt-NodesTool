@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(Debugger VERSION 1.0.0 LANGUAGES CXX)
 
+# Allow cmake_minimum_required to accept old-style syntax from dependencies
+cmake_policy(SET CMP0128 NEW)
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_AUTOUIC ON)

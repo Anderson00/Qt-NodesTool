@@ -4,6 +4,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Controls.Material 2.12
 import Qt5Compat.GraphicalEffects
 import App.Theme 1.0
+import App.Properties 1.0
 
 import Qaterial 1.0 as Qaterial
 
@@ -144,12 +145,12 @@ Rectangle {
     }
 
     Behavior on height {
-        enabled: animEnabled
+        enabled: animEnabled && !isResizing
         NumberAnimation {duration: 250; easing.type: Easing.OutQuad}
     }
 
     Behavior on width {
-        enabled: animEnabled
+        enabled: animEnabled && !isResizing
         NumberAnimation {duration: 250; easing.type: Easing.OutQuad}
     }
 
@@ -189,8 +190,8 @@ Rectangle {
         width: resizeHandleSize
         height: resizeHandleSize
         radius: resizeHandleSize / 2
-        color: isResizing && resizeDirection === "top-left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-        border.color: root.borderColor
+        color: isResizing && GlobalProperties.debugMode && resizeDirection === "top-left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+        border.color: GlobalProperties.debugMode? root.borderColor : "transparent"
         border.width: 1
         z: 20
         
@@ -203,8 +204,14 @@ Rectangle {
             hoverEnabled: true
             cursorShape: Qt.SizeFDiagCursor
             
-            onEntered: parent.color = root.borderColor
-            onExited: parent.color = isResizing && resizeDirection === "top-left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            onEntered: {
+                if(GlobalProperties.debugMode)
+                    parent.color = root.borderColor
+            }
+            onExited: {
+                if(GlobalProperties.debugMode)
+                    parent.color = isResizing && resizeDirection === "top-left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            }
             
             onPressed: {
                 isResizing = true
@@ -248,8 +255,8 @@ Rectangle {
         width: resizeHandleSize
         height: resizeHandleSize
         radius: resizeHandleSize / 2
-        color: isResizing && resizeDirection === "top-right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-        border.color: root.borderColor
+        color: isResizing && GlobalProperties.debugMode && resizeDirection === "top-right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+        border.color: GlobalProperties.debugMode ? root.borderColor : "transparent"
         border.width: 1
         z: 20
         
@@ -262,8 +269,14 @@ Rectangle {
             hoverEnabled: true
             cursorShape: Qt.SizeBDiagCursor
             
-            onEntered: parent.color = root.borderColor
-            onExited: parent.color = isResizing && resizeDirection === "top-right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            onEntered: {
+                if(GlobalProperties.debugMode)
+                    parent.color = root.borderColor
+            }
+            onExited: {
+                if(GlobalProperties.debugMode)
+                    parent.color = isResizing && resizeDirection === "top-right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            }
             
             onPressed: {
                 isResizing = true
@@ -306,8 +319,8 @@ Rectangle {
         width: resizeHandleSize
         height: resizeHandleSize
         radius: resizeHandleSize / 2
-        color: isResizing && resizeDirection === "bottom-left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-        border.color: root.borderColor
+        color: isResizing && GlobalProperties.debugMode && resizeDirection === "bottom-left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+        border.color: GlobalProperties.debugMode ? root.borderColor : "transparent"
         border.width: 1
         z: 20
         
@@ -320,8 +333,14 @@ Rectangle {
             hoverEnabled: true
             cursorShape: Qt.SizeBDiagCursor
             
-            onEntered: parent.color = root.borderColor
-            onExited: parent.color = isResizing && resizeDirection === "bottom-left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            onEntered: {
+                if(GlobalProperties.debugMode)
+                    parent.color = root.borderColor
+            }
+            onExited: {
+                if(GlobalProperties.debugMode)
+                    parent.color = isResizing && resizeDirection === "bottom-left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            }
             
             onPressed: {
                 isResizing = true
@@ -364,8 +383,8 @@ Rectangle {
         width: resizeHandleSize
         height: resizeHandleSize
         radius: resizeHandleSize / 2
-        color: isResizing && resizeDirection === "bottom-right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-        border.color: root.borderColor
+        color: isResizing && GlobalProperties.debugMode && resizeDirection === "bottom-right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+        border.color: GlobalProperties.debugMode ? root.borderColor : "transparent"
         border.width: 1
         z: 20
         
@@ -378,8 +397,14 @@ Rectangle {
             hoverEnabled: true
             cursorShape: Qt.SizeFDiagCursor
             
-            onEntered: parent.color = root.borderColor
-            onExited: parent.color = isResizing && resizeDirection === "bottom-right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            onEntered: {
+                if(GlobalProperties.debugMode)
+                    parent.color = root.borderColor
+            }
+            onExited: {
+                if(GlobalProperties.debugMode)
+                    parent.color = isResizing && resizeDirection === "bottom-right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            }
             
             onPressed: {
                 isResizing = true
@@ -421,8 +446,8 @@ Rectangle {
         anchors.rightMargin: resizeHandleSize
         anchors.topMargin: -resizeHandleSize / 2
         height: resizeHandleSize
-        color: isResizing && resizeDirection === "top" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-        border.color: root.borderColor
+        color: isResizing && GlobalProperties.debugMode && resizeDirection === "top" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+        border.color: GlobalProperties.debugMode? root.borderColor : "transparent"
         border.width: 1
         z: 20
         
@@ -434,23 +459,31 @@ Rectangle {
             hoverEnabled: true
             cursorShape: Qt.SizeVerCursor
             
-            onEntered: parent.color = root.borderColor
-            onExited: parent.color = isResizing && resizeDirection === "top" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            onEntered: {
+                if(GlobalProperties.debugMode)
+                    parent.color = root.borderColor
+            }
+            onExited: {
+                if(GlobalProperties.debugMode)
+                    parent.color = isResizing && resizeDirection === "top" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            }
             
             onPressed: {
                 isResizing = true
                 resizeDirection = "top"
-                yPrev = mouse.y
+                yPrev = mapToGlobal(0, mouse.y).y
             }
             
             onPositionChanged: {
                 if (pressed && resizeDirection === "top") {
-                    let deltaY = mouse.y - yPrev
+                    let currentGlobalY = mapToGlobal(0, mouse.y).y
+                    let deltaY = currentGlobalY - yPrev
                     let newHeight = root.height - deltaY
                     
                     if (newHeight >= minHeight) {
                         root.y += deltaY
                         root.height = newHeight
+                        yPrev = currentGlobalY
                     }
                 }
             }
@@ -471,8 +504,8 @@ Rectangle {
         anchors.rightMargin: resizeHandleSize
         anchors.bottomMargin: -resizeHandleSize / 2
         height: resizeHandleSize
-        color: isResizing && resizeDirection === "bottom" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-        border.color: root.borderColor
+        color: isResizing && GlobalProperties.debugMode && resizeDirection === "bottom" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+        border.color: GlobalProperties.debugMode ? root.borderColor : "transparent"
         border.width: 1
         z: 20
         
@@ -484,8 +517,14 @@ Rectangle {
             hoverEnabled: true
             cursorShape: Qt.SizeVerCursor
             
-            onEntered: parent.color = root.borderColor
-            onExited: parent.color = isResizing && resizeDirection === "bottom" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            onEntered: {
+                if(GlobalProperties.debugMode)
+                    parent.color = root.borderColor
+            }
+            onExited: {
+                if(GlobalProperties.debugMode)
+                    parent.color = isResizing && resizeDirection === "bottom" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            }
             
             onPressed: {
                 isResizing = true
@@ -520,8 +559,8 @@ Rectangle {
         anchors.topMargin: resizeHandleSize
         anchors.bottomMargin: resizeHandleSize
         width: resizeHandleSize
-        color: isResizing && resizeDirection === "left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-        border.color: root.borderColor
+        color: isResizing && GlobalProperties.debugMode && resizeDirection === "left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+        border.color: GlobalProperties.debugMode? root.borderColor : "transparent"
         border.width: 1
         z: 20
         
@@ -533,23 +572,31 @@ Rectangle {
             hoverEnabled: true
             cursorShape: Qt.SizeHorCursor
             
-            onEntered: parent.color = root.borderColor
-            onExited: parent.color = isResizing && resizeDirection === "left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            onEntered: {
+                if(GlobalProperties.debugMode)
+                    parent.color = root.borderColor
+            }
+            onExited: {
+                if(GlobalProperties.debugMode)
+                    parent.color = isResizing && resizeDirection === "left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            }
             
             onPressed: {
                 isResizing = true
                 resizeDirection = "left"
-                xPrev = mouse.x
+                xPrev = mapToGlobal(mouse.x, 0).x
             }
             
             onPositionChanged: {
                 if (pressed && resizeDirection === "left") {
-                    let deltaX = mouse.x - xPrev
+                    let currentGlobalX = mapToGlobal(mouse.x, 0).x
+                    let deltaX = currentGlobalX - xPrev
                     let newWidth = root.width - deltaX
                     
                     if (newWidth >= minWidth) {
                         root.x += deltaX
                         root.width = newWidth
+                        xPrev = currentGlobalX
                     }
                 }
             }
@@ -570,8 +617,8 @@ Rectangle {
         anchors.topMargin: resizeHandleSize
         anchors.bottomMargin: resizeHandleSize
         width: resizeHandleSize
-        color: isResizing && resizeDirection === "right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-        border.color: root.borderColor
+        color: isResizing && GlobalProperties.debugMode && resizeDirection === "right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+        border.color: GlobalProperties.debugMode ? root.borderColor : "transparent"
         border.width: 1
         z: 20
         
@@ -583,8 +630,14 @@ Rectangle {
             hoverEnabled: true
             cursorShape: Qt.SizeHorCursor
             
-            onEntered: parent.color = root.borderColor
-            onExited: parent.color = isResizing && resizeDirection === "right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            onEntered: {
+                if(GlobalProperties.debugMode)
+                    parent.color = root.borderColor
+            }
+            onExited: {
+                if(GlobalProperties.debugMode)
+                    parent.color = isResizing && resizeDirection === "right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            }
             
             onPressed: {
                 isResizing = true

@@ -8,6 +8,7 @@
 //#include <retdec/fileformat/fileformat.h>
 #include <Qaterial/Qaterial.hpp>
 #include <model/tablemodel.h>
+#include <model/globalproperties.h>
 
 static QFile log_file(QDateTime::currentDateTime().toString().replace(":","-").append(".log"));
 
@@ -66,6 +67,9 @@ int main(int argc, char **argv)
     qaterial::registerQmlTypes();
 
     //qmlRegisterType<TableModel>("TableModel", 1, 0, "TableModel");
+
+    // Register GlobalProperties as singleton in QML
+    qmlRegisterSingletonInstance("App.GlobalProperties", 1, 0, "GlobalProperties", GlobalProperties::instance());
 
     MainWindow w;
     w.show();
