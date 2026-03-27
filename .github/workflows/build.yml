@@ -375,14 +375,6 @@ jobs:
           ctest --output-on-failure -C Release
         continue-on-error: true
         shell: bash
-        shell: bash
-
-      - name: Run Tests
-        run: |
-          cd build
-          ctest --output-on-failure -C Release
-        continue-on-error: true
-        shell: bash
 
       - name: Prepare Release Package
         run: |
