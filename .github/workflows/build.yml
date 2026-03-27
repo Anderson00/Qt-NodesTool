@@ -7,28 +7,228 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        include:
-          # Windows
-          - os: windows-latest
-            qt-arch: 'win64_msvc2019_64'
-            cmake-generator: 'Visual Studio 17 2022'
-            cmake-arch: 'x64'
-            
-          # macOS (Intel)
-          - os: macos-latest
-            qt-arch: 'clang_64'
-            cmake-generator: 'Ninja'
-            
-          # Linux
-          - os: ubuntu-latest
-            qt-arch: 'gcc_64'
-            cmake-generator: 'Unix Makefiles'
+  build-windows:
+    runs-on: windows-latest
 
-    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: false
 
+      - name: Clone Required Submodules
+        run: |
+          git submodule init extern/capstone extern/cxxopts extern/retdec
+          git submodule update --depth=1
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.5.3'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2019_64'
+          modules: 'qt5compat qtshadertools qtcharts'
+          cache: 'false'
+
+      - name: Verify Qt Installation
+        run: |
+          $qtPath = "D:\a\Qt-NodesTool\Qt\6.5.3\msvc2019_64"
+          
+          Write-Host "=== Qt Charts DLLs ==="
+          Get-ChildItem "$qtPath\bin" -Filter "Qt6Charts*" -ErrorAction SilentlyContinue
+          
+          Write-Host "`n=== QML QtCharts ==="
+          if (Test-Path "$qtPath\qml\QtCharts") {
+            Get-ChildItem "$qtPath\qml\QtCharts" -Recurse
+          } else {
+            Write-Host "QtCharts QML NOT FOUND - will install manually"
+          }
+          
+          Write-Host "`n=== Qt.labs ==="
+          if (Test-Path "$qtPath\qml\Qt\labs") {
+            Get-ChildItem "$qtPath\qml\Qt\labs" -Directory
+          } else {
+            Write-Host "Qt.labs NOT FOUND"
+          }
+          
+          Write-Host "`n=== All QML directories ==="
+          Get-ChildItem "$qtPath\qml" -Directory -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  $($_.Name)" }
+          
+          Write-Host "`n=== All Qt.labs directories ==="
+          Get-ChildItem "$qtPath\qml\Qt\labs" -Directory -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  $($_.Name)" }
+        shell: powershell
+
+      - name: Configure CMake
+        run: |
+          mkdir -p build
+          cd build
+          cmake -G "Visual Studio 17 2022" -A x64 ..
+
+      - name: Build
+        run: |
+          cd build
+          cmake --build . --config Release
+
+      - name: Deploy Qt Dependencies
+        run: |
+          $qtBinPath = "D:\a\Qt-NodesTool\Qt\6.5.3\msvc2019_64\bin"
+          $env:PATH = "$qtBinPath;$env:PATH"
+          $releaseDir = "build\Release"
+          if (Test-Path $releaseDir) {
+            $exeFiles = Get-ChildItem -Path $releaseDir -Filter "*.exe" -Recurse
+            foreach ($exe in $exeFiles) {
+              Write-Host "Deploying: $($exe.FullName)"
+              & "$qtBinPath\windeployqt.exe" --release "$($exe.FullName)"
+            }
+          }
+        shell: powershell
+
+      - name: Run Tests
+        run: |
+          cd build
+          ctest --output-on-failure -C Release
+        continue-on-error: true
+
+      - name: Prepare Release Package
+        run: |
+          $packageDir = "release-package"
+          $qtPath = "D:\a\Qt-NodesTool\Qt\6.5.3\msvc2019_64"
+          $qtBinPath = "$qtPath\bin"
+          $qtPluginsPath = "$qtPath\plugins"
+          $qmlSourcePath = "$qtPath\qml"
+          $ErrorActionPreference = "SilentlyContinue"
+          
+          New-Item -ItemType Directory -Path $packageDir -Force | Out-Null
+          
+          # Create qt.conf to tell the app where to find plugins and QML modules
+          "[Paths]`nPlugins = .`nImports = qml`nQml2Imports = qml" | Out-File -FilePath "$packageDir\qt.conf" -Encoding utf8
+          
+          Write-Host "Looking for application executables..."
+          
+          $allExeFiles = Get-ChildItem -Path "build" -Filter "*.exe" -Recurse -ErrorAction SilentlyContinue
+          Write-Host "Found $($allExeFiles.Count) total EXE files"
+          
+          $excludePatterns = @("CompilerIdC", "CompilerIdCXX", "CMakeFiles")
+          $filteredExes = @()
+          
+          foreach ($exe in $allExeFiles) {
+            $shouldInclude = $true
+            foreach ($pattern in $excludePatterns) {
+              if ($exe.FullName -like "*$pattern*") {
+                $shouldInclude = $false
+                Write-Host "Excluding: $($exe.Name) (matched pattern: $pattern)"
+                break
+              }
+            }
+            if ($shouldInclude) {
+              $filteredExes += $exe
+              Write-Host "Including: $($exe.Name)"
+            }
+          }
+          
+          Write-Host "`nAfter filtering: $($filteredExes.Count) application EXE files`n"
+          Write-Host "========== Processing all EXEs with windeployqt =========="
+          
+          foreach ($exe in $filteredExes) {
+            Write-Host "`n[PROCESSING] $($exe.Name)"
+            Copy-Item -Path $exe.FullName -Destination $packageDir -Force
+            Write-Host "  Copied EXE"
+            
+            Write-Host "  Running windeployqt with full QML support..."
+            $exePath = "$packageDir\$($exe.Name)"
+            & "$qtBinPath\windeployqt.exe" --release --qmldir "valkyrieGUI/resources/qml" $exePath 2>&1 | Write-Host
+          }
+          
+          Write-Host "`n========== Copying complete Qt bin folder (all DLLs) =========="
+          Write-Host "Copying all Qt DLLs from: $qtBinPath"
+          Get-ChildItem -Path $qtBinPath -Filter "*.dll" -ErrorAction SilentlyContinue | ForEach-Object {
+            $dest = "$packageDir\$($_.Name)"
+            if (-not (Test-Path $dest)) {
+              Copy-Item -Path $_.FullName -Destination $packageDir -Force
+              Write-Host "  Copied: $($_.Name)"
+            } else {
+              Write-Host "  Already present: $($_.Name)"
+            }
+          }
+          
+          Write-Host "`n========== Ensuring plugins and qml folders =========="
+          if (Test-Path $qtPluginsPath) {
+            $pluginsDest = "$packageDir\plugins"
+            if (-not (Test-Path $pluginsDest)) {
+              Write-Host "Copying plugins..."
+              Copy-Item -Path "$qtPluginsPath\*" -Destination $packageDir -Recurse -Force
+              Write-Host "Plugins copied"
+            } else {
+              Write-Host "Plugins already present"
+            }
+          }
+          
+          if (Test-Path $qmlSourcePath) {
+            $qmlDest = "$packageDir\qml"
+            New-Item -ItemType Directory -Path $qmlDest -Force | Out-Null
+            Write-Host "Copying/merging all QML modules into package..."
+            Copy-Item -Path "$qmlSourcePath\*" -Destination $qmlDest -Recurse -Force
+            Write-Host "QML modules copied"
+            
+            Write-Host "QML modules in package:"
+            Get-ChildItem -Path $qmlDest -Directory | ForEach-Object { Write-Host "  $($_.Name)" }
+          }
+          
+          # Copy lib folder if it exists (contains additional DLLs)
+          $libPath = "$qtPath\lib"
+          if (Test-Path $libPath) {
+            Write-Host "Scanning lib folder..."
+            Get-ChildItem -Path $libPath -Filter "*.dll" -ErrorAction SilentlyContinue | ForEach-Object {
+              $dest = "$packageDir\$($_.Name)"
+              if (-not (Test-Path $dest)) {
+                Copy-Item -Path $_.FullName -Destination $packageDir -Force
+                Write-Host "  Copied from lib: $($_.Name)"
+              }
+            }
+          }
+          
+          Write-Host "`n========== Copying custom build DLLs =========="
+          Get-ChildItem -Path "build" -Filter "*.dll" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.FullName -notlike "*CMakeFiles*" } | ForEach-Object {
+            Copy-Item -Path $_.FullName -Destination $packageDir -Force
+            Write-Host "Copied: $($_.Name)"
+          }
+          
+          Write-Host "`n========== FINAL PACKAGE CONTENTS =========="
+          $files = @(Get-ChildItem -Path $packageDir -Recurse -File -ErrorAction SilentlyContinue)
+          $dirs = @(Get-ChildItem -Path $packageDir -Recurse -Directory -ErrorAction SilentlyContinue)
+          Write-Host "Total files: $($files.Count)"
+          Write-Host "Total directories: $($dirs.Count)`n"
+          
+          Write-Host "Executables:"
+          Get-ChildItem -Path $packageDir -Filter "*.exe" -ErrorAction SilentlyContinue | ForEach-Object { 
+            Write-Host "  [+] $($_.Name)" 
+          }
+          
+          Write-Host "`nQt DLLs in package:"
+          $qtDllCount = @(Get-ChildItem -Path $packageDir -Filter "Qt6*.dll" -ErrorAction SilentlyContinue).Count
+          Write-Host "  Total: $qtDllCount DLLs"
+          
+          Write-Host "`nDirectories:"
+          Get-ChildItem -Path $packageDir -Directory -ErrorAction SilentlyContinue | ForEach-Object { 
+            Write-Host "  [DIR] $($_.Name)" 
+          }
+          
+          Write-Host "`n[SUCCESS] Package preparation completed!"
+          exit 0
+        shell: powershell
+
+      - name: Upload Build Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-windows
+          path: release-package/
+          retention-days: 30
+
+  build-macos:
+    runs-on: macos-latest
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -41,8 +241,76 @@ jobs:
           git submodule update --depth=1
         shell: bash
 
-      - name: Install dependencies (Linux)
-        if: runner.os == 'Linux'
+      - name: Install dependencies
+        run: |
+          brew install ninja
+        shell: bash
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.5.3'
+          host: 'mac'
+          target: 'desktop'
+          arch: 'clang_64'
+          modules: 'qt5compat qtshadertools qtcharts'
+          cache: 'false'
+
+      - name: Configure CMake
+        run: |
+          mkdir -p build
+          cd build
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
+        shell: bash
+
+      - name: Build
+        run: |
+          cd build
+          cmake --build . -j$(sysctl -n hw.ncpu)
+        shell: bash
+
+      - name: Run Tests
+        run: |
+          cd build
+          ctest --output-on-failure -C Release
+        continue-on-error: true
+        shell: bash
+
+      - name: Prepare Release Package
+        run: |
+          mkdir -p "release-package"
+          find build -name "*.app" -type d | while read app; do
+            echo "Deploying: $app"
+            macdeployqt "$app" -dmg 2>/dev/null || true
+            mv "$app/../$(basename $app .app).dmg" "release-package/" 2>/dev/null || true
+          done
+          echo "Package ready at: release-package"
+        shell: bash
+
+      - name: Upload Build Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-macos
+          path: release-package/
+          retention-days: 30
+
+  build-linux:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: false
+
+      - name: Clone Required Submodules
+        run: |
+          git submodule init extern/capstone extern/cxxopts extern/retdec
+          git submodule update --depth=1
+        shell: bash
+
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -62,50 +330,29 @@ jobs:
             libxcb-xkb1 \
             libxkb-common-x11-0 \
             ninja-build
-
-      - name: Install dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew install ninja
+        shell: bash
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
           version: '6.5.3'
-          host: ${{ runner.os == 'Windows' && 'windows' || runner.os == 'macOS' && 'mac' || 'linux' }}
+          host: 'linux'
           target: 'desktop'
-          arch: '${{ matrix.qt-arch }}'
+          arch: 'gcc_64'
           modules: 'qt5compat qtshadertools qtcharts'
           cache: 'false'
 
-      - name: Configure CMake (Windows)
-        if: runner.os == 'Windows'
+      - name: Configure CMake
         run: |
           mkdir -p build
           cd build
-          cmake -G "${{ matrix.cmake-generator }}" -A ${{ matrix.cmake-arch }} ..
-        shell: pwsh
-
-      - name: Configure CMake (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          mkdir -p build
-          cd build
-          cmake -G "${{ matrix.cmake-generator }}" -DCMAKE_BUILD_TYPE=Release ..
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
         shell: bash
 
-      - name: Build (Windows)
-        if: runner.os == 'Windows'
+      - name: Build
         run: |
           cd build
-          cmake --build . --config Release
-        shell: pwsh
-
-      - name: Build (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          cd build
-          cmake --build . --config Release -j$(nproc)
+          cmake --build . -j$(nproc)
         shell: bash
 
       - name: Run Tests
@@ -115,92 +362,13 @@ jobs:
         continue-on-error: true
         shell: bash
 
-      - name: Deploy Qt Dependencies (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          $qtBinPath = "${{ env.Qt6_DIR }}\bin"
-          $env:PATH = "$qtBinPath;$env:PATH"
-          $releaseDir = "build\Release"
-          
-          if (Test-Path $releaseDir) {
-            $exeFiles = Get-ChildItem -Path $releaseDir -Filter "*.exe" -Recurse
-            foreach ($exe in $exeFiles) {
-              Write-Host "Deploying: $($exe.FullName)"
-              & "$qtBinPath\windeployqt.exe" --release "$($exe.FullName)"
-            }
-          }
-        shell: pwsh
-
-      - name: Deploy Qt Dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          mkdir -p "release-package"
-          find build -name "*.app" -type d | while read app; do
-            echo "Deploying: $app"
-            macdeployqt "$app" -dmg
-            mv "$app/../$(basename $app .app).dmg" "release-package/" 2>/dev/null || true
-          done
-          # Copy standalone executables
-          find build -maxdepth 3 -type f -perm +111 ! -name "*.app" ! -name "*CMake*" ! -name "moc*" ! -name "uic*" ! -name "rcc*" | while read exe; do
-            [ -x "$exe" ] && cp "$exe" "release-package/"
-          done
-        shell: bash
-
-      - name: Deploy Qt Dependencies (Linux)
-        if: runner.os == 'Linux'
+      - name: Prepare Release Package
         run: |
           mkdir -p "release-package"
           find build -maxdepth 3 -type f -perm +111 ! -name "*CMake*" ! -name "moc*" ! -name "uic*" ! -name "rcc*" -exec file {} \; | grep "ELF.*executable" | cut -d: -f1 | while read exe; do
             cp "$exe" "release-package/"
             echo "Copied: $exe"
           done
-          
-          # Copy Qt libraries
-          for lib in $(find $Qt6_DIR/lib -maxdepth 1 -name "libQt6*.so*" 2>/dev/null); do
-            cp -P "$lib" "release-package/" 2>/dev/null || true
-          done
-        shell: bash
-
-      - name: Prepare Release Package (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          $packageDir = "release-package"
-          $qtPath = "${{ env.Qt6_DIR }}"
-          $qtBinPath = "$qtPath\bin"
-          $qtPluginsPath = "$qtPath\plugins"
-          $qmlSourcePath = "$qtPath\qml"
-          
-          New-Item -ItemType Directory -Path $packageDir -Force | Out-Null
-          
-          "[Paths]`nPlugins = .`nImports = qml`nQml2Imports = qml" | Out-File -FilePath "$packageDir\qt.conf" -Encoding utf8
-          
-          # Copy plugins and QML
-          if (Test-Path $qtPluginsPath) {
-            Copy-Item -Path "$qtPluginsPath\*" -Destination "$packageDir\plugins" -Recurse -Force
-          }
-          
-          if (Test-Path $qmlSourcePath) {
-            Copy-Item -Path "$qmlSourcePath\*" -Destination "$packageDir\qml" -Recurse -Force
-          }
-          
-          # Copy custom DLLs
-          Get-ChildItem -Path "build" -Filter "*.dll" -Recurse -ErrorAction SilentlyContinue | 
-            Where-Object { $_.FullName -notlike "*CMakeFiles*" } | 
-            ForEach-Object { Copy-Item -Path $_.FullName -Destination $packageDir -Force }
-          
-          Write-Host "Package ready at: $packageDir"
-        shell: pwsh
-
-      - name: Prepare Release Package (macOS/Linux)
-        if: runner.os != 'Windows'
-        run: |
-          mkdir -p "release-package"
-          
-          # Copy valkyrieGUI QML resources
-          if [ -d "valkyrieGUI/resources/qml" ]; then
-            cp -r "valkyrieGUI/resources/qml" "release-package/"
-          fi
-          
           echo "Package ready at: release-package"
         shell: bash
 
@@ -208,6 +376,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts-${{ runner.os }}-${{ runner.arch }}
+          name: build-artifacts-linux
           path: release-package/
           retention-days: 30
