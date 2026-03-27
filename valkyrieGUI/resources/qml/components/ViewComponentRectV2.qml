@@ -23,6 +23,13 @@ Rectangle {
 
     property double xPrev: 0.0
     property double yPrev: 0.0
+    
+    property double minWidth: 150
+    property double minHeight: 100
+    
+    property int resizeHandleSize: 8
+    property bool isResizing: false
+    property string resizeDirection: ""
 
     signal connectionSocketClicked(conn: var);
 
@@ -151,7 +158,7 @@ Rectangle {
         z: 1
         anchors.fill: root
         hoverEnabled: true
-        cursorShape: area.containsMouse ? Qt.OpenHandCursor : Qt.ArrowCursor
+        cursorShape: (area.containsMouse && !isResizing) ? Qt.OpenHandCursor : Qt.ArrowCursor
         drag.smoothed: true
         drag.target: root
 
@@ -168,6 +175,437 @@ Rectangle {
             if(pressedButtons & Qt.RightButton){
                 menu.open()
                 root.focus = true
+            }
+        }
+    }
+
+    // Resize Handles
+    // Top-Left Corner
+    Rectangle {
+        anchors.left: root.left
+        anchors.top: root.top
+        anchors.leftMargin: -resizeHandleSize / 2
+        anchors.topMargin: -resizeHandleSize / 2
+        width: resizeHandleSize
+        height: resizeHandleSize
+        radius: resizeHandleSize / 2
+        color: isResizing && resizeDirection === "top-left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+        border.color: root.borderColor
+        border.width: 1
+        z: 20
+        
+        MouseArea {
+            id: tlCorner
+            anchors.centerIn: parent
+            anchors.margins: -10
+            width: resizeHandleSize + 20
+            height: resizeHandleSize + 20
+            hoverEnabled: true
+            cursorShape: Qt.SizeFDiagCursor
+            
+            onEntered: parent.color = root.borderColor
+            onExited: parent.color = isResizing && resizeDirection === "top-left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            
+            onPressed: {
+                isResizing = true
+                resizeDirection = "top-left"
+                xPrev = mouse.x
+                yPrev = mouse.y
+            }
+            
+            onPositionChanged: {
+                if (pressed && resizeDirection === "top-left") {
+                    let deltaX = mouse.x - xPrev
+                    let deltaY = mouse.y - yPrev
+                    
+                    let newWidth = root.width - deltaX
+                    let newHeight = root.height - deltaY
+                    
+                    if (newWidth >= minWidth) {
+                        root.x += deltaX
+                        root.width = newWidth
+                    }
+                    if (newHeight >= minHeight) {
+                        root.y += deltaY
+                        root.height = newHeight
+                    }
+                }
+            }
+            
+            onReleased: {
+                isResizing = false
+                resizeDirection = ""
+            }
+        }
+    }
+
+    // Top-Right Corner
+    Rectangle {
+        anchors.right: root.right
+        anchors.top: root.top
+        anchors.rightMargin: -resizeHandleSize / 2
+        anchors.topMargin: -resizeHandleSize / 2
+        width: resizeHandleSize
+        height: resizeHandleSize
+        radius: resizeHandleSize / 2
+        color: isResizing && resizeDirection === "top-right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+        border.color: root.borderColor
+        border.width: 1
+        z: 20
+        
+        MouseArea {
+            id: trCorner
+            anchors.centerIn: parent
+            anchors.margins: -10
+            width: resizeHandleSize + 20
+            height: resizeHandleSize + 20
+            hoverEnabled: true
+            cursorShape: Qt.SizeBDiagCursor
+            
+            onEntered: parent.color = root.borderColor
+            onExited: parent.color = isResizing && resizeDirection === "top-right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            
+            onPressed: {
+                isResizing = true
+                resizeDirection = "top-right"
+                xPrev = mouse.x
+                yPrev = mouse.y
+            }
+            
+            onPositionChanged: {
+                if (pressed && resizeDirection === "top-right") {
+                    let deltaX = mouse.x - xPrev
+                    let deltaY = mouse.y - yPrev
+                    
+                    let newWidth = root.width + deltaX
+                    let newHeight = root.height - deltaY
+                    
+                    if (newWidth >= minWidth) {
+                        root.width = newWidth
+                    }
+                    if (newHeight >= minHeight) {
+                        root.y += deltaY
+                        root.height = newHeight
+                    }
+                }
+            }
+            
+            onReleased: {
+                isResizing = false
+                resizeDirection = ""
+            }
+        }
+    }
+
+    // Bottom-Left Corner
+    Rectangle {
+        anchors.left: root.left
+        anchors.bottom: root.bottom
+        anchors.leftMargin: -resizeHandleSize / 2
+        anchors.bottomMargin: -resizeHandleSize / 2
+        width: resizeHandleSize
+        height: resizeHandleSize
+        radius: resizeHandleSize / 2
+        color: isResizing && resizeDirection === "bottom-left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+        border.color: root.borderColor
+        border.width: 1
+        z: 20
+        
+        MouseArea {
+            id: blCorner
+            anchors.centerIn: parent
+            anchors.margins: -10
+            width: resizeHandleSize + 20
+            height: resizeHandleSize + 20
+            hoverEnabled: true
+            cursorShape: Qt.SizeBDiagCursor
+            
+            onEntered: parent.color = root.borderColor
+            onExited: parent.color = isResizing && resizeDirection === "bottom-left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            
+            onPressed: {
+                isResizing = true
+                resizeDirection = "bottom-left"
+                xPrev = mouse.x
+                yPrev = mouse.y
+            }
+            
+            onPositionChanged: {
+                if (pressed && resizeDirection === "bottom-left") {
+                    let deltaX = mouse.x - xPrev
+                    let deltaY = mouse.y - yPrev
+                    
+                    let newWidth = root.width - deltaX
+                    let newHeight = root.height + deltaY
+                    
+                    if (newWidth >= minWidth) {
+                        root.x += deltaX
+                        root.width = newWidth
+                    }
+                    if (newHeight >= minHeight) {
+                        root.height = newHeight
+                    }
+                }
+            }
+            
+            onReleased: {
+                isResizing = false
+                resizeDirection = ""
+            }
+        }
+    }
+
+    // Bottom-Right Corner
+    Rectangle {
+        anchors.right: root.right
+        anchors.bottom: root.bottom
+        anchors.rightMargin: -resizeHandleSize / 2
+        anchors.bottomMargin: -resizeHandleSize / 2
+        width: resizeHandleSize
+        height: resizeHandleSize
+        radius: resizeHandleSize / 2
+        color: isResizing && resizeDirection === "bottom-right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+        border.color: root.borderColor
+        border.width: 1
+        z: 20
+        
+        MouseArea {
+            id: brCorner
+            anchors.centerIn: parent
+            anchors.margins: -10
+            width: resizeHandleSize + 20
+            height: resizeHandleSize + 20
+            hoverEnabled: true
+            cursorShape: Qt.SizeFDiagCursor
+            
+            onEntered: parent.color = root.borderColor
+            onExited: parent.color = isResizing && resizeDirection === "bottom-right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            
+            onPressed: {
+                isResizing = true
+                resizeDirection = "bottom-right"
+                xPrev = mouse.x
+                yPrev = mouse.y
+            }
+            
+            onPositionChanged: {
+                if (pressed && resizeDirection === "bottom-right") {
+                    let deltaX = mouse.x - xPrev
+                    let deltaY = mouse.y - yPrev
+                    
+                    let newWidth = root.width + deltaX
+                    let newHeight = root.height + deltaY
+                    
+                    if (newWidth >= minWidth) {
+                        root.width = newWidth
+                    }
+                    if (newHeight >= minHeight) {
+                        root.height = newHeight
+                    }
+                }
+            }
+            
+            onReleased: {
+                isResizing = false
+                resizeDirection = ""
+            }
+        }
+    }
+
+    // Top Edge
+    Rectangle {
+        anchors.left: root.left
+        anchors.right: root.right
+        anchors.top: root.top
+        anchors.leftMargin: resizeHandleSize
+        anchors.rightMargin: resizeHandleSize
+        anchors.topMargin: -resizeHandleSize / 2
+        height: resizeHandleSize
+        color: isResizing && resizeDirection === "top" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+        border.color: root.borderColor
+        border.width: 1
+        z: 20
+        
+        MouseArea {
+            id: topEdge
+            anchors.fill: parent
+            anchors.topMargin: -10
+            anchors.bottomMargin: 0
+            hoverEnabled: true
+            cursorShape: Qt.SizeVerCursor
+            
+            onEntered: parent.color = root.borderColor
+            onExited: parent.color = isResizing && resizeDirection === "top" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            
+            onPressed: {
+                isResizing = true
+                resizeDirection = "top"
+                yPrev = mouse.y
+            }
+            
+            onPositionChanged: {
+                if (pressed && resizeDirection === "top") {
+                    let deltaY = mouse.y - yPrev
+                    let newHeight = root.height - deltaY
+                    
+                    if (newHeight >= minHeight) {
+                        root.y += deltaY
+                        root.height = newHeight
+                    }
+                }
+            }
+            
+            onReleased: {
+                isResizing = false
+                resizeDirection = ""
+            }
+        }
+    }
+
+    // Bottom Edge
+    Rectangle {
+        anchors.left: root.left
+        anchors.right: root.right
+        anchors.bottom: root.bottom
+        anchors.leftMargin: resizeHandleSize
+        anchors.rightMargin: resizeHandleSize
+        anchors.bottomMargin: -resizeHandleSize / 2
+        height: resizeHandleSize
+        color: isResizing && resizeDirection === "bottom" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+        border.color: root.borderColor
+        border.width: 1
+        z: 20
+        
+        MouseArea {
+            id: bottomEdge
+            anchors.fill: parent
+            anchors.topMargin: 0
+            anchors.bottomMargin: -10
+            hoverEnabled: true
+            cursorShape: Qt.SizeVerCursor
+            
+            onEntered: parent.color = root.borderColor
+            onExited: parent.color = isResizing && resizeDirection === "bottom" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            
+            onPressed: {
+                isResizing = true
+                resizeDirection = "bottom"
+                yPrev = mouse.y
+            }
+            
+            onPositionChanged: {
+                if (pressed && resizeDirection === "bottom") {
+                    let deltaY = mouse.y - yPrev
+                    let newHeight = root.height + deltaY
+                    
+                    if (newHeight >= minHeight) {
+                        root.height = newHeight
+                    }
+                }
+            }
+            
+            onReleased: {
+                isResizing = false
+                resizeDirection = ""
+            }
+        }
+    }
+
+    // Left Edge
+    Rectangle {
+        anchors.left: root.left
+        anchors.top: root.top
+        anchors.bottom: root.bottom
+        anchors.leftMargin: -resizeHandleSize / 2
+        anchors.topMargin: resizeHandleSize
+        anchors.bottomMargin: resizeHandleSize
+        width: resizeHandleSize
+        color: isResizing && resizeDirection === "left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+        border.color: root.borderColor
+        border.width: 1
+        z: 20
+        
+        MouseArea {
+            id: leftEdge
+            anchors.fill: parent
+            anchors.leftMargin: -10
+            anchors.rightMargin: 0
+            hoverEnabled: true
+            cursorShape: Qt.SizeHorCursor
+            
+            onEntered: parent.color = root.borderColor
+            onExited: parent.color = isResizing && resizeDirection === "left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            
+            onPressed: {
+                isResizing = true
+                resizeDirection = "left"
+                xPrev = mouse.x
+            }
+            
+            onPositionChanged: {
+                if (pressed && resizeDirection === "left") {
+                    let deltaX = mouse.x - xPrev
+                    let newWidth = root.width - deltaX
+                    
+                    if (newWidth >= minWidth) {
+                        root.x += deltaX
+                        root.width = newWidth
+                    }
+                }
+            }
+            
+            onReleased: {
+                isResizing = false
+                resizeDirection = ""
+            }
+        }
+    }
+
+    // Right Edge
+    Rectangle {
+        anchors.right: root.right
+        anchors.top: root.top
+        anchors.bottom: root.bottom
+        anchors.rightMargin: -resizeHandleSize / 2
+        anchors.topMargin: resizeHandleSize
+        anchors.bottomMargin: resizeHandleSize
+        width: resizeHandleSize
+        color: isResizing && resizeDirection === "right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+        border.color: root.borderColor
+        border.width: 1
+        z: 20
+        
+        MouseArea {
+            id: rightEdge
+            anchors.fill: parent
+            anchors.leftMargin: 0
+            anchors.rightMargin: -10
+            hoverEnabled: true
+            cursorShape: Qt.SizeHorCursor
+            
+            onEntered: parent.color = root.borderColor
+            onExited: parent.color = isResizing && resizeDirection === "right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
+            
+            onPressed: {
+                isResizing = true
+                resizeDirection = "right"
+                xPrev = mouse.x
+            }
+            
+            onPositionChanged: {
+                if (pressed && resizeDirection === "right") {
+                    let deltaX = mouse.x - xPrev
+                    let newWidth = root.width + deltaX
+                    
+                    if (newWidth >= minWidth) {
+                        root.width = newWidth
+                    }
+                }
+            }
+            
+            onReleased: {
+                isResizing = false
+                resizeDirection = ""
             }
         }
     }

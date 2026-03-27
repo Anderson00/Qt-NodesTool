@@ -226,6 +226,7 @@ Rectangle {
         preventStealing: true
         z: 10
         enabled: false
+        visible: mouseAreaGlobal.enabled
 
         onClicked: {
             // TODO: dinamic code, this is a prototype
@@ -403,20 +404,28 @@ Rectangle {
     Rectangle {
         id: fpsCounterContainer
         visible: viewPort.showFps
-        color: ThemeManager.primaryColor
-        opacity: 0.5
+        color: "transparent"
         width: 100
         height: 50
         anchors.horizontalCenter: parent.horizontalCenter
         radius: 8
 
+        Rectangle {
+            anchors.fill: parent
+            color: ThemeManager.primaryColor
+            opacity: 0.5
+            radius: fpsCounterContainer.radius
+        }
+
         ColumnLayout {
             anchors.fill: parent
             Layout.alignment: Qt.AlignCenter
+            spacing: 0
 
             Label {
                 id: fpsCounter
                 color: ThemeManager.textColor
+                font.pixelSize: 14
                 text: `${viewPort.fpsCount} FPS`
                 Layout.alignment: Qt.AlignCenter
             }
@@ -424,6 +433,7 @@ Rectangle {
             Label {
                 id: fpsTime
                 color: ThemeManager.textColor
+                font.pixelSize: 14
                 text: `${viewPort.fpsCount > 0? (1000/viewPort.fpsCount).toFixed(2) : 0} ms`
                 Layout.alignment: Qt.AlignCenter
             }
@@ -680,23 +690,24 @@ Rectangle {
 
     ProgressBar {
         id: progressX
-        width: viewRect.width
+        width: viewRect.width - 2
         height: 3
 
-        value: 10
+        value: 0
         from: 0
         to: 100
 
         anchors.bottom: viewRect.top
         anchors.left: viewRect.left
+        Material.accent: ThemeManager.primaryColor
     }
 
     ProgressBar {
         id: progressY
-        width: viewRect.height + 4
+        width: viewRect.height + 3
         height: 3
 
-        value: 10
+        value: 0
         from: 0
         to: 100
 
@@ -706,6 +717,7 @@ Rectangle {
         anchors.bottom: viewRect.bottom
         anchors.bottomMargin: width/2
         anchors.leftMargin: - width/2 - 3
+        Material.accent: ThemeManager.primaryColor
     }
 
     CustomToolbar {
@@ -766,8 +778,8 @@ Rectangle {
             width: viewRect.width / sliderZoom.value
             height: viewRect.height / sliderZoom.value
 
-            x: -(mycanvas.x / (viewRect.width * 0.3));
-            y: -(mycanvas.y / (viewRect.height * 0.3));
+            x: -(mycanvas.x * viewRect.width) / (containerCanvas.width * sliderZoom.value)
+            y: -(mycanvas.y * viewRect.height) / (containerCanvas.height * sliderZoom.value)
 
             onXChanged: {
                 progressX.value = Math.abs(x) % (viewRect.width+Math.abs(x));
