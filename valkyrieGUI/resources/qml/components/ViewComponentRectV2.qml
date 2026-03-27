@@ -177,12 +177,12 @@ Rectangle {
         anchors.left: root.left
         anchors.top: root.top
         anchors.right: root.right
-        anchors.bottom: body.top
-        width: parent.width + 4
-        height: titleView.height + 8
+        anchors.leftMargin: root.border.width
+        anchors.topMargin: root.border.width
+        anchors.rightMargin: root.border.width
+        height: 25
         radius: root.radius - 1
-        anchors.margins: root.border.width
-        //anchors.bottomMargin: -radius
+        antialiasing: true
 
         z: 1
         color: root.focus ? root.border.color : root.color
@@ -192,45 +192,51 @@ Rectangle {
             width: parent.width
             height: root.radius
             color: topHeaderRect.color
+            antialiasing: true
         }
 
         RowLayout{
             id: topHeader
 
-            anchors.left: parent.left
-            anchors.top: parent.top
-            anchors.right: parent.right
-            anchors.margins: 4
-            anchors.bottomMargin: 0
-
+            anchors.fill: parent
+            anchors.leftMargin: 4
+            anchors.rightMargin: 4
             width: parent.width
 
             Text {
                 id: titleView
                 Layout.fillWidth: true
+                Layout.alignment: Qt.AlignCenter
 
                 text: ""
                 font.pixelSize: 8
                 color: root.focus? "#333" : root.borderColor
             }
 
-            Rectangle {
-                Layout.preferredHeight: 10
-                Layout.preferredWidth: 10
-                color: "transparent"
-                radius: 10
-
-                MouseArea {
-                    anchors.fill: parent
-                    z: 2
-
-                    onClicked: {
-                        menu.open()
-                    }
+            NewButton {
+                Layout.preferredHeight: 25
+                Layout.preferredWidth: 20
+                textColor: titleView.color
+                iconSource: Qaterial.Icons.dotsVertical
+                iconSize: 10
+                variant: "text"
+                onClicked: {
+                    menu.open()
                 }
+
 
                 Menu {
                     id: menu
+                    Material.foreground: ThemeManager.textColor
+
+                    background: Rectangle {
+                        color: ThemeManager.backgroundColor
+                        border.color: ThemeManager.primaryColor
+                        border.width: 1
+                        radius: 4
+                        implicitWidth: 200
+                        implicitHeight: 40
+                    }
 
                     onOpened: {
                         root.focus = true
@@ -284,28 +290,31 @@ Rectangle {
                         }
                     }
                 }
+            }
 
-                SvgIcon {
-                    anchors.centerIn: parent
-                    source: Qaterial.Icons.dotsVertical
-                    width: 10
-                    height: 10
-                    color: titleView.color
+            NewButton {
+                Layout.preferredHeight: 25
+                Layout.preferredWidth: 20
+                textColor: titleView.color
+                iconSource: Qaterial.Icons.windowMaximize
+                iconSize: 10
+                variant: "text"
+                onClicked: {
+                    console.log("Maximize clicked")
                 }
             }
 
-            // NewButton {
-            //     Layout.preferredHeight: 20
-            //     Layout.preferredWidth: 20
-            //     radius: 4
-            //     backgroundColor: root.border.color
-            //     iconSource: Qaterial.Icons.close
-            //     iconSize: 10
-            //     variant: "filled"
-            //     onClicked: {
-            //         closeButtonClicked()
-            //     }
-            // }
+            NewButton {
+                Layout.preferredHeight: 25
+                Layout.preferredWidth: 20
+                textColor: titleView.color
+                iconSource: Qaterial.Icons.close
+                iconSize: 10
+                variant: "text"
+                onClicked: {
+                    closeButtonClicked()
+                }
+            }
         }
     }
 
@@ -316,6 +325,8 @@ Rectangle {
         anchors.top: topHeaderRect.bottom
         anchors.left: parent.left
         anchors.right: parent.right
+        anchors.leftMargin: 1
+        anchors.rightMargin: 1
     }
 
     ColumnLayout {
