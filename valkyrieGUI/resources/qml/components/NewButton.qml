@@ -48,15 +48,13 @@ Button {
     }
 
     flat: variant === "text"
-    padding: 12
-    leftPadding: 16
-    rightPadding: 16
-    topPadding: 8
-    bottomPadding: 8
 
     contentItem: Item {
+        anchors.fill: parent
+
         Row {
             id: contentRow
+            visible: control.text !== ""
             anchors.centerIn: parent
             spacing: (control.iconSource !== "" && control.text !== "") ? 8 : 0
 
@@ -78,6 +76,16 @@ Button {
                 color: control.textColor
                 elide: Text.ElideRight
             }
+        }
+
+        SvgIcon {
+            id: iconOnly
+            visible: control.iconSource !== "" && control.text === ""
+            width: control.iconSize
+            height: control.iconSize
+            anchors.centerIn: parent
+            source: control.iconSource
+            color: control.textColor
         }
     }
 
