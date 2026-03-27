@@ -10,6 +10,7 @@ Item {
     //property alias orientation: slider.orientation;
     property string prefix: ""
     property string color: ""
+    property string textColor: "#fff"
     //property alias color: slider.color
     property alias value: slider.value
     property alias from: slider.from
@@ -17,6 +18,7 @@ Item {
 
     width: 200
     height: layout.height
+    clip: false
 
     Rectangle {
         id: labelFloatingBody
@@ -29,10 +31,12 @@ Item {
         Qaterial.Label {
             id: labelFloating
             text: slider.value.toFixed(0) + prefix
-            color: slider.color
+            color: root.textColor
         }
 
-        x: slider.x + slider.leftPadding + ((slider.width - (labelFloating.width * 1.4)) * slider.visualPosition)
+        x: layout.x + slider.x + slider.leftPadding + slider.visualPosition * (slider.availableWidth - 16) + 8 - width / 2
+        y: layout.y + slider.y + slider.topPadding + slider.availableHeight / 2 - 8 - height - 4
+        z: 1
 
         Behavior on x {
             NumberAnimation { duration: 50 }
@@ -52,6 +56,7 @@ Item {
         id: layout
         width: parent.width
         height: slider.height
+        anchors.bottom: parent.bottom
         spacing: 0
 
         Slider {
@@ -61,6 +66,32 @@ Item {
             Layout.fillWidth: true
 
             value: 5
+
+            background: Rectangle {
+                x: slider.leftPadding
+                y: slider.topPadding + slider.availableHeight / 2 - height / 2
+                width: slider.availableWidth
+                height: 4
+                radius: 2
+                color: "#555555"
+
+                Rectangle {
+                    width: slider.visualPosition * parent.width
+                    height: parent.height
+                    color: root.color !== "" ? root.color : ThemeManager.primaryColor
+                    radius: 2
+                }
+            }
+
+            handle: Rectangle {
+                x: slider.leftPadding + slider.visualPosition * (slider.availableWidth - width)
+                y: slider.topPadding + slider.availableHeight / 2 - height / 2
+                width: 16
+                height: 16
+                radius: 8
+                color: slider.pressed ? Qt.darker(root.color !== "" ? root.color : ThemeManager.primaryColor, 1.2)
+                                      : (root.color !== "" ? root.color : ThemeManager.primaryColor)
+            }
 
             onValueChanged: {
                 if(animateOpacity.running === false && labelFloatingBody.opacity !== 1.0){
@@ -74,7 +105,7 @@ Item {
             visible: false
             text: slider.value.toFixed(0)
             Layout.alignment: Qt.AlignVCenter
-            color: Qaterial.Style.colorTheme.secondaryText
+            color: root.textColor
         }
     }
 }

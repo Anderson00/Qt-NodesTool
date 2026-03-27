@@ -329,11 +329,10 @@ Rectangle {
         z: 100
 
         Qaterial.MiniFabButton {
-
+            id: fullscreenButton
             icon.source: Qaterial.Icons.fullscreen
             icon.color: ThemeManager.accentColor
             flat: false
-
 
             onClicked: {
                 if(icon.source === Qaterial.Icons.fullscreen)
@@ -370,9 +369,10 @@ Rectangle {
         z: 100
         enabled: !isConnecting
         color: ThemeManager.primaryColor
+        textColor: ThemeManager.textColor
         anchors.left: fullscreenFab.right
         anchors.top: parent.top
-        anchors.topMargin: 8
+        anchors.topMargin: 25
         prefix: "x"
 
         onValueChanged: {
@@ -416,14 +416,14 @@ Rectangle {
 
             Label {
                 id: fpsCounter
-                color: "#EAEAEA"
+                color: ThemeManager.textColor
                 text: `${viewPort.fpsCount} FPS`
                 Layout.alignment: Qt.AlignCenter
             }
 
             Label {
                 id: fpsTime
-                color: "#EAEAEA"
+                color: ThemeManager.textColor
                 text: `${viewPort.fpsCount > 0? (1000/viewPort.fpsCount).toFixed(2) : 0} ms`
                 Layout.alignment: Qt.AlignCenter
             }

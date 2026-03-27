@@ -137,6 +137,7 @@ Contrl.Drawer {
                             visible: !breadcrumbIcon.visible
                             text: modelData
                             height: 30
+                            color: ThemeManager.textColor
 
                             HoverHandler {
                                 id: hoverHandler
@@ -165,10 +166,9 @@ Contrl.Drawer {
                             visible: index < breadcrumb.model.length - 1
                             text: "/"
                             height: 30
+                            color: ThemeManager.textColor
                         }
                     }
-
-
                 }
 
                 Item {
@@ -221,6 +221,7 @@ Contrl.Drawer {
                     }
                     Contrl.Label {
                         text: "2"
+                        color: ThemeManager.textColor
                     }
 
                     Qaterial.Icon {
@@ -229,6 +230,7 @@ Contrl.Drawer {
                     }
                     Contrl.Label {
                         text: "33"
+                        color: ThemeManager.textColor
                     }
 
                     Qaterial.Icon {
@@ -237,6 +239,7 @@ Contrl.Drawer {
                     }
                     Contrl.Label {
                         text: "1"
+                        color: ThemeManager.textColor
                     }
                 }
 
@@ -344,7 +347,7 @@ Contrl.Drawer {
                                     Binding on color
                                     {
                                         when: model === root.selectedElement
-                                        value: ThemeManager.primaryColor
+                                        value: ThemeManager.textColor
                                     }
                                 }
                             }
