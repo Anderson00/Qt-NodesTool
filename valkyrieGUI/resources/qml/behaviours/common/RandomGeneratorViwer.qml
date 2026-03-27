@@ -4,6 +4,7 @@ import QtQuick.Controls 2.0
 import Qt.labs.qmlmodels 1.0
 import QtQuick.Controls.Material 2.0
 import Qaterial 1.0 as Qaterial
+import App.Theme 1.0
 
 import '../../components'
 
@@ -46,10 +47,10 @@ Item {
         NewButton {
             id: btStart
             Layout.fillWidth: true
-            Layout.preferredHeight: 30
+            Layout.preferredHeight: 40
+            variant: "outlined"
             text: randomGenerator.running? "Stop" : "Start"
-            iconSource: randomGenerator.running? Qaterial.Icons.stop : Qaterial.Icons.play
-            backgroundColor: randomGenerator.running ? "#df4759" : "#22bb33"
+            backgroundColor: randomGenerator.running ? ThemeManager.dangerColor : ThemeManager.primaryColor
 
             onClicked: {
                 if(randomGenerator.running){
@@ -66,14 +67,18 @@ Item {
             Layout.preferredHeight: 40
             from: 0
             to: 5000
+            textColor: ThemeManager.textColor
+            color: ThemeManager.primaryColor
         }
 
         CustomSlider {
             id: maxNumberSlider
             Layout.fillWidth: true
-            Layout.preferredHeight: 30
+            Layout.preferredHeight: 40
             from: minNumberSlider.value
             to: minNumberSlider.value+5000
+            textColor: ThemeManager.textColor
+            color: ThemeManager.primaryColor
         }
 
         CustomSlider {
@@ -82,6 +87,9 @@ Item {
             from: 50
             to: 5000
             prefix: "ms"
+            height: 40
+            textColor: ThemeManager.textColor
+            color: ThemeManager.primaryColor
         }
 
         Label {
@@ -90,6 +98,7 @@ Item {
             Layout.fillHeight: true
             Layout.alignment: Qt.AlignCenter
             text: "0"
+            color: ThemeManager.textColor
         }
     }
 }

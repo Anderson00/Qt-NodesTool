@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.14
 import QtQuick.Window 2.2
 import QtQuick 2.14
 import QtQml 2.14
+import App.Theme 1.0
 
 import Qaterial 1.0 as Qaterial
 
@@ -89,7 +90,7 @@ Contrl.Drawer {
                     Layout.preferredHeight: 20
                     enabled: false
                     icon.source: `qrc:/Qaterial/Icons/arrow-left`
-                    icon.color: Material.accentColor
+                    icon.color: ThemeManager.primaryColor
                     Layout.alignment: Qt.AlignLeft
 
                     onClicked: {
@@ -108,8 +109,11 @@ Contrl.Drawer {
                         Qaterial.Icon {
                             id: breadcrumbIcon
                             Layout.preferredHeight: 20
+                            Layout.preferredWidth: 20
                             visible: modelData === "home"
                             icon: Qaterial.Icons.home
+                            smooth: true
+                            antialiasing: true
 
                             HoverHandler {
                                 id: breadcrumbIconHoverHandler
@@ -117,7 +121,7 @@ Contrl.Drawer {
 
                                 onHoveredChanged: {
                                     if(hovered)
-                                        parent.color = Material.accentColor
+                                        parent.color = ThemeManager.primaryColor
                                     else
                                         parent.color = "#fff"
                                 }
@@ -136,6 +140,7 @@ Contrl.Drawer {
                             visible: !breadcrumbIcon.visible
                             text: modelData
                             height: 30
+                            color: ThemeManager.textColor
 
                             HoverHandler {
                                 id: hoverHandler
@@ -143,7 +148,7 @@ Contrl.Drawer {
 
                                 onHoveredChanged: {
                                     if(hovered)
-                                        parent.color = Material.accentColor
+                                        parent.color = ThemeManager.primaryColor
                                     else
                                         parent.color = "#fff"
 
@@ -164,10 +169,9 @@ Contrl.Drawer {
                             visible: index < breadcrumb.model.length - 1
                             text: "/"
                             height: 30
+                            color: ThemeManager.textColor
                         }
                     }
-
-
                 }
 
                 Item {
@@ -180,7 +184,10 @@ Contrl.Drawer {
 
                     Qaterial.Icon {
                         Layout.preferredHeight: 20
+                        Layout.preferredWidth: 20
                         icon: Qaterial.Icons.magnify
+                        smooth: true
+                        antialiasing: true
                     }
 
                     Contrl.TextField {
@@ -216,26 +223,38 @@ Contrl.Drawer {
                 RowLayout {
                     Qaterial.Icon {
                         Layout.preferredHeight: 20
+                        Layout.preferredWidth: 20
                         icon: Qaterial.Icons.folder
+                        smooth: true
+                        antialiasing: true
                     }
                     Contrl.Label {
                         text: "2"
+                        color: ThemeManager.textColor
                     }
 
                     Qaterial.Icon {
                         Layout.preferredHeight: 20
+                        Layout.preferredWidth: 20
                         icon: Qaterial.Icons.bug
+                        smooth: true
+                        antialiasing: true
                     }
                     Contrl.Label {
                         text: "33"
+                        color: ThemeManager.textColor
                     }
 
                     Qaterial.Icon {
                         Layout.preferredHeight: 20
+                        Layout.preferredWidth: 20
                         icon: Qaterial.Icons.codeBraces
+                        smooth: true
+                        antialiasing: true
                     }
                     Contrl.Label {
                         text: "1"
+                        color: ThemeManager.textColor
                     }
                 }
 
@@ -255,7 +274,7 @@ Contrl.Drawer {
                     Layout.leftMargin: -16
                     Layout.rightMargin: -16
                     icon.source: 'qrc:/Qaterial/Icons/plus'
-                    icon.color: Material.accentColor
+                    icon.color: ThemeManager.primaryColor
 
                     onClicked: {
 
@@ -265,7 +284,7 @@ Contrl.Drawer {
                 Qaterial.AppBarButton{
                     Layout.preferredHeight: 20
                     icon.source: gridMode ? 'qrc:/Qaterial/Icons/view-list' : 'qrc:/Qaterial/Icons/view-grid'
-                    icon.color: Material.accentColor
+                    icon.color: ThemeManager.primaryColor
 
                     onClicked: {
                         gridMode = !gridMode
@@ -343,7 +362,7 @@ Contrl.Drawer {
                                     Binding on color
                                     {
                                         when: model === root.selectedElement
-                                        value: Qaterial.Style.accentColor
+                                        value: ThemeManager.textColor
                                     }
                                 }
                             }
@@ -404,7 +423,7 @@ Contrl.Drawer {
                                 width: 100
                                 implicitHeight:4
                                 radius: implicitHeight/2
-                                color: Material.accentColor
+                                color: ThemeManager.primaryColor
                             }
                         }
 
@@ -424,7 +443,7 @@ Contrl.Drawer {
 
                             color: "#222"
                             border.width: 1
-                            border.color: Material.accentColor
+                            border.color: ThemeManager.primaryColor
                             radius: 4
                             width: gridView.cellWidth - 8
                             height: gridView.cellHeight - 8

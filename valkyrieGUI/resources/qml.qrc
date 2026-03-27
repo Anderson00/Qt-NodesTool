@@ -20,6 +20,7 @@
         <file alias="CustomTextField.qml">qml/components/CustomTextField.qml</file>
         <file alias="IconButton.qml">qml/components/IconButton.qml</file>
         <file alias="RippleEffectBackground.qml">qml/components/RippleEffectBackground.qml</file>
+        <file alias="SvgIcon.qml">qml/components/SvgIcon.qml</file>
     </qresource>
     <qresource prefix="/subwindows">
         <file alias="DebuggerMain.qml">qml/subwindows/DebuggerMain.qml</file>

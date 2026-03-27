@@ -21,12 +21,14 @@ void ThemeManager::applyTheme() {
         setPrimaryColor(QColor(60, 179, 113));
         setAccentColor(QColor(60, 179, 113));
         setDangerColor(QColor(244, 0, 0));
+        setTextColor(QColor(31, 31, 31));
     } else {
         setBackgroundColor(QColor(31, 31, 31));
         setForegroundColor(QColor(224, 224, 224));
         setPrimaryColor(QColor(60, 179, 113));
         setAccentColor(QColor(60, 179, 113));
         setDangerColor(QColor(244, 0, 0));
+        setTextColor(QColor(224, 224, 224));
     }
 
     for (auto* sub : qAsConst(m_subThemes)) {

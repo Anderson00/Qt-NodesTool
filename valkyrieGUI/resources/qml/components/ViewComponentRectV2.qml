@@ -3,6 +3,7 @@ import QtQuick.Layouts 1.0
 import QtQuick.Controls 2.15
 import QtQuick.Controls.Material 2.12
 import Qt5Compat.GraphicalEffects
+import App.Theme 1.0
 
 import Qaterial 1.0 as Qaterial
 
@@ -203,7 +204,6 @@ Rectangle {
             anchors.bottomMargin: 0
 
             width: parent.width
-            //height: parent.height + 8
 
             Text {
                 id: titleView
@@ -216,8 +216,8 @@ Rectangle {
 
             Rectangle {
                 Layout.preferredHeight: 10
-                width: 10
-                color: Qt.rgba(0.2, 0.2, 0.2, 0.5)
+                Layout.preferredWidth: 10
+                color: "transparent"
                 radius: 10
 
                 MouseArea {
@@ -285,20 +285,27 @@ Rectangle {
                     }
                 }
 
-                Column{
+                SvgIcon {
                     anchors.centerIn: parent
-                    spacing: 1
-                    Repeater {
-                        model: 3
-                        Rectangle {
-                            width: 2
-                            height: width
-                            radius: width
-                            color: root.borderColor
-                        }
-                    }
+                    source: Qaterial.Icons.dotsVertical
+                    width: 10
+                    height: 10
+                    color: titleView.color
                 }
             }
+
+            // NewButton {
+            //     Layout.preferredHeight: 20
+            //     Layout.preferredWidth: 20
+            //     radius: 4
+            //     backgroundColor: root.border.color
+            //     iconSource: Qaterial.Icons.close
+            //     iconSize: 10
+            //     variant: "filled"
+            //     onClicked: {
+            //         closeButtonClicked()
+            //     }
+            // }
         }
     }
 
