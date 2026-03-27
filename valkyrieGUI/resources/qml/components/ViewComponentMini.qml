@@ -63,18 +63,22 @@ Rectangle{
         RowLayout {
             width: parent.width
             height: 20
-            Qaterial.Icon {
+            SvgIcon {
                 Layout.preferredHeight: 20
-                icon: Qaterial.Icons.upload
+                Layout.preferredWidth: 20
+                source: Qaterial.Icons.upload
+                color: card.border.color
             }
 
             Label {
                 text: n_outputs
             }
 
-            Qaterial.Icon {
+            SvgIcon {
                 Layout.preferredHeight: 20
-                icon: Qaterial.Icons.download
+                Layout.preferredWidth: 20
+                source: Qaterial.Icons.download
+                color: card.border.color
             }
 
             Label {

@@ -109,8 +109,11 @@ Contrl.Drawer {
                         Qaterial.Icon {
                             id: breadcrumbIcon
                             Layout.preferredHeight: 20
+                            Layout.preferredWidth: 20
                             visible: modelData === "home"
                             icon: Qaterial.Icons.home
+                            smooth: true
+                            antialiasing: true
 
                             HoverHandler {
                                 id: breadcrumbIconHoverHandler
@@ -181,7 +184,10 @@ Contrl.Drawer {
 
                     Qaterial.Icon {
                         Layout.preferredHeight: 20
+                        Layout.preferredWidth: 20
                         icon: Qaterial.Icons.magnify
+                        smooth: true
+                        antialiasing: true
                     }
 
                     Contrl.TextField {
@@ -217,7 +223,10 @@ Contrl.Drawer {
                 RowLayout {
                     Qaterial.Icon {
                         Layout.preferredHeight: 20
+                        Layout.preferredWidth: 20
                         icon: Qaterial.Icons.folder
+                        smooth: true
+                        antialiasing: true
                     }
                     Contrl.Label {
                         text: "2"
@@ -226,7 +235,10 @@ Contrl.Drawer {
 
                     Qaterial.Icon {
                         Layout.preferredHeight: 20
+                        Layout.preferredWidth: 20
                         icon: Qaterial.Icons.bug
+                        smooth: true
+                        antialiasing: true
                     }
                     Contrl.Label {
                         text: "33"
@@ -235,7 +247,10 @@ Contrl.Drawer {
 
                     Qaterial.Icon {
                         Layout.preferredHeight: 20
+                        Layout.preferredWidth: 20
                         icon: Qaterial.Icons.codeBraces
+                        smooth: true
+                        antialiasing: true
                     }
                     Contrl.Label {
                         text: "1"

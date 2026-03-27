@@ -60,15 +60,14 @@ Button {
             anchors.centerIn: parent
             spacing: (control.iconSource !== "" && control.text !== "") ? 8 : 0
 
-            Qaterial.Icon {
+            SvgIcon {
                 id: btIcon
                 visible: control.iconSource !== ""
                 width: control.iconSize
                 height: control.iconSize
                 anchors.verticalCenter: parent.verticalCenter
-                icon: control.iconSource
+                source: control.iconSource
                 color: control.textColor
-                antialiasing: true
             }
 
             Text {
