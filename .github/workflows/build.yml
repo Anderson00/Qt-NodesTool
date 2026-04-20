@@ -379,7 +379,7 @@ jobs:
       - name: Prepare Release Package
         run: |
           mkdir -p "release-package"
-          find build -maxdepth 3 -type f -perm +111 ! -name "*CMake*" ! -name "moc*" ! -name "uic*" ! -name "rcc*" -exec file {} \; | grep "ELF.*executable" | cut -d: -f1 | while read exe; do
+          find build -maxdepth 3 -type f -perm /111 ! -name "*CMake*" ! -name "moc*" ! -name "uic*" ! -name "rcc*" -exec file {} \; | grep "ELF.*executable" | cut -d: -f1 | while read exe; do
             cp "$exe" "release-package/"
             echo "Copied: $exe"
           done
