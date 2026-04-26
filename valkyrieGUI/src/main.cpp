@@ -55,6 +55,15 @@ static void messageLogOutput(QtMsgType type, const QMessageLogContext &context, 
 int main(int argc, char **argv)
 {
 
+    // Ativar depuração em tempo de execução
+    //qputenv("QSG_INFO", QByteArray("1"));
+    //qputenv("QSG_VISUALIZE", QByteArray("overdraw"));
+    //qputenv("QSG_RENDERER_DEBUG", QByteArray("batch"));
+    //qputenv("QSG_RENDER_TIMING", QByteArray("1"));
+    //qputenv("QSG_RHI_BACKEND", QByteArray("vulkan"));
+    //qputenv("QSG_RHI_DEBUG_LAYER", QByteArray("1"));
+    //qputenv("QSG_RHI_PREFER_SOFTWARE_RENDERER", QByteArray("1"));
+
     qInstallMessageHandler(messageLogOutput);
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)

@@ -213,10 +213,9 @@ Rectangle {
                 id: titleView
                 Layout.fillWidth: true
                 text: ""
-                font.pixelSize: 10
+                font.pixelSize: 12
                 color: root.focus ? ThemeManager.backgroundColor
                                   : ThemeManager.textColor
-                horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 elide: Text.ElideRight
             }
