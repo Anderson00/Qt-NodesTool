@@ -690,9 +690,9 @@ Rectangle {
             id: topHeader
 
             anchors.fill: parent
-            anchors.leftMargin: 4
-            anchors.rightMargin: 4
-            width: parent.width
+            anchors.leftMargin: 6
+            anchors.rightMargin: 6
+            spacing: 4
 
             Text {
                 id: titleView
