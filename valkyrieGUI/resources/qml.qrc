@@ -21,6 +21,19 @@
         <file alias="IconButton.qml">qml/components/IconButton.qml</file>
         <file alias="RippleEffectBackground.qml">qml/components/RippleEffectBackground.qml</file>
         <file alias="SvgIcon.qml">qml/components/SvgIcon.qml</file>
+        <file alias="Card.qml">qml/components/Card.qml</file>
+        <file alias="CustomCheckBox.qml">qml/components/CustomCheckBox.qml</file>
+        <file alias="CustomRadioButton.qml">qml/components/CustomRadioButton.qml</file>
+        <file alias="CustomSwitch.qml">qml/components/CustomSwitch.qml</file>
+        <file alias="CustomComboBox.qml">qml/components/CustomComboBox.qml</file>
+        <file alias="NumberSpinBox.qml">qml/components/NumberSpinBox.qml</file>
+        <file alias="PasswordField.qml">qml/components/PasswordField.qml</file>
+        <file alias="ColorPicker.qml">qml/components/ColorPicker.qml</file>
+        <file alias="TagInput.qml">qml/components/TagInput.qml</file>
+        <file alias="FileDropZone.qml">qml/components/FileDropZone.qml</file>
+        <file alias="SearchableSelect.qml">qml/components/SearchableSelect.qml</file>
+        <file alias="CustomDatePicker.qml">qml/components/CustomDatePicker.qml</file>
+        <file alias="ResizeHandle.qml">qml/components/ResizeHandle.qml</file>
     </qresource>
     <qresource prefix="/subwindows">
         <file alias="DebuggerMain.qml">qml/subwindows/DebuggerMain.qml</file>

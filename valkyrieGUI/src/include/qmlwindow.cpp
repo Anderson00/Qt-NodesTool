@@ -10,6 +10,7 @@
 #include <QUuid>
 #include "model/thememanager.h"
 #include "model/subtheme.h"
+#include "model/globalproperties.h"
 
 QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent),
     m_qml_url(qmlUrl)
@@ -24,6 +25,13 @@ QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent),
             "ThemeManager",
             ThemeManager::qmlSingletonProvider
         );
+
+        qmlRegisterSingletonType<ThemeManager>(
+            "App.Properties",
+            1, 0,
+            "GlobalProperties",
+            GlobalProperties::qmlSingletonProvider
+            );
 
         m_subTheme = new SubTheme(QUuid::createUuid().toString(QUuid::WithoutBraces));
         ThemeManager::instance()->addSubTheme(m_subTheme);

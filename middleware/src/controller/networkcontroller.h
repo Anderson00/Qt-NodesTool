@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QList>
+#include <QTimer>
 #include <src/network/tcpserver.h>
 #include <src/model/client.h>
 

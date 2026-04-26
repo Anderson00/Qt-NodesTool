@@ -7,14 +7,8 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-latest
-
-    strategy:
-      matrix:
-        include:
-          - os: windows-latest
-            vcvars: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Auxiliary\\Build\\vcvars64.bat"
 
     steps:
       - name: Checkout code
@@ -228,5 +222,176 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts-${{ matrix.os }}
+          name: build-artifacts-windows
           path: release-package/
+          retention-days: 30
+
+  build-macos:
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: false
+
+      - name: Clone Required Submodules
+        run: |
+          git submodule init extern/capstone extern/cxxopts extern/retdec
+          git submodule update --depth=1
+        shell: bash
+
+      - name: Install dependencies
+        run: |
+          brew install ninja cmake
+        shell: bash
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.5.3'
+          host: 'mac'
+          target: 'desktop'
+          arch: 'clang_64'
+          modules: 'qt5compat qtshadertools qtcharts'
+          cache: 'false'
+
+      - name: Configure CMake
+        run: |
+          mkdir -p build
+          cd build
+          cmake -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_POLICY_DEFAULT_CMP0135=NEW \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+            -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DCMAKE_SKIP_RPATH=ON \
+            -DFETCHCONTENT_FULLY_DISCONNECTED=OFF \
+            ..
+        shell: bash
+
+      - name: Build
+        run: |
+          cd build
+          cmake --build . -j$(sysctl -n hw.ncpu)
+        shell: bash
+
+      - name: Run Tests
+        run: |
+          cd build
+          ctest --output-on-failure -C Release
+        continue-on-error: true
+        shell: bash
+
+      - name: Prepare Release Package
+        run: |
+          mkdir -p "release-package"
+          find build -name "*.app" -type d | while read app; do
+            echo "Deploying: $app"
+            macdeployqt "$app" -dmg 2>/dev/null || true
+            mv "$app/../$(basename $app .app).dmg" "release-package/" 2>/dev/null || true
+          done
+          echo "Package ready at: release-package"
+        shell: bash
+
+      - name: Upload Build Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-macos
+          path: release-package/
+          retention-days: 30
+
+  build-linux:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: false
+
+      - name: Clone Required Submodules
+        run: |
+          git submodule init extern/capstone extern/cxxopts extern/retdec
+          git submodule update --depth=1
+        shell: bash
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgl1-mesa-dev \
+            libxkbcommon-x11-0 \
+            libxkbcommon-dev \
+            libxcb-icccm4 \
+            libxcb-image0 \
+            libxcb-keysyms1 \
+            libxcb-randr0 \
+            libxcb-render-util0 \
+            libxcb-render0 \
+            libxcb-shape0 \
+            libxcb-sync1 \
+            libxcb-xfixes0 \
+            libxcb-xinerama0 \
+            libxcb-xkb1 \
+            libxkbcommon-x11-0 \
+            ninja-build
+        shell: bash
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.5.3'
+          host: 'linux'
+          target: 'desktop'
+          arch: 'gcc_64'
+          modules: 'qt5compat qtshadertools qtcharts'
+          cache: 'false'
+
+      - name: Configure CMake
+        run: |
+          mkdir -p build
+          cd build
+          cmake -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_POLICY_DEFAULT_CMP0135=NEW \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+            -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DCMAKE_SKIP_RPATH=ON \
+            -DFETCHCONTENT_FULLY_DISCONNECTED=OFF \
+            ..
+        shell: bash
+
+      - name: Build
+        run: |
+          cd build
+          cmake --build . -j$(nproc)
+        shell: bash
+
+      - name: Run Tests
+        run: |
+          cd build
+          ctest --output-on-failure -C Release
+        continue-on-error: true
+        shell: bash
+
+      - name: Prepare Release Package
+        run: |
+          mkdir -p "release-package"
+          find build -maxdepth 3 -type f -perm /111 ! -name "*CMake*" ! -name "moc*" ! -name "uic*" ! -name "rcc*" -exec file {} \; | grep "ELF.*executable" | cut -d: -f1 | while read exe; do
+            cp "$exe" "release-package/"
+            echo "Copied: $exe"
+          done
+          echo "Package ready at: release-package"
+        shell: bash
+
+      - name: Upload Build Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-linux
+          path: release-package/
+          retention-days: 30

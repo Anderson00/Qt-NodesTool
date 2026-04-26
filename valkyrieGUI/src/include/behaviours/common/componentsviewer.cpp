@@ -3,9 +3,9 @@
 ComponentsViewer::ComponentsViewer(QObject *parent)
 {
 
-    this->setWidth(300);
-    this->setHeight(200);
-    this->setContentHeight(200);
+    this->setWidth(700);
+    this->setHeight(500);
+    this->setContentHeight(500);
     this->setQmlBodyUrl("qrc:/behaviours/common/ComponentsViewer.qml");
 }
 
