@@ -14,8 +14,9 @@ RadioButton {
     indicator: Rectangle {
         implicitWidth: control.circleSize
         implicitHeight: control.circleSize
-        x: control.leftPadding
-        y: parent.height / 2 - height / 2
+        anchors.left: parent.left
+        anchors.leftMargin: control.leftPadding
+        anchors.verticalCenter: parent.verticalCenter
         radius: width / 2
         border.width: 2
         border.color: control.checked || control.hovered

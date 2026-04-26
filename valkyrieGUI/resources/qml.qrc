@@ -21,7 +21,7 @@
         <file alias="IconButton.qml">qml/components/IconButton.qml</file>
         <file alias="RippleEffectBackground.qml">qml/components/RippleEffectBackground.qml</file>
         <file alias="SvgIcon.qml">qml/components/SvgIcon.qml</file>
-        <file alias="Card.qml">Card.qml</file>
+        <file alias="Card.qml">qml/components/Card.qml</file>
         <file alias="CustomCheckBox.qml">qml/components/CustomCheckBox.qml</file>
         <file alias="CustomRadioButton.qml">qml/components/CustomRadioButton.qml</file>
         <file alias="CustomSwitch.qml">qml/components/CustomSwitch.qml</file>
