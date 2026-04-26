@@ -1,5 +1,5 @@
-import QtQuick 2.0
-import QtQuick.Layouts 1.0
+import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import QtQuick.Controls.Material 2.12
 import Qt5Compat.GraphicalEffects
@@ -11,149 +11,141 @@ import Qaterial 1.0 as Qaterial
 Rectangle {
     id: root
 
+    // -- Public API --
     property var behaviourObject
 
     property var connectionsInput: []
     property var connectionsOutput: []
     property alias title: titleView.text
-    property string borderColor: "green"
+    property color borderColor: ThemeManager.primaryColor
     property alias rootBodyColor: rootBody.color
     property alias bodyComponent: rootBodyLoader.sourceComponent
     property alias bodySourceQML: rootBodyLoader.source
     property bool animEnabled: false
 
-    property double xPrev: 0.0
-    property double yPrev: 0.0
-    
     property double minWidth: 150
     property double minHeight: 100
-    
+
     property int resizeHandleSize: 8
-    property bool isResizing: false
-    property string resizeDirection: ""
 
-    signal connectionSocketClicked(conn: var);
+    // True while any resize handle is being dragged
+    readonly property bool isResizing:
+        tlH.active || trH.active || blH.active || brH.active ||
+        tH.active  || bH.active  || lH.active  || rH.active
 
-    // Menu
-    signal closeButtonClicked();
-    signal frontOneStepClicked();
-    signal backOneStepClicked();
-    signal frontTotalClicked();
-    signal backTotalClicked();
+    // -- Signals --
+    signal connectionSocketClicked(conn: var)
 
-    color: Qt.rgba(0.2, 0.2, 0.2, 0.5)
+    // Single menu signal: action is one of
+    // "close", "front-step", "back-step", "front-max", "back-max"
+    signal menuActionTriggered(string action)
+
+    // Kept for backward compatibility
+    signal closeButtonClicked()
+    signal frontOneStepClicked()
+    signal backOneStepClicked()
+    signal frontTotalClicked()
+    signal backTotalClicked()
+
+    color: Qt.rgba(ThemeManager.backgroundColor.r,
+                   ThemeManager.backgroundColor.g,
+                   ThemeManager.backgroundColor.b, 0.6)
     radius: 4
     border.width: 1
     border.color: root.borderColor
 
+    // ============== Helpers ==============
     function stringToColour(str) {
-        var hash = 0;
-        for (var i = 0; i < str.length; i++) {
-            hash = str.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        var colour = '#';
-        for (var i = 0; i < 3; i++) {
-            var value = (hash >> (i * 8)) & 0xFF;
-            colour += ('00' + value.toString(16)).substr(-2);
-        }
-        return colour;
+        let hash = 0
+        for (let i = 0; i < str.length; i++)
+            hash = str.charCodeAt(i) + ((hash << 5) - hash)
+        const hue = Math.abs(hash) % 360
+        return Qt.hsla(hue / 360.0, 0.65, 0.55, 1.0)
     }
 
-    function extractParams(text){
-        return text.slice(text.indexOf('('), text.length - 1)
+    function extractParams(text) {
+        const i = text.indexOf('(')
+        if (i === -1) return text
+        return text.slice(i, text.length - 1)
     }
 
-    function connectionOnXYPosition(x:double, y:double) {
-        let connJoint = [];
-        connJoint = connJoint.concat(connectionsInput);
-        connJoint = connJoint.concat(connectionsOutput);
-
-        for(let i = 0; i < connJoint.length; i++){
-            let conn = connJoint[i].connArea;
-            let connPos = conn.mapToItem(this.parent, 0, 0);
-
-            if((x >= connPos.x && x <= (conn.width + connPos.x)) &&
-               (y >= connPos.y && y <= (conn.height + connPos.y))){
-                return connJoint[i];
-            }
+    function connectionOnXYPosition(x: double, y: double) {
+        const connJoint = connectionsInput.concat(connectionsOutput)
+        for (let i = 0; i < connJoint.length; i++) {
+            const conn = connJoint[i].connArea
+            const connPos = conn.mapToItem(this.parent, 0, 0)
+            if ((x >= connPos.x && x <= conn.width + connPos.x) &&
+                (y >= connPos.y && y <= conn.height + connPos.y))
+                return connJoint[i]
         }
-
-        return undefined;
+        return undefined
     }
 
-    function loadInputConns(){
-        let connObj = [];
-        let inputs = behaviourObject.getInputsMethodSignature();
-        inputs.forEach((input) => connObj.push({'name' : input}));
-
+    function loadInputConns() {
+        const connObj = []
+        const inputs = behaviourObject.getInputsMethodSignature()
+        inputs.forEach((input) => connObj.push({ name: input }))
         root.connectionsInput = connObj
     }
 
-    function loadOutputConns(){
-        let connObj = [];
-        let outputs = behaviourObject.getOutputsMethodSignature();
-        outputs.forEach((output) => connObj.push({'name' : output}));
-
+    function loadOutputConns() {
+        const connObj = []
+        const outputs = behaviourObject.getOutputsMethodSignature()
+        outputs.forEach((output) => connObj.push({ name: output }))
         root.connectionsOutput = connObj
     }
 
-    Component.onCompleted: {
-        root.title = Qt.binding(() => behaviourObject.title)
-        root.bodySourceQML = Qt.binding(() => behaviourObject.qmlBodyUrl)
-        root.width = Qt.binding(() => behaviourObject.width)
-        root.height = Qt.binding(() => behaviourObject.contentHeight + topHeader.height + divider.height + topHeader.anchors.margins + connectionsBody.height)
-        root.x = Qt.binding(() => behaviourObject.x)
-        root.y = Qt.binding(() => behaviourObject.y)
-        loadInputConns()
-        loadOutputConns()
-        animEnabled = true
-    }
-
-    onXChanged: {
-        behaviourObject.x = x
-    }
-
-    onYChanged: {
-        behaviourObject.y = y
-    }
-
-    onWidthChanged: {
-        behaviourObjectConn.enabled = false
-        behaviourObject.contentWidth = width
-        behaviourObjectConn.enabled = true
-    }
-
-    onHeightChanged: {
-        behaviourObject.height = root.height
-    }
-
-    Connections {
-        id: behaviourObjectConn
-        target: behaviourObject
-
-        function onContentWidthChanged(){
-            behaviourObject.width = behaviourObject.contentWidth
+    function _emitMenuAction(action) {
+        menuActionTriggered(action)
+        switch (action) {
+            case "close":      closeButtonClicked();    break
+            case "front-step": frontOneStepClicked();   break
+            case "back-step":  backOneStepClicked();    break
+            case "front-max":  frontTotalClicked();     break
+            case "back-max":   backTotalClicked();      break
         }
     }
 
+    // ============== Bindings to behaviourObject ==============
+    // One-shot init from behaviourObject; user interactions (drag/resize) push
+    // values back via the onXChanged/onYChanged/onWidthChanged/onHeightChanged
+    // handlers below. Avoids circular bindings between width <-> contentWidth.
+    Component.onCompleted: {
+        root.title = Qt.binding(() => behaviourObject.title)
+        root.bodySourceQML = Qt.binding(() => behaviourObject.qmlBodyUrl)
+        root.width  = behaviourObject.width  > 0 ? behaviourObject.width  : root.minWidth
+        root.height = behaviourObject.height > 0 ? behaviourObject.height
+                                                  : (behaviourObject.contentHeight + topHeaderRect.height +
+                                                     divider.height + connectionsBody.height)
+        root.x = behaviourObject.x
+        root.y = behaviourObject.y
+        loadInputConns()
+        loadOutputConns()
+        Qt.callLater(() => animEnabled = true)
+    }
+
+    onXChanged:      if (behaviourObject) behaviourObject.x = x
+    onYChanged:      if (behaviourObject) behaviourObject.y = y
+    onWidthChanged:  if (behaviourObject) { behaviourObject.width = width; behaviourObject.contentWidth = width }
+    onHeightChanged: if (behaviourObject) behaviourObject.height = root.height
+
     Connections {
         target: rootBodyLoader
-
-        function onLoaded(){
+        function onLoaded() {
             rootBodyLoader.item.behaviourObject = root.behaviourObject
         }
     }
 
     Behavior on height {
         enabled: animEnabled && !isResizing
-        NumberAnimation {duration: 250; easing.type: Easing.OutQuad}
+        NumberAnimation { duration: 250; easing.type: Easing.OutQuad }
     }
-
     Behavior on width {
         enabled: animEnabled && !isResizing
-        NumberAnimation {duration: 250; easing.type: Easing.OutQuad}
+        NumberAnimation { duration: 250; easing.type: Easing.OutQuad }
     }
 
+    // ============== Drag area ==============
     MouseArea {
         id: area
         z: 1
@@ -165,504 +157,28 @@ Rectangle {
 
         drag.minimumX: 0
         drag.minimumY: 0
+        drag.maximumX: parent && parent.parent ? parent.parent.width  - width  : Number.MAX_VALUE
+        drag.maximumY: parent && parent.parent ? parent.parent.height - height : Number.MAX_VALUE
+        acceptedButtons: Qt.AllButtons
 
-        drag.maximumX: parent.parent.width - width
-        drag.maximumY: parent.parent.height - height
-        acceptedButtons: Qt.AllButtons;
-
-        onClicked: {
+        onClicked: function(mouse) {
             root.focus = true
-
-            if(pressedButtons & Qt.RightButton){
-                menu.open()
-                root.focus = true
-            }
+            if (mouse.button === Qt.RightButton)
+                contextMenu.popup()
         }
     }
 
-    // Resize Handles
-    // Top-Left Corner
-    Rectangle {
-        anchors.left: root.left
-        anchors.top: root.top
-        anchors.leftMargin: -resizeHandleSize / 2
-        anchors.topMargin: -resizeHandleSize / 2
-        width: resizeHandleSize
-        height: resizeHandleSize
-        radius: resizeHandleSize / 2
-        color: isResizing && GlobalProperties.debugMode && resizeDirection === "top-left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-        border.color: GlobalProperties.debugMode? root.borderColor : "transparent"
-        border.width: 1
-        z: 20
-        
-        MouseArea {
-            id: tlCorner
-            anchors.centerIn: parent
-            anchors.margins: -10
-            width: resizeHandleSize + 20
-            height: resizeHandleSize + 20
-            hoverEnabled: true
-            cursorShape: Qt.SizeFDiagCursor
-            
-            onEntered: {
-                if(GlobalProperties.debugMode)
-                    parent.color = root.borderColor
-            }
-            onExited: {
-                if(GlobalProperties.debugMode)
-                    parent.color = isResizing && resizeDirection === "top-left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-            }
-            
-            onPressed: {
-                isResizing = true
-                resizeDirection = "top-left"
-                xPrev = mouse.x
-                yPrev = mouse.y
-            }
-            
-            onPositionChanged: {
-                if (pressed && resizeDirection === "top-left") {
-                    let deltaX = mouse.x - xPrev
-                    let deltaY = mouse.y - yPrev
-                    
-                    let newWidth = root.width - deltaX
-                    let newHeight = root.height - deltaY
-                    
-                    if (newWidth >= minWidth) {
-                        root.x += deltaX
-                        root.width = newWidth
-                    }
-                    if (newHeight >= minHeight) {
-                        root.y += deltaY
-                        root.height = newHeight
-                    }
-                }
-            }
-            
-            onReleased: {
-                isResizing = false
-                resizeDirection = ""
-            }
-        }
-    }
+    // ============== Resize handles (extracted to ResizeHandle.qml) ==============
+    ResizeHandle { id: tlH; direction: "top-left";     handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
+    ResizeHandle { id: trH; direction: "top-right";    handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
+    ResizeHandle { id: blH; direction: "bottom-left";  handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
+    ResizeHandle { id: brH; direction: "bottom-right"; handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
+    ResizeHandle { id: tH;  direction: "top";          handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
+    ResizeHandle { id: bH;  direction: "bottom";       handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
+    ResizeHandle { id: lH;  direction: "left";         handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
+    ResizeHandle { id: rH;  direction: "right";        handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
 
-    // Top-Right Corner
-    Rectangle {
-        anchors.right: root.right
-        anchors.top: root.top
-        anchors.rightMargin: -resizeHandleSize / 2
-        anchors.topMargin: -resizeHandleSize / 2
-        width: resizeHandleSize
-        height: resizeHandleSize
-        radius: resizeHandleSize / 2
-        color: isResizing && GlobalProperties.debugMode && resizeDirection === "top-right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-        border.color: GlobalProperties.debugMode ? root.borderColor : "transparent"
-        border.width: 1
-        z: 20
-        
-        MouseArea {
-            id: trCorner
-            anchors.centerIn: parent
-            anchors.margins: -10
-            width: resizeHandleSize + 20
-            height: resizeHandleSize + 20
-            hoverEnabled: true
-            cursorShape: Qt.SizeBDiagCursor
-            
-            onEntered: {
-                if(GlobalProperties.debugMode)
-                    parent.color = root.borderColor
-            }
-            onExited: {
-                if(GlobalProperties.debugMode)
-                    parent.color = isResizing && resizeDirection === "top-right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-            }
-            
-            onPressed: {
-                isResizing = true
-                resizeDirection = "top-right"
-                xPrev = mouse.x
-                yPrev = mouse.y
-            }
-            
-            onPositionChanged: {
-                if (pressed && resizeDirection === "top-right") {
-                    let deltaX = mouse.x - xPrev
-                    let deltaY = mouse.y - yPrev
-                    
-                    let newWidth = root.width + deltaX
-                    let newHeight = root.height - deltaY
-                    
-                    if (newWidth >= minWidth) {
-                        root.width = newWidth
-                    }
-                    if (newHeight >= minHeight) {
-                        root.y += deltaY
-                        root.height = newHeight
-                    }
-                }
-            }
-            
-            onReleased: {
-                isResizing = false
-                resizeDirection = ""
-            }
-        }
-    }
-
-    // Bottom-Left Corner
-    Rectangle {
-        anchors.left: root.left
-        anchors.bottom: root.bottom
-        anchors.leftMargin: -resizeHandleSize / 2
-        anchors.bottomMargin: -resizeHandleSize / 2
-        width: resizeHandleSize
-        height: resizeHandleSize
-        radius: resizeHandleSize / 2
-        color: isResizing && GlobalProperties.debugMode && resizeDirection === "bottom-left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-        border.color: GlobalProperties.debugMode ? root.borderColor : "transparent"
-        border.width: 1
-        z: 20
-        
-        MouseArea {
-            id: blCorner
-            anchors.centerIn: parent
-            anchors.margins: -10
-            width: resizeHandleSize + 20
-            height: resizeHandleSize + 20
-            hoverEnabled: true
-            cursorShape: Qt.SizeBDiagCursor
-            
-            onEntered: {
-                if(GlobalProperties.debugMode)
-                    parent.color = root.borderColor
-            }
-            onExited: {
-                if(GlobalProperties.debugMode)
-                    parent.color = isResizing && resizeDirection === "bottom-left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-            }
-            
-            onPressed: {
-                isResizing = true
-                resizeDirection = "bottom-left"
-                xPrev = mouse.x
-                yPrev = mouse.y
-            }
-            
-            onPositionChanged: {
-                if (pressed && resizeDirection === "bottom-left") {
-                    let deltaX = mouse.x - xPrev
-                    let deltaY = mouse.y - yPrev
-                    
-                    let newWidth = root.width - deltaX
-                    let newHeight = root.height + deltaY
-                    
-                    if (newWidth >= minWidth) {
-                        root.x += deltaX
-                        root.width = newWidth
-                    }
-                    if (newHeight >= minHeight) {
-                        root.height = newHeight
-                    }
-                }
-            }
-            
-            onReleased: {
-                isResizing = false
-                resizeDirection = ""
-            }
-        }
-    }
-
-    // Bottom-Right Corner
-    Rectangle {
-        anchors.right: root.right
-        anchors.bottom: root.bottom
-        anchors.rightMargin: -resizeHandleSize / 2
-        anchors.bottomMargin: -resizeHandleSize / 2
-        width: resizeHandleSize
-        height: resizeHandleSize
-        radius: resizeHandleSize / 2
-        color: isResizing && GlobalProperties.debugMode && resizeDirection === "bottom-right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-        border.color: GlobalProperties.debugMode ? root.borderColor : "transparent"
-        border.width: 1
-        z: 20
-        
-        MouseArea {
-            id: brCorner
-            anchors.centerIn: parent
-            anchors.margins: -10
-            width: resizeHandleSize + 20
-            height: resizeHandleSize + 20
-            hoverEnabled: true
-            cursorShape: Qt.SizeFDiagCursor
-            
-            onEntered: {
-                if(GlobalProperties.debugMode)
-                    parent.color = root.borderColor
-            }
-            onExited: {
-                if(GlobalProperties.debugMode)
-                    parent.color = isResizing && resizeDirection === "bottom-right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-            }
-            
-            onPressed: {
-                isResizing = true
-                resizeDirection = "bottom-right"
-                xPrev = mouse.x
-                yPrev = mouse.y
-            }
-            
-            onPositionChanged: {
-                if (pressed && resizeDirection === "bottom-right") {
-                    let deltaX = mouse.x - xPrev
-                    let deltaY = mouse.y - yPrev
-                    
-                    let newWidth = root.width + deltaX
-                    let newHeight = root.height + deltaY
-                    
-                    if (newWidth >= minWidth) {
-                        root.width = newWidth
-                    }
-                    if (newHeight >= minHeight) {
-                        root.height = newHeight
-                    }
-                }
-            }
-            
-            onReleased: {
-                isResizing = false
-                resizeDirection = ""
-            }
-        }
-    }
-
-    // Top Edge
-    Rectangle {
-        anchors.left: root.left
-        anchors.right: root.right
-        anchors.top: root.top
-        anchors.leftMargin: resizeHandleSize
-        anchors.rightMargin: resizeHandleSize
-        anchors.topMargin: -resizeHandleSize / 2
-        height: resizeHandleSize
-        color: isResizing && GlobalProperties.debugMode && resizeDirection === "top" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-        border.color: GlobalProperties.debugMode? root.borderColor : "transparent"
-        border.width: 1
-        z: 20
-        
-        MouseArea {
-            id: topEdge
-            anchors.fill: parent
-            anchors.topMargin: -10
-            anchors.bottomMargin: 0
-            hoverEnabled: true
-            cursorShape: Qt.SizeVerCursor
-            
-            onEntered: {
-                if(GlobalProperties.debugMode)
-                    parent.color = root.borderColor
-            }
-            onExited: {
-                if(GlobalProperties.debugMode)
-                    parent.color = isResizing && resizeDirection === "top" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-            }
-            
-            onPressed: {
-                isResizing = true
-                resizeDirection = "top"
-                yPrev = mapToGlobal(0, mouse.y).y
-            }
-            
-            onPositionChanged: {
-                if (pressed && resizeDirection === "top") {
-                    let currentGlobalY = mapToGlobal(0, mouse.y).y
-                    let deltaY = currentGlobalY - yPrev
-                    let newHeight = root.height - deltaY
-                    
-                    if (newHeight >= minHeight) {
-                        root.y += deltaY
-                        root.height = newHeight
-                        yPrev = currentGlobalY
-                    }
-                }
-            }
-            
-            onReleased: {
-                isResizing = false
-                resizeDirection = ""
-            }
-        }
-    }
-
-    // Bottom Edge
-    Rectangle {
-        anchors.left: root.left
-        anchors.right: root.right
-        anchors.bottom: root.bottom
-        anchors.leftMargin: resizeHandleSize
-        anchors.rightMargin: resizeHandleSize
-        anchors.bottomMargin: -resizeHandleSize / 2
-        height: resizeHandleSize
-        color: isResizing && GlobalProperties.debugMode && resizeDirection === "bottom" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-        border.color: GlobalProperties.debugMode ? root.borderColor : "transparent"
-        border.width: 1
-        z: 20
-        
-        MouseArea {
-            id: bottomEdge
-            anchors.fill: parent
-            anchors.topMargin: 0
-            anchors.bottomMargin: -10
-            hoverEnabled: true
-            cursorShape: Qt.SizeVerCursor
-            
-            onEntered: {
-                if(GlobalProperties.debugMode)
-                    parent.color = root.borderColor
-            }
-            onExited: {
-                if(GlobalProperties.debugMode)
-                    parent.color = isResizing && resizeDirection === "bottom" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-            }
-            
-            onPressed: {
-                isResizing = true
-                resizeDirection = "bottom"
-                yPrev = mouse.y
-            }
-            
-            onPositionChanged: {
-                if (pressed && resizeDirection === "bottom") {
-                    let deltaY = mouse.y - yPrev
-                    let newHeight = root.height + deltaY
-                    
-                    if (newHeight >= minHeight) {
-                        root.height = newHeight
-                    }
-                }
-            }
-            
-            onReleased: {
-                isResizing = false
-                resizeDirection = ""
-            }
-        }
-    }
-
-    // Left Edge
-    Rectangle {
-        anchors.left: root.left
-        anchors.top: root.top
-        anchors.bottom: root.bottom
-        anchors.leftMargin: -resizeHandleSize / 2
-        anchors.topMargin: resizeHandleSize
-        anchors.bottomMargin: resizeHandleSize
-        width: resizeHandleSize
-        color: isResizing && GlobalProperties.debugMode && resizeDirection === "left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-        border.color: GlobalProperties.debugMode? root.borderColor : "transparent"
-        border.width: 1
-        z: 20
-        
-        MouseArea {
-            id: leftEdge
-            anchors.fill: parent
-            anchors.leftMargin: -10
-            anchors.rightMargin: 0
-            hoverEnabled: true
-            cursorShape: Qt.SizeHorCursor
-            
-            onEntered: {
-                if(GlobalProperties.debugMode)
-                    parent.color = root.borderColor
-            }
-            onExited: {
-                if(GlobalProperties.debugMode)
-                    parent.color = isResizing && resizeDirection === "left" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-            }
-            
-            onPressed: {
-                isResizing = true
-                resizeDirection = "left"
-                xPrev = mapToGlobal(mouse.x, 0).x
-            }
-            
-            onPositionChanged: {
-                if (pressed && resizeDirection === "left") {
-                    let currentGlobalX = mapToGlobal(mouse.x, 0).x
-                    let deltaX = currentGlobalX - xPrev
-                    let newWidth = root.width - deltaX
-                    
-                    if (newWidth >= minWidth) {
-                        root.x += deltaX
-                        root.width = newWidth
-                        xPrev = currentGlobalX
-                    }
-                }
-            }
-            
-            onReleased: {
-                isResizing = false
-                resizeDirection = ""
-            }
-        }
-    }
-
-    // Right Edge
-    Rectangle {
-        anchors.right: root.right
-        anchors.top: root.top
-        anchors.bottom: root.bottom
-        anchors.rightMargin: -resizeHandleSize / 2
-        anchors.topMargin: resizeHandleSize
-        anchors.bottomMargin: resizeHandleSize
-        width: resizeHandleSize
-        color: isResizing && GlobalProperties.debugMode && resizeDirection === "right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-        border.color: GlobalProperties.debugMode ? root.borderColor : "transparent"
-        border.width: 1
-        z: 20
-        
-        MouseArea {
-            id: rightEdge
-            anchors.fill: parent
-            anchors.leftMargin: 0
-            anchors.rightMargin: -10
-            hoverEnabled: true
-            cursorShape: Qt.SizeHorCursor
-            
-            onEntered: {
-                if(GlobalProperties.debugMode)
-                    parent.color = root.borderColor
-            }
-            onExited: {
-                if(GlobalProperties.debugMode)
-                    parent.color = isResizing && resizeDirection === "right" ? root.borderColor : Qt.rgba(0, 0, 0, 0)
-            }
-            
-            onPressed: {
-                isResizing = true
-                resizeDirection = "right"
-                xPrev = mouse.x
-            }
-            
-            onPositionChanged: {
-                if (pressed && resizeDirection === "right") {
-                    let deltaX = mouse.x - xPrev
-                    let newWidth = root.width + deltaX
-                    
-                    if (newWidth >= minWidth) {
-                        root.width = newWidth
-                    }
-                }
-            }
-            
-            onReleased: {
-                isResizing = false
-                resizeDirection = ""
-            }
-        }
-    }
-
+    // ============== Header ==============
     Rectangle {
         id: topHeaderRect
         anchors.left: root.left
@@ -674,9 +190,9 @@ Rectangle {
         height: 25
         radius: root.radius - 1
         antialiasing: true
-
+        clip: true
         z: 1
-        color: root.focus ? root.border.color : root.color
+        color: root.focus ? root.borderColor : root.color
 
         Rectangle {
             anchors.bottom: topHeaderRect.bottom
@@ -686,9 +202,8 @@ Rectangle {
             antialiasing: true
         }
 
-        RowLayout{
+        RowLayout {
             id: topHeader
-
             anchors.fill: parent
             anchors.leftMargin: 6
             anchors.rightMargin: 6
@@ -697,119 +212,93 @@ Rectangle {
             Text {
                 id: titleView
                 Layout.fillWidth: true
-                Layout.alignment: Qt.AlignCenter
-
                 text: ""
-                font.pixelSize: 8
-                color: root.focus? "#333" : root.borderColor
+                font.pixelSize: 10
+                color: root.focus ? ThemeManager.backgroundColor
+                                  : ThemeManager.textColor
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                elide: Text.ElideRight
             }
 
             NewButton {
                 Layout.preferredHeight: 25
-                Layout.preferredWidth: 20
+                Layout.preferredWidth: 22
                 textColor: titleView.color
                 iconSource: Qaterial.Icons.dotsVertical
-                iconSize: 10
+                iconSize: 12
                 variant: "text"
-                onClicked: {
-                    menu.open()
-                }
-
-
-                Menu {
-                    id: menu
-                    Material.foreground: ThemeManager.textColor
-
-                    background: Rectangle {
-                        color: ThemeManager.backgroundColor
-                        border.color: ThemeManager.primaryColor
-                        border.width: 1
-                        radius: 4
-                        implicitWidth: 200
-                        implicitHeight: 40
-                    }
-
-                    onOpened: {
-                        root.focus = true
-                    }
-
-                    onAboutToHide: {
-                        root.focus = true
-                    }
-
-                    // Todo: repeater, dinamic items
-
-                    //MenuSeparator {}
-
-                    MenuItem {
-                        text: "close"
-                        icon.source: 'qrc:/Qaterial/Icons/close'
-                        onTriggered: {
-                            closeButtonClicked()
-                        }
-                    }
-
-                    MenuItem {
-                        text: "front + 1"
-                        icon.source: 'qrc:/Qaterial/Icons/arrow-up'
-                        onTriggered: {
-                            frontOneStepClicked()
-                        }
-                    }
-
-                    MenuItem {
-                        text: "down - 1"
-                        icon.source: 'qrc:/Qaterial/Icons/arrow-down'
-                        onTriggered: {
-                            backOneStepClicked()
-                        }
-                    }
-
-                    MenuItem {
-                        text: "front max"
-                        icon.source: 'qrc:/Qaterial/Icons/flip-to-front'
-                        onTriggered: {
-                            frontTotalClicked()
-                        }
-                    }
-
-                    MenuItem {
-                        text: "back max"
-                        icon.source: 'qrc:/Qaterial/Icons/flip-to-back'
-                        onTriggered: {
-                            backTotalClicked()
-                        }
-                    }
-                }
+                onClicked: contextMenu.popup()
             }
 
             NewButton {
                 Layout.preferredHeight: 25
-                Layout.preferredWidth: 20
+                Layout.preferredWidth: 22
                 textColor: titleView.color
                 iconSource: Qaterial.Icons.windowMaximize
-                iconSize: 10
+                iconSize: 12
                 variant: "text"
-                onClicked: {
-                    console.log("Maximize clicked")
-                }
+                onClicked: console.log("Maximize clicked")
             }
 
             NewButton {
                 Layout.preferredHeight: 25
-                Layout.preferredWidth: 20
+                Layout.preferredWidth: 22
                 textColor: titleView.color
                 iconSource: Qaterial.Icons.close
-                iconSize: 10
+                iconSize: 12
                 variant: "text"
-                onClicked: {
-                    closeButtonClicked()
-                }
+                onClicked: root._emitMenuAction("close")
             }
         }
     }
 
-    Rectangle{
+    // ============== Context menu ==============
+    Menu {
+        id: contextMenu
+        Material.foreground: ThemeManager.textColor
+
+        background: Rectangle {
+            color: ThemeManager.backgroundColor
+            border.color: ThemeManager.primaryColor
+            border.width: 1
+            radius: 4
+            implicitWidth: 200
+            implicitHeight: 40
+        }
+
+        onOpened:     root.focus = true
+        onAboutToHide: root.focus = true
+
+        MenuItem {
+            text: qsTr("Close")
+            icon.source: 'qrc:/Qaterial/Icons/close.svg'
+            onTriggered: root._emitMenuAction("close")
+        }
+        MenuItem {
+            text: qsTr("Front + 1")
+            icon.source: 'qrc:/Qaterial/Icons/arrow-up.svg'
+            onTriggered: root._emitMenuAction("front-step")
+        }
+        MenuItem {
+            text: qsTr("Down - 1")
+            icon.source: 'qrc:/Qaterial/Icons/arrow-down.svg'
+            onTriggered: root._emitMenuAction("back-step")
+        }
+        MenuItem {
+            text: qsTr("Front max")
+            icon.source: 'qrc:/Qaterial/Icons/flip-to-front.svg'
+            onTriggered: root._emitMenuAction("front-max")
+        }
+        MenuItem {
+            text: qsTr("Back max")
+            icon.source: 'qrc:/Qaterial/Icons/flip-to-back.svg'
+            onTriggered: root._emitMenuAction("back-max")
+        }
+    }
+
+    // ============== Divider ==============
+    Rectangle {
         id: divider
         color: root.border.color
         height: 1
@@ -820,6 +309,7 @@ Rectangle {
         anchors.rightMargin: 1
     }
 
+    // ============== Body ==============
     ColumnLayout {
         id: body
         anchors.top: divider.bottom
@@ -831,29 +321,32 @@ Rectangle {
         anchors.bottomMargin: 1
         clip: true
         spacing: 0
-        z:2
+        z: 2
 
         RowLayout {
             id: connectionsBody
             Layout.fillWidth: true
             spacing: 0
-            z:3
+            z: 3
             visible: connectionsInput.length > 0 || connectionsOutput.length > 0
 
             SplitView {
                 id: splitConns
                 orientation: Qt.Horizontal
                 Layout.fillWidth: true
-                Layout.preferredHeight: ((columnLayoutInputConns.height > columnLayoutOutputConns.height)? columnLayoutInputConns.height : columnLayoutOutputConns.height) + 8
+                Layout.preferredHeight:
+                    Math.max(columnLayoutInputConns.height,
+                             columnLayoutOutputConns.height) + 8
 
                 Rectangle {
                     id: connectionsInputBody
-                    Layout.preferredHeight: ((columnLayoutInputConns.height > columnLayoutOutputConns.height)? columnLayoutInputConns.height: columnLayoutOutputConns.height) + 4
+                    Layout.preferredHeight:
+                        Math.max(columnLayoutInputConns.height,
+                                 columnLayoutOutputConns.height) + 4
                     Layout.fillWidth: true
                     SplitView.minimumWidth: 10
                     SplitView.preferredWidth: parent.width / 2
-
-                    color: "#444"
+                    color: Qt.rgba(1, 1, 1, 0.06)
 
                     ColumnLayout {
                         id: columnLayoutInputConns
@@ -864,7 +357,6 @@ Rectangle {
                         anchors.topMargin: 2
 
                         Repeater {
-                            Layout.fillWidth: true
                             model: connectionsInput
                             Rectangle {
                                 id: inputArea
@@ -878,34 +370,27 @@ Rectangle {
                                 }
 
                                 MouseArea {
-                                    width: connectionsInputBody.width - 4
-                                    height: rowInput.height
+                                    anchors.fill: parent
                                     preventStealing: true
-
-                                    onClicked: {
-                                        console.log(modelData.name)
-                                        root.connectionSocketClicked(connectionsInput[index])
-                                    }
+                                    onClicked: root.connectionSocketClicked(connectionsInput[index])
                                 }
 
                                 Row {
                                     id: rowInput
-                                    Layout.alignment: Qt.AlignLeft
                                     spacing: 2
 
                                     Rectangle {
                                         id: connInConnCircle
                                         width: 4
-                                        height: connInConnCircle.width
-                                        radius: connInConnCircle.width                                        
+                                        height: width
+                                        radius: width
                                         color: stringToColour(extractParams(connInName.text))
                                         anchors.verticalCenter: connInName.verticalCenter
                                     }
-
                                     Text {
                                         id: connInName
                                         font.pixelSize: 8
-                                        color: "#ccc"
+                                        color: ThemeManager.textColor
                                         text: modelData.name
                                     }
                                 }
@@ -917,24 +402,23 @@ Rectangle {
                 Rectangle {
                     clip: true
                     id: connectionsOutputBody
-                    Layout.preferredHeight: ((columnLayoutInputConns.height > columnLayoutOutputConns.height)? columnLayoutInputConns.height: columnLayoutOutputConns.height) + 4
+                    Layout.preferredHeight:
+                        Math.max(columnLayoutInputConns.height,
+                                 columnLayoutOutputConns.height) + 4
                     Layout.fillWidth: true
                     SplitView.minimumWidth: 10
                     SplitView.preferredWidth: parent.width / 2
-
-                    color: "#222"
+                    color: Qt.rgba(0, 0, 0, 0.20)
 
                     ColumnLayout {
                         id: columnLayoutOutputConns
-                        //width: parent.width
                         anchors.right: parent.right
                         anchors.top: parent.top
                         anchors.rightMargin: 4
                         anchors.topMargin: 2
-                        Repeater {
-                            Layout.fillWidth: true
-                            model: connectionsOutput
 
+                        Repeater {
+                            model: connectionsOutput
                             Rectangle {
                                 id: outputArea
                                 width: connOutName.width + 8
@@ -948,12 +432,8 @@ Rectangle {
                                 }
 
                                 MouseArea {
-                                    width: connectionsOutputBody.width
-                                    height: connOutName.height
-
-                                    onClicked: {
-                                        root.connectionSocketClicked(connectionsOutput[index])
-                                    }
+                                    anchors.fill: parent
+                                    onClicked: root.connectionSocketClicked(connectionsOutput[index])
                                 }
 
                                 Row {
@@ -964,15 +444,14 @@ Rectangle {
                                     Text {
                                         id: connOutName
                                         font.pixelSize: 8
-                                        color: "#ccc"
+                                        color: ThemeManager.textColor
                                         text: modelData.name
-                                    }                                    
-
+                                    }
                                     Rectangle {
                                         id: connOutConnCircle
                                         width: 4
-                                        height: connOutConnCircle.width
-                                        radius: connOutConnCircle.width
+                                        height: width
+                                        radius: width
                                         color: stringToColour(extractParams(connOutName.text))
                                         anchors.verticalCenter: connOutName.verticalCenter
                                     }
@@ -988,10 +467,10 @@ Rectangle {
             id: rootBody
             Layout.fillHeight: true
             Layout.fillWidth: true
-            z:2
+            z: 2
             radius: root.radius
             clip: true
-            color: "#333"
+            color: Qt.rgba(0, 0, 0, 0.35)
 
             Loader {
                 id: rootBodyLoader

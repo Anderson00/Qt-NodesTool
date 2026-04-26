@@ -3,6 +3,7 @@ import QtQuick.Controls 2.12
 import QtQuick.Controls.Material 2.12
 import QtQuick.Layouts 1.12
 
+import App.Theme 1.0
 import Qaterial 1.0 as Qaterial
 
 Item {
@@ -10,6 +11,8 @@ Item {
     property alias value: slider.value
     property alias from: slider.from
     property alias to: slider.to
+    property color color: ThemeManager.primaryColor
+    property color textColor: ThemeManager.textColor
 
     width: labelFloating.width + slider.width
     height: layout.height
@@ -50,7 +53,7 @@ Item {
         Qaterial.Label {
             id: labelFloating
             text: slider.value.toFixed(0)
-            color: slider.color
+            color: root.textColor
         }
 
         y: ((slider.y) + slider.leftPadding + ((slider.height - (labelFloating.height*1.8 )) * slider.visualPosition))

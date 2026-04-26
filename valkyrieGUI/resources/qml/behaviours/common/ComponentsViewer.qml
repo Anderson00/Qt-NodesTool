@@ -116,7 +116,7 @@ Item {
             // ===================== BUTTONS =====================
             Section {
                 title: qsTr("Buttons")
-                contentHeight: buttonsFlow.implicitHeight + 16
+                contentHeight: 280
                 loader: Component {
                     Item {
                         Flow {
