@@ -53,6 +53,7 @@ Rectangle {
 
     property bool rightDrawerOpened: false
     property bool bottomDrawerOpened: false
+    property bool isAnimatingCenter: false
 
     property int topBarHeight: 48
     property string selectedPanel: ""
@@ -382,9 +383,11 @@ Rectangle {
 
             onClicked: {
                 if (opacity < 1) return
+                root.isAnimatingCenter = true
                 mycanvas.x = homeX
                 mycanvas.y = homeY
-                sliderZoom.value = 1
+                zoomAnim.to = 1
+                zoomAnim.start()
             }
         }
     }
@@ -404,6 +407,14 @@ Rectangle {
         prefix: "x"
 
         onValueChanged: {}
+    }
+
+    NumberAnimation {
+        id: zoomAnim
+        target: sliderZoom
+        property: "value"
+        duration: 400
+        easing.type: Easing.InOutCubic
     }
 
     CustomSliderVertical {
@@ -504,6 +515,22 @@ Rectangle {
             // Keep viewCenterX/Y in sync whenever the user pans or zoom changes.
             onXChanged: if (initialized) root.viewCenterX = (containerCanvas.width  / 2 - x) / sliderZoom.value
             onYChanged: if (initialized) root.viewCenterY = (containerCanvas.height / 2 - y) / sliderZoom.value
+
+            Behavior on x {
+                enabled: root.isAnimatingCenter
+                NumberAnimation {
+                    duration: 400
+                    easing.type: Easing.InOutCubic
+                    onRunningChanged: if (!running) root.isAnimatingCenter = false
+                }
+            }
+            Behavior on y {
+                enabled: root.isAnimatingCenter
+                NumberAnimation {
+                    duration: 400
+                    easing.type: Easing.InOutCubic
+                }
+            }
 
             Component.onCompleted: {
                 // Qt.callLater defers until after the first layout pass,
