@@ -20,7 +20,6 @@ public:
 
     QHash<QString, Behaviours*> behaviours();
     bool showFps();
-    void setShowFps(bool state);
     int fpsCount();
     void setFpsCount(int value);
 
@@ -29,6 +28,7 @@ public slots:
     bool addBehaviour(const QString &path, const QJsonObject infos);
     bool removeBehaviourFromUUID(const QString &uuid);
     bool removeBehaviourObject(Behaviours * object);
+    void setShowFps(bool state);
 
     Behaviours* searchBehaviourFromUUID(const QString &uuid);
     QString getUUIDFromBehaviour(Behaviours * object);

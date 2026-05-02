@@ -3,6 +3,7 @@ import QtQuick.Controls 2.12
 import QtQuick.Controls.Material 2.12
 import QtQuick.Layouts 1.0
 import App.Theme 1.0
+import App.Properties 1.0
 import Qaterial as Qaterial
 
 Popup {

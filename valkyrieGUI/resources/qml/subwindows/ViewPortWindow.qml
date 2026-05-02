@@ -390,7 +390,7 @@ Rectangle {
         textColor: ThemeManager.textColor
         anchors.left: fullscreenFab.right
         anchors.top: topBar.bottom
-        anchors.topMargin: 8
+        anchors.topMargin: 22
         prefix: "x"
 
         onValueChanged: {}
