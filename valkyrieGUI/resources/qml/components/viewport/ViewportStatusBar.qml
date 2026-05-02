@@ -67,7 +67,7 @@ Rectangle {
                 return "X " + cx + "  Y " + cy
             }
         }
-
+        Item { Layout.preferredWidth: 10 }
         Rectangle {
             Layout.preferredWidth: 1; Layout.preferredHeight: 12
             Layout.alignment: Qt.AlignVCenter
@@ -96,7 +96,7 @@ Rectangle {
                 return "X " + mx + "  Y " + my
             }
         }
-
+        Item { Layout.preferredWidth: 10 }
         Rectangle {
             Layout.preferredWidth: 1; Layout.preferredHeight: 12
             Layout.alignment: Qt.AlignVCenter
@@ -122,18 +122,15 @@ Rectangle {
             text: Math.round(zoom * 100) + "%"
         }
 
+        // ── Selected node (optional) ─────────────────────────────────────────
+        Item { Layout.preferredWidth: 10; visible: nodeOnFocus !== undefined && nodeOnFocus !== null }
         Rectangle {
             Layout.preferredWidth: 1; Layout.preferredHeight: 12
             Layout.alignment: Qt.AlignVCenter
             color: ThemeManager.textColor; opacity: 0.18
             visible: nodeOnFocus !== undefined && nodeOnFocus !== null
         }
-        Item {
-            Layout.preferredWidth: 10
-            visible: nodeOnFocus !== undefined && nodeOnFocus !== null
-        }
-
-        // ── Selected node ────────────────────────────────────────────────────
+        Item { Layout.preferredWidth: 10; visible: nodeOnFocus !== undefined && nodeOnFocus !== null }
         Text {
             text: "\u25c8"
             font.pixelSize: 10
@@ -142,10 +139,7 @@ Rectangle {
             Layout.alignment: Qt.AlignVCenter
             visible: nodeOnFocus !== undefined && nodeOnFocus !== null
         }
-        Item {
-            Layout.preferredWidth: 5
-            visible: nodeOnFocus !== undefined && nodeOnFocus !== null
-        }
+        Item { Layout.preferredWidth: 5; visible: nodeOnFocus !== undefined && nodeOnFocus !== null }
         Text {
             font.pixelSize: 10
             color: ThemeManager.textColor
