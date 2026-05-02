@@ -644,12 +644,24 @@ Rectangle {
                             startX: circleConnPoint.x + model.circleConn.width / 2
                             startY: circleConnPoint.y + model.circleConn.height / 2
 
-                            PathLine {
-                                // When tracking mouse: convert viewport coords to mycanvas local space.
-                                x: circleConn2 ? circleConnPoint2.x + circleConn2.width  / 2
-                                               : (mouseAreaGlobal.mouseX - mycanvas.x) / sliderZoom.value
-                                y: circleConn2 ? circleConnPoint2.y + circleConn2.height / 2
-                                               : (mouseAreaGlobal.mouseY - mycanvas.y) / sliderZoom.value
+                            PathCubic {
+                                readonly property real ex: circleConn2
+                                    ? circleConnPoint2.x + circleConn2.width  / 2
+                                    : (mouseAreaGlobal.mouseX - mycanvas.x) / sliderZoom.value
+                                readonly property real ey: circleConn2
+                                    ? circleConnPoint2.y + circleConn2.height / 2
+                                    : (mouseAreaGlobal.mouseY - mycanvas.y) / sliderZoom.value
+
+                                // Control points: horizontal tangents from each endpoint.
+                                // Offset proportional to horizontal distance for a natural S-curve.
+                                readonly property real dx: Math.abs(ex - shapepath.startX) * 0.5 + 40
+
+                                x: ex
+                                y: ey
+                                control1X: shapepath.startX + dx
+                                control1Y: shapepath.startY
+                                control2X: ex - dx
+                                control2Y: ey
                             }
                         }
                     }
