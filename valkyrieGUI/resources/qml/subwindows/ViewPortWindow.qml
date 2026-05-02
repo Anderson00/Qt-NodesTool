@@ -28,6 +28,12 @@ Rectangle {
     property var behavioursZ: []
     property var nodeOnFocus
 
+    // World-space point kept at the center of the view.
+    // Updated whenever the canvas is panned or zoomed.
+    // Initial value = (5000, 5000) = canvas center = "home" = display (0, 0).
+    property real viewCenterX: 5000
+    property real viewCenterY: 5000
+
     property var rectsArray: ListModel {}
 
     signal nodeConnected(var node1, var node2)
@@ -99,15 +105,11 @@ Rectangle {
         }
     }
 
-    function viewSubWindowsWidthHeightArea(){
-        // TODO:
-        return;
-        if(view3.x + view3.width > root.width){
-            view3.x = root.width - view3.width
-        }
-        if(view3.y + view3.height > root.height){
-            view3.y = root.height - view3.height
-        }
+    function viewSubWindowsWidthHeightArea() {
+        // Re-anchor the canvas so the same world point stays centered after resize.
+        if (!mycanvas.initialized) return
+        mycanvas.x = containerCanvas.width  / 2 - viewCenterX * sliderZoom.value
+        mycanvas.y = containerCanvas.height / 2 - viewCenterY * sliderZoom.value
     }
 
     function addWindow(){
@@ -589,19 +591,86 @@ Rectangle {
                         ctx.fillText("⌞", bL + 3, bB - 3)
                     if (bR >= 20 && bR <= width - 2 && bB >= 14 && bB <= height - 2)
                         ctx.fillText("⌟", bR - 13, bB - 3)
+                }   // end if (anyEdgeVisible)
+
+                // ── Axis lines and 500-unit tick marks ───────────────────────
+                // Origin in screen space: world (5000,5000) mapped to viewport.
+                var ox5 = px + 5000 * zoom
+                var oy5 = py + 5000 * zoom
+                var step = 500 * zoom   // 500 world units in screen px
+
+                // Axis lines (full viewport width/height through origin)
+                ctx.strokeStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.22)
+                ctx.lineWidth = 1
+                ctx.setLineDash([])
+                if (oy5 >= 0 && oy5 <= height) {
+                    ctx.beginPath(); ctx.moveTo(0, oy5); ctx.lineTo(width, oy5); ctx.stroke()
+                }
+                if (ox5 >= 0 && ox5 <= width) {
+                    ctx.beginPath(); ctx.moveTo(ox5, 0); ctx.lineTo(ox5, height); ctx.stroke()
+                }
+
+                // Tick marks and labels every 500 units
+                ctx.font = "9px sans-serif"
+                var tickLen = 5
+
+                // Horizontal ticks (along X axis)
+                if (oy5 >= 0 && oy5 <= height) {
+                    // first tick aligned to origin
+                    var startTX = ox5 % step
+                    if (startTX < 0) startTX += step
+                    for (var tx = startTX; tx <= width + step; tx += step) {
+                        var worldX = Math.round((tx - ox5) / zoom)
+                        if (worldX % 500 !== 0) continue
+                        ctx.strokeStyle = Qt.rgba(pc.r, pc.g, pc.b, worldX === 0 ? 0.0 : 0.38)
+                        ctx.lineWidth = 1
+                        ctx.beginPath(); ctx.moveTo(tx, oy5 - tickLen); ctx.lineTo(tx, oy5 + tickLen); ctx.stroke()
+                        if (worldX !== 0 && tx > 4 && tx < width - 4) {
+                            ctx.fillStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.38)
+                            ctx.textAlign = "center"
+                            ctx.fillText(worldX, tx, oy5 - tickLen - 3)
+                        }
+                    }
+                }
+
+                // Vertical ticks (along Y axis)
+                if (ox5 >= 0 && ox5 <= width) {
+                    var startTY = oy5 % step
+                    if (startTY < 0) startTY += step
+                    for (var ty = startTY; ty <= height + step; ty += step) {
+                        var worldY = Math.round((ty - oy5) / zoom)
+                        if (worldY % 500 !== 0) continue
+                        ctx.strokeStyle = Qt.rgba(pc.r, pc.g, pc.b, worldY === 0 ? 0.0 : 0.38)
+                        ctx.lineWidth = 1
+                        ctx.beginPath(); ctx.moveTo(ox5 - tickLen, ty); ctx.lineTo(ox5 + tickLen, ty); ctx.stroke()
+                        if (worldY !== 0 && ty > 10 && ty < height - 4) {
+                            ctx.fillStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.38)
+                            ctx.textAlign = "left"
+                            ctx.fillText(worldY, ox5 + tickLen + 3, ty + 3)
+                        }
+                    }
                 }
             }
         }
-
-        // ── Workspace item (node container) ──────────────────────────────────
         Item {
             id: mycanvas
             width:  10000
             height: 10000
 
+            property bool initialized: false
+
+            // Keep viewCenterX/Y in sync whenever the user pans or zoom changes.
+            onXChanged: if (initialized) root.viewCenterX = (containerCanvas.width  / 2 - x) / sliderZoom.value
+            onYChanged: if (initialized) root.viewCenterY = (containerCanvas.height / 2 - y) / sliderZoom.value
+
             Component.onCompleted: {
-                mycanvas.x = (containerCanvas.width  - mycanvas.width)  / 2
-                mycanvas.y = (containerCanvas.height - mycanvas.height) / 2
+                // Qt.callLater defers until after the first layout pass,
+                // guaranteeing containerCanvas.width/height are final.
+                Qt.callLater(function() {
+                    mycanvas.x = containerCanvas.width  / 2 - 5000 * sliderZoom.value
+                    mycanvas.y = containerCanvas.height / 2 - 5000 * sliderZoom.value
+                    mycanvas.initialized = true
+                })
             }
 
             transform: Scale {
@@ -630,6 +699,55 @@ Rectangle {
                 anchors.fill: parent
                 color: "transparent"
 
+                // ── Origin indicator at (5000, 5000) = display (0, 0) ────────
+                Item {
+                    id: originMarker
+                    x: 5000
+                    y: 5000
+                    z: -1
+
+                    // Horizontal axis line
+                    Rectangle {
+                        width: 80
+                        height: 1
+                        x: -width / 2
+                        y: -height / 2
+                        color: ThemeManager.primaryColor
+                        opacity: 0.35
+                    }
+
+                    // Vertical axis line
+                    Rectangle {
+                        width: 1
+                        height: 80
+                        x: -width / 2
+                        y: -height / 2
+                        color: ThemeManager.primaryColor
+                        opacity: 0.35
+                    }
+
+                    // Center dot
+                    Rectangle {
+                        width: 6
+                        height: 6
+                        radius: 3
+                        x: -width / 2
+                        y: -height / 2
+                        color: ThemeManager.primaryColor
+                        opacity: 0.70
+                    }
+
+                    // "0, 0" label
+                    Text {
+                        x: 7
+                        y: -16
+                        text: "0, 0"
+                        font.pixelSize: 10
+                        color: ThemeManager.primaryColor
+                        opacity: 0.50
+                    }
+                }
+
                 Repeater {
                     id: nodeConnections
 
@@ -645,6 +763,16 @@ Rectangle {
                         property var circleConnPoint2
                         property var circleConn2
                         property var viewRectConn2
+
+                        // Marching ants animation
+                        NumberAnimation on dashOffset {
+                            from: 0
+                            to: -12
+                            duration: 400
+                            loops: Animation.Infinite
+                            running: true
+                        }
+                        property real dashOffset: 0
 
                         Component.onCompleted: {
                             circleConnPoint = model.circleConn.mapToItem(parent, 0, 0)
@@ -678,6 +806,9 @@ Rectangle {
                             strokeWidth: 2
                             fillColor: "transparent"
                             capStyle: ShapePath.RoundCap
+                            strokeStyle: ShapePath.DashLine
+                            dashPattern: [8, 4]
+                            dashOffset: shape.dashOffset
 
                             startX: circleConnPoint.x + model.circleConn.width / 2
                             startY: circleConnPoint.y + model.circleConn.height / 2
@@ -1284,8 +1415,8 @@ Rectangle {
                 Layout.alignment: Qt.AlignVCenter
                 Layout.preferredWidth: 140
                 text: {
-                    var cx = Math.round((containerCanvas.width  / 2 - mycanvas.x) / sliderZoom.value)
-                    var cy = Math.round((containerCanvas.height / 2 - mycanvas.y) / sliderZoom.value)
+                    var cx = Math.round((containerCanvas.width  / 2 - mycanvas.x) / sliderZoom.value) - 5000
+                    var cy = Math.round((containerCanvas.height / 2 - mycanvas.y) / sliderZoom.value) - 5000
                     return "X " + cx + "  Y " + cy
                 }
             }
@@ -1313,8 +1444,8 @@ Rectangle {
                 Layout.alignment: Qt.AlignVCenter
                 Layout.preferredWidth: 140
                 text: {
-                    var mx = Math.round((globalHover.point.position.x - mycanvas.x) / sliderZoom.value)
-                    var my = Math.round((globalHover.point.position.y - mycanvas.y) / sliderZoom.value)
+                    var mx = Math.round((globalHover.point.position.x - mycanvas.x) / sliderZoom.value) - 5000
+                    var my = Math.round((globalHover.point.position.y - mycanvas.y) / sliderZoom.value) - 5000
                     return "X " + mx + "  Y " + my
                 }
             }
