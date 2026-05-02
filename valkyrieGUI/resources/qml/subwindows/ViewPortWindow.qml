@@ -114,15 +114,22 @@ Rectangle {
         return aux.sort()[aux.length - 1];
     }
 
-    function detectNodeByMousePosition(x: double, y : double){
-        for(let i = 0; i < nodes.model.count; i++){
-            let node = nodes.model.get(i)['object'];
-            if((x >= node.x && x <= (node.width + node.x)) &&
-               (y >= node.y && y <= (node.height + node.y))){
-                return node;
-            }
+    // Converts viewport coordinates to mycanvas local coordinates.
+    function toLocal(vx, vy) {
+        return Qt.point(
+            (vx - mycanvas.x) / sliderZoom.value,
+            (vy - mycanvas.y) / sliderZoom.value
+        )
+    }
+
+    function detectNodeByMousePosition(x: double, y: double) {
+        for (let i = 0; i < nodes.model.count; i++) {
+            let node = nodes.model.get(i)['object']
+            if ((x >= node.x && x <= node.x + node.width) &&
+                (y >= node.y && y <= node.y + node.height))
+                return node
         }
-        return undefined;
+        return undefined
     }
 
     Keys.enabled: true
@@ -238,61 +245,48 @@ Rectangle {
         visible: mouseAreaGlobal.enabled
 
         onClicked: {
-            // TODO: dinamic code, this is a prototype
-            // shapepath.startX = mouse.x;
-            // shapepath.startY = mouse.y;
             mouseAreaGlobal.enabled = false
             isConnecting = false
-            console.log(shapeConn.circleConnPoint2)
 
-            let node = detectNodeByMousePosition(mouse.x, mouse.y)
-            let viewRect = (node)? node.viewRect : undefined
-            let conn;
-            let lastConnection = nodeConnections.model.count - 1;
-            if(viewRect){
-                conn = viewRect.connectionOnXYPosition(mouse.x, mouse.y)
-                if(conn){
-                    shapeConn.circleConn2 = conn.circleConn
+            let lp   = toLocal(mouse.x, mouse.y)
+            let node = detectNodeByMousePosition(lp.x, lp.y)
+            let vr   = node ? node.viewRect : undefined
+            let lastConnection = nodeConnections.model.count - 1
+
+            if (vr) {
+                let conn = vr.connectionOnXYPosition(lp.x, lp.y)
+                if (conn) {
+                    shapeConn.circleConn2   = conn.circleConn
                     shapeConn.viewRectConn2 = node
+                    nodeConnections.model.set(lastConnection, { node2: node, methodSignature2: conn.name })
 
-                    //TODO:
-                    //node.
-                    nodeConnections.model.set(lastConnection, {node2: node, methodSignature2: conn.name})
-
-                    let node1 = nodeConnections.model.get(lastConnection);
-                    let isValid = node1['node'].behaviourObject.addConnection(node1['methodSignature1'], node1['node2'], node1['methodSignature2'])
-                    if(isValid){
-                        // TODO:
+                    let n1      = nodeConnections.model.get(lastConnection)
+                    let isValid = n1['node'].behaviourObject.addConnection(
+                                      n1['methodSignature1'], n1['node2'], n1['methodSignature2'])
+                    if (isValid)
                         nodeConnected(node, shapeConn.viewRectConn2)
-                    }else{
+                    else
                         nodeConnections.model.remove(lastConnection)
-                    }
-                }else{
+                } else {
                     nodeConnections.model.remove(lastConnection)
                 }
-            }else {
+            } else {
                 nodeConnections.model.remove(lastConnection)
             }
 
-            shapeConn = undefined;
+            shapeConn = undefined
             mouse.accepted = false
         }
 
         onPositionChanged: {
-            // TODO: dinamic code, this is a prototype
-            // shapepath.startX = mouse.x;
-            // shapepath.startY = mouse.y;
-            mouseXX = mouse.x;
-            mouseYY = mouse.y;
-
+            mouseXX = mouse.x
+            mouseYY = mouse.y
             mouse.accepted = false
 
-            let node = detectNodeByMousePosition(mouse.x, mouse.y)
-            let viewRect = (node)? node.viewRect : undefined
-            let conn;
-            if(viewRect){
-                conn = viewRect.connectionOnXYPosition(mouse.x, mouse.y)
-            }
+            let lp = toLocal(mouse.x, mouse.y)
+            let node = detectNodeByMousePosition(lp.x, lp.y)
+            if (node && node.viewRect)
+                node.viewRect.connectionOnXYPosition(lp.x, lp.y)
         }
     }
 
@@ -610,8 +604,11 @@ Rectangle {
                             startY: circleConnPoint.y + model.circleConn.height / 2
 
                             PathLine {
-                                x: circleConn2 ? circleConnPoint2.x + circleConn2.width / 2 : mouseAreaGlobal.mouseX
-                                y: circleConn2 ? circleConnPoint2.y + circleConn2.width / 2 : mouseAreaGlobal.mouseY
+                                // When tracking mouse: convert viewport coords to mycanvas local space.
+                                x: circleConn2 ? circleConnPoint2.x + circleConn2.width  / 2
+                                               : (mouseAreaGlobal.mouseX - mycanvas.x) / sliderZoom.value
+                                y: circleConn2 ? circleConnPoint2.y + circleConn2.height / 2
+                                               : (mouseAreaGlobal.mouseY - mycanvas.y) / sliderZoom.value
                             }
                         }
                     }
@@ -650,9 +647,6 @@ Rectangle {
 
                         onConnectionSocketClicked: {
                             isConnecting = true
-                            mycanvas.x = (containerCanvas.width  - mycanvas.width)  / 2
-                            mycanvas.y = (containerCanvas.height - mycanvas.height) / 2
-                            sliderZoom.value = 1
                             nodeConnections.model.append({
                                 methodSignature1: conn.name, node: this,
                                 circleConn: conn.circleConn, node2: null, methodSignature2: null
@@ -667,8 +661,12 @@ Rectangle {
                         Component.onCompleted: {
                             behavioursZ[index] = 0
                             model.object.setViewRectangle(this)
-                            behaviourObject.x = mycanvasBody.width  / 2 - width  / 2
-                            behaviourObject.y = mycanvasBody.height / 2 - height / 2
+                            // Place at the center of the currently visible viewport area,
+                            // correctly accounting for current pan and zoom.
+                            var cx = (containerCanvas.width  / 2 - mycanvas.x) / sliderZoom.value
+                            var cy = (containerCanvas.height / 2 - mycanvas.y) / sliderZoom.value
+                            viewComponentRectV2.x = cx - viewComponentRectV2.width  / 2
+                            viewComponentRectV2.y = cy - viewComponentRectV2.height / 2
                         }
 
                         onZChanged: { behavioursZ[index] = z }
