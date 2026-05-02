@@ -985,7 +985,7 @@ Rectangle {
     Connections {
         target: WorkspaceManager
         function onWorkspaceLoaded(name) {
-            console.log("[ViewPort] Workspace loaded signal received:", name, "— scheduling connection restore")
+            console.log("[ViewPort] Workspace loaded signal received:", name, "- scheduling connection restore")
             restoreConnectionsTimer.restart()
         }
     }

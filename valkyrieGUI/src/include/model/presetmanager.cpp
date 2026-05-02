@@ -77,7 +77,7 @@ void PresetManager::loadBuiltinPresets() {
           QColor("#333333"), QColor(0, 0, 0, 204),
           QColor("#FFE600"), QColor("#FF2D78"), QColor("#00F5FF"),
           QColor("#00FF9C"), QColor("#FF8C00"), QColor("#FF2D78"),
-          QColor("#FFFFFF"), QColor("#888888"), QColor(255, 230, 0, 51) });
+          QColor("#00F5FF"), QColor("#888888"), QColor(255, 230, 0, 51) });
 
     add({ "builtin-ocean", "Ocean", true,
           QColor("#0A1628"), QColor("#112240"), QColor("#1A3A5C"),
