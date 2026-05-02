@@ -30,7 +30,7 @@ Contrl.Drawer {
     interactive: false
 
     background: Rectangle {
-        color: Qt.rgba(0.2, 0.2, 0.2, 0.8)
+        color: ThemeManager.foregroundColor
     }
 
     function getTextLabel(text){
@@ -64,7 +64,7 @@ Contrl.Drawer {
         Rectangle {
             Layout.fillWidth: true
             height: 40
-            color: "#222"
+            color: ThemeManager.surfaceColor
 
             MouseArea {
                 width: parent.width
@@ -123,7 +123,7 @@ Contrl.Drawer {
                                     if(hovered)
                                         parent.color = ThemeManager.primaryColor
                                     else
-                                        parent.color = "#fff"
+                                        parent.color = ThemeManager.textColor
                                 }
                             }
 
@@ -150,7 +150,7 @@ Contrl.Drawer {
                                     if(hovered)
                                         parent.color = ThemeManager.primaryColor
                                     else
-                                        parent.color = "#fff"
+                                        parent.color = ThemeManager.textColor
 
                                     parent.font.underline = hovered
                                 }
@@ -217,7 +217,7 @@ Contrl.Drawer {
                     Layout.bottomMargin: 8
                     Layout.leftMargin: 16
                     Layout.rightMargin: 16
-                    color: "#333"
+                    color: ThemeManager.borderColor
                 }
 
                 RowLayout {
@@ -266,7 +266,7 @@ Contrl.Drawer {
                     Layout.bottomMargin: 8
                     Layout.leftMargin: 16
                     Layout.rightMargin: 16
-                    color: "#333"
+                    color: ThemeManager.borderColor
                 }
 
                 Qaterial.AppBarButton{
@@ -441,7 +441,7 @@ Contrl.Drawer {
                                 behaviourSelected(getPath(), modelData)
                             }
 
-                            color: "#222"
+                            color: ThemeManager.surfaceColor
                             border.width: 1
                             border.color: ThemeManager.primaryColor
                             radius: 4

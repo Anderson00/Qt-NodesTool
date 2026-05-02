@@ -1,13 +1,14 @@
 import QtQuick 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Controls.Material 2.12
+import App.Theme 1.0
 
 Rectangle {
     property var tt: ""
     property var count: 0
     anchors.fill: parent
 
-    color:'#27191c'
+    color: ThemeManager.backgroundColor
 
     Connections{
         target: window
@@ -59,7 +60,7 @@ Rectangle {
             var ctx = getContext("2d")
             ctx.clearRect(0,0, parent.width, parent.height)
             ctx.lineWidth = 1
-            ctx.strokeStyle = "blue"
+            ctx.strokeStyle = ThemeManager.accentColor
             ctx.beginPath()
 
             for(var i = 0; i < conexoes.length - 1; i++){
@@ -84,7 +85,7 @@ Rectangle {
             var ctx = getContext("2d")
             ctx.clearRect(0,0, parent.width, parent.height)
             ctx.lineWidth = 0.3
-            ctx.strokeStyle = "#114d4d"
+            ctx.strokeStyle = ThemeManager.borderColor
             ctx.beginPath()
             var nrows = height/wgrid;
             for(var i=0; i < nrows+1; i++){

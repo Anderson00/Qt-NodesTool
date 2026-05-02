@@ -4,6 +4,8 @@ import QtQuick.Controls 2.0
 import Qt.labs.qmlmodels 1.0
 import QtCharts 2.15
 
+import App.Theme 1.0
+
 import '../../components'
 
 Item {
@@ -49,7 +51,7 @@ Item {
     Rectangle{
         id: bo
         anchors.fill: parent
-        color: "#140f07"
+        color: ThemeManager.backgroundColor
     }
 
     ColumnLayout {
@@ -64,18 +66,18 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             antialiasing: true
-            backgroundColor: "#140f07"
+            backgroundColor: ThemeManager.backgroundColor
             animationOptions: ChartView.NoAnimation
 
             LineSeries {
                 id: lineSerie
-                color: "#EC407A"
+                color: ThemeManager.dangerColor
                 name: "test"
             }
 
             LineSeries {
                 id: lineSerieAutoIncremented
-                color: "red"
+                color: ThemeManager.warningColor
                 name: "auto Increment"
             }
         }

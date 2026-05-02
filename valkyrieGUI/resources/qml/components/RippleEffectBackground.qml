@@ -8,7 +8,7 @@ Item {
     id: root
 
     property color color: ThemeManager.primaryColor
-    property color borderColor: "#333"
+    property color borderColor: ThemeManager.borderColor
     property int borderWidth: 0
     property int radius: 4
 

@@ -5,11 +5,12 @@ import QtQuick.Layouts 1.12
 import QtQuick.Controls.Material 2.12
 import QtCharts 2.15
 
+import App.Theme 1.0
 import Qaterial 1.0 as Qaterial
 
 Rectangle {
     anchors.fill: parent
-    color: "#140f07"
+    color: ThemeManager.backgroundColor
 
     property int cpuUsage: 0
 
@@ -101,13 +102,13 @@ Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     antialiasing: true
-                    backgroundColor: "#140f07"
+                    backgroundColor: ThemeManager.backgroundColor
                     //plotAreaColor: "#EC407A"
                     animationOptions: ChartView.SeriesAnimations
 
                     LineSeries {
                         id: lineSerie
-                        color: "#EC407A"
+                        color: ThemeManager.dangerColor
                         name: ((sliderTimeout.value*(1000-100))+100).toFixed(0) + " ms"
                     }
                 } // ChartView
@@ -135,7 +136,7 @@ Rectangle {
                 background: Rectangle {
                     implicitWidth: 200
                     implicitHeight: progressTotalMemoryUsage.height
-                    color: "#880E4F"
+                    color: Qt.darker(ThemeManager.dangerColor, 1.5)
                 }
 
                 contentItem: Item {
@@ -146,7 +147,7 @@ Rectangle {
                         width: progressTotalMemoryUsage.visualPosition * parent.width
                         height: progressTotalMemoryUsage.height
                         radius: 2
-                        color: "#EC407A"
+                        color: ThemeManager.dangerColor
 
 
                     }
@@ -185,7 +186,7 @@ Rectangle {
                 Text {
                     text: modelData.type
                     anchors.horizontalCenter: parent.horizontalCenter
-                    color: "#FFF"
+                    color: ThemeManager.textColor
                 }
 
                 Text {

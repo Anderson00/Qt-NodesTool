@@ -7,6 +7,7 @@ Behaviours::Behaviours(QObject *parent) : QObject(parent)
 {
     this->m_x = 0;
     this->m_y = 0;
+    this->m_nodeTheme = new NodeTheme(this);
 }
 
 QMap<QString, QVariant> Behaviours::static_infos()
@@ -272,6 +273,11 @@ void Behaviours::setY(double y)
 QQuickItem *Behaviours::viewRect()
 {
     return this->m_viewRectangle;
+}
+
+NodeTheme *Behaviours::nodeTheme()
+{
+    return this->m_nodeTheme;
 }
 
 void Behaviours::save()

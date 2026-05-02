@@ -14,8 +14,8 @@ Popup {
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
     padding: 0
 
-    width: 660
-    height: 480
+    width: 700
+    height: 540
 
     x: parent ? (parent.width  - width)  / 2 : 0
     y: parent ? (parent.height - height) / 2 : 0
@@ -32,7 +32,7 @@ Popup {
         color: ThemeManager.backgroundColor
         radius: 10
         border.width: 1
-        border.color: Qt.rgba(1, 1, 1, 0.08)
+        border.color: ThemeManager.borderColor
     }
 
     contentItem: Item {
@@ -286,7 +286,42 @@ Popup {
                 anchors.margins: 28
                 visible: selectedCategory === "appearance"
                 contentWidth: availableWidth
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
                 clip: true
+
+                // Reusable section-header component
+                component SectionLabel: Text {
+                    width: parent ? parent.width : 0
+                    font.pixelSize: 10
+                    font.letterSpacing: 1.2
+                    color: ThemeManager.textColor
+                    opacity: 0.45
+                    topPadding: 20
+                    bottomPadding: 10
+                }
+
+                // Reusable color-row component
+                component ColorRow: RowLayout {
+                    property string label: ""
+                    property color value: "black"
+                    signal accepted(color c)
+
+                    width: parent ? parent.width : 0
+                    height: 44
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: parent.label
+                        font.pixelSize: 12
+                        color: ThemeManager.textColor
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    ColorPicker {
+                        value: parent.value
+                        showHex: true
+                        onAccepted: function(c) { parent.accepted(c) }
+                    }
+                }
 
                 Column {
                     width: parent.width
@@ -300,165 +335,167 @@ Popup {
                         bottomPadding: 20
                     }
 
-                    // Section label
-                    Text {
-                        text: "THEME COLORS"
-                        font.pixelSize: 10
-                        font.letterSpacing: 1.2
-                        color: ThemeManager.textColor
-                        opacity: 0.45
-                        bottomPadding: 14
-                    }
-
-                    // Primary Color
-                    RowLayout {
-                        width: parent.width
-                        height: 44
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: "Primary Color"
-                            font.pixelSize: 12
-                            color: ThemeManager.textColor
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        ColorPicker {
-                            id: primaryColorPicker
-                            value: ThemeManager.primaryColor
-                            showHex: true
-                            onAccepted: function(c) { ThemeManager.primaryColor = c }
-                        }
-                    }
-
-                    // Accent Color
-                    RowLayout {
-                        width: parent.width
-                        height: 44
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: "Accent Color"
-                            font.pixelSize: 12
-                            color: ThemeManager.textColor
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        ColorPicker {
-                            value: ThemeManager.accentColor
-                            showHex: true
-                            onAccepted: function(c) { ThemeManager.accentColor = c }
-                        }
-                    }
-
-                    // Background Color
-                    RowLayout {
-                        width: parent.width
-                        height: 44
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: "Background Color"
-                            font.pixelSize: 12
-                            color: ThemeManager.textColor
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        ColorPicker {
-                            value: ThemeManager.backgroundColor
-                            showHex: true
-                            onAccepted: function(c) { ThemeManager.backgroundColor = c }
-                        }
-                    }
-
-                    // Text Color
-                    RowLayout {
-                        width: parent.width
-                        height: 44
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: "Text Color"
-                            font.pixelSize: 12
-                            color: ThemeManager.textColor
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        ColorPicker {
-                            value: ThemeManager.textColor
-                            showHex: true
-                            onAccepted: function(c) { ThemeManager.textColor = c }
-                        }
-                    }
-
-                    // Danger Color
-                    RowLayout {
-                        width: parent.width
-                        height: 44
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: "Danger Color"
-                            font.pixelSize: 12
-                            color: ThemeManager.textColor
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        ColorPicker {
-                            value: ThemeManager.dangerColor
-                            showHex: true
-                            onAccepted: function(c) { ThemeManager.dangerColor = c }
-                        }
-                    }
-
-                    Item { width: 1; height: 20 }
-
-                    Rectangle {
-                        width: parent.width; height: 1
-                        color: ThemeManager.primaryColor; opacity: 0.1
-                    }
-
-                    Item { width: 1; height: 20 }
-
-                    Text {
-                        text: "THEME MODE"
-                        font.pixelSize: 10
-                        font.letterSpacing: 1.2
-                        color: ThemeManager.textColor
-                        opacity: 0.45
-                        bottomPadding: 14
-                    }
+                    // ── THEME MODE ──────────────────────────────────────────────
+                    SectionLabel { text: "THEME MODE" }
 
                     RowLayout {
                         width: parent.width
                         height: 44
+                        spacing: 8
 
                         Text {
                             Layout.fillWidth: true
-                            text: "Toggle Light / Dark"
+                            text: ThemeManager.isDarkMode ? "Dark Mode" : "Light Mode"
                             font.pixelSize: 12
                             color: ThemeManager.textColor
                             verticalAlignment: Text.AlignVCenter
                         }
 
+                        // Light button
                         Rectangle {
-                            width: 80; height: 30
-                            radius: 6
-                            color: ThemeManager.primaryColor
-                            opacity: toggleThemeHover.containsMouse ? 0.85 : 1
-                            Behavior on opacity { NumberAnimation { duration: 100 } }
-
+                            width: 68; height: 30; radius: 6
+                            color: !ThemeManager.isDarkMode ? ThemeManager.primaryColor
+                                                            : Qt.rgba(ThemeManager.borderColor.r, ThemeManager.borderColor.g, ThemeManager.borderColor.b, 0.4)
+                            border.width: 1
+                            border.color: !ThemeManager.isDarkMode ? ThemeManager.primaryColor : ThemeManager.borderColor
+                            Behavior on color { ColorAnimation { duration: 150 } }
+                            opacity: lightHover.containsMouse ? 0.8 : 1
                             Text {
                                 anchors.centerIn: parent
-                                text: "Toggle"
+                                text: "☀  Light"
                                 font.pixelSize: 11
-                                color: "white"
+                                color: !ThemeManager.isDarkMode ? ThemeManager.backgroundColor : ThemeManager.textColor
                             }
-
                             MouseArea {
-                                id: toggleThemeHover
+                                id: lightHover
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: ThemeManager.toggleTheme()
+                                onClicked: ThemeManager.setThemeMode(ThemeManager.ThemeMode.Light)
+                            }
+                        }
+
+                        // Dark button
+                        Rectangle {
+                            width: 68; height: 30; radius: 6
+                            color: ThemeManager.isDarkMode ? ThemeManager.primaryColor
+                                                           : Qt.rgba(ThemeManager.borderColor.r, ThemeManager.borderColor.g, ThemeManager.borderColor.b, 0.4)
+                            border.width: 1
+                            border.color: ThemeManager.isDarkMode ? ThemeManager.primaryColor : ThemeManager.borderColor
+                            Behavior on color { ColorAnimation { duration: 150 } }
+                            opacity: darkHover.containsMouse ? 0.8 : 1
+                            Text {
+                                anchors.centerIn: parent
+                                text: "☾  Dark"
+                                font.pixelSize: 11
+                                color: ThemeManager.isDarkMode ? ThemeManager.backgroundColor : ThemeManager.textColor
+                            }
+                            MouseArea {
+                                id: darkHover
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: ThemeManager.setThemeMode(ThemeManager.ThemeMode.Dark)
                             }
                         }
                     }
+
+                    Item { width: 1; height: 8 }
+                    Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
+
+                    // ── STRUCTURAL ──────────────────────────────────────────────
+                    SectionLabel { text: "STRUCTURAL" }
+
+                    ColorRow {
+                        label: "Background"
+                        value: ThemeManager.backgroundColor
+                        onAccepted: function(c) { ThemeManager.backgroundColor = c }
+                    }
+                    ColorRow {
+                        label: "Surface"
+                        value: ThemeManager.surfaceColor
+                        onAccepted: function(c) { ThemeManager.surfaceColor = c }
+                    }
+                    ColorRow {
+                        label: "Foreground (panels)"
+                        value: ThemeManager.foregroundColor
+                        onAccepted: function(c) { ThemeManager.foregroundColor = c }
+                    }
+                    ColorRow {
+                        label: "Border"
+                        value: ThemeManager.borderColor
+                        onAccepted: function(c) { ThemeManager.borderColor = c }
+                    }
+                    ColorRow {
+                        label: "Shadow"
+                        value: ThemeManager.shadowColor
+                        onAccepted: function(c) { ThemeManager.shadowColor = c }
+                    }
+
+                    Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
+
+                    // ── BRAND / ACTIONS ─────────────────────────────────────────
+                    SectionLabel { text: "BRAND / ACTIONS" }
+
+                    ColorRow {
+                        label: "Primary"
+                        value: ThemeManager.primaryColor
+                        onAccepted: function(c) { ThemeManager.primaryColor = c }
+                    }
+                    ColorRow {
+                        label: "Secondary"
+                        value: ThemeManager.secondaryColor
+                        onAccepted: function(c) { ThemeManager.secondaryColor = c }
+                    }
+                    ColorRow {
+                        label: "Accent"
+                        value: ThemeManager.accentColor
+                        onAccepted: function(c) { ThemeManager.accentColor = c }
+                    }
+
+                    Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
+
+                    // ── SEMANTIC STATES ─────────────────────────────────────────
+                    SectionLabel { text: "SEMANTIC STATES" }
+
+                    ColorRow {
+                        label: "Success"
+                        value: ThemeManager.successColor
+                        onAccepted: function(c) { ThemeManager.successColor = c }
+                    }
+                    ColorRow {
+                        label: "Warning"
+                        value: ThemeManager.warningColor
+                        onAccepted: function(c) { ThemeManager.warningColor = c }
+                    }
+                    ColorRow {
+                        label: "Danger"
+                        value: ThemeManager.dangerColor
+                        onAccepted: function(c) { ThemeManager.dangerColor = c }
+                    }
+
+                    Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
+
+                    // ── TYPOGRAPHY ──────────────────────────────────────────────
+                    SectionLabel { text: "TYPOGRAPHY" }
+
+                    ColorRow {
+                        label: "Text"
+                        value: ThemeManager.textColor
+                        onAccepted: function(c) { ThemeManager.textColor = c }
+                    }
+                    ColorRow {
+                        label: "Text Secondary"
+                        value: ThemeManager.textSecondaryColor
+                        onAccepted: function(c) { ThemeManager.textSecondaryColor = c }
+                    }
+                    ColorRow {
+                        label: "Selection"
+                        value: ThemeManager.selectionColor
+                        onAccepted: function(c) { ThemeManager.selectionColor = c }
+                    }
+
+                    Item { width: 1; height: 28 }
                 }
             }
 

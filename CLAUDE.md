@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Qt-NodesTool ("Valkyrie") is a Qt 6.5.3 C++17 node-based debugger/visualization application. It has three main components: a GUI application, a network middleware daemon, and a test suite.
+Qt-NodesTool ("Valkyrie") is a Qt 6.5.3 node-based debugger/visualization application. It has three main components: a GUI application, a network middleware daemon, and a test suite. **valkyrieGUI uses C++17; middleware uses C++11** — don't use C++17 features in middleware.
 
 ## Build Commands
 
@@ -29,6 +29,11 @@ windeployqt.exe --release build\Release\Debugger.exe
 ctest --output-on-failure -C Release
 ```
 
+**Run a single test:**
+```bash
+ctest -R CacheTest --output-on-failure -C Release
+```
+
 CI uses `jurplel/install-qt-action` to fetch Qt 6.5.3 — see `.github/workflows/build.yml` for platform-specific steps (Windows/macOS/Linux).
 
 ## Architecture
@@ -37,13 +42,13 @@ CI uses `jurplel/install-qt-action` to fetch Qt 6.5.3 — see `.github/workflows
 
 **valkyrieGUI** — Qt6 GUI executable (output: `Debugger.exe`)
 - `MainWindow` — QMainWindow with MDI (Multiple Document Interface) as the application shell
-- `ViewPortWindow` — The node-based visual editing canvas
-- `BehaviourLoader` (singleton) — Dynamically loads node behaviors from JSON; creates `Behaviours` objects at runtime
-- `Behaviours` — Base class for all node types; supports CPP, DLL, and Python loading strategies
+- `ViewPortWindow` — The node-based visual editing canvas; inherits from `QMLWindow` (not QWidget) and exposes its API to QML via `Q_PROPERTY` / `Q_INVOKABLE`
+- `BehaviourLoader` (singleton) — Dynamically loads node behaviors from JSON; creates `Behaviours` objects at runtime; node type is a `Q_ENUM` (CPP, DLL, PYTHON)
+- `Behaviours` — Base class for all node types; each instance is identified by a UUID stored in `ViewPortWindow`'s `QHash` for O(1) lookup
 - `Connections` — Wires signals/slots between behavior nodes
 - `ThemeManager` / `AbstractTheme` / `SubTheme` — Layered theming system
 - Various viewer sub-windows: HexViewer, LineChartViewer, ProcessesViewer, CameraViewer, etc.
-- QML integration via Qaterial (Material Design) for certain UI components
+- QML integration via Qaterial (Material Design); middleware is deliberately GUI-free (Qt Core/Network only)
 
 **middleware** — Qt Core/Network daemon for agent and network management
 - `Agente` — Base agent class with UUID and parameter cache

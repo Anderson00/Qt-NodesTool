@@ -11,6 +11,7 @@
 #include <QtQuick/QQuickItem>
 #include "connections.h"
 #include "utils/nodeserialize.h"
+#include "model/nodetheme.h"
 
 class ConnectionModel;
 class Connections;
@@ -28,6 +29,7 @@ class Behaviours : public QObject, Presets::NodeSerialize
     Q_PROPERTY(double contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged)
 
     Q_PROPERTY(QQuickItem *viewRect READ viewRect CONSTANT)
+    Q_PROPERTY(NodeTheme *nodeTheme READ nodeTheme CONSTANT)
 public:
     enum Type{
         CPP = 0, DLL, PYTHON
@@ -67,6 +69,7 @@ public:
     void setX(double x);
     void setY(double y);
     QQuickItem *viewRect();
+    NodeTheme  *nodeTheme();
 
     void save() override;
     void load() override;
@@ -116,6 +119,7 @@ private:
     QMap<QString, Connections*> m_output_conns;
 
     QQuickItem *m_viewRectangle;
+    NodeTheme  *m_nodeTheme;
 
     QList<QString> m_listOfExclusions;
 };

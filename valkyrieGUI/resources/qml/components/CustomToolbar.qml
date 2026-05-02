@@ -4,6 +4,7 @@ import QtQuick.Controls.Material 2.12
 import QtQuick.Layouts 1.12
 import QtQuick.Shapes 1.15
 
+import App.Theme 1.0
 import Qaterial 1.0 as Qaterial
 
 Rectangle {
@@ -12,7 +13,7 @@ Rectangle {
 
     width: body.implicitWidth
     height: body.implicitHeight
-    color: Qt.rgba(0.2, 0.2, 0.2, 0.3)
+    color: Qt.rgba(ThemeManager.foregroundColor.r, ThemeManager.foregroundColor.g, ThemeManager.foregroundColor.b, 0.85)
 
     Shape {
         id: shape

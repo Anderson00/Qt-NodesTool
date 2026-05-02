@@ -348,7 +348,7 @@ Rectangle {
                     Layout.fillWidth: true
                     SplitView.minimumWidth: 10
                     SplitView.preferredWidth: parent.width / 2
-                    color: Qt.rgba(1, 1, 1, 0.06)
+                    color: Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.08)
 
                     ColumnLayout {
                         id: columnLayoutInputConns
@@ -410,7 +410,7 @@ Rectangle {
                     Layout.fillWidth: true
                     SplitView.minimumWidth: 10
                     SplitView.preferredWidth: parent.width / 2
-                    color: Qt.rgba(0, 0, 0, 0.20)
+                    color: Qt.rgba(ThemeManager.successColor.r, ThemeManager.successColor.g, ThemeManager.successColor.b, 0.08)
 
                     ColumnLayout {
                         id: columnLayoutOutputConns
@@ -472,7 +472,7 @@ Rectangle {
             z: 2
             radius: root.radius
             clip: true
-            color: Qt.rgba(0, 0, 0, 0.35)
+            color: ThemeManager.surfaceColor
 
             Loader {
                 id: rootBodyLoader

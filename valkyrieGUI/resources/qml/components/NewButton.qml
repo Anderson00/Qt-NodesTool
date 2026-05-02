@@ -15,7 +15,7 @@ Button {
         switch (variant) {
             case "outlined": return control.backgroundColor
             case "text":     return control.backgroundColor
-            default:         return "#fff"
+            default:         return ThemeManager.backgroundColor
         }
     }
     property int radius: variant === "rounded" ? height / 2 : 8
@@ -115,7 +115,7 @@ Button {
             width: 0
             height: width
             radius: width / 2
-            color: Qt.rgba(1, 1, 1, 0.25)
+            color: ThemeManager.selectionColor
             opacity: 0
             visible: false
 

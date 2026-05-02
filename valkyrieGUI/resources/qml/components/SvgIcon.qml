@@ -1,11 +1,12 @@
 import QtQuick 2.12
 import Qt5Compat.GraphicalEffects
+import App.Theme 1.0
 
 Item {
     id: root
 
     property alias source: img.source
-    property color color: "#ffffff"
+    property color color: ThemeManager.textColor
     property int renderSize: 96
 
     implicitWidth: 20

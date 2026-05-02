@@ -1,4 +1,5 @@
 import QtQuick 2.4
+import App.Theme 1.0
 
 
 Canvas {
@@ -7,8 +8,8 @@ Canvas {
 
     property int triangleWidth: 60
     property int triangleHeight: 60
-    property color strokeStyle:  "#ffffff"
-    property color fillStyle: "#ffffff"
+    property color strokeStyle: ThemeManager.textColor
+    property color fillStyle: ThemeManager.textColor
     property int lineWidth: 3
     property bool fill: false
     property bool stroke: true

@@ -3,11 +3,12 @@ import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.0
 import QtQuick.Controls.Material 2.12
 
+import App.Theme 1.0
 import Qaterial 1.0 as Qaterial
 
 Rectangle {
     anchors.fill: parent
-    color: "#140f07"
+    color: ThemeManager.backgroundColor
 
     Connections {
         target: midClient
@@ -89,8 +90,8 @@ Rectangle {
                 width: scroll.parent.width
                 //height: scroll.height
 
-                color: "#e0e7f6"
-                background: Rectangle { color: "#21252f" }
+                color: ThemeManager.textColor
+                background: Rectangle { color: ThemeManager.surfaceColor }
 
                 enabled: false
 
@@ -104,7 +105,7 @@ Rectangle {
                 id: stateText
                 Layout.preferredHeight: 25
                 Layout.alignment: Qt.AlignVCenter
-                color: "#e0e7f6"
+                color: ThemeManager.textColor
                 Layout.fillWidth: true
                 text: "Initiated"
             }

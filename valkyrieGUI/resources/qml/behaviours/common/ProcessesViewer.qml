@@ -3,6 +3,8 @@ import QtQuick.Layouts 1.0
 import QtQuick.Controls 2.0
 import Qt.labs.qmlmodels 1.0
 
+import App.Theme 1.0
+
 import '../../components'
 
 //import TableModel 1.0
@@ -43,7 +45,7 @@ Item {
         Rectangle{
             Layout.fillWidth: true
             Layout.fillHeight: true
-            color: '#222'
+            color: ThemeManager.surfaceColor
             TableView {
                 id: tableView
                 anchors.fill: parent
@@ -93,7 +95,7 @@ Item {
                         delegate: Rectangle {
                             width: lbPid.width
                             height: lbPid.height
-                            color: "#222"
+                            color: ThemeManager.surfaceColor
                             Label {
                                 id: lbPid
                                 anchors.verticalCenter: parent.verticalCenter
@@ -108,7 +110,7 @@ Item {
                         delegate: Rectangle {
                             width: root.width
                             height: lbPName.height
-                            color: "#222"
+                            color: ThemeManager.surfaceColor
                             Label {
                                 id: lbPName
                                 anchors.verticalCenter: parent.verticalCenter
