@@ -407,6 +407,87 @@ Popup {
                     // ── PRESETS ─────────────────────────────────────────────────
                     SectionLabel { text: "PRESETS" }
 
+                    // ── Save current theme as preset ──────────────────────────
+                    RowLayout {
+                        width: parent.width
+                        height: 38
+                        spacing: 8
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            height: 34
+                            radius: 6
+                            color: ThemeManager.foregroundColor
+                            border.width: 1
+                            border.color: presetNameInput.activeFocus
+                                          ? ThemeManager.primaryColor
+                                          : ThemeManager.borderColor
+                            Behavior on border.color { ColorAnimation { duration: 120 } }
+
+                            TextInput {
+                                id: presetNameInput
+                                anchors.fill: parent
+                                anchors.leftMargin: 10
+                                anchors.rightMargin: 10
+                                verticalAlignment: TextInput.AlignVCenter
+                                color: ThemeManager.textColor
+                                selectionColor: ThemeManager.selectionColor
+                                font.pixelSize: 12
+                                clip: true
+
+                                Text {
+                                    anchors.fill: parent
+                                    verticalAlignment: Text.AlignVCenter
+                                    text: "Name for new preset…"
+                                    color: ThemeManager.textSecondaryColor
+                                    font.pixelSize: 12
+                                    visible: presetNameInput.text.length === 0 && !presetNameInput.activeFocus
+                                }
+
+                                Keys.onReturnPressed: savePresetBtn.doSave()
+                                Keys.onEnterPressed:  savePresetBtn.doSave()
+                            }
+                        }
+
+                        Rectangle {
+                            id: savePresetBtn
+                            width: 110; height: 34
+                            radius: 6
+                            color: ThemeManager.primaryColor
+                            opacity: presetNameInput.text.trim().length > 0
+                                     ? (savePresetMa.containsMouse ? 0.85 : 1.0)
+                                     : 0.35
+                            Behavior on opacity { NumberAnimation { duration: 120 } }
+
+                            function doSave() {
+                                const n = presetNameInput.text.trim()
+                                if (n.length === 0) return
+                                PresetManager.saveCurrentAsPreset(n)
+                                presetNameInput.text = ""
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "Save Current"
+                                font.pixelSize: 11
+                                font.bold: true
+                                color: ThemeManager.backgroundColor
+                            }
+
+                            MouseArea {
+                                id: savePresetMa
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: presetNameInput.text.trim().length > 0
+                                             ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                onClicked: savePresetBtn.doSave()
+                            }
+                        }
+                    }
+
+                    Item { height: 10; width: 1 }
+
+                    // ── Preset cards ──────────────────────────────────────────
                     Flow {
                         width: parent.width
                         spacing: 10
@@ -418,27 +499,26 @@ Popup {
                             delegate: Rectangle {
                                 id: presetCard
 
-                                // keep outer modelData accessible inside nested Repeater
                                 property var preset: modelData
 
-                                width: 155
-                                height: 90
+                                width: 163
+                                height: 94
                                 radius: 9
                                 color: preset.backgroundColor
                                 clip: true
 
-                                scale: presetMa.containsMouse ? 1.04 : 1.0
+                                scale: bodyMa.containsMouse ? 1.04 : 1.0
                                 Behavior on scale { NumberAnimation { duration: 130; easing.type: Easing.OutQuad } }
 
-                                border.width: presetMa.containsMouse ? 2 : 1
-                                border.color: presetMa.containsMouse
+                                border.width: bodyMa.containsMouse ? 2 : 1
+                                border.color: bodyMa.containsMouse
                                               ? preset.primaryColor
                                               : Qt.rgba(preset.borderColor.r,
                                                         preset.borderColor.g,
                                                         preset.borderColor.b, 0.6)
                                 Behavior on border.width { NumberAnimation { duration: 130 } }
 
-                                // ── 6-color strip at top ──────────────────────────
+                                // ── 6-color strip ─────────────────────────────
                                 Row {
                                     id: colorStrip
                                     anchors.top: parent.top
@@ -465,7 +545,7 @@ Popup {
                                     }
                                 }
 
-                                // ── surface accent bar (left) ─────────────────────
+                                // ── surface accent bar ────────────────────────
                                 Rectangle {
                                     anchors.left: parent.left
                                     anchors.top: colorStrip.bottom
@@ -475,7 +555,16 @@ Popup {
                                     opacity: 0.5
                                 }
 
-                                // ── footer bar ────────────────────────────────────
+                                // ── click area (behind delete button) ─────────
+                                MouseArea {
+                                    id: bodyMa
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: PresetManager.applyPreset(index)
+                                }
+
+                                // ── footer bar ────────────────────────────────
                                 Rectangle {
                                     id: footerBar
                                     anchors.bottom: parent.bottom
@@ -484,26 +573,74 @@ Popup {
                                     height: 26
                                     color: Qt.rgba(0, 0, 0, 0.30)
 
-                                    Text {
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        anchors.left: parent.left
-                                        anchors.right: parent.right
-                                        anchors.leftMargin: 10
-                                        anchors.rightMargin: 6
-                                        text: preset.name
-                                        font.pixelSize: 10
-                                        font.bold: true
-                                        color: preset.textColor
-                                        elide: Text.ElideRight
+                                    Row {
+                                        anchors.fill: parent
+                                        anchors.leftMargin: 8
+                                        anchors.rightMargin: 8
+                                        spacing: 4
+
+                                        // "custom" badge
+                                        Rectangle {
+                                            visible: !preset.builtin
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            width: 38; height: 14; radius: 7
+                                            color: Qt.rgba(preset.primaryColor.r,
+                                                           preset.primaryColor.g,
+                                                           preset.primaryColor.b, 0.35)
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: "custom"
+                                                font.pixelSize: 8
+                                                color: preset.primaryColor
+                                            }
+                                        }
+
+                                        Text {
+                                            width: footerBar.width
+                                                   - (preset.builtin ? 0 : 46)
+                                                   - 8 - deleteBtn.width - 4
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            text: preset.name
+                                            font.pixelSize: 10
+                                            font.bold: true
+                                            color: preset.textColor
+                                            elide: Text.ElideRight
+                                        }
                                     }
                                 }
 
-                                MouseArea {
-                                    id: presetMa
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: PresetManager.applyPreset(index)
+                                // ── delete button (custom only, on top) ───────
+                                Rectangle {
+                                    id: deleteBtn
+                                    visible: !preset.builtin
+                                    anchors.top: colorStrip.bottom
+                                    anchors.right: parent.right
+                                    anchors.topMargin: 5
+                                    anchors.rightMargin: 6
+                                    width: 18; height: 18; radius: 9
+                                    z: 10
+                                    color: deleteMa.containsMouse
+                                           ? ThemeManager.dangerColor
+                                           : Qt.rgba(ThemeManager.dangerColor.r,
+                                                     ThemeManager.dangerColor.g,
+                                                     ThemeManager.dangerColor.b, 0.55)
+                                    Behavior on color { ColorAnimation { duration: 120 } }
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "×"
+                                        font.pixelSize: 13
+                                        font.bold: true
+                                        color: "white"
+                                    }
+
+                                    MouseArea {
+                                        id: deleteMa
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: PresetManager.removePreset(preset.id)
+                                    }
                                 }
                             }
                         }
