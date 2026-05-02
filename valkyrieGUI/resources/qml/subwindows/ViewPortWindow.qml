@@ -468,6 +468,13 @@ Rectangle {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         color: "transparent"
+
+        // Global hover tracker — HoverHandler propagates through all child items
+        // without stealing events, so it works even when the mouse is over a node.
+        HoverHandler {
+            id: globalHover
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+        }
         clip: true
 
         // ── Workspace item ───────────────────────────────────────────────────────
@@ -1261,7 +1268,36 @@ Rectangle {
             anchors.rightMargin: 10
             spacing: 0
 
-            // ── Cursor world position
+            // ── View center (where the user is looking)
+            Text {
+                text: "\u25ef"
+                font.pixelSize: 9
+                color: ThemeManager.primaryColor
+                opacity: 0.80
+                Layout.alignment: Qt.AlignVCenter
+            }
+            Item { Layout.preferredWidth: 4 }
+            Text {
+                font.pixelSize: 10
+                color: ThemeManager.textColor
+                opacity: 0.60
+                Layout.alignment: Qt.AlignVCenter
+                Layout.preferredWidth: 140
+                text: {
+                    var cx = Math.round((containerCanvas.width  / 2 - mycanvas.x) / sliderZoom.value)
+                    var cy = Math.round((containerCanvas.height / 2 - mycanvas.y) / sliderZoom.value)
+                    return "X " + cx + "  Y " + cy
+                }
+            }
+
+            Rectangle {
+                Layout.preferredWidth: 1; Layout.preferredHeight: 12
+                Layout.alignment: Qt.AlignVCenter
+                color: ThemeManager.textColor; opacity: 0.18
+            }
+            Item { Layout.preferredWidth: 10 }
+
+            // ── Mouse world position (via HoverHandler — updates even over nodes)
             Text {
                 text: "\u2316"
                 font.pixelSize: 11
@@ -1269,26 +1305,24 @@ Rectangle {
                 opacity: 0.80
                 Layout.alignment: Qt.AlignVCenter
             }
-            Item { Layout.preferredWidth: 5 }
+            Item { Layout.preferredWidth: 4 }
             Text {
                 font.pixelSize: 10
                 color: ThemeManager.textColor
                 opacity: 0.60
                 Layout.alignment: Qt.AlignVCenter
-                Layout.preferredWidth: 130
+                Layout.preferredWidth: 140
                 text: {
-                    var wx = Math.round((mouseZoom.zoomMouseX - mycanvas.x) / sliderZoom.value)
-                    var wy = Math.round((mouseZoom.zoomMouseY - mycanvas.y) / sliderZoom.value)
-                    return "X " + wx + "  Y " + wy
+                    var mx = Math.round((globalHover.point.position.x - mycanvas.x) / sliderZoom.value)
+                    var my = Math.round((globalHover.point.position.y - mycanvas.y) / sliderZoom.value)
+                    return "X " + mx + "  Y " + my
                 }
             }
 
             Rectangle {
-                Layout.preferredWidth: 1
-                Layout.preferredHeight: 12
+                Layout.preferredWidth: 1; Layout.preferredHeight: 12
                 Layout.alignment: Qt.AlignVCenter
-                color: ThemeManager.textColor
-                opacity: 0.18
+                color: ThemeManager.textColor; opacity: 0.18
             }
             Item { Layout.preferredWidth: 10 }
 
@@ -1300,22 +1334,20 @@ Rectangle {
                 opacity: 0.80
                 Layout.alignment: Qt.AlignVCenter
             }
-            Item { Layout.preferredWidth: 5 }
+            Item { Layout.preferredWidth: 4 }
             Text {
                 font.pixelSize: 10
                 color: ThemeManager.textColor
                 opacity: 0.60
                 Layout.alignment: Qt.AlignVCenter
-                Layout.preferredWidth: 48
+                Layout.preferredWidth: 44
                 text: Math.round(sliderZoom.value * 100) + "%"
             }
 
             Rectangle {
-                Layout.preferredWidth: 1
-                Layout.preferredHeight: 12
+                Layout.preferredWidth: 1; Layout.preferredHeight: 12
                 Layout.alignment: Qt.AlignVCenter
-                color: ThemeManager.textColor
-                opacity: 0.18
+                color: ThemeManager.textColor; opacity: 0.18
                 visible: nodeOnFocus !== undefined && nodeOnFocus !== null
             }
             Item {
