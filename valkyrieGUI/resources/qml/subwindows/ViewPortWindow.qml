@@ -730,38 +730,6 @@ Rectangle {
         }
     }
 
-    ProgressBar {
-        id: progressX
-        width: viewRect.width - 2
-        height: 3
-
-        value: 0
-        from: 0
-        to: 100
-
-        anchors.bottom: viewRect.top
-        anchors.left: viewRect.left
-        Material.accent: ThemeManager.primaryColor
-    }
-
-    ProgressBar {
-        id: progressY
-        width: viewRect.height + 3
-        height: 3
-
-        value: 0
-        from: 0
-        to: 100
-
-        rotation: -90
-
-        anchors.left: viewRect.left
-        anchors.bottom: viewRect.bottom
-        anchors.bottomMargin: width/2
-        anchors.leftMargin: - width/2 - 3
-        Material.accent: ThemeManager.primaryColor
-    }
-
     CustomToolbar {
         id: toolbar
         anchors.bottom: parent.bottom
@@ -929,15 +897,6 @@ Rectangle {
 
             x: -(mycanvas.x * viewRect.width) / (containerCanvas.width * sliderZoom.value)
             y: -(mycanvas.y * viewRect.height) / (containerCanvas.height * sliderZoom.value)
-
-            onXChanged: {
-                progressX.value = Math.abs(x) % (viewRect.width+Math.abs(x));
-
-            }
-
-            onYChanged: {
-                progressY.value = Math.abs(y) % (viewRect.height + Math.abs(y));
-            }
         }
     }
 
