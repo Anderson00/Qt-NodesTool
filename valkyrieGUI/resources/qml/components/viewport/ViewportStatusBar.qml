@@ -52,59 +52,61 @@ Rectangle {
             font.pixelSize: 9
             color: ThemeManager.primaryColor
             opacity: 0.80
-            Layout.alignment: Qt.AlignVCenter
+            Layout.alignment: Qt.AlignCenter
         }
-        Item { Layout.preferredWidth: 4 }
-        Text {
-            font.pixelSize: 10
-            color: ThemeManager.textColor
-            opacity: 0.60
-            Layout.alignment: Qt.AlignVCenter
-            Layout.preferredWidth: 80
-            text: {
-                var cx = Math.round((containerWidth  / 2 - canvasPosX) / zoom) - 5000
-                var cy = Math.round((containerHeight / 2 - canvasPosY) / zoom) - 5000
-                return "X " + cx + "  Y " + cy
+        RowLayout {
+            Layout.preferredWidth: 100
+            Text {
+                font.pixelSize: 10
+                color: ThemeManager.textColor
+                opacity: 0.60
+                Layout.alignment: Qt.AlignCenter
+                text: {
+                    var cx = Math.round((containerWidth  / 2 - canvasPosX) / zoom) - 5000
+                    var cy = Math.round((containerHeight / 2 - canvasPosY) / zoom) - 5000
+                    return "X " + cx + "  Y " + cy
+                }
             }
         }
-        Item { Layout.preferredWidth: 10 }
         Rectangle {
             Layout.preferredWidth: 1; Layout.preferredHeight: 12
             Layout.alignment: Qt.AlignVCenter
             color: ThemeManager.textColor; opacity: 0.18
         }
-        Item { Layout.preferredWidth: 10 }
 
         // ── Mouse world position ─────────────────────────────────────────────
+        Item { Layout.preferredWidth: 4 }
         Text {
             text: "\u2316"
             font.pixelSize: 11
             color: ThemeManager.primaryColor
             opacity: 0.80
-            Layout.alignment: Qt.AlignVCenter
+            Layout.alignment: Qt.AlignCenter
         }
-        Item { Layout.preferredWidth: 4 }
-        Text {
-            font.pixelSize: 10
-            color: ThemeManager.textColor
-            opacity: 0.60
-            Layout.alignment: Qt.AlignVCenter
-            Layout.preferredWidth: 80
-            text: {
-                var mx = Math.round((hoverX - canvasPosX) / zoom) - 5000
-                var my = Math.round((hoverY - canvasPosY) / zoom) - 5000
-                return "X " + mx + "  Y " + my
+        RowLayout {
+            Layout.preferredWidth: 100
+            Text {
+                font.pixelSize: 10
+                color: ThemeManager.textColor
+                opacity: 0.60
+                Layout.alignment: Qt.AlignCenter
+                Layout.preferredWidth: 80
+                text: {
+                    var mx = Math.round((hoverX - canvasPosX) / zoom) - 5000
+                    var my = Math.round((hoverY - canvasPosY) / zoom) - 5000
+                    return "X " + mx + "  Y " + my
+                }
             }
         }
-        Item { Layout.preferredWidth: 10 }
+
         Rectangle {
             Layout.preferredWidth: 1; Layout.preferredHeight: 12
             Layout.alignment: Qt.AlignVCenter
             color: ThemeManager.textColor; opacity: 0.18
         }
-        Item { Layout.preferredWidth: 10 }
 
         // ── Zoom level ───────────────────────────────────────────────────────
+        Item { Layout.preferredWidth: 4 }
         Text {
             text: "\u2295"
             font.pixelSize: 11
@@ -112,14 +114,16 @@ Rectangle {
             opacity: 0.80
             Layout.alignment: Qt.AlignVCenter
         }
-        Item { Layout.preferredWidth: 4 }
-        Text {
-            font.pixelSize: 10
-            color: ThemeManager.textColor
-            opacity: 0.60
-            Layout.alignment: Qt.AlignVCenter
-            Layout.preferredWidth: 44
-            text: Math.round(zoom * 100) + "%"
+        RowLayout {
+            Layout.preferredWidth: 100
+            Text {
+                font.pixelSize: 10
+                color: ThemeManager.textColor
+                opacity: 0.60
+                Layout.alignment: Qt.AlignCenter
+                Layout.preferredWidth: 44
+                text: Math.round(zoom * 100) + "%"
+            }
         }
 
         // ── Selected node (optional) ─────────────────────────────────────────
