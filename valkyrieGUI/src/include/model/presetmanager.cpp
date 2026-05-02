@@ -5,6 +5,7 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QFile>
+#include <QCoreApplication>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -29,7 +30,7 @@ PresetManager::PresetManager(QObject* parent) : QObject(parent) {
 // ── File path ─────────────────────────────────────────────────────────────────
 
 QString PresetManager::presetsFilePath() const {
-    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    const QString dir = QCoreApplication::applicationDirPath();
     QDir().mkpath(dir);
     return dir + "/presets.json";
 }

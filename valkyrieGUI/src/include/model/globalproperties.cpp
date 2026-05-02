@@ -2,6 +2,7 @@
 #include <QtQml/QQmlEngine>
 #include <QStandardPaths>
 #include <QDir>
+#include <QCoreApplication>
 #include <QFile>
 #include <QSettings>
 #include <QJsonDocument>
@@ -29,7 +30,7 @@ QObject* GlobalProperties::qmlSingletonProvider(QQmlEngine*, QJSEngine*) {
 // ── File path ─────────────────────────────────────────────────────────────────
 
 QString GlobalProperties::settingsFilePath() const {
-    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    const QString dir = QCoreApplication::applicationDirPath();
     QDir().mkpath(dir);
     return dir + "/settings.json";
 }
@@ -37,7 +38,7 @@ QString GlobalProperties::settingsFilePath() const {
 // ── Migration from legacy INI ─────────────────────────────────────────────────
 
 void GlobalProperties::migrateFromIni() {
-    const QString dir    = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    const QString dir    = QCoreApplication::applicationDirPath();
     const QString iniPath = dir + "/ValkyriSettings.ini";
     const QString jsonPath = settingsFilePath();
 

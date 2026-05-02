@@ -37,7 +37,7 @@ void WorkspaceManager::setViewPort(ViewPortWindow* vp)
 
 QString WorkspaceManager::workspacesDir() const
 {
-    return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/workspaces";
+    return QCoreApplication::applicationDirPath() + "/workspaces";
 }
 
 QString WorkspaceManager::workspacePath(const QString& name) const
@@ -118,6 +118,7 @@ bool WorkspaceManager::saveWorkspace(const QString& name)
     root["viewport"]    = viewport;
 
     QFile file(workspacePath(name));
+
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         qWarning() << "WorkspaceManager: cannot write" << workspacePath(name);
         return false;
