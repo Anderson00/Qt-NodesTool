@@ -33,6 +33,9 @@ Rectangle {
         tlH.active || trH.active || blH.active || brH.active ||
         tH.active  || bH.active  || lH.active  || rH.active
 
+    // Explicit selection state — set externally by ViewPortWindow via nodeOnFocus
+    property bool isSelected: false
+
     // -- Signals --
     signal connectionSocketClicked(conn: var)
 
@@ -192,7 +195,7 @@ Rectangle {
         antialiasing: true
         clip: true
         z: 1
-        color: root.focus ? root.borderColor : root.color
+        color: root.isSelected ? root.borderColor : root.color
 
         Rectangle {
             anchors.bottom: topHeaderRect.bottom
@@ -214,7 +217,7 @@ Rectangle {
                 Layout.fillWidth: true
                 text: ""
                 font.pixelSize: 12
-                color: root.focus ? ThemeManager.backgroundColor
+                color: root.isSelected ? ThemeManager.backgroundColor
                                   : ThemeManager.textColor
                 verticalAlignment: Text.AlignVCenter
                 elide: Text.ElideRight
@@ -266,8 +269,8 @@ Rectangle {
             implicitHeight: 40
         }
 
-        onOpened:     root.focus = true
-        onAboutToHide: root.focus = true
+        onOpened:      root.isSelected = true
+        onAboutToHide: root.isSelected = true
 
         MenuItem {
             text: qsTr("Close")

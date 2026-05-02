@@ -33,7 +33,13 @@ Rectangle {
     signal nodeConnected(var node1, var node2)
 
     onNodeOnFocusChanged: {
-        if(nodeOnFocus){
+        // Deselect all nodes, then mark the new focused one
+        for (let i = 0; i < nodes.model.count; i++) {
+            let item = nodes.itemAt(i)
+            if (item) item.isSelected = false
+        }
+        if (nodeOnFocus) {
+            nodeOnFocus.isSelected = true
             console.log('>>' + nodeOnFocus.behaviourObject.title)
         }
     }
@@ -165,6 +171,7 @@ Rectangle {
     Qaterial.MiniFabButton {
         id: fabBottomMenu
         anchors.bottom: parent.bottom
+        anchors.bottomMargin: 22
         anchors.horizontalCenter: parent.horizontalCenter
         z: 100
 
@@ -199,9 +206,9 @@ Rectangle {
         }
 
         onYChanged: {
-            fabBottomMenu.anchors.bottomMargin = parent.height - y
-            toolbar.anchors.bottomMargin = parent.height - y
-            viewRect.anchors.bottomMargin = fabBottomMenu.anchors.bottomMargin + 8
+            fabBottomMenu.anchors.bottomMargin = (parent.height - y) + 22
+            toolbar.anchors.bottomMargin = (parent.height - y) + 22
+            viewRect.anchors.bottomMargin = (parent.height - y) + 22 + 8
         }
     }
 
@@ -607,6 +614,7 @@ Rectangle {
 
                 onClicked: {
                     root.focus = true
+                    nodeOnFocus = null
                 }
             }
 
@@ -696,12 +704,10 @@ Rectangle {
                         id: viewComponentRectV2
 
                         onXChanged: {
-                            this.focus = true
                             if (nodeOnFocus !== this) nodeOnFocus = this
                         }
 
                         onYChanged: {
-                            this.focus = true
                             if (nodeOnFocus !== this) nodeOnFocus = this
                         }
 
@@ -1178,7 +1184,7 @@ Rectangle {
         id: viewRect
         anchors.bottom: parent.bottom
         anchors.right: parent.right
-        anchors.bottomMargin: 8
+        anchors.bottomMargin: 22 + 8
         anchors.rightMargin: 8
         color: "transparent"
         border.width: 2
@@ -1226,6 +1232,130 @@ Rectangle {
 
             onYChanged: {
                 progressY.value = Math.abs(y) % (viewRect.height + Math.abs(y));
+            }
+        }
+    }
+
+    // ─── Status Bar ─────────────────────────────────────────────────────────────
+    Rectangle {
+        id: statusBar
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: 22
+        z: 200
+        color: Qt.darker(ThemeManager.backgroundColor, 1.55)
+
+        Rectangle {
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 1
+            color: ThemeManager.primaryColor
+            opacity: 0.22
+        }
+
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: 10
+            anchors.rightMargin: 10
+            spacing: 0
+
+            // ── Cursor world position
+            Text {
+                text: "\u2316"
+                font.pixelSize: 11
+                color: ThemeManager.primaryColor
+                opacity: 0.80
+                Layout.alignment: Qt.AlignVCenter
+            }
+            Item { Layout.preferredWidth: 5 }
+            Text {
+                font.pixelSize: 10
+                color: ThemeManager.textColor
+                opacity: 0.60
+                Layout.alignment: Qt.AlignVCenter
+                Layout.preferredWidth: 130
+                text: {
+                    var wx = Math.round((mouseZoom.zoomMouseX - mycanvas.x) / sliderZoom.value)
+                    var wy = Math.round((mouseZoom.zoomMouseY - mycanvas.y) / sliderZoom.value)
+                    return "X " + wx + "  Y " + wy
+                }
+            }
+
+            Rectangle {
+                Layout.preferredWidth: 1
+                Layout.preferredHeight: 12
+                Layout.alignment: Qt.AlignVCenter
+                color: ThemeManager.textColor
+                opacity: 0.18
+            }
+            Item { Layout.preferredWidth: 10 }
+
+            // ── Zoom level
+            Text {
+                text: "\u2295"
+                font.pixelSize: 11
+                color: ThemeManager.primaryColor
+                opacity: 0.80
+                Layout.alignment: Qt.AlignVCenter
+            }
+            Item { Layout.preferredWidth: 5 }
+            Text {
+                font.pixelSize: 10
+                color: ThemeManager.textColor
+                opacity: 0.60
+                Layout.alignment: Qt.AlignVCenter
+                Layout.preferredWidth: 48
+                text: Math.round(sliderZoom.value * 100) + "%"
+            }
+
+            Rectangle {
+                Layout.preferredWidth: 1
+                Layout.preferredHeight: 12
+                Layout.alignment: Qt.AlignVCenter
+                color: ThemeManager.textColor
+                opacity: 0.18
+                visible: nodeOnFocus !== undefined && nodeOnFocus !== null
+            }
+            Item {
+                Layout.preferredWidth: 10
+                visible: nodeOnFocus !== undefined && nodeOnFocus !== null
+            }
+
+            // ── Selected node
+            Text {
+                text: "\u25c8"
+                font.pixelSize: 10
+                color: ThemeManager.primaryColor
+                opacity: 0.85
+                Layout.alignment: Qt.AlignVCenter
+                visible: nodeOnFocus !== undefined && nodeOnFocus !== null
+            }
+            Item {
+                Layout.preferredWidth: 5
+                visible: nodeOnFocus !== undefined && nodeOnFocus !== null
+            }
+            Text {
+                font.pixelSize: 10
+                color: ThemeManager.textColor
+                opacity: 0.65
+                Layout.alignment: Qt.AlignVCenter
+                Layout.maximumWidth: 160
+                visible: nodeOnFocus !== undefined && nodeOnFocus !== null
+                text: nodeOnFocus ? (nodeOnFocus.behaviourObject ? nodeOnFocus.behaviourObject.title : "Node") : ""
+                elide: Text.ElideRight
+            }
+
+            Item { Layout.fillWidth: true }
+
+            // ── Node count
+            Text {
+                font.pixelSize: 10
+                color: ThemeManager.textColor
+                opacity: 0.40
+                Layout.alignment: Qt.AlignVCenter
+                text: nodes.model.count + (nodes.model.count === 1 ? " node" : " nodes")
             }
         }
     }
