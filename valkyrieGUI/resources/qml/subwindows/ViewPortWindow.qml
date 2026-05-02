@@ -7,6 +7,7 @@ import App.Theme 1.0
 
 import "../components"
 import "../components/bottomsheets"
+import "../components/viewport"
 import Qaterial as Qaterial
 
 Rectangle {
@@ -485,172 +486,13 @@ Rectangle {
         // Infinite illusion via panOffset % cellSize.
         // LOD: at low zoom only major dots (~190) are drawn, avoiding the
         //      ~5 184 arc calls that caused drag lag at zoom=1.
-        Canvas {
+        ViewportGridCanvas {
             id: gridCanvas
             anchors.fill: parent
-            z: 0
-
-            readonly property real panX: mycanvas.x
-            readonly property real panY: mycanvas.y
-
-            onPanXChanged:   requestPaint()
-            onPanYChanged:   requestPaint()
-            onWidthChanged:  requestPaint()
-            onHeightChanged: requestPaint()
-
-            Connections {
-                target: sliderZoom
-                function onValueChanged() { gridCanvas.requestPaint() }
-            }
-            Connections {
-                target: ThemeManager
-                function onThemeChanged() { gridCanvas.requestPaint() }
-            }
-
-            onPaint: {
-                var ctx   = getContext("2d")
-                ctx.clearRect(0, 0, width, height)
-
-                var zoom  = sliderZoom.value
-                var cell  = root.minWgrid * zoom   // minor cell in screen px
-                var major = cell * 5               // major cell in screen px
-                var pc    = ThemeManager.primaryColor
-                var px    = mycanvas.x
-                var py    = mycanvas.y
-
-                // Infinite-grid offset: wrap pan into [0, period).
-                var ox  = ((px % cell)  + cell)  % cell
-                var oy  = ((py % cell)  + cell)  % cell
-                var mox = ((px % major) + major) % major
-                var moy = ((py % major) + major) % major
-
-                // ── LOD: minor dots only when cell is large enough ────────────
-                // Threshold 32 px ≈ zoom ≥ 1.6 → avoids ~5 000 arc calls at low zoom.
-                if (cell >= 32) {
-                    var mr = Math.max(0.9, zoom * 0.48)
-                    ctx.fillStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.20)
-                    ctx.beginPath()
-                    for (var ix = ox; ix <= width  + cell; ix += cell) {
-                        for (var iy = oy; iy <= height + cell; iy += cell) {
-                            ctx.moveTo(ix + mr, iy)
-                            ctx.arc(ix, iy, mr, 0, 6.2832)
-                        }
-                    }
-                    ctx.fill()
-                }
-
-                // ── Major dots (always shown, max ~200 at any zoom) ───────────
-                var xr = Math.max(1.4, zoom * 0.88)
-                ctx.fillStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.48)
-                ctx.beginPath()
-                for (var jx = mox; jx <= width  + major; jx += major) {
-                    for (var jy = moy; jy <= height + major; jy += major) {
-                        ctx.moveTo(jx + xr, jy)
-                        ctx.arc(jx, jy, xr, 0, 6.2832)
-                    }
-                }
-                ctx.fill()
-
-                // ── Workspace boundary indicator ──────────────────────────────
-                // Shows where the 10 000×10 000 work area ends.
-                var bL = px
-                var bT = py
-                var bR = px + mycanvas.width  * zoom
-                var bB = py + mycanvas.height * zoom
-
-                var anyEdgeVisible = (bL > 0 && bL < width)  ||
-                                     (bR > 0 && bR < width)  ||
-                                     (bT > 0 && bT < height) ||
-                                     (bB > 0 && bB < height)
-
-                if (anyEdgeVisible) {
-                    var cL = Math.max(0, bL)
-                    var cT = Math.max(0, bT)
-                    var cR = Math.min(width,  bR)
-                    var cB = Math.min(height, bB)
-
-                    ctx.strokeStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.55)
-                    ctx.lineWidth   = 1.5
-                    ctx.setLineDash([7, 5])
-                    ctx.beginPath()
-                    if (bL >= 0 && bL <= width)  { ctx.moveTo(bL, cT); ctx.lineTo(bL, cB) }
-                    if (bR >= 0 && bR <= width)  { ctx.moveTo(bR, cT); ctx.lineTo(bR, cB) }
-                    if (bT >= 0 && bT <= height) { ctx.moveTo(cL, bT); ctx.lineTo(cR, bT) }
-                    if (bB >= 0 && bB <= height) { ctx.moveTo(cL, bB); ctx.lineTo(cR, bB) }
-                    ctx.stroke()
-                    ctx.setLineDash([])
-
-                    // Corner labels "END" near each visible boundary corner
-                    ctx.fillStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.40)
-                    ctx.font = "10px sans-serif"
-                    if (bL >= 2 && bL <= width - 20 && bT >= 2 && bT <= height - 14)
-                        ctx.fillText("⌜", bL + 3, bT + 12)
-                    if (bR >= 20 && bR <= width - 2 && bT >= 2 && bT <= height - 14)
-                        ctx.fillText("⌝", bR - 13, bT + 12)
-                    if (bL >= 2 && bL <= width - 20 && bB >= 14 && bB <= height - 2)
-                        ctx.fillText("⌞", bL + 3, bB - 3)
-                    if (bR >= 20 && bR <= width - 2 && bB >= 14 && bB <= height - 2)
-                        ctx.fillText("⌟", bR - 13, bB - 3)
-                }   // end if (anyEdgeVisible)
-
-                // ── Axis lines and 500-unit tick marks ───────────────────────
-                // Origin in screen space: world (5000,5000) mapped to viewport.
-                var ox5 = px + 5000 * zoom
-                var oy5 = py + 5000 * zoom
-                var step = 500 * zoom   // 500 world units in screen px
-
-                // Axis lines (full viewport width/height through origin)
-                ctx.strokeStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.22)
-                ctx.lineWidth = 1
-                ctx.setLineDash([])
-                if (oy5 >= 0 && oy5 <= height) {
-                    ctx.beginPath(); ctx.moveTo(0, oy5); ctx.lineTo(width, oy5); ctx.stroke()
-                }
-                if (ox5 >= 0 && ox5 <= width) {
-                    ctx.beginPath(); ctx.moveTo(ox5, 0); ctx.lineTo(ox5, height); ctx.stroke()
-                }
-
-                // Tick marks and labels every 500 units
-                ctx.font = "9px sans-serif"
-                var tickLen = 5
-
-                // Horizontal ticks (along X axis)
-                if (oy5 >= 0 && oy5 <= height) {
-                    // first tick aligned to origin
-                    var startTX = ox5 % step
-                    if (startTX < 0) startTX += step
-                    for (var tx = startTX; tx <= width + step; tx += step) {
-                        var worldX = Math.round((tx - ox5) / zoom)
-                        if (worldX % 500 !== 0) continue
-                        ctx.strokeStyle = Qt.rgba(pc.r, pc.g, pc.b, worldX === 0 ? 0.0 : 0.38)
-                        ctx.lineWidth = 1
-                        ctx.beginPath(); ctx.moveTo(tx, oy5 - tickLen); ctx.lineTo(tx, oy5 + tickLen); ctx.stroke()
-                        if (worldX !== 0 && tx > 4 && tx < width - 4) {
-                            ctx.fillStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.38)
-                            ctx.textAlign = "center"
-                            ctx.fillText(worldX, tx, oy5 - tickLen - 3)
-                        }
-                    }
-                }
-
-                // Vertical ticks (along Y axis)
-                if (ox5 >= 0 && ox5 <= width) {
-                    var startTY = oy5 % step
-                    if (startTY < 0) startTY += step
-                    for (var ty = startTY; ty <= height + step; ty += step) {
-                        var worldY = Math.round((ty - oy5) / zoom)
-                        if (worldY % 500 !== 0) continue
-                        ctx.strokeStyle = Qt.rgba(pc.r, pc.g, pc.b, worldY === 0 ? 0.0 : 0.38)
-                        ctx.lineWidth = 1
-                        ctx.beginPath(); ctx.moveTo(ox5 - tickLen, ty); ctx.lineTo(ox5 + tickLen, ty); ctx.stroke()
-                        if (worldY !== 0 && ty > 10 && ty < height - 4) {
-                            ctx.fillStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.38)
-                            ctx.textAlign = "left"
-                            ctx.fillText(worldY, ox5 + tickLen + 3, ty + 3)
-                        }
-                    }
-                }
-            }
+            panX:     mycanvas.x
+            panY:     mycanvas.y
+            zoom:     sliderZoom.value
+            minWgrid: root.minWgrid
         }
         Item {
             id: mycanvas
@@ -700,52 +542,10 @@ Rectangle {
                 color: "transparent"
 
                 // ── Origin indicator at (5000, 5000) = display (0, 0) ────────
-                Item {
+                ViewportOriginMarker {
                     id: originMarker
                     x: 5000
                     y: 5000
-                    z: -1
-
-                    // Horizontal axis line
-                    Rectangle {
-                        width: 80
-                        height: 1
-                        x: -width / 2
-                        y: -height / 2
-                        color: ThemeManager.primaryColor
-                        opacity: 0.35
-                    }
-
-                    // Vertical axis line
-                    Rectangle {
-                        width: 1
-                        height: 80
-                        x: -width / 2
-                        y: -height / 2
-                        color: ThemeManager.primaryColor
-                        opacity: 0.35
-                    }
-
-                    // Center dot
-                    Rectangle {
-                        width: 6
-                        height: 6
-                        radius: 3
-                        x: -width / 2
-                        y: -height / 2
-                        color: ThemeManager.primaryColor
-                        opacity: 0.70
-                    }
-
-                    // "0, 0" label
-                    Text {
-                        x: 7
-                        y: -16
-                        text: "0, 0"
-                        font.pixelSize: 10
-                        color: ThemeManager.primaryColor
-                        opacity: 0.50
-                    }
                 }
 
                 Repeater {
@@ -952,289 +752,25 @@ Rectangle {
     }
 
     // ─── Top Bar ────────────────────────────────────────────────────────────────
-    Rectangle {
+    ViewportTopBar {
         id: topBar
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        height: topBarHeight
         z: 200
-        color: Qt.darker(ThemeManager.backgroundColor, 1.35)
-
-        Rectangle {
-            anchors.bottom: parent.bottom
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: 1
-            color: ThemeManager.primaryColor
-            opacity: 0.3
-        }
-
-        RowLayout {
-            anchors.fill: parent
-            anchors.leftMargin: 16
-            anchors.rightMargin: 8
-            spacing: 0
-
-            // App name + project
-            Row {
-                spacing: 0
-                Layout.alignment: Qt.AlignVCenter
-
-                Text {
-                    text: "Valkyrie"
-                    font.pixelSize: 14
-                    font.bold: true
-                    font.letterSpacing: 0.8
-                    color: ThemeManager.primaryColor
-                    height: topBarHeight
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-                Item { width: 12; height: 1 }
-
-                Rectangle {
-                    width: 1; height: 16
-                    color: ThemeManager.textColor
-                    opacity: 0.3
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                Item { width: 12; height: 1 }
-
-                Text {
-                    text: currentProject
-                    font.pixelSize: 12
-                    color: ThemeManager.textColor
-                    opacity: 0.55
-                    height: topBarHeight
-                    verticalAlignment: Text.AlignVCenter
-                }
-            }
-
-            // Nav buttons – left-aligned, icon + text side by side
-            Row {
-                spacing: 0
-                Layout.alignment: Qt.AlignVCenter
-                Layout.leftMargin: 8
-
-                // Nodes
-                Item {
-                    width: nodesRow.implicitWidth + 24
-                    height: topBarHeight
-
-                    Rectangle {
-                        anchors.fill: parent
-                        color: ThemeManager.primaryColor
-                        opacity: selectedPanel === "nodes" ? 0.12 : nodesHoverArea.containsMouse ? 0.06 : 0
-                        Behavior on opacity { NumberAnimation { duration: 120 } }
-                    }
-
-                    Row {
-                        id: nodesRow
-                        anchors.centerIn: parent
-                        spacing: 7
-
-                        Qaterial.ColorIcon {
-                            source: Qaterial.Icons.graphOutline
-                            color: selectedPanel === "nodes" ? ThemeManager.primaryColor : ThemeManager.textColor
-                            width: 16; height: 16
-                            anchors.verticalCenter: parent.verticalCenter
-                            Behavior on color { ColorAnimation { duration: 120 } }
-                        }
-
-                        Text {
-                            text: "Nodes"
-                            font.pixelSize: 11
-                            color: selectedPanel === "nodes" ? ThemeManager.primaryColor : ThemeManager.textColor
-                            anchors.verticalCenter: parent.verticalCenter
-                            Behavior on color { ColorAnimation { duration: 120 } }
-                        }
-                    }
-
-                    Rectangle {
-                        anchors.bottom: parent.bottom
-                        anchors.left: parent.left; anchors.right: parent.right
-                        anchors.leftMargin: 6; anchors.rightMargin: 6
-                        height: 2; radius: 1
-                        color: ThemeManager.primaryColor
-                        visible: selectedPanel === "nodes"
-                    }
-
-                    MouseArea {
-                        id: nodesHoverArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (selectedPanel === "nodes") {
-                                selectedPanel = ""
-                                leftPanelDrawer.close()
-                            } else {
-                                selectedPanel = "nodes"
-                                leftPanelDrawer.open()
-                            }
-                        }
-                    }
-                }
-
-                // Explorer
-                Item {
-                    width: explorerRow.implicitWidth + 24
-                    height: topBarHeight
-
-                    Rectangle {
-                        anchors.fill: parent
-                        color: ThemeManager.primaryColor
-                        opacity: selectedPanel === "explorer" ? 0.12 : explorerHoverArea.containsMouse ? 0.06 : 0
-                        Behavior on opacity { NumberAnimation { duration: 120 } }
-                    }
-
-                    Row {
-                        id: explorerRow
-                        anchors.centerIn: parent
-                        spacing: 7
-
-                        Qaterial.ColorIcon {
-                            source: Qaterial.Icons.folderOutline
-                            color: selectedPanel === "explorer" ? ThemeManager.primaryColor : ThemeManager.textColor
-                            width: 16; height: 16
-                            anchors.verticalCenter: parent.verticalCenter
-                            Behavior on color { ColorAnimation { duration: 120 } }
-                        }
-
-                        Text {
-                            text: "Explorer"
-                            font.pixelSize: 11
-                            color: selectedPanel === "explorer" ? ThemeManager.primaryColor : ThemeManager.textColor
-                            anchors.verticalCenter: parent.verticalCenter
-                            Behavior on color { ColorAnimation { duration: 120 } }
-                        }
-                    }
-
-                    Rectangle {
-                        anchors.bottom: parent.bottom
-                        anchors.left: parent.left; anchors.right: parent.right
-                        anchors.leftMargin: 6; anchors.rightMargin: 6
-                        height: 2; radius: 1
-                        color: ThemeManager.primaryColor
-                        visible: selectedPanel === "explorer"
-                    }
-
-                    MouseArea {
-                        id: explorerHoverArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (selectedPanel === "explorer") {
-                                selectedPanel = ""
-                                leftPanelDrawer.close()
-                            } else {
-                                selectedPanel = "explorer"
-                                leftPanelDrawer.open()
-                            }
-                        }
-                    }
-                }
-
-                // Variables
-                Item {
-                    width: variablesRow.implicitWidth + 24
-                    height: topBarHeight
-
-                    Rectangle {
-                        anchors.fill: parent
-                        color: ThemeManager.primaryColor
-                        opacity: selectedPanel === "variables" ? 0.12 : variablesHoverArea.containsMouse ? 0.06 : 0
-                        Behavior on opacity { NumberAnimation { duration: 120 } }
-                    }
-
-                    Row {
-                        id: variablesRow
-                        anchors.centerIn: parent
-                        spacing: 7
-
-                        Qaterial.ColorIcon {
-                            source: Qaterial.Icons.codeJson
-                            color: selectedPanel === "variables" ? ThemeManager.primaryColor : ThemeManager.textColor
-                            width: 16; height: 16
-                            anchors.verticalCenter: parent.verticalCenter
-                            Behavior on color { ColorAnimation { duration: 120 } }
-                        }
-
-                        Text {
-                            text: "Variables"
-                            font.pixelSize: 11
-                            color: selectedPanel === "variables" ? ThemeManager.primaryColor : ThemeManager.textColor
-                            anchors.verticalCenter: parent.verticalCenter
-                            Behavior on color { ColorAnimation { duration: 120 } }
-                        }
-                    }
-
-                    Rectangle {
-                        anchors.bottom: parent.bottom
-                        anchors.left: parent.left; anchors.right: parent.right
-                        anchors.leftMargin: 6; anchors.rightMargin: 6
-                        height: 2; radius: 1
-                        color: ThemeManager.primaryColor
-                        visible: selectedPanel === "variables"
-                    }
-
-                    MouseArea {
-                        id: variablesHoverArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (selectedPanel === "variables") {
-                                selectedPanel = ""
-                                leftPanelDrawer.close()
-                            } else {
-                                selectedPanel = "variables"
-                                leftPanelDrawer.open()
-                            }
-                        }
-                    }
-                }
-            }
-
-            Item { Layout.fillWidth: true }
-
-            // Right action buttons
-            Row {
-                spacing: 0
-                Layout.alignment: Qt.AlignVCenter
-
-                Qaterial.AppBarButton {
-                    icon.source: Qaterial.Icons.contentSave
-                    icon.color: ThemeManager.textColor
-                    ToolTip.text: "Save"
-                    ToolTip.visible: hovered
-                    ToolTip.delay: 500
-                    width: 40; height: 40
-                }
-
-                Qaterial.AppBarButton {
-                    icon.source: Qaterial.Icons.folderOpenOutline
-                    icon.color: ThemeManager.textColor
-                    ToolTip.text: "Open Project"
-                    ToolTip.visible: hovered
-                    ToolTip.delay: 500
-                    width: 40; height: 40
-                }
-
-                Qaterial.AppBarButton {
-                    width: 40; height: 40
-                    icon.source: Qaterial.Icons.cogOutline
-                    icon.color: ThemeManager.textColor
-                    ToolTip.text: "Settings"
-                    ToolTip.visible: hovered
-                    ToolTip.delay: 500
-                    onClicked: settingsPopup.open()
-                }
+        barHeight:      topBarHeight
+        currentProject: root.currentProject
+        selectedPanel:  root.selectedPanel
+        onPanelToggled: function(panel) {
+            if (root.selectedPanel === panel) {
+                root.selectedPanel = ""
+                leftPanelDrawer.close()
+            } else {
+                root.selectedPanel = panel
+                leftPanelDrawer.open()
             }
         }
+        onSettingsRequested: settingsPopup.open()
     }
 
     // ─── Settings Popup ─────────────────────────────────────────────────────────
@@ -1379,151 +915,20 @@ Rectangle {
     }
 
     // ─── Status Bar ─────────────────────────────────────────────────────────────
-    Rectangle {
+    ViewportStatusBar {
         id: statusBar
         anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: 22
+        anchors.left:   parent.left
+        anchors.right:  parent.right
         z: 200
-        color: Qt.darker(ThemeManager.backgroundColor, 1.55)
-
-        Rectangle {
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: 1
-            color: ThemeManager.primaryColor
-            opacity: 0.22
-        }
-
-        RowLayout {
-            anchors.fill: parent
-            anchors.leftMargin: 10
-            anchors.rightMargin: 10
-            spacing: 0
-
-            // ── View center (where the user is looking)
-            Text {
-                text: "\u25ef"
-                font.pixelSize: 9
-                color: ThemeManager.primaryColor
-                opacity: 0.80
-                Layout.alignment: Qt.AlignVCenter
-            }
-            Item { Layout.preferredWidth: 4 }
-            Text {
-                font.pixelSize: 10
-                color: ThemeManager.textColor
-                opacity: 0.60
-                Layout.alignment: Qt.AlignVCenter
-                Layout.preferredWidth: 140
-                text: {
-                    var cx = Math.round((containerCanvas.width  / 2 - mycanvas.x) / sliderZoom.value) - 5000
-                    var cy = Math.round((containerCanvas.height / 2 - mycanvas.y) / sliderZoom.value) - 5000
-                    return "X " + cx + "  Y " + cy
-                }
-            }
-
-            Rectangle {
-                Layout.preferredWidth: 1; Layout.preferredHeight: 12
-                Layout.alignment: Qt.AlignVCenter
-                color: ThemeManager.textColor; opacity: 0.18
-            }
-            Item { Layout.preferredWidth: 10 }
-
-            // ── Mouse world position (via HoverHandler — updates even over nodes)
-            Text {
-                text: "\u2316"
-                font.pixelSize: 11
-                color: ThemeManager.primaryColor
-                opacity: 0.80
-                Layout.alignment: Qt.AlignVCenter
-            }
-            Item { Layout.preferredWidth: 4 }
-            Text {
-                font.pixelSize: 10
-                color: ThemeManager.textColor
-                opacity: 0.60
-                Layout.alignment: Qt.AlignVCenter
-                Layout.preferredWidth: 140
-                text: {
-                    var mx = Math.round((globalHover.point.position.x - mycanvas.x) / sliderZoom.value) - 5000
-                    var my = Math.round((globalHover.point.position.y - mycanvas.y) / sliderZoom.value) - 5000
-                    return "X " + mx + "  Y " + my
-                }
-            }
-
-            Rectangle {
-                Layout.preferredWidth: 1; Layout.preferredHeight: 12
-                Layout.alignment: Qt.AlignVCenter
-                color: ThemeManager.textColor; opacity: 0.18
-            }
-            Item { Layout.preferredWidth: 10 }
-
-            // ── Zoom level
-            Text {
-                text: "\u2295"
-                font.pixelSize: 11
-                color: ThemeManager.primaryColor
-                opacity: 0.80
-                Layout.alignment: Qt.AlignVCenter
-            }
-            Item { Layout.preferredWidth: 4 }
-            Text {
-                font.pixelSize: 10
-                color: ThemeManager.textColor
-                opacity: 0.60
-                Layout.alignment: Qt.AlignVCenter
-                Layout.preferredWidth: 44
-                text: Math.round(sliderZoom.value * 100) + "%"
-            }
-
-            Rectangle {
-                Layout.preferredWidth: 1; Layout.preferredHeight: 12
-                Layout.alignment: Qt.AlignVCenter
-                color: ThemeManager.textColor; opacity: 0.18
-                visible: nodeOnFocus !== undefined && nodeOnFocus !== null
-            }
-            Item {
-                Layout.preferredWidth: 10
-                visible: nodeOnFocus !== undefined && nodeOnFocus !== null
-            }
-
-            // ── Selected node
-            Text {
-                text: "\u25c8"
-                font.pixelSize: 10
-                color: ThemeManager.primaryColor
-                opacity: 0.85
-                Layout.alignment: Qt.AlignVCenter
-                visible: nodeOnFocus !== undefined && nodeOnFocus !== null
-            }
-            Item {
-                Layout.preferredWidth: 5
-                visible: nodeOnFocus !== undefined && nodeOnFocus !== null
-            }
-            Text {
-                font.pixelSize: 10
-                color: ThemeManager.textColor
-                opacity: 0.65
-                Layout.alignment: Qt.AlignVCenter
-                Layout.maximumWidth: 160
-                visible: nodeOnFocus !== undefined && nodeOnFocus !== null
-                text: nodeOnFocus ? (nodeOnFocus.behaviourObject ? nodeOnFocus.behaviourObject.title : "Node") : ""
-                elide: Text.ElideRight
-            }
-
-            Item { Layout.fillWidth: true }
-
-            // ── Node count
-            Text {
-                font.pixelSize: 10
-                color: ThemeManager.textColor
-                opacity: 0.40
-                Layout.alignment: Qt.AlignVCenter
-                text: nodes.model.count + (nodes.model.count === 1 ? " node" : " nodes")
-            }
-        }
+        canvasPosX:      mycanvas.x
+        canvasPosY:      mycanvas.y
+        containerWidth:  containerCanvas.width
+        containerHeight: containerCanvas.height
+        zoom:            sliderZoom.value
+        hoverX:          globalHover.point.position.x
+        hoverY:          globalHover.point.position.y
+        nodeOnFocus:     root.nodeOnFocus
+        nodeCount:       nodes.model.count
     }
 }

@@ -46,6 +46,12 @@
         <file alias="FolderBottomSheet.qml">qml/components/bottomsheets/FolderBottomSheet.qml</file>
         <file alias="NodeSettings.qml">qml/components/bottomsheets/NodeSettings.qml</file>
     </qresource>
+    <qresource prefix="/components/viewport">
+        <file alias="ViewportTopBar.qml">qml/components/viewport/ViewportTopBar.qml</file>
+        <file alias="ViewportStatusBar.qml">qml/components/viewport/ViewportStatusBar.qml</file>
+        <file alias="ViewportGridCanvas.qml">qml/components/viewport/ViewportGridCanvas.qml</file>
+        <file alias="ViewportOriginMarker.qml">qml/components/viewport/ViewportOriginMarker.qml</file>
+    </qresource>
     <qresource prefix="/behaviours">
         <file alias="BaseBehaviour.qml">qml/behaviours/BaseBehaviour.qml</file>
     </qresource>
