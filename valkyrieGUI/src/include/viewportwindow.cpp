@@ -1,128 +1,173 @@
 #include "viewportwindow.h"
 #include "behaviours/behaviourloader.h"
+#include "utils/workspacemanager.h"
 #include <QUuid>
 
-ViewPortWindow::ViewPortWindow(QWidget *parent) :
-    QMLWindow(parent, QUrl("qrc:/subwindows/ViewPortWindow.qml"))
+ViewPortWindow::ViewPortWindow(QWidget* parent)
+    : QMLWindow(parent, QUrl("qrc:/subwindows/ViewPortWindow.qml"))
 {
-    this->m_frameTimer = new QTimer(this);
-    this->m_frameTimer->setTimerType(Qt::PreciseTimer);
-    this->m_frameTimer->setInterval(1000);
+    m_frameTimer = new QTimer(this);
+    m_frameTimer->setTimerType(Qt::PreciseTimer);
+    m_frameTimer->setInterval(1000);
 
-    this->showWindow(QVector<QMLWindow::PropertyPair>({
-                                                          QMLWindow::PropertyPair({"viewPort", this}),
-                                                          QMLWindow::PropertyPair({"behaviourLoader", BehaviourLoader::instance()})
-                                                      }));
+    showWindow(QVector<QMLWindow::PropertyPair>({
+        { "viewPort",        this },
+        { "behaviourLoader", BehaviourLoader::instance() }
+    }));
 
+    WorkspaceManager::instance()->setViewPort(this);
 }
 
-ViewPortWindow::~ViewPortWindow()
-{
+ViewPortWindow::~ViewPortWindow() {}
 
-}
+// ── Properties ────────────────────────────────────────────────────────────────
 
-QHash<QString, Behaviours *> ViewPortWindow::behaviours()
-{
-    return this->m_behaviours;
-}
+QHash<QString, Behaviours*> ViewPortWindow::behaviours() { return m_behaviours; }
+bool  ViewPortWindow::showFps()       const { return m_showFps; }
+int   ViewPortWindow::fpsCount()      const { return m_fpsCount; }
+qreal ViewPortWindow::viewportX()     const { return m_viewportX; }
+qreal ViewPortWindow::viewportY()     const { return m_viewportY; }
+qreal ViewPortWindow::viewportScale() const { return m_viewportScale; }
 
-bool ViewPortWindow::showFps()
-{
-    return this->m_showFps;
-}
-
-void ViewPortWindow::setShowFps(bool state)
-{
-    this->m_showFps = state;
-    emit showFpsChanged();
-
-    disconnect(this->m_timerTriggerConn);
-    disconnect(this->m_frameSwappedConn);
-
-    if(state == true){
-        this->m_timerTriggerConn = connect(this->m_frameTimer, &QTimer::timeout, [&](){
-            this->setFpsCount(m_frameCount);
-            m_frameCount = 0;
-        });
-
-        this->m_frameSwappedConn = connect(this->view(), &QQuickView::frameSwapped, [&](){
-            this->m_frameCount++;
-        });
-
-        this->m_frameTimer->start();
-    } else {
-        this->m_frameTimer->stop();
-    }
-}
-
-int ViewPortWindow::fpsCount()
-{
-    return this->m_fpsCount;
-}
-
-void ViewPortWindow::setFpsCount(int value)
-{
-    this->m_fpsCount = value;
+void ViewPortWindow::setFpsCount(int value) {
+    m_fpsCount = value;
     emit fpsCountChanged();
 }
 
-void ViewPortWindow::setFullScreen(bool isFull)
-{
-    emit this->fullScreenToogle();
+void ViewPortWindow::setViewportX(qreal x) {
+    if (!qFuzzyCompare(m_viewportX, x)) { m_viewportX = x; emit viewportStateChanged(); }
+}
+void ViewPortWindow::setViewportY(qreal y) {
+    if (!qFuzzyCompare(m_viewportY, y)) { m_viewportY = y; emit viewportStateChanged(); }
+}
+void ViewPortWindow::setViewportScale(qreal s) {
+    if (!qFuzzyCompare(m_viewportScale, s)) { m_viewportScale = s; emit viewportStateChanged(); }
 }
 
-bool ViewPortWindow::addBehaviour(const QString &path, const QJsonObject infos)
-{
-    QString uuid = QUuid::createUuid().toString(QUuid::WithoutBraces);
-    Behaviours *object = BehaviourLoader::instance()->loadBehaviour(path, infos);
-    if(object != nullptr){
-        this->m_behaviours[uuid] = object;
+// ── FPS ───────────────────────────────────────────────────────────────────────
 
-        auto lambdaFun = [&, object](ConnectionModel * model){
-            Behaviours * output = model->output();
-            Behaviours * input = model->input();
+void ViewPortWindow::setShowFps(bool state) {
+    m_showFps = state;
+    emit showFpsChanged();
 
-            if(output == object){
-                emit behaviourConnection(object, input);
-            }else{
-                emit behaviourConnection(object, output);
-            }
-        };
+    disconnect(m_timerTriggerConn);
+    disconnect(m_frameSwappedConn);
 
-        QMetaObject::Connection outputConn = QObject::connect(object, &Behaviours::outputConnected, lambdaFun);
-        QMetaObject::Connection inputConn = QObject::connect(object, &Behaviours::inputConnected, lambdaFun);
-
-        QObject::connect(object, &Behaviours::destroyed, [=](){
-            QObject::disconnect(outputConn);
-            QObject::disconnect(inputConn);
+    if (state) {
+        m_timerTriggerConn = connect(m_frameTimer, &QTimer::timeout, [&]() {
+            setFpsCount(m_frameCount);
+            m_frameCount = 0;
         });
-
-        object->start();
-        emit this->behaviourAdded(object);
-        return true;
+        m_frameSwappedConn = connect(view(), &QQuickView::frameSwapped, [&]() {
+            m_frameCount++;
+        });
+        m_frameTimer->start();
+    } else {
+        m_frameTimer->stop();
     }
-
-    return false;
 }
 
-bool ViewPortWindow::removeBehaviourFromUUID(const QString &uuid)
-{
-    return this->m_behaviours.remove(uuid);
+void ViewPortWindow::setFullScreen(bool) {
+    emit fullScreenToogle();
 }
 
-bool ViewPortWindow::removeBehaviourObject(Behaviours *object)
+// ── Node management ───────────────────────────────────────────────────────────
+
+void ViewPortWindow::connectBehaviour(Behaviours* object) {
+    auto lambdaFun = [&, object](ConnectionModel* model) {
+        Behaviours* output = model->output();
+        Behaviours* input  = model->input();
+        emit behaviourConnection(object, (output == object) ? input : output);
+    };
+
+    QMetaObject::Connection out = QObject::connect(object, &Behaviours::outputConnected, lambdaFun);
+    QMetaObject::Connection in  = QObject::connect(object, &Behaviours::inputConnected,  lambdaFun);
+
+    QObject::connect(object, &Behaviours::destroyed, [=]() {
+        QObject::disconnect(out);
+        QObject::disconnect(in);
+    });
+}
+
+bool ViewPortWindow::addBehaviour(const QString& path, const QJsonObject infos) {
+    const QString uuid = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    Behaviours* object = BehaviourLoader::instance()->loadBehaviour(path, infos);
+    if (!object) return false;
+
+    object->setBehaviourPath(path);
+    object->setBehaviourInfos(infos);
+    m_behaviours[uuid] = object;
+    connectBehaviour(object);
+    object->start();
+    emit behaviourAdded(object);
+    return true;
+}
+
+bool ViewPortWindow::addBehaviourWithUuid(const QString& path, const QJsonObject& infos,
+                                           const QString& uuid,
+                                           double x, double y, double w, double h,
+                                           const QString& title)
 {
-    QString key = this->m_behaviours.key(object);
+    Behaviours* object = BehaviourLoader::instance()->loadBehaviour(path, infos);
+    if (!object) return false;
+
+    object->setBehaviourPath(path);
+    object->setBehaviourInfos(infos);
+    // Set geometry BEFORE emitting behaviourAdded so QML reads correct initial values
+    object->setX(x);
+    object->setY(y);
+    if (w > 0) object->setWidth(w);
+    if (h > 0) object->setHeight(h);
+    if (!title.isEmpty()) object->setTitle(title);
+
+    m_behaviours[uuid] = object;
+    connectBehaviour(object);
+    object->start();
+    emit behaviourAdded(object);
+    return true;
+}
+
+bool ViewPortWindow::removeBehaviourFromUUID(const QString& uuid) {
+    return m_behaviours.remove(uuid);
+}
+
+bool ViewPortWindow::removeBehaviourObject(Behaviours* object) {
+    const QString key = m_behaviours.key(object);
     delete object;
-    return this->m_behaviours.remove(key);
+    return m_behaviours.remove(key);
 }
 
-Behaviours *ViewPortWindow::searchBehaviourFromUUID(const QString &uuid)
-{
-    return this->m_behaviours[uuid];
+void ViewPortWindow::clearBehaviours() {
+    emit behavioursCleared();
+    qDeleteAll(m_behaviours);
+    m_behaviours.clear();
 }
 
-QString ViewPortWindow::getUUIDFromBehaviour(Behaviours *object)
+Behaviours* ViewPortWindow::searchBehaviourFromUUID(const QString& uuid) {
+    return m_behaviours.value(uuid);
+}
+
+QString ViewPortWindow::getUUIDFromBehaviour(Behaviours* object) {
+    return m_behaviours.key(object);
+}
+
+// ── Connections ───────────────────────────────────────────────────────────────
+
+bool ViewPortWindow::addConnectionByUuids(const QString& outputUuid, const QString& outputMethod,
+                                           const QString& inputUuid,  const QString& inputMethod)
 {
-    return this->m_behaviours.key(object);
+    Behaviours* outputBeh = m_behaviours.value(outputUuid);
+    Behaviours* inputBeh  = m_behaviours.value(inputUuid);
+    if (!outputBeh || !inputBeh) return false;
+    return outputBeh->addConnection(outputMethod, inputBeh, inputMethod);
+}
+
+// ── Workspace ─────────────────────────────────────────────────────────────────
+
+bool ViewPortWindow::saveWorkspace(const QString& name) {
+    return WorkspaceManager::instance()->saveWorkspace(name);
+}
+
+bool ViewPortWindow::loadWorkspace(const QString& name) {
+    return WorkspaceManager::instance()->loadWorkspace(name);
 }

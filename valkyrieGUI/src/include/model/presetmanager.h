@@ -7,6 +7,8 @@
 #include <QJSEngine>
 #include "colorpreset.h"
 
+class QQmlEngine;
+
 class PresetManager : public QObject {
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<ColorPreset> presets READ presets NOTIFY presetsChanged)

@@ -8,6 +8,7 @@
 #include <QList>
 #include <QString>
 #include <QUrl>
+#include <QJsonObject>
 #include <QtQuick/QQuickItem>
 #include "connections.h"
 #include "utils/nodeserialize.h"
@@ -28,8 +29,10 @@ class Behaviours : public QObject, Presets::NodeSerialize
     Q_PROPERTY(double contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged)
     Q_PROPERTY(double contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged)
 
-    Q_PROPERTY(QQuickItem *viewRect READ viewRect CONSTANT)
-    Q_PROPERTY(NodeTheme *nodeTheme READ nodeTheme CONSTANT)
+    Q_PROPERTY(QQuickItem  *viewRect       READ viewRect       CONSTANT)
+    Q_PROPERTY(NodeTheme   *nodeTheme      READ nodeTheme      CONSTANT)
+    Q_PROPERTY(QString      behaviourPath  READ behaviourPath  CONSTANT)
+    Q_PROPERTY(QJsonObject  behaviourInfos READ behaviourInfos CONSTANT)
 public:
     enum Type{
         CPP = 0, DLL, PYTHON
@@ -68,8 +71,13 @@ public:
     void setContentHeight(double width);
     void setX(double x);
     void setY(double y);
-    QQuickItem *viewRect();
-    NodeTheme  *nodeTheme();
+    QQuickItem  *viewRect();
+    NodeTheme   *nodeTheme();
+    QString      behaviourPath()  const;
+    QJsonObject  behaviourInfos() const;
+
+    void setBehaviourPath(const QString& path);
+    void setBehaviourInfos(const QJsonObject& infos);
 
     void save() override;
     void load() override;
@@ -118,8 +126,10 @@ private:
     QMap<QString, Connections*> m_input_conns;
     QMap<QString, Connections*> m_output_conns;
 
-    QQuickItem *m_viewRectangle;
-    NodeTheme  *m_nodeTheme;
+    QQuickItem  *m_viewRectangle;
+    NodeTheme   *m_nodeTheme;
+    QString      m_behaviourPath;
+    QJsonObject  m_behaviourInfos;
 
     QList<QString> m_listOfExclusions;
 };

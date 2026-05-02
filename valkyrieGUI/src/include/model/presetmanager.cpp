@@ -1,5 +1,6 @@
 #include "presetmanager.h"
 #include "thememanager.h"
+#include <QtQml/QQmlEngine>
 #include <QUuid>
 #include <QStandardPaths>
 #include <QDir>
