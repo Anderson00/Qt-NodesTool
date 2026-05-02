@@ -464,66 +464,130 @@ Rectangle {
         clip: true
 
         // ── Workspace item ───────────────────────────────────────────────────────
-        Item {
-            id: mycanvas
-            width:  gridCanvas.width
-            height: gridCanvas.height
+        // ── Infinite grid (viewport-fixed canvas) ────────────────────────────────
+        // Viewport-sized only — no large texture allocation.
+        // Infinite illusion via panOffset % cellSize.
+        // LOD: at low zoom only major dots (~190) are drawn, avoiding the
+        //      ~5 184 arc calls that caused drag lag at zoom=1.
+        Canvas {
+            id: gridCanvas
+            anchors.fill: parent
+            z: 0
 
-            Component.onCompleted: {
-                mycanvas.x = (containerCanvas.width  - mycanvas.width)  / 2
-                mycanvas.y = (containerCanvas.height - mycanvas.height) / 2
+            readonly property real panX: mycanvas.x
+            readonly property real panY: mycanvas.y
+
+            onPanXChanged:   requestPaint()
+            onPanYChanged:   requestPaint()
+            onWidthChanged:  requestPaint()
+            onHeightChanged: requestPaint()
+
+            Connections {
+                target: sliderZoom
+                function onValueChanged() { gridCanvas.requestPaint() }
+            }
+            Connections {
+                target: ThemeManager
+                function onThemeChanged() { gridCanvas.requestPaint() }
             }
 
-            // ── Grid canvas ──────────────────────────────────────────────────
-            // Lives inside mycanvas — moves and scales with it via GPU transform.
-            // Drawn once at startup; only redraws when the theme changes.
-            Canvas {
-                id: gridCanvas
-                width:  3200
-                height: 2400
-                x: (parent.width  - width)  / 2
-                y: (parent.height - height) / 2
-                z: 0
+            onPaint: {
+                var ctx   = getContext("2d")
+                ctx.clearRect(0, 0, width, height)
 
-                Component.onCompleted: requestPaint()
+                var zoom  = sliderZoom.value
+                var cell  = root.minWgrid * zoom   // minor cell in screen px
+                var major = cell * 5               // major cell in screen px
+                var pc    = ThemeManager.primaryColor
+                var px    = mycanvas.x
+                var py    = mycanvas.y
 
-                Connections {
-                    target: ThemeManager
-                    function onThemeChanged() { gridCanvas.requestPaint() }
-                }
+                // Infinite-grid offset: wrap pan into [0, period).
+                var ox  = ((px % cell)  + cell)  % cell
+                var oy  = ((py % cell)  + cell)  % cell
+                var mox = ((px % major) + major) % major
+                var moy = ((py % major) + major) % major
 
-                onPaint: {
-                    var ctx = getContext("2d")
-                    ctx.clearRect(0, 0, width, height)
-
-                    var cell  = root.minWgrid        // Scale transform handles visual zoom
-                    var major = cell * 5
-                    var pc    = ThemeManager.primaryColor
-                    var mr    = 1.0
-                    var xr    = 1.8
-
-                    // Minor dots — single batched path
-                    ctx.fillStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.22)
+                // ── LOD: minor dots only when cell is large enough ────────────
+                // Threshold 32 px ≈ zoom ≥ 1.6 → avoids ~5 000 arc calls at low zoom.
+                if (cell >= 32) {
+                    var mr = Math.max(0.9, zoom * 0.48)
+                    ctx.fillStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.20)
                     ctx.beginPath()
-                    for (var ix = 0; ix < width; ix += cell) {
-                        for (var iy = 0; iy < height; iy += cell) {
+                    for (var ix = ox; ix <= width  + cell; ix += cell) {
+                        for (var iy = oy; iy <= height + cell; iy += cell) {
                             ctx.moveTo(ix + mr, iy)
                             ctx.arc(ix, iy, mr, 0, 6.2832)
                         }
                     }
                     ctx.fill()
-
-                    // Major dots — single batched path
-                    ctx.fillStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.50)
-                    ctx.beginPath()
-                    for (var gx = 0; gx < width; gx += major) {
-                        for (var gy = 0; gy < height; gy += major) {
-                            ctx.moveTo(gx + xr, gy)
-                            ctx.arc(gx, gy, xr, 0, 6.2832)
-                        }
-                    }
-                    ctx.fill()
                 }
+
+                // ── Major dots (always shown, max ~200 at any zoom) ───────────
+                var xr = Math.max(1.4, zoom * 0.88)
+                ctx.fillStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.48)
+                ctx.beginPath()
+                for (var jx = mox; jx <= width  + major; jx += major) {
+                    for (var jy = moy; jy <= height + major; jy += major) {
+                        ctx.moveTo(jx + xr, jy)
+                        ctx.arc(jx, jy, xr, 0, 6.2832)
+                    }
+                }
+                ctx.fill()
+
+                // ── Workspace boundary indicator ──────────────────────────────
+                // Shows where the 10 000×10 000 work area ends.
+                var bL = px
+                var bT = py
+                var bR = px + mycanvas.width  * zoom
+                var bB = py + mycanvas.height * zoom
+
+                var anyEdgeVisible = (bL > 0 && bL < width)  ||
+                                     (bR > 0 && bR < width)  ||
+                                     (bT > 0 && bT < height) ||
+                                     (bB > 0 && bB < height)
+
+                if (anyEdgeVisible) {
+                    var cL = Math.max(0, bL)
+                    var cT = Math.max(0, bT)
+                    var cR = Math.min(width,  bR)
+                    var cB = Math.min(height, bB)
+
+                    ctx.strokeStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.55)
+                    ctx.lineWidth   = 1.5
+                    ctx.setLineDash([7, 5])
+                    ctx.beginPath()
+                    if (bL >= 0 && bL <= width)  { ctx.moveTo(bL, cT); ctx.lineTo(bL, cB) }
+                    if (bR >= 0 && bR <= width)  { ctx.moveTo(bR, cT); ctx.lineTo(bR, cB) }
+                    if (bT >= 0 && bT <= height) { ctx.moveTo(cL, bT); ctx.lineTo(cR, bT) }
+                    if (bB >= 0 && bB <= height) { ctx.moveTo(cL, bB); ctx.lineTo(cR, bB) }
+                    ctx.stroke()
+                    ctx.setLineDash([])
+
+                    // Corner labels "END" near each visible boundary corner
+                    ctx.fillStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.40)
+                    ctx.font = "10px sans-serif"
+                    if (bL >= 2 && bL <= width - 20 && bT >= 2 && bT <= height - 14)
+                        ctx.fillText("⌜", bL + 3, bT + 12)
+                    if (bR >= 20 && bR <= width - 2 && bT >= 2 && bT <= height - 14)
+                        ctx.fillText("⌝", bR - 13, bT + 12)
+                    if (bL >= 2 && bL <= width - 20 && bB >= 14 && bB <= height - 2)
+                        ctx.fillText("⌞", bL + 3, bB - 3)
+                    if (bR >= 20 && bR <= width - 2 && bB >= 14 && bB <= height - 2)
+                        ctx.fillText("⌟", bR - 13, bB - 3)
+                }
+            }
+        }
+
+        // ── Workspace item (node container) ──────────────────────────────────
+        Item {
+            id: mycanvas
+            width:  10000
+            height: 10000
+
+            Component.onCompleted: {
+                mycanvas.x = (containerCanvas.width  - mycanvas.width)  / 2
+                mycanvas.y = (containerCanvas.height - mycanvas.height) / 2
             }
 
             transform: Scale {
