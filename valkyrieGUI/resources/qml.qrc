@@ -34,6 +34,7 @@
         <file alias="SearchableSelect.qml">qml/components/SearchableSelect.qml</file>
         <file alias="CustomDatePicker.qml">qml/components/CustomDatePicker.qml</file>
         <file alias="ResizeHandle.qml">qml/components/ResizeHandle.qml</file>
+        <file alias="SettingsPopup.qml">qml/components/SettingsPopup.qml</file>
     </qresource>
     <qresource prefix="/subwindows">
         <file alias="DebuggerMain.qml">qml/subwindows/DebuggerMain.qml</file>

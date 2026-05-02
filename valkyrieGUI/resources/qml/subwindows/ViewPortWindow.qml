@@ -40,6 +40,11 @@ Rectangle {
 
     property bool rightDrawerOpened: false
     property bool bottomDrawerOpened: false
+
+    property int topBarHeight: 48
+    property string selectedPanel: ""
+    property string currentProject: "Untitled Project"
+
     anchors.fill: parent
     clip: true
 
@@ -131,6 +136,7 @@ Rectangle {
     Qaterial.MiniFabButton {
         id: fabRightMenu
         anchors.right: parent.right
+        anchors.top: topBar.bottom
         z: 100
         opacity: (nodeOnFocus)? 1 : 0.3
 
@@ -220,7 +226,10 @@ Rectangle {
 
     MouseArea {
         id: mouseAreaGlobal
-        anchors.fill: parent
+        anchors.top: topBar.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
         hoverEnabled: true
         propagateComposedEvents: false
         preventStealing: true
@@ -289,7 +298,10 @@ Rectangle {
 
     MouseArea {
         id: mouseZoom
-        anchors.fill: parent
+        anchors.top: topBar.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
         propagateComposedEvents: true
         hoverEnabled: true
 
@@ -323,7 +335,7 @@ Rectangle {
 
     Column {
         id: fullscreenFab
-        anchors.top: root.top
+        anchors.top: topBar.bottom
         anchors.left: root.left
         anchors.margins: 8
         spacing: 2
@@ -372,8 +384,8 @@ Rectangle {
         color: ThemeManager.primaryColor
         textColor: ThemeManager.textColor
         anchors.left: fullscreenFab.right
-        anchors.top: parent.top
-        anchors.topMargin: 25
+        anchors.top: topBar.bottom
+        anchors.topMargin: 8
         prefix: "x"
 
         onValueChanged: {
@@ -407,6 +419,8 @@ Rectangle {
         color: "transparent"
         width: 100
         height: 50
+        anchors.top: topBar.bottom
+        anchors.topMargin: 8
         anchors.horizontalCenter: parent.horizontalCenter
         radius: 8
 
@@ -442,8 +456,10 @@ Rectangle {
 
     Rectangle {
         id: containerCanvas
-        width: parent.width
-        height: parent.height
+        anchors.top: topBar.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
         color: "transparent"
 
         Canvas {
@@ -734,6 +750,377 @@ Rectangle {
             {text: "OK", onClicked: ()=>{console.log(3232)} }
         ]
 
+    }
+
+    // ─── Top Bar ────────────────────────────────────────────────────────────────
+    Rectangle {
+        id: topBar
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: topBarHeight
+        z: 200
+        color: Qt.darker(ThemeManager.backgroundColor, 1.35)
+
+        Rectangle {
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 1
+            color: ThemeManager.primaryColor
+            opacity: 0.3
+        }
+
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: 16
+            anchors.rightMargin: 8
+            spacing: 0
+
+            // App name + project
+            Row {
+                spacing: 0
+                Layout.alignment: Qt.AlignVCenter
+
+                Text {
+                    text: "Valkyrie"
+                    font.pixelSize: 14
+                    font.bold: true
+                    font.letterSpacing: 0.8
+                    color: ThemeManager.primaryColor
+                    height: topBarHeight
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                Item { width: 12; height: 1 }
+
+                Rectangle {
+                    width: 1; height: 16
+                    color: ThemeManager.textColor
+                    opacity: 0.3
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Item { width: 12; height: 1 }
+
+                Text {
+                    text: currentProject
+                    font.pixelSize: 12
+                    color: ThemeManager.textColor
+                    opacity: 0.55
+                    height: topBarHeight
+                    verticalAlignment: Text.AlignVCenter
+                }
+            }
+
+            // Nav buttons – left-aligned, icon + text side by side
+            Row {
+                spacing: 0
+                Layout.alignment: Qt.AlignVCenter
+                Layout.leftMargin: 8
+
+                // Nodes
+                Item {
+                    width: nodesRow.implicitWidth + 24
+                    height: topBarHeight
+
+                    Rectangle {
+                        anchors.fill: parent
+                        color: ThemeManager.primaryColor
+                        opacity: selectedPanel === "nodes" ? 0.12 : nodesHoverArea.containsMouse ? 0.06 : 0
+                        Behavior on opacity { NumberAnimation { duration: 120 } }
+                    }
+
+                    Row {
+                        id: nodesRow
+                        anchors.centerIn: parent
+                        spacing: 7
+
+                        Qaterial.ColorIcon {
+                            source: Qaterial.Icons.graphOutline
+                            color: selectedPanel === "nodes" ? ThemeManager.primaryColor : ThemeManager.textColor
+                            width: 16; height: 16
+                            anchors.verticalCenter: parent.verticalCenter
+                            Behavior on color { ColorAnimation { duration: 120 } }
+                        }
+
+                        Text {
+                            text: "Nodes"
+                            font.pixelSize: 11
+                            color: selectedPanel === "nodes" ? ThemeManager.primaryColor : ThemeManager.textColor
+                            anchors.verticalCenter: parent.verticalCenter
+                            Behavior on color { ColorAnimation { duration: 120 } }
+                        }
+                    }
+
+                    Rectangle {
+                        anchors.bottom: parent.bottom
+                        anchors.left: parent.left; anchors.right: parent.right
+                        anchors.leftMargin: 6; anchors.rightMargin: 6
+                        height: 2; radius: 1
+                        color: ThemeManager.primaryColor
+                        visible: selectedPanel === "nodes"
+                    }
+
+                    MouseArea {
+                        id: nodesHoverArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (selectedPanel === "nodes") {
+                                selectedPanel = ""
+                                leftPanelDrawer.close()
+                            } else {
+                                selectedPanel = "nodes"
+                                leftPanelDrawer.open()
+                            }
+                        }
+                    }
+                }
+
+                // Explorer
+                Item {
+                    width: explorerRow.implicitWidth + 24
+                    height: topBarHeight
+
+                    Rectangle {
+                        anchors.fill: parent
+                        color: ThemeManager.primaryColor
+                        opacity: selectedPanel === "explorer" ? 0.12 : explorerHoverArea.containsMouse ? 0.06 : 0
+                        Behavior on opacity { NumberAnimation { duration: 120 } }
+                    }
+
+                    Row {
+                        id: explorerRow
+                        anchors.centerIn: parent
+                        spacing: 7
+
+                        Qaterial.ColorIcon {
+                            source: Qaterial.Icons.folderOutline
+                            color: selectedPanel === "explorer" ? ThemeManager.primaryColor : ThemeManager.textColor
+                            width: 16; height: 16
+                            anchors.verticalCenter: parent.verticalCenter
+                            Behavior on color { ColorAnimation { duration: 120 } }
+                        }
+
+                        Text {
+                            text: "Explorer"
+                            font.pixelSize: 11
+                            color: selectedPanel === "explorer" ? ThemeManager.primaryColor : ThemeManager.textColor
+                            anchors.verticalCenter: parent.verticalCenter
+                            Behavior on color { ColorAnimation { duration: 120 } }
+                        }
+                    }
+
+                    Rectangle {
+                        anchors.bottom: parent.bottom
+                        anchors.left: parent.left; anchors.right: parent.right
+                        anchors.leftMargin: 6; anchors.rightMargin: 6
+                        height: 2; radius: 1
+                        color: ThemeManager.primaryColor
+                        visible: selectedPanel === "explorer"
+                    }
+
+                    MouseArea {
+                        id: explorerHoverArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (selectedPanel === "explorer") {
+                                selectedPanel = ""
+                                leftPanelDrawer.close()
+                            } else {
+                                selectedPanel = "explorer"
+                                leftPanelDrawer.open()
+                            }
+                        }
+                    }
+                }
+
+                // Variables
+                Item {
+                    width: variablesRow.implicitWidth + 24
+                    height: topBarHeight
+
+                    Rectangle {
+                        anchors.fill: parent
+                        color: ThemeManager.primaryColor
+                        opacity: selectedPanel === "variables" ? 0.12 : variablesHoverArea.containsMouse ? 0.06 : 0
+                        Behavior on opacity { NumberAnimation { duration: 120 } }
+                    }
+
+                    Row {
+                        id: variablesRow
+                        anchors.centerIn: parent
+                        spacing: 7
+
+                        Qaterial.ColorIcon {
+                            source: Qaterial.Icons.codeJson
+                            color: selectedPanel === "variables" ? ThemeManager.primaryColor : ThemeManager.textColor
+                            width: 16; height: 16
+                            anchors.verticalCenter: parent.verticalCenter
+                            Behavior on color { ColorAnimation { duration: 120 } }
+                        }
+
+                        Text {
+                            text: "Variables"
+                            font.pixelSize: 11
+                            color: selectedPanel === "variables" ? ThemeManager.primaryColor : ThemeManager.textColor
+                            anchors.verticalCenter: parent.verticalCenter
+                            Behavior on color { ColorAnimation { duration: 120 } }
+                        }
+                    }
+
+                    Rectangle {
+                        anchors.bottom: parent.bottom
+                        anchors.left: parent.left; anchors.right: parent.right
+                        anchors.leftMargin: 6; anchors.rightMargin: 6
+                        height: 2; radius: 1
+                        color: ThemeManager.primaryColor
+                        visible: selectedPanel === "variables"
+                    }
+
+                    MouseArea {
+                        id: variablesHoverArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (selectedPanel === "variables") {
+                                selectedPanel = ""
+                                leftPanelDrawer.close()
+                            } else {
+                                selectedPanel = "variables"
+                                leftPanelDrawer.open()
+                            }
+                        }
+                    }
+                }
+            }
+
+            Item { Layout.fillWidth: true }
+
+            // Right action buttons
+            Row {
+                spacing: 0
+                Layout.alignment: Qt.AlignVCenter
+
+                Qaterial.AppBarButton {
+                    icon.source: Qaterial.Icons.contentSave
+                    icon.color: ThemeManager.textColor
+                    ToolTip.text: "Save"
+                    ToolTip.visible: hovered
+                    ToolTip.delay: 500
+                    width: 40; height: 40
+                }
+
+                Qaterial.AppBarButton {
+                    icon.source: Qaterial.Icons.folderOpenOutline
+                    icon.color: ThemeManager.textColor
+                    ToolTip.text: "Open Project"
+                    ToolTip.visible: hovered
+                    ToolTip.delay: 500
+                    width: 40; height: 40
+                }
+
+                Qaterial.AppBarButton {
+                    width: 40; height: 40
+                    icon.source: Qaterial.Icons.cogOutline
+                    icon.color: ThemeManager.textColor
+                    ToolTip.text: "Settings"
+                    ToolTip.visible: hovered
+                    ToolTip.delay: 500
+                    onClicked: settingsPopup.open()
+                }
+            }
+        }
+    }
+
+    // ─── Settings Popup ─────────────────────────────────────────────────────────
+    SettingsPopup {
+        id: settingsPopup
+    }
+
+    // ─── Left Panel Drawer ───────────────────────────────────────────────────────
+    Drawer {
+        id: leftPanelDrawer
+        width: 280
+        y: topBarHeight
+        height: parent.height - topBarHeight
+        edge: Qt.LeftEdge
+        modal: false
+        interactive: false
+        z: 199
+
+        background: Rectangle {
+            color: Qt.darker(ThemeManager.backgroundColor, 1.2)
+
+            Rectangle {
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: 1
+                color: ThemeManager.primaryColor
+                opacity: 0.2
+            }
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            color: "transparent"
+
+            Rectangle {
+                id: panelHeader
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 44
+
+                color: "transparent"
+
+                Rectangle {
+                    anchors.bottom: parent.bottom
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: 1
+                    color: ThemeManager.primaryColor
+                    opacity: 0.15
+                }
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.left: parent.left
+                    anchors.leftMargin: 16
+                    text: {
+                        if (selectedPanel === "nodes")     return "Nodes"
+                        if (selectedPanel === "explorer")  return "Explorer"
+                        if (selectedPanel === "variables") return "Variables"
+                        if (selectedPanel === "settings")  return "Settings"
+                        return ""
+                    }
+                    font.pixelSize: 13
+                    font.bold: true
+                    color: ThemeManager.textColor
+                }
+            }
+
+            Item {
+                anchors.top: panelHeader.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+
+                Text {
+                    anchors.centerIn: parent
+                    text: selectedPanel ? (selectedPanel.charAt(0).toUpperCase() + selectedPanel.slice(1) + " panel") : ""
+                    color: ThemeManager.textColor
+                    opacity: 0.35
+                    font.pixelSize: 12
+                }
+            }
+        }
     }
 
     Rectangle {
