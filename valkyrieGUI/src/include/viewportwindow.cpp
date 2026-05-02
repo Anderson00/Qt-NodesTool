@@ -167,6 +167,13 @@ bool ViewPortWindow::addConnectionByUuids(const QString& outputUuid, const QStri
 
 // ── Workspace ─────────────────────────────────────────────────────────────────
 
+void ViewPortWindow::restoreViewport(qreal x, qreal y, qreal scale) {
+    m_viewportX     = x;
+    m_viewportY     = y;
+    m_viewportScale = scale;
+    emit viewportRestoreRequested(x, y, scale);
+}
+
 QVariantList ViewPortWindow::getAllConnections() const {
     QVariantList result;
     for (auto it = m_behaviours.constBegin(); it != m_behaviours.constEnd(); ++it) {

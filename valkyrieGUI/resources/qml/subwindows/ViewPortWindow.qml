@@ -91,6 +91,12 @@ Rectangle {
             rectsArray.clear()
         }
 
+        function onViewportRestoreRequested(x, y, scale) {
+            sliderZoom.value = scale
+            mycanvas.x = x
+            mycanvas.y = y
+        }
+
         // Visual connection drawing is managed by QML (manual) or restoreAllConnections() (load).
         function onBehaviourConnection(source, target){}
     }
@@ -394,7 +400,7 @@ Rectangle {
         anchors.topMargin: 22
         prefix: "x"
 
-        onValueChanged: {}
+        onValueChanged: viewPort.viewportScale = value
     }
 
     NumberAnimation {
@@ -500,9 +506,15 @@ Rectangle {
 
             property bool initialized: false
 
-            // Keep viewCenterX/Y in sync whenever the user pans or zoom changes.
-            onXChanged: if (initialized) root.viewCenterX = (containerCanvas.width  / 2 - x) / sliderZoom.value
-            onYChanged: if (initialized) root.viewCenterY = (containerCanvas.height / 2 - y) / sliderZoom.value
+            // Keep viewCenterX/Y and C++ viewport state in sync when panning.
+            onXChanged: if (initialized) {
+                root.viewCenterX  = (containerCanvas.width  / 2 - x) / sliderZoom.value
+                viewPort.viewportX = x
+            }
+            onYChanged: if (initialized) {
+                root.viewCenterY  = (containerCanvas.height / 2 - y) / sliderZoom.value
+                viewPort.viewportY = y
+            }
 
             Behavior on x {
                 enabled: root.isAnimatingCenter
@@ -795,6 +807,13 @@ Rectangle {
         onOpenRequested: openWorkspaceDialog.open()
     }
 
+    // ─── Splash Screen ──────────────────────────────────────────────────────────
+    SplashScreen {
+        id: splashScreen
+        onNewProjectRequested: { /* canvas is already empty — user can start and save later */ }
+        onOpenProjectRequested: openWorkspaceDialog.open()
+    }
+
     // ─── Settings Popup ─────────────────────────────────────────────────────────
     SettingsPopup {
         id: settingsPopup
@@ -958,11 +977,8 @@ Rectangle {
     }
 
     Component.onCompleted: {
-        const last = GlobalProperties.lastWorkspace
-        if (last !== "") {
-            console.log("[ViewPort] Auto-loading last workspace:", last)
-            viewPort.loadWorkspace(last)
-        }
+        // Splash always appears — user selects the project to open.
+        // No auto-load: recent projects are shown in the splash screen.
     }
 
     // ─── Connection restoration after workspace load ─────────────────────────────

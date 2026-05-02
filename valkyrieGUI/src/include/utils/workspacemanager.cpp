@@ -186,9 +186,7 @@ bool WorkspaceManager::loadWorkspace(const QString& name)
     }
 
     const QJsonObject vp = root["viewport"].toObject();
-    m_viewPort->setViewportX(vp["x"].toDouble(0));
-    m_viewPort->setViewportY(vp["y"].toDouble(0));
-    m_viewPort->setViewportScale(vp["scale"].toDouble(1.0));
+    m_viewPort->restoreViewport(vp["x"].toDouble(0), vp["y"].toDouble(0), vp["scale"].toDouble(1.0));
 
     qDebug() << "[WorkspaceManager] Workspace loaded successfully:" << name;
     emit workspaceLoaded(name);

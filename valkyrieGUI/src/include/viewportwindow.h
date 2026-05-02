@@ -66,11 +66,14 @@ public slots:
     Q_INVOKABLE bool loadWorkspace(const QString& name);
     Q_INVOKABLE QVariantList getAllConnections() const;
 
+    void restoreViewport(qreal x, qreal y, qreal scale);
+
 signals:
     void fullScreenToogle();
     void showFpsChanged();
     void fpsCountChanged();
     void viewportStateChanged();
+    void viewportRestoreRequested(qreal x, qreal y, qreal scale);
     void behaviourAdded(Behaviours* behaviour);
     void behavioursCleared();
     void behaviourConnection(Behaviours* source, Behaviours* target);
