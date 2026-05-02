@@ -318,17 +318,23 @@ Rectangle {
         }
 
         onWheel: {
-            if(isConnecting)
-                return;
+            if (isConnecting)
+                return
 
-            let oldZoom = sliderZoom.value
-            let newZoom = oldZoom + (wheel.angleDelta.y > 0 ? 0.1 : -0.1)
+            var oldZoom = sliderZoom.value
+            var newZoom = oldZoom + (wheel.angleDelta.y > 0 ? 0.1 : -0.1)
             newZoom = Math.max(sliderZoom.from, Math.min(sliderZoom.to, newZoom))
 
-            // Definir a origem do zoom na posição do mouse
-            canvasScale.origin.x = mouseZoom.zoomMouseX
-            canvasScale.origin.y = mouseZoom.zoomMouseY
+            // Keep the content point under the mouse stationary during zoom.
+            // Visual position of workspace origin: mycanvas.x + localX * zoom
+            // => mycanvas.x_new = mouseX - (mouseX - mycanvas.x) * newZoom / oldZoom
+            var mx = mouseZoom.zoomMouseX
+            var my = mouseZoom.zoomMouseY
+            mycanvas.x = mx - (mx - mycanvas.x) * newZoom / oldZoom
+            mycanvas.y = my - (my - mycanvas.y) * newZoom / oldZoom
 
+            canvasScale.origin.x = 0
+            canvasScale.origin.y = 0
             sliderZoom.value = newZoom
         }
     }
@@ -362,14 +368,19 @@ Rectangle {
             icon.source: Qaterial.Icons.setCenter
             icon.color: ThemeManager.accentColor
             flat: false
-            opacity: (mycanvas.x == 0 && mycanvas.y == 0 && sliderZoom.value == 1)? 0.3 : 1
+
+            readonly property real homeX: (containerCanvas.width  - mycanvas.width)  / 2
+            readonly property real homeY: (containerCanvas.height - mycanvas.height) / 2
+
+            opacity: (Math.abs(mycanvas.x - homeX) < 1 &&
+                      Math.abs(mycanvas.y - homeY) < 1 &&
+                      sliderZoom.value === 1) ? 0.3 : 1
 
             onClicked: {
-                if(opacity == 1){
-                    mycanvas.x = 0;
-                    mycanvas.y = 0;
-                    sliderZoom.value = 1;
-                }
+                if (opacity < 1) return
+                mycanvas.x = homeX
+                mycanvas.y = homeY
+                sliderZoom.value = 1
             }
         }
     }
@@ -388,12 +399,7 @@ Rectangle {
         anchors.topMargin: 8
         prefix: "x"
 
-        onValueChanged: {
-            if(isConnecting)
-                return;
-            mycanvas.wgrid = sliderZoom.value * minWgrid
-            mycanvas.requestPaint()
-        }
+        onValueChanged: {}
     }
 
     CustomSliderVertical {
@@ -461,15 +467,69 @@ Rectangle {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         color: "transparent"
+        clip: true
 
-        Canvas {
+        // ── Workspace item ───────────────────────────────────────────────────────
+        Item {
             id: mycanvas
-            width: parent.width
-            height: parent.height
-            property real wgrid: root.minWgrid / sliderZoom.value;
+            width:  gridCanvas.width
+            height: gridCanvas.height
 
             Component.onCompleted: {
-                mycanvas.requestPaint()
+                mycanvas.x = (containerCanvas.width  - mycanvas.width)  / 2
+                mycanvas.y = (containerCanvas.height - mycanvas.height) / 2
+            }
+
+            // ── Grid canvas ──────────────────────────────────────────────────
+            // Lives inside mycanvas — moves and scales with it via GPU transform.
+            // Drawn once at startup; only redraws when the theme changes.
+            Canvas {
+                id: gridCanvas
+                width:  3200
+                height: 2400
+                x: (parent.width  - width)  / 2
+                y: (parent.height - height) / 2
+                z: 0
+
+                Component.onCompleted: requestPaint()
+
+                Connections {
+                    target: ThemeManager
+                    function onThemeChanged() { gridCanvas.requestPaint() }
+                }
+
+                onPaint: {
+                    var ctx = getContext("2d")
+                    ctx.clearRect(0, 0, width, height)
+
+                    var cell  = root.minWgrid        // Scale transform handles visual zoom
+                    var major = cell * 5
+                    var pc    = ThemeManager.primaryColor
+                    var mr    = 1.0
+                    var xr    = 1.8
+
+                    // Minor dots — single batched path
+                    ctx.fillStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.22)
+                    ctx.beginPath()
+                    for (var ix = 0; ix < width; ix += cell) {
+                        for (var iy = 0; iy < height; iy += cell) {
+                            ctx.moveTo(ix + mr, iy)
+                            ctx.arc(ix, iy, mr, 0, 6.2832)
+                        }
+                    }
+                    ctx.fill()
+
+                    // Major dots — single batched path
+                    ctx.fillStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.50)
+                    ctx.beginPath()
+                    for (var gx = 0; gx < width; gx += major) {
+                        for (var gy = 0; gy < height; gy += major) {
+                            ctx.moveTo(gx + xr, gy)
+                            ctx.arc(gx, gy, xr, 0, 6.2832)
+                        }
+                    }
+                    ctx.fill()
+                }
             }
 
             transform: Scale {
@@ -490,22 +550,17 @@ Rectangle {
                 onClicked: {
                     root.focus = true
                 }
-
             }
 
-            Rectangle{
+            Rectangle {
                 id: mycanvasBody
                 anchors.fill: parent
-                border.width: 1
-                border.color: ThemeManager.primaryColor
                 color: "transparent"
 
                 Repeater {
                     id: nodeConnections
 
-                    model: ListModel {
-
-                    }
+                    model: ListModel {}
 
                     delegate: Shape {
                         id: shape
@@ -519,46 +574,29 @@ Rectangle {
                         property var viewRectConn2
 
                         Component.onCompleted: {
-                            circleConnPoint = model.circleConn.mapToItem(parent, 0, 0);
-                            shapeConn = shape;
-
+                            circleConnPoint = model.circleConn.mapToItem(parent, 0, 0)
+                            shapeConn = shape
                         }
 
                         onCircleConn2Changed: {
-                            if(circleConn2){
-                                circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0);
-                            }else{
-                                // TODO: remove connection in CPP/Behaviour
+                            if (circleConn2) {
+                                circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0)
+                            } else {
                                 nodeConnections.model.remove(index)
                             }
                         }
 
                         Connections {
                             target: model.node
-
-                            function onCloseButtonClicked(){
-                                nodeConnections.model.remove(index)
-                            }
-
-                            function onXChanged(){
-                                circleConnPoint = model.circleConn.mapToItem(parent, 0, 0);
-                            }
-
-                            function onYChanged(){
-                                circleConnPoint = model.circleConn.mapToItem(parent, 0, 0);
-                            }
+                            function onCloseButtonClicked() { nodeConnections.model.remove(index) }
+                            function onXChanged() { circleConnPoint = model.circleConn.mapToItem(parent, 0, 0) }
+                            function onYChanged() { circleConnPoint = model.circleConn.mapToItem(parent, 0, 0) }
                         }
 
                         Connections {
                             target: viewRectConn2
-
-                            function onXChanged(){
-                                circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0);
-                            }
-
-                            function onYChanged(){
-                                circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0);
-                            }
+                            function onXChanged() { circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0) }
+                            function onYChanged() { circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0) }
                         }
 
                         ShapePath {
@@ -568,13 +606,12 @@ Rectangle {
                             fillColor: "transparent"
                             capStyle: ShapePath.RoundCap
 
-                            startX: circleConnPoint.x + model.circleConn.width/2
-                            startY: circleConnPoint.y + model.circleConn.height/2
+                            startX: circleConnPoint.x + model.circleConn.width / 2
+                            startY: circleConnPoint.y + model.circleConn.height / 2
 
                             PathLine {
-                                id: lineTest
-                                x: circleConn2 ? circleConnPoint2.x + circleConn2.width/2 : mouseAreaGlobal.mouseX
-                                y: circleConn2 ? circleConnPoint2.y + circleConn2.width/2 : mouseAreaGlobal.mouseY
+                                x: circleConn2 ? circleConnPoint2.x + circleConn2.width / 2 : mouseAreaGlobal.mouseX
+                                y: circleConn2 ? circleConnPoint2.y + circleConn2.width / 2 : mouseAreaGlobal.mouseY
                             }
                         }
                     }
@@ -583,13 +620,13 @@ Rectangle {
                 Repeater {
                     id: nodes
 
-                    property var objectToDelete;
+                    property var objectToDelete
 
-                    model: ListModel{
+                    model: ListModel {
                         onCountChanged: {
-                            if(nodes.objectToDelete){
-                                viewPort.removeBehaviourObject(nodes.objectToDelete);
-                                nodes.objectToDelete = null;
+                            if (nodes.objectToDelete) {
+                                viewPort.removeBehaviourObject(nodes.objectToDelete)
+                                nodes.objectToDelete = null
                             }
                         }
                     }
@@ -597,109 +634,61 @@ Rectangle {
                     delegate: ViewComponentRectV2 {
                         id: viewComponentRectV2
 
-                        Connections {
-                            target: mycanvasBody
-
-                            function onWidthChanged() {
-                                viewComponentRectV2.x = clamp(viewComponentRectV2.x, 0, mycanvasBody.width - viewComponentRectV2.width)
-                            }
-
-                            function onHeightChanged() {
-                                viewComponentRectV2.y = clamp(viewComponentRectV2.y, 0, mycanvasBody.height - viewComponentRectV2.height)
-                            }
-                        }
-
                         onXChanged: {
                             this.focus = true
-                            if(nodeOnFocus !== this)
-                                nodeOnFocus = this
+                            if (nodeOnFocus !== this) nodeOnFocus = this
                         }
 
                         onYChanged: {
                             this.focus = true
-                            if(nodeOnFocus !== this)
-                                nodeOnFocus = this
+                            if (nodeOnFocus !== this) nodeOnFocus = this
                         }
 
                         onFocusChanged: {
-                            if(focus)
-                                nodeOnFocus = this
+                            if (focus) nodeOnFocus = this
                         }
 
                         onConnectionSocketClicked: {
                             isConnecting = true
-                            mycanvas.x = 0;
-                            mycanvas.y = 0;
-                            sliderZoom.value = 1;
-                            nodeConnections.model.append({methodSignature1: conn.name, node: this, circleConn: conn.circleConn, node2: null, methodSignature2: null})
+                            mycanvas.x = (containerCanvas.width  - mycanvas.width)  / 2
+                            mycanvas.y = (containerCanvas.height - mycanvas.height) / 2
+                            sliderZoom.value = 1
+                            nodeConnections.model.append({
+                                methodSignature1: conn.name, node: this,
+                                circleConn: conn.circleConn, node2: null, methodSignature2: null
+                            })
                             mouseAreaGlobal.enabled = true
-                            //fogForNodeConnections.visible = true
                         }
 
-                        borderColor: ThemeManager.primaryColor
-                        rootBodyColor: "transparent"
-
+                        borderColor:    ThemeManager.primaryColor
+                        rootBodyColor:  "transparent"
                         behaviourObject: model.object
 
                         Component.onCompleted: {
                             behavioursZ[index] = 0
                             model.object.setViewRectangle(this)
-
-                            behaviourObject.x = mycanvasBody.width/2 - width/2
-                            behaviourObject.y = mycanvasBody.height/2 - height/2
+                            behaviourObject.x = mycanvasBody.width  / 2 - width  / 2
+                            behaviourObject.y = mycanvasBody.height / 2 - height / 2
                         }
 
-                        onZChanged: {
-                            behavioursZ[index] = z
-                        }
+                        onZChanged: { behavioursZ[index] = z }
 
                         Component.onDestruction: {
-                            behavioursZ = behavioursZ.slice(0, index).concat(behavioursZ.slice(index + 1,behavioursZ.length))
+                            behavioursZ = behavioursZ.slice(0, index)
+                                          .concat(behavioursZ.slice(index + 1, behavioursZ.length))
                         }
 
                         onCloseButtonClicked: {
                             nodes.objectToDelete = model.object
-                            nodes.model.remove(index);
+                            nodes.model.remove(index)
                         }
 
-                        onFrontOneStepClicked: {
-                            z += 1
-                        }
-
-                        onBackOneStepClicked: {
-                            z = ((z - 1) < 1) ? 0 : z - 1;
-                        }
-
-                        onFrontTotalClicked: {
-                            z = getBehaviourGreaterZ() + 1;
-                        }
-
-                        onBackTotalClicked: {
-                            z = 0;
-                        }
+                        onFrontOneStepClicked: { z += 1 }
+                        onBackOneStepClicked:  { z = (z - 1 < 1) ? 0 : z - 1 }
+                        onFrontTotalClicked:   { z = getBehaviourGreaterZ() + 1 }
+                        onBackTotalClicked:    { z = 0 }
                     }
                 }
-            }
-
-            onPaint: {
-                var ctx = getContext("2d")
-                ctx.clearRect(0,0, width, height)
-                ctx.lineWidth = 0.3 / sliderZoom.value
-                ctx.strokeStyle = "#535C27"
-                ctx.beginPath()
-                var nrows = height / wgrid;
-                for(var i = 0; i < nrows+1; i++){
-                    ctx.moveTo(0, wgrid*i);
-                    ctx.lineTo(width, wgrid*i);
-                }
-
-                var ncols = width / wgrid
-                for(var j = 0; j < ncols+1; j++){
-                    ctx.moveTo(wgrid*j, 0);
-                    ctx.lineTo(wgrid*j, height);
-                }
-                ctx.closePath()
-                ctx.stroke()
             }
         }
     }
