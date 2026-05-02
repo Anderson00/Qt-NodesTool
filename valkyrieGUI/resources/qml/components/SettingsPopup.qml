@@ -4,6 +4,7 @@ import QtQuick.Controls.Material 2.12
 import QtQuick.Layouts 1.0
 import App.Theme 1.0
 import App.Properties 1.0
+import App.Presets 1.0
 import Qaterial as Qaterial
 
 Popup {
@@ -14,8 +15,8 @@ Popup {
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
     padding: 0
 
-    width: 740
-    height: 540
+    width: 840
+    height: 640
 
     x: parent ? (parent.width  - width)  / 2 : 0
     y: parent ? (parent.height - height) / 2 : 0
@@ -33,80 +34,6 @@ Popup {
         opacity: 0.45
         topPadding: 20
         bottomPadding: 10
-    }
-
-    // ── Color presets ──────────────────────────────────────────────────────────
-    readonly property var colorPresets: [
-        { name: "Valkyrie Dark",
-          bg:"#0D1117", surface:"#161B22", fg:"#1E2530", border:"#30363D", shadow:"#780D1117",
-          primary:"#7C6AF7", secondary:"#A78BFA", accent:"#22D3EE",
-          success:"#34D399", warning:"#FBBF24", danger:"#F87171",
-          text:"#E6EDF3", textSec:"#8B949E", selection:"#337C6AF7" },
-
-        { name: "Valkyrie Light",
-          bg:"#F0F2F5", surface:"#FFFFFF", fg:"#E4E8EF", border:"#CBD5E1", shadow:"#190D1117",
-          primary:"#5B6AF0", secondary:"#8B5CF6", accent:"#06B6D4",
-          success:"#10B981", warning:"#F59E0B", danger:"#EF4444",
-          text:"#1A1A2E", textSec:"#64748B", selection:"#335B6AF0" },
-
-        { name: "Dracula",
-          bg:"#282A36", surface:"#21222C", fg:"#343746", border:"#6272A4", shadow:"#99000000",
-          primary:"#BD93F9", secondary:"#FF79C6", accent:"#8BE9FD",
-          success:"#50FA7B", warning:"#FFB86C", danger:"#FF5555",
-          text:"#F8F8F2", textSec:"#6272A4", selection:"#33BD93F9" },
-
-        { name: "Nord",
-          bg:"#2E3440", surface:"#3B4252", fg:"#434C5E", border:"#4C566A", shadow:"#99000000",
-          primary:"#88C0D0", secondary:"#81A1C1", accent:"#5E81AC",
-          success:"#A3BE8C", warning:"#EBCB8B", danger:"#BF616A",
-          text:"#ECEFF4", textSec:"#D8DEE9", selection:"#3388C0D0" },
-
-        { name: "Cyberpunk",
-          bg:"#0D0D0D", surface:"#1A1A1A", fg:"#141414", border:"#333333", shadow:"#CC000000",
-          primary:"#FFE600", secondary:"#FF2D78", accent:"#00F5FF",
-          success:"#00FF9C", warning:"#FF8C00", danger:"#FF2D78",
-          text:"#FFFFFF", textSec:"#888888", selection:"#33FFE600" },
-
-        { name: "Ocean",
-          bg:"#0A1628", surface:"#112240", fg:"#1A3A5C", border:"#233554", shadow:"#AA000000",
-          primary:"#64FFDA", secondary:"#7F5AF0", accent:"#38BDF8",
-          success:"#2CB67D", warning:"#FFCF40", danger:"#FF6B6B",
-          text:"#CCD6F6", textSec:"#8892B0", selection:"#3364FFDA" },
-
-        { name: "Sunset",
-          bg:"#1A1025", surface:"#241533", fg:"#2D1B42", border:"#3D2856", shadow:"#AA000000",
-          primary:"#FF6B35", secondary:"#FF4D6D", accent:"#FFD166",
-          success:"#06D6A0", warning:"#FFD166", danger:"#EF233C",
-          text:"#F8EDEB", textSec:"#B8B5B9", selection:"#33FF6B35" },
-
-        { name: "Forest",
-          bg:"#1A2318", surface:"#1E2B1C", fg:"#243322", border:"#344A31", shadow:"#AA000000",
-          primary:"#4CAF50", secondary:"#8BC34A", accent:"#00BCD4",
-          success:"#4CAF50", warning:"#FFC107", danger:"#F44336",
-          text:"#E8F5E9", textSec:"#A5C8A0", selection:"#334CAF50" },
-
-        { name: "Rose Pinheiro",
-          bg:"#191724", surface:"#1F1D2E", fg:"#26233A", border:"#403D52", shadow:"#AA000000",
-          primary:"#EBBCBA", secondary:"#C4A7E7", accent:"#9CCFD8",
-          success:"#31748F", warning:"#F6C177", danger:"#EB6F92",
-          text:"#E0DEF4", textSec:"#908CAA", selection:"#33EBBCBA" }
-    ]
-
-    function applyPreset(p) {
-        ThemeManager.backgroundColor    = p.bg
-        ThemeManager.surfaceColor       = p.surface
-        ThemeManager.foregroundColor    = p.fg
-        ThemeManager.borderColor        = p.border
-        ThemeManager.shadowColor        = p.shadow
-        ThemeManager.primaryColor       = p.primary
-        ThemeManager.secondaryColor     = p.secondary
-        ThemeManager.accentColor        = p.accent
-        ThemeManager.successColor       = p.success
-        ThemeManager.warningColor       = p.warning
-        ThemeManager.dangerColor        = p.danger
-        ThemeManager.textColor          = p.text
-        ThemeManager.textSecondaryColor = p.textSec
-        ThemeManager.selectionColor     = p.selection
     }
 
     component ColorRow: RowLayout {
@@ -482,68 +409,93 @@ Popup {
 
                     Flow {
                         width: parent.width
-                        spacing: 8
+                        spacing: 10
                         bottomPadding: 4
 
                         Repeater {
-                            model: root.colorPresets
+                            model: PresetManager.presets
 
                             delegate: Rectangle {
                                 id: presetCard
-                                width: 138
-                                height: 76
-                                radius: 8
-                                color: modelData.bg
-                                border.width: presetMa.containsMouse ? 2 : 1
-                                border.color: presetMa.containsMouse
-                                              ? modelData.primary
-                                              : Qt.rgba(
-                                                    Qt.color(modelData.border).r,
-                                                    Qt.color(modelData.border).g,
-                                                    Qt.color(modelData.border).b, 0.7)
+
+                                // keep outer modelData accessible inside nested Repeater
+                                property var preset: modelData
+
+                                width: 155
+                                height: 90
+                                radius: 9
+                                color: preset.backgroundColor
                                 clip: true
 
-                                Behavior on border.width { NumberAnimation { duration: 100 } }
+                                scale: presetMa.containsMouse ? 1.04 : 1.0
+                                Behavior on scale { NumberAnimation { duration: 130; easing.type: Easing.OutQuad } }
 
-                                // ── top color strip ──
+                                border.width: presetMa.containsMouse ? 2 : 1
+                                border.color: presetMa.containsMouse
+                                              ? preset.primaryColor
+                                              : Qt.rgba(preset.borderColor.r,
+                                                        preset.borderColor.g,
+                                                        preset.borderColor.b, 0.6)
+                                Behavior on border.width { NumberAnimation { duration: 130 } }
+
+                                // ── 6-color strip at top ──────────────────────────
                                 Row {
+                                    id: colorStrip
                                     anchors.top: parent.top
                                     anchors.left: parent.left
                                     anchors.right: parent.right
-                                    height: 6
+                                    height: 8
+
+                                    property list<color> colors: [
+                                        presetCard.preset.primaryColor,
+                                        presetCard.preset.secondaryColor,
+                                        presetCard.preset.accentColor,
+                                        presetCard.preset.successColor,
+                                        presetCard.preset.warningColor,
+                                        presetCard.preset.dangerColor
+                                    ]
 
                                     Repeater {
-                                        model: [modelData.primary, modelData.secondary,
-                                                modelData.accent,  modelData.success,
-                                                modelData.warning, modelData.danger]
+                                        model: colorStrip.colors
                                         Rectangle {
                                             width: presetCard.width / 6
-                                            height: 6
+                                            height: colorStrip.height
                                             color: modelData
                                         }
                                     }
                                 }
 
-                                // ── bg/surface mini preview ──
+                                // ── surface accent bar (left) ─────────────────────
                                 Rectangle {
                                     anchors.left: parent.left
-                                    anchors.bottom: parent.bottom
-                                    anchors.top: parent.top
-                                    anchors.topMargin: 6
-                                    width: 20
-                                    color: modelData.surface
-                                    opacity: 0.6
+                                    anchors.top: colorStrip.bottom
+                                    anchors.bottom: footerBar.top
+                                    width: 4
+                                    color: preset.surfaceColor
+                                    opacity: 0.5
                                 }
 
-                                // ── name ──
-                                Text {
-                                    anchors.centerIn: parent
-                                    anchors.horizontalCenterOffset: 10
-                                    text: modelData.name
-                                    font.pixelSize: 11
-                                    font.bold: presetMa.containsMouse
-                                    color: modelData.text
-                                    horizontalAlignment: Text.AlignHCenter
+                                // ── footer bar ────────────────────────────────────
+                                Rectangle {
+                                    id: footerBar
+                                    anchors.bottom: parent.bottom
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    height: 26
+                                    color: Qt.rgba(0, 0, 0, 0.30)
+
+                                    Text {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        anchors.leftMargin: 10
+                                        anchors.rightMargin: 6
+                                        text: preset.name
+                                        font.pixelSize: 10
+                                        font.bold: true
+                                        color: preset.textColor
+                                        elide: Text.ElideRight
+                                    }
                                 }
 
                                 MouseArea {
@@ -551,7 +503,7 @@ Popup {
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
-                                    onClicked: root.applyPreset(modelData)
+                                    onClicked: PresetManager.applyPreset(index)
                                 }
                             }
                         }

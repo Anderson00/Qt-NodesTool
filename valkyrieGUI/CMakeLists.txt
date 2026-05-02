@@ -41,6 +41,8 @@ set(PROJECT_SOURCES
     src/include/model/abstracttheme.h src/include/model/abstracttheme.cpp
     src/include/model/subtheme.h src/include/model/subtheme.cpp
     src/include/model/nodetheme.h src/include/model/nodetheme.cpp
+    src/include/model/colorpreset.h src/include/model/colorpreset.cpp
+    src/include/model/presetmanager.h src/include/model/presetmanager.cpp
     src/include/model/globalproperties.h src/include/model/globalproperties.cpp
     src/include/behaviours/behaviours.h src/include/behaviours/behaviours.cpp
     src/include/subwindows/taskmanagerwindow.h src/include/subwindows/taskmanagerwindow.cpp

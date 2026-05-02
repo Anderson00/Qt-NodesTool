@@ -11,6 +11,8 @@
 #include "model/thememanager.h"
 #include "model/subtheme.h"
 #include "model/globalproperties.h"
+#include "model/presetmanager.h"
+#include "model/colorpreset.h"
 
 QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent),
     m_qml_url(qmlUrl)
@@ -31,6 +33,20 @@ QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent),
             1, 0,
             "GlobalProperties",
             GlobalProperties::qmlSingletonProvider
+            );
+
+        qmlRegisterSingletonType<PresetManager>(
+            "App.Presets",
+            1, 0,
+            "PresetManager",
+            PresetManager::qmlSingletonProvider
+            );
+
+        qmlRegisterUncreatableType<ColorPreset>(
+            "App.Presets",
+            1, 0,
+            "ColorPreset",
+            "ColorPreset is created by PresetManager"
             );
 
         m_subTheme = new SubTheme(QUuid::createUuid().toString(QUuid::WithoutBraces));
