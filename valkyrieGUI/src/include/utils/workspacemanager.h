@@ -33,6 +33,7 @@ public slots:
 signals:
     void workspaceListChanged();
     void currentWorkspaceChanged();
+    void workspaceLoaded(const QString& name);
 
 private:
     explicit WorkspaceManager(QObject* parent = nullptr);

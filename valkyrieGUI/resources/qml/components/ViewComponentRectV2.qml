@@ -72,6 +72,14 @@ Rectangle {
         return text.slice(i, text.length - 1)
     }
 
+    function connectionByName(name) {
+        const all = connectionsInput.concat(connectionsOutput)
+        for (let i = 0; i < all.length; i++) {
+            if (all[i].name === name) return all[i]
+        }
+        return undefined
+    }
+
     function connectionOnXYPosition(x: double, y: double) {
         const connJoint = connectionsInput.concat(connectionsOutput)
         for (let i = 0; i < connJoint.length; i++) {

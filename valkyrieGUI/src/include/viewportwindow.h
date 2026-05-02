@@ -6,6 +6,7 @@
 #include <QHash>
 #include <QWidget>
 #include <QJsonObject>
+#include <QVariantList>
 #include "behaviours/behaviours.h"
 #include "qmlwindow.h"
 
@@ -63,6 +64,7 @@ public slots:
     // Workspace
     Q_INVOKABLE bool saveWorkspace(const QString& name);
     Q_INVOKABLE bool loadWorkspace(const QString& name);
+    Q_INVOKABLE QVariantList getAllConnections() const;
 
 signals:
     void fullScreenToogle();

@@ -4,6 +4,8 @@ import QtQuick.Controls.Material 2.12
 import QtQuick.Layouts 1.0
 import QtQuick.Shapes 1.15
 import App.Theme 1.0
+import App.Properties 1.0
+import App.Workspace 1.0
 
 import "../components"
 import "../components/bottomsheets"
@@ -57,7 +59,7 @@ Rectangle {
 
     property int topBarHeight: 48
     property string selectedPanel: ""
-    property string currentProject: "Untitled Project"
+    property string currentProject: WorkspaceManager.currentWorkspace !== "" ? WorkspaceManager.currentWorkspace : "Untitled Project"
 
     anchors.fill: parent
     clip: true
@@ -83,28 +85,14 @@ Rectangle {
             nodes.model.append({'object':obj})
         }
 
-        function onBehaviourConnection(source, target){
-            console.log("Source = "+ source + " target = "+ target)
-
-            let sourceUUID = viewPort.getUUIDFromBehaviour(source);
-            let targetUUID = viewPort.getUUIDFromBehaviour(target);
-
-            let sourceObject;
-            let targetObject;
-            for(let i = 0; i < rectsArray.count; i++){
-                if(rectsArray.get(i)["uuid"] === sourceUUID) {
-                    sourceObject = rectsArray.get(i)["rectObjTarget"];
-                }
-
-                if(rectsArray.get(i)["uuid"] === targetUUID){
-                    targetObject = rectsArray.get(i)["rectObjTarget"];
-                }
-            }
-
-            if(sourceObject && targetObject){
-                viewRectGhostConns.model.append({rect1: sourceObject, rect2: targetObject});
-            }
+        function onBehavioursCleared() {
+            nodeConnections.model.clear()
+            nodes.model.clear()
+            rectsArray.clear()
         }
+
+        // Visual connection drawing is managed by QML (manual) or restoreAllConnections() (load).
+        function onBehaviourConnection(source, target){}
     }
 
     function viewSubWindowsWidthHeightArea() {
@@ -603,7 +591,14 @@ Rectangle {
 
                         Component.onCompleted: {
                             circleConnPoint = model.circleConn.mapToItem(parent, 0, 0)
-                            shapeConn = shape
+                            if (model.initCircleConn2) {
+                                // Restored connection: set endpoints immediately
+                                circleConn2   = model.initCircleConn2
+                                viewRectConn2 = model.initViewRectConn2
+                            } else {
+                                // New in-progress connection drawn by user
+                                shapeConn = shape
+                            }
                         }
 
                         onCircleConn2Changed: {
@@ -712,12 +707,19 @@ Rectangle {
                         Component.onCompleted: {
                             behavioursZ[index] = 0
                             model.object.setViewRectangle(this)
-                            // Place at the center of the currently visible viewport area,
-                            // correctly accounting for current pan and zoom.
-                            var cx = (containerCanvas.width  / 2 - mycanvas.x) / sliderZoom.value
-                            var cy = (containerCanvas.height / 2 - mycanvas.y) / sliderZoom.value
-                            viewComponentRectV2.x = cx - viewComponentRectV2.width  / 2
-                            viewComponentRectV2.y = cy - viewComponentRectV2.height / 2
+                            rectsArray.append({
+                                uuid:          viewPort.getUUIDFromBehaviour(model.object),
+                                rectObjTarget: viewComponentRectV2
+                            })
+                            // Use saved position when non-zero; otherwise center in viewport.
+                            if (model.object.x !== 0 || model.object.y !== 0) {
+                                // ViewComponentRectV2.Component.onCompleted already set x/y from behaviourObject
+                            } else {
+                                var cx = (containerCanvas.width  / 2 - mycanvas.x) / sliderZoom.value
+                                var cy = (containerCanvas.height / 2 - mycanvas.y) / sliderZoom.value
+                                viewComponentRectV2.x = cx - viewComponentRectV2.width  / 2
+                                viewComponentRectV2.y = cy - viewComponentRectV2.height / 2
+                            }
                         }
 
                         onZChanged: { behavioursZ[index] = z }
@@ -728,6 +730,12 @@ Rectangle {
                         }
 
                         onCloseButtonClicked: {
+                            const uuid = viewPort.getUUIDFromBehaviour(model.object)
+                            for (let ri = 0; ri < rectsArray.count; ri++) {
+                                if (rectsArray.get(ri).uuid === uuid) {
+                                    rectsArray.remove(ri); break
+                                }
+                            }
                             nodes.objectToDelete = model.object
                             nodes.model.remove(index)
                         }
@@ -778,11 +786,236 @@ Rectangle {
             }
         }
         onSettingsRequested: settingsPopup.open()
+        onSaveRequested: {
+            if (WorkspaceManager.currentWorkspace !== "")
+                viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
+            else
+                saveWorkspaceDialog.open()
+        }
+        onOpenRequested: openWorkspaceDialog.open()
     }
 
     // ─── Settings Popup ─────────────────────────────────────────────────────────
     SettingsPopup {
         id: settingsPopup
+    }
+
+    // ─── Save Workspace Dialog ───────────────────────────────────────────────────
+    Popup {
+        id: saveWorkspaceDialog
+        width: 300
+        x: (parent.width  - width)  / 2
+        y: (parent.height - height) / 2
+        z: 1000
+        modal: true
+        padding: 20
+        closePolicy: Popup.CloseOnEscape
+
+        background: Rectangle {
+            color:  ThemeManager.surfaceColor
+            radius: 8
+            border.color: ThemeManager.borderColor
+            border.width: 1
+        }
+
+        Column {
+            width: parent.width
+            spacing: 12
+
+            Text {
+                text: "Save Workspace"
+                font.pixelSize: 14
+                font.bold: true
+                color: ThemeManager.foregroundColor
+            }
+
+            TextField {
+                id: saveNameField
+                width: parent.width
+                placeholderText: "Workspace name..."
+                text: WorkspaceManager.currentWorkspace
+                color: ThemeManager.foregroundColor
+                background: Rectangle {
+                    color: Qt.darker(ThemeManager.surfaceColor, 1.2)
+                    radius: 4
+                    border.color: ThemeManager.borderColor
+                }
+                Keys.onReturnPressed: {
+                    if (text.trim() !== "") saveConfirmBtn.clicked()
+                }
+            }
+
+            Row {
+                spacing: 8
+                anchors.right: parent.right
+
+                Button {
+                    text: "Cancel"
+                    flat: true
+                    onClicked: saveWorkspaceDialog.close()
+                }
+
+                Button {
+                    id: saveConfirmBtn
+                    text: "Save"
+                    enabled: saveNameField.text.trim() !== ""
+                    onClicked: {
+                        const name = saveNameField.text.trim()
+                        viewPort.saveWorkspace(name)
+                        GlobalProperties.lastWorkspace = name
+                        saveWorkspaceDialog.close()
+                    }
+                }
+            }
+        }
+    }
+
+    // ─── Open Workspace Dialog ───────────────────────────────────────────────────
+    Popup {
+        id: openWorkspaceDialog
+        width: 300
+        x: (parent.width  - width)  / 2
+        y: (parent.height - height) / 2
+        z: 1000
+        modal: true
+        padding: 20
+        closePolicy: Popup.CloseOnEscape
+
+        background: Rectangle {
+            color:  ThemeManager.surfaceColor
+            radius: 8
+            border.color: ThemeManager.borderColor
+            border.width: 1
+        }
+
+        Column {
+            width: parent.width
+            spacing: 12
+
+            Text {
+                text: "Open Workspace"
+                font.pixelSize: 14
+                font.bold: true
+                color: ThemeManager.foregroundColor
+            }
+
+            Text {
+                visible: WorkspaceManager.workspaceList.length === 0
+                text: "No saved workspaces yet."
+                color: ThemeManager.textSecondaryColor
+                font.pixelSize: 12
+            }
+
+            ListView {
+                visible: WorkspaceManager.workspaceList.length > 0
+                width:  parent.width
+                height: Math.min(WorkspaceManager.workspaceList.length * 40, 200)
+                model:  WorkspaceManager.workspaceList
+                clip:   true
+
+                delegate: Rectangle {
+                    width:  parent ? parent.width : 0
+                    height: 40
+                    radius: 4
+                    color:  wsItemMouse.containsMouse
+                                ? Qt.rgba(ThemeManager.primaryColor.r,
+                                          ThemeManager.primaryColor.g,
+                                          ThemeManager.primaryColor.b, 0.12)
+                                : "transparent"
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.left:           parent.left
+                        anchors.leftMargin:     8
+                        text:  modelData
+                        color: modelData === WorkspaceManager.currentWorkspace
+                                   ? ThemeManager.primaryColor
+                                   : ThemeManager.foregroundColor
+                        font.pixelSize: 12
+                    }
+
+                    MouseArea {
+                        id: wsItemMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape:  Qt.PointingHandCursor
+                        onClicked: {
+                            viewPort.loadWorkspace(modelData)
+                            GlobalProperties.lastWorkspace = modelData
+                            openWorkspaceDialog.close()
+                        }
+                    }
+                }
+            }
+
+            Button {
+                text: "Cancel"
+                flat: true
+                anchors.right: parent.right
+                onClicked: openWorkspaceDialog.close()
+            }
+        }
+    }
+
+    Component.onCompleted: {
+        const last = GlobalProperties.lastWorkspace
+        if (last !== "") {
+            console.log("[ViewPort] Auto-loading last workspace:", last)
+            viewPort.loadWorkspace(last)
+        }
+    }
+
+    // ─── Connection restoration after workspace load ─────────────────────────────
+    Connections {
+        target: WorkspaceManager
+        function onWorkspaceLoaded(name) {
+            console.log("[ViewPort] Workspace loaded signal received:", name, "— scheduling connection restore")
+            restoreConnectionsTimer.restart()
+        }
+    }
+
+    Timer {
+        id: restoreConnectionsTimer
+        interval: 120
+        running:  false
+        onTriggered: restoreAllConnections()
+    }
+
+    function restoreAllConnections() {
+        const conns = viewPort.getAllConnections()
+        console.log("[ViewPort] Restoring", conns.length, "connections")
+        for (let i = 0; i < conns.length; i++) {
+            const c = conns[i]
+            drawSavedConnection(c.outputUuid, c.outputMethod, c.inputUuid, c.inputMethod)
+        }
+    }
+
+    function drawSavedConnection(outputUuid, outputMethod, inputUuid, inputMethod) {
+        let sourceRect, targetRect
+        for (let i = 0; i < rectsArray.count; i++) {
+            const e = rectsArray.get(i)
+            if (e.uuid === outputUuid) sourceRect = e.rectObjTarget
+            if (e.uuid === inputUuid)  targetRect = e.rectObjTarget
+        }
+        if (!sourceRect || !targetRect) {
+            console.warn("[ViewPort] Cannot find rect for connection", outputUuid, "->", inputUuid)
+            return
+        }
+        const sourceConn = sourceRect.connectionByName(outputMethod)
+        const targetConn = targetRect.connectionByName(inputMethod)
+        if (!sourceConn || !targetConn || !sourceConn.circleConn || !targetConn.circleConn) {
+            console.warn("[ViewPort] Cannot find ports for", outputMethod, "->", inputMethod)
+            return
+        }
+        nodeConnections.model.append({
+            methodSignature1: outputMethod,
+            node:             sourceRect,
+            circleConn:       sourceConn.circleConn,
+            node2:            targetRect,
+            methodSignature2: inputMethod,
+            initCircleConn2:  targetConn.circleConn,
+            initViewRectConn2: targetRect
+        })
     }
 
     // ─── Left Panel Drawer ───────────────────────────────────────────────────────

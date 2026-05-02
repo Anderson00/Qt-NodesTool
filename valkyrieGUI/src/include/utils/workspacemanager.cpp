@@ -66,6 +66,8 @@ bool WorkspaceManager::saveWorkspace(const QString& name)
     QDir().mkpath(workspacesDir());
 
     const auto& behaviours = m_viewPort->behaviours();
+    qDebug() << "[WorkspaceManager] Saving workspace:" << name
+             << "| nodes:" << behaviours.size();
 
     // Nodes
     QJsonArray nodes;
@@ -121,6 +123,8 @@ bool WorkspaceManager::saveWorkspace(const QString& name)
         return false;
     }
     file.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
+    qDebug() << "[WorkspaceManager] Saved" << nodes.size() << "nodes,"
+             << connections.size() << "connections ->" << workspacePath(name);
 
     if (m_currentWorkspace != name) {
         m_currentWorkspace = name;
@@ -150,9 +154,14 @@ bool WorkspaceManager::loadWorkspace(const QString& name)
 
     const QJsonObject root = doc.object();
 
+    const QJsonArray nodeArr = root["nodes"].toArray();
+    const QJsonArray connArr = root["connections"].toArray();
+    qDebug() << "[WorkspaceManager] Loading workspace:" << name
+             << "| nodes:" << nodeArr.size() << "| connections:" << connArr.size();
+
     m_viewPort->clearBehaviours();
 
-    for (const QJsonValue& v : root["nodes"].toArray()) {
+    for (const QJsonValue& v : nodeArr) {
         const QJsonObject n = v.toObject();
         m_viewPort->addBehaviourWithUuid(
             n["path"].toString(),
@@ -166,7 +175,7 @@ bool WorkspaceManager::loadWorkspace(const QString& name)
         );
     }
 
-    for (const QJsonValue& v : root["connections"].toArray()) {
+    for (const QJsonValue& v : connArr) {
         const QJsonObject c = v.toObject();
         m_viewPort->addConnectionByUuids(
             c["outputUuid"].toString(),
@@ -180,6 +189,9 @@ bool WorkspaceManager::loadWorkspace(const QString& name)
     m_viewPort->setViewportX(vp["x"].toDouble(0));
     m_viewPort->setViewportY(vp["y"].toDouble(0));
     m_viewPort->setViewportScale(vp["scale"].toDouble(1.0));
+
+    qDebug() << "[WorkspaceManager] Workspace loaded successfully:" << name;
+    emit workspaceLoaded(name);
 
     if (m_currentWorkspace != name) {
         m_currentWorkspace = name;

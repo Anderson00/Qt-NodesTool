@@ -71,6 +71,9 @@ void GlobalProperties::saveProperties() {
         return;
     }
     file.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
+    qDebug() << "[GlobalProperties] Saved -> lastWorkspace:" << m_lastWorkspace
+             << "| lastPresetId:" << m_lastPresetId
+             << "| debugMode:" << m_debugMode;
 }
 
 void GlobalProperties::loadProperties() {
@@ -88,6 +91,9 @@ void GlobalProperties::loadProperties() {
     m_debugMode     = root["debug"].toObject()["enabled"].toBool(false);
     m_lastWorkspace = root["session"].toObject()["lastWorkspace"].toString();
     m_lastPresetId  = root["session"].toObject()["lastPresetId"].toString();
+    qDebug() << "[GlobalProperties] Loaded -> lastWorkspace:" << m_lastWorkspace
+             << "| lastPresetId:" << m_lastPresetId
+             << "| debugMode:" << m_debugMode;
 }
 
 // ── Getters / Setters ─────────────────────────────────────────────────────────

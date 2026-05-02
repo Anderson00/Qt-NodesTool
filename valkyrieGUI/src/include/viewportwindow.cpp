@@ -1,7 +1,10 @@
 #include "viewportwindow.h"
 #include "behaviours/behaviourloader.h"
+#include "behaviours/connections.h"
+#include "model/connectionmodel.h"
 #include "utils/workspacemanager.h"
 #include <QUuid>
+#include <QVariantMap>
 
 ViewPortWindow::ViewPortWindow(QWidget* parent)
     : QMLWindow(parent, QUrl("qrc:/subwindows/ViewPortWindow.qml"))
@@ -163,6 +166,30 @@ bool ViewPortWindow::addConnectionByUuids(const QString& outputUuid, const QStri
 }
 
 // ── Workspace ─────────────────────────────────────────────────────────────────
+
+QVariantList ViewPortWindow::getAllConnections() const {
+    QVariantList result;
+    for (auto it = m_behaviours.constBegin(); it != m_behaviours.constEnd(); ++it) {
+        const QString& outputUuid = it.key();
+        Behaviours* beh = it.value();
+        const auto& outs = beh->outputConns();
+        for (auto ci = outs.constBegin(); ci != outs.constEnd(); ++ci) {
+            const QString& outputMethod = ci.key();
+            Connections* conn = ci.value();
+            for (ConnectionModel* model : conn->getAllConnections()) {
+                const QString inputUuid = m_behaviours.key(model->input());
+                if (inputUuid.isEmpty()) continue;
+                QVariantMap entry;
+                entry["outputUuid"]   = outputUuid;
+                entry["outputMethod"] = outputMethod;
+                entry["inputUuid"]    = inputUuid;
+                entry["inputMethod"]  = QString::fromLatin1(model->slot().methodSignature());
+                result.append(entry);
+            }
+        }
+    }
+    return result;
+}
 
 bool ViewPortWindow::saveWorkspace(const QString& name) {
     return WorkspaceManager::instance()->saveWorkspace(name);

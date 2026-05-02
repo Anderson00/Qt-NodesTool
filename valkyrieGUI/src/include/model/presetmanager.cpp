@@ -127,6 +127,7 @@ void PresetManager::saveToFile() {
         return;
     }
     file.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
+    qDebug() << "[PresetManager] Saved" << arr.size() << "custom preset(s) ->" << presetsFilePath();
 }
 
 void PresetManager::loadFromFile() {
@@ -147,6 +148,7 @@ void PresetManager::loadFromFile() {
         if (p) m_presets.append(p);
     }
 
+    qDebug() << "[PresetManager] Loaded" << arr.size() << "custom preset(s) from" << presetsFilePath();
     if (!arr.isEmpty())
         emit presetsChanged();
 }
