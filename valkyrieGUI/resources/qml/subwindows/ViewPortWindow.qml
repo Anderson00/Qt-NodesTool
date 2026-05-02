@@ -790,14 +790,18 @@ Rectangle {
                         Connections {
                             target: model.node
                             function onCloseButtonClicked() { nodeConnections.model.remove(index) }
-                            function onXChanged() { circleConnPoint = model.circleConn.mapToItem(parent, 0, 0) }
-                            function onYChanged() { circleConnPoint = model.circleConn.mapToItem(parent, 0, 0) }
+                            function onXChanged()      { circleConnPoint = model.circleConn.mapToItem(parent, 0, 0) }
+                            function onYChanged()      { circleConnPoint = model.circleConn.mapToItem(parent, 0, 0) }
+                            function onWidthChanged()  { circleConnPoint = model.circleConn.mapToItem(parent, 0, 0) }
+                            function onHeightChanged() { circleConnPoint = model.circleConn.mapToItem(parent, 0, 0) }
                         }
 
                         Connections {
                             target: viewRectConn2
-                            function onXChanged() { circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0) }
-                            function onYChanged() { circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0) }
+                            function onXChanged()      { circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0) }
+                            function onYChanged()      { circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0) }
+                            function onWidthChanged()  { circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0) }
+                            function onHeightChanged() { circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0) }
                         }
 
                         ShapePath {
