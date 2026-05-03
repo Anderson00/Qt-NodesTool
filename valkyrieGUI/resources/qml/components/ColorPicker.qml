@@ -100,9 +100,10 @@ Item {
         id: colorPopup
         width: 340
         height: 420
-        modal: true
+        modal: false
         focus: true
         padding: 0
+        z: 10000
 
         background: Rectangle {
             color: ThemeManager.backgroundColor
