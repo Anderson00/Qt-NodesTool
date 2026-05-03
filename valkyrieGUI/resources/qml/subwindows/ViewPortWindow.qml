@@ -11,6 +11,7 @@ import App.Toast 1.0
 import "../components"
 import "../components/bottomsheets"
 import "../components/viewport"
+import "../components/drawers"
 import Qaterial as Qaterial
 
 Rectangle {
@@ -1596,7 +1597,7 @@ Rectangle {
     // ─── Left Panel Drawer ───────────────────────────────────────────────────────
     Drawer {
         id: leftPanelDrawer
-        width: 280
+        width: 320
         y: topBarHeight
         height: parent.height - topBarHeight
         edge: Qt.LeftEdge
@@ -1662,12 +1663,81 @@ Rectangle {
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
 
+                NodesDrawer {
+                    id: nodesDrawer
+                    anchors.fill: parent
+                    visible: selectedPanel === "nodes"
+
+                    onBehaviourSelected: function(path, infos) {
+                        viewPort.addBehaviour(path, infos)
+                    }
+                    onDragStarted: function(path, infos, lx, ly) {
+                        var gp = nodesDrawer.mapToItem(root, lx, ly)
+                        nodeDragGhost.currentPath  = path
+                        nodeDragGhost.currentInfos = infos
+                        nodeDragGhost.x = gp.x - nodeDragGhost.width  / 2
+                        nodeDragGhost.y = gp.y - nodeDragGhost.height / 2
+                        nodeDragGhost.open()
+                    }
+                    onDragUpdated: function(lx, ly) {
+                        var gp = nodesDrawer.mapToItem(root, lx, ly)
+                        nodeDragGhost.x = gp.x - nodeDragGhost.width  / 2
+                        nodeDragGhost.y = gp.y - nodeDragGhost.height / 2
+                    }
+                    onDragEnded: function(lx, ly) {
+                        nodeDragGhost.close()
+                        if (lx < -9000) return  // onCanceled path — don't add node
+                        var gp = nodesDrawer.mapToItem(root, lx, ly)
+                        if (gp.x > leftPanelDrawer.width + 20)
+                            viewPort.addBehaviour(nodeDragGhost.currentPath,
+                                                  nodeDragGhost.currentInfos)
+                    }
+                }
+
+                ExplorerDrawer {
+                    anchors.fill: parent
+                    visible: selectedPanel === "explorer"
+                    rootFolder: "file:///" + Qt.application.applicationDirPath
+                }
+
+                VariablesDrawer {
+                    anchors.fill: parent
+                    visible: selectedPanel === "variables"
+                }
+            }
+        }
+    }
+
+    // ─── Node drag ghost (Popup → renders in Overlay above Drawer) ─────────────
+    Popup {
+        id: nodeDragGhost
+        modal: false
+        closePolicy: Popup.NoAutoClose
+        padding: 0
+        background: null
+        width: 136; height: 52
+
+        property string currentPath:  ""
+        property var    currentInfos: null
+
+        Rectangle {
+            anchors.fill: parent; radius: 7
+            color: Qt.rgba(ThemeManager.primaryColor.r,
+                           ThemeManager.primaryColor.g,
+                           ThemeManager.primaryColor.b, 0.92)
+
+            ColumnLayout {
+                anchors.fill: parent; anchors.margins: 10; spacing: 2
                 Text {
-                    anchors.centerIn: parent
-                    text: selectedPanel ? (selectedPanel.charAt(0).toUpperCase() + selectedPanel.slice(1) + " panel") : ""
-                    color: ThemeManager.textColor
-                    opacity: 0.35
-                    font.pixelSize: 12
+                    Layout.fillWidth: true
+                    text: nodeDragGhost.currentInfos
+                          ? (nodeDragGhost.currentInfos.name || "") : ""
+                    font.pixelSize: 12; font.bold: true
+                    color: "white"; elide: Text.ElideRight
+                }
+                Text {
+                    text: "→ drop on canvas"
+                    font.pixelSize: 9; color: "white"; opacity: 0.7
                 }
             }
         }
