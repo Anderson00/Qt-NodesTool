@@ -21,7 +21,7 @@ Canvas {
     // Minor grid cell size in world units.
     property int minWgrid: 20
 
-    // Grid pattern: "dots" | "lines" | "circles" | "cross" | "hexagon" | "none"
+    // Grid pattern: "dots" | "lines" | "circles" | "cross" | "x" | "hexagon" | "none"
     property string pattern: "dots"
     onPatternChanged:  requestPaint()
     onMinWgridChanged: requestPaint()
@@ -165,6 +165,35 @@ Canvas {
             }
             ctx.stroke()
 
+        } else if (pattern === "x") {
+            // ── Minor X diagonals (LOD: only when cell ≥ 32 px) ──────────────────
+            var xdiag = cell * 0.14
+            if (cell >= 32) {
+                ctx.strokeStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.15)
+                ctx.lineWidth = 1
+                ctx.beginPath()
+                for (var xdix = ox; xdix <= width  + cell; xdix += cell) {
+                    for (var xdiy = oy; xdiy <= height + cell; xdiy += cell) {
+                        ctx.moveTo(xdix - xdiag, xdiy - xdiag); ctx.lineTo(xdix + xdiag, xdiy + xdiag)
+                        ctx.moveTo(xdix + xdiag, xdiy - xdiag); ctx.lineTo(xdix - xdiag, xdiy + xdiag)
+                    }
+                }
+                ctx.stroke()
+            }
+
+            // ── Major X diagonals ────────────────────────────────────────────────
+            var xmajordiag = cell * 0.14
+            ctx.strokeStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.35)
+            ctx.lineWidth = 1
+            ctx.beginPath()
+            for (var xdjx = mox; xdjx <= width  + major; xdjx += major) {
+                for (var xdjy = moy; xdjy <= height + major; xdjy += major) {
+                    ctx.moveTo(xdjx - xmajordiag, xdjy - xmajordiag); ctx.lineTo(xdjx + xmajordiag, xdjy + xmajordiag)
+                    ctx.moveTo(xdjx + xmajordiag, xdjy - xmajordiag); ctx.lineTo(xdjx - xmajordiag, xdjy + xmajordiag)
+                }
+            }
+            ctx.stroke()
+
         } else if (pattern === "hexagon") {
             // ── Hexagons at major grid intersections (pointy-top) ────────────────
             var hexSize = major * 0.42
@@ -245,7 +274,7 @@ Canvas {
         }
 
         ctx.font = "9px sans-serif"
-        var tickLen = 5
+        var tickLen = 10
 
         // Horizontal ticks (along X axis)
         if (oy5 >= 0 && oy5 <= height) {

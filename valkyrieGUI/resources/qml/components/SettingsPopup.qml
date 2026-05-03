@@ -813,6 +813,7 @@ Popup {
                         { id: "lines",   label: "Lines",   icon: Qaterial.Icons.viewSequential },
                         { id: "circles", label: "Circles", icon: Qaterial.Icons.circleOutline },
                         { id: "cross",   label: "Cross",   icon: Qaterial.Icons.plus },
+                        { id: "x",       label: "X",       icon: Qaterial.Icons.close },
                         { id: "hexagon", label: "Hexagon", icon: Qaterial.Icons.hexagonOutline },
                         { id: "none",    label: "None",    icon: Qaterial.Icons.eyeOffOutline }
                     ]
