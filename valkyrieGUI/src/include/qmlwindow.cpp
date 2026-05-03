@@ -13,6 +13,8 @@
 #include "model/globalproperties.h"
 #include "model/presetmanager.h"
 #include "model/colorpreset.h"
+#include "model/nodevariable.h"
+#include "model/variablemanager.h"
 #include "utils/workspacemanager.h"
 
 QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent),
@@ -55,6 +57,20 @@ QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent),
             1, 0,
             "WorkspaceManager",
             WorkspaceManager::qmlSingletonProvider
+            );
+
+        qmlRegisterSingletonType<VariableManager>(
+            "App.Variables",
+            1, 0,
+            "VariableManager",
+            VariableManager::qmlSingletonProvider
+            );
+
+        qmlRegisterUncreatableType<NodeVariable>(
+            "App.Variables",
+            1, 0,
+            "NodeVariable",
+            "NodeVariable is created by VariableManager"
             );
 
         m_subTheme = new SubTheme(QUuid::createUuid().toString(QUuid::WithoutBraces));

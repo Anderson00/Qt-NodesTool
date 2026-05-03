@@ -9,7 +9,6 @@ Item {
     id: root
 
     property var rootFolder:    "file:///"
-    property var currentFolder: rootFolder
 
     property var breadcrumbUrls:   [rootFolder]
     property var breadcrumbLabels: ["Root"]
@@ -20,22 +19,25 @@ Item {
 
     // Re-init after parent sets rootFolder
     Component.onCompleted: {
-        root.breadcrumbUrls   = [root.rootFolder.toString()]
+        var url = root.rootFolder.toString()
+        root.breadcrumbUrls   = [url]
         root.breadcrumbLabels = ["Root"]
-        root.currentFolder    = root.rootFolder.toString()
+        folderModel.folder    = url
     }
 
     function _navigate(folderUrl, label) {
         var urlStr = folderUrl.toString()
         root.breadcrumbUrls   = root.breadcrumbUrls.concat([urlStr])
         root.breadcrumbLabels = root.breadcrumbLabels.concat([label])
-        root.currentFolder    = urlStr
+        folderModel.folder    = urlStr
     }
 
     function _navigateTo(index) {
-        root.breadcrumbUrls   = root.breadcrumbUrls.slice(0, index + 1)
-        root.breadcrumbLabels = root.breadcrumbLabels.slice(0, index + 1)
-        root.currentFolder    = root.breadcrumbUrls[index].toString()
+        var newUrls   = root.breadcrumbUrls.slice(0, index + 1)
+        var newLabels = root.breadcrumbLabels.slice(0, index + 1)
+        root.breadcrumbUrls   = newUrls
+        root.breadcrumbLabels = newLabels
+        folderModel.folder    = newUrls[index].toString()
     }
 
     function _goBack() {
@@ -45,7 +47,6 @@ Item {
 
     FolderListModel {
         id: folderModel
-        folder:    root.currentFolder
         showDirs:  true
         showFiles: true
         showHidden: false

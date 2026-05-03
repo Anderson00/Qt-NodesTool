@@ -46,6 +46,8 @@ set(PROJECT_SOURCES
     src/include/model/colorpreset.h src/include/model/colorpreset.cpp
     src/include/model/presetmanager.h src/include/model/presetmanager.cpp
     src/include/model/globalproperties.h src/include/model/globalproperties.cpp
+    src/include/model/nodevariable.h src/include/model/nodevariable.cpp
+    src/include/model/variablemanager.h src/include/model/variablemanager.cpp
     src/include/behaviours/behaviours.h src/include/behaviours/behaviours.cpp
     src/include/commands/nodeundocommands.h src/include/commands/nodeundocommands.cpp
     src/include/subwindows/taskmanagerwindow.h src/include/subwindows/taskmanagerwindow.cpp

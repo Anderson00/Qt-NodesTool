@@ -2,12 +2,14 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15 as Contrl
 import QtQuick.Layouts 1.14
 import App.Theme 1.0
+import App.Variables 1.0
 import Qaterial 1.0 as Qaterial
+
+import '../../components'
 
 Item {
     id: root
 
-    // Variable types and their visual identity
     readonly property var typeConfig: ({
         "STRING":  { color: "#3B82F6", symbol: "\"\"", label: "String"  },
         "NUMBER":  { color: "#F59E0B", symbol: "#",    label: "Number"  },
@@ -16,37 +18,46 @@ Item {
         "ARRAY":   { color: "#F97316", symbol: "[ ]",  label: "Array"   }
     })
 
-    property string typeFilter: "ALL"
-    property string searchText: ""
-    property bool   addFormOpen: false
+    property string typeFilter:      "ALL"
+    property string searchText:      ""
+    property bool   addFormOpen:     false
+    property bool   _newVarReadOnly: false
+    property string _newVarType:     "STRING"
+    property bool   _newVarBool:     false
+    property color  _newVarColor:    "#7C6AF7"
 
-    // Persistent variable store (runtime only until backend integration)
-    ListModel {
-        id: variablesModel
+    readonly property var _typeKeys: ["STRING", "NUMBER", "BOOLEAN", "COLOR", "ARRAY"]
+
+    function _typeColor(t) {
+        return typeConfig[t] ? typeConfig[t].color : ThemeManager.textColor.toString()
+    }
+    function _typeSymbol(t) {
+        return typeConfig[t] ? typeConfig[t].symbol : "?"
     }
 
-    property var _typeKeys: ["STRING", "NUMBER", "BOOLEAN", "COLOR", "ARRAY"]
+    function _addVariable() {
+        var name = newVarName.text.trim()
+        if (!name) return
+        var val = ""
+        if (root._newVarType === "BOOLEAN")
+            val = root._newVarBool ? "true" : "false"
+        else if (root._newVarType === "COLOR")
+            val = root._newVarColor.toString().toUpperCase()
+        else
+            val = newVarValue.text
+        VariableManager.addVariable(name, root._newVarType, val, root._newVarReadOnly)
+        _resetForm()
+    }
 
-    function _addVariable(name, type, value) {
-        if (!name.trim()) return
-        variablesModel.append({
-            varName:  name.trim(),
-            varType:  type,
-            varValue: value,
-            editing:  false
-        })
-        addFormOpen = false
-        newVarName.text  = ""
-        newVarValue.text = ""
+    function _resetForm() {
+        root.addFormOpen      = false
+        root._newVarReadOnly  = false
+        root._newVarBool      = false
+        root._newVarColor     = "#7C6AF7"
+        root._newVarType      = "STRING"
+        newVarName.text       = ""
+        newVarValue.text      = ""
         newVarType.currentIndex = 0
-    }
-
-    function _typeColor(type) {
-        return typeConfig[type] ? typeConfig[type].color : ThemeManager.textColor.toString()
-    }
-
-    function _typeSymbol(type) {
-        return typeConfig[type] ? typeConfig[type].symbol : "?"
     }
 
     ColumnLayout {
@@ -69,52 +80,48 @@ Item {
 
                 Qaterial.ColorIcon {
                     source: Qaterial.Icons.magnify
-                    color: ThemeManager.textColor; opacity: 0.4
-                    width: 14; height: 14
+                    color: ThemeManager.textColor; opacity: 0.4; width: 14; height: 14
                 }
 
                 Item {
                     Layout.fillWidth: true; height: parent.height
-
                     Text {
-                        anchors.fill: parent; verticalAlignment: Text.AlignVCenter
-                        text: "Search variables…"
-                        color: ThemeManager.textColor; opacity: 0.3; font.pixelSize: 12
+                        anchors.left: parent.left; anchors.right: parent.right
+                        anchors.leftMargin: 2; anchors.verticalCenter: parent.verticalCenter
+                        text: "Search variables…"; font.pixelSize: 12
+                        color: ThemeManager.textColor; opacity: 0.3
                         visible: !varSearch.text.length && !varSearch.activeFocus
                     }
                     TextInput {
                         id: varSearch
-                        anchors.fill: parent; verticalAlignment: TextInput.AlignVCenter
+                        anchors.left: parent.left; anchors.right: parent.right
+                        anchors.leftMargin: 2; anchors.verticalCenter: parent.verticalCenter
+                        height: 22
                         color: ThemeManager.textColor; font.pixelSize: 12; clip: true
                         selectionColor: ThemeManager.primaryColor
+                        verticalAlignment: TextInput.AlignVCenter
                         onTextChanged: root.searchText = text
                     }
                 }
 
-                // Variable count badge
                 Rectangle {
                     height: 18; width: countBadge.implicitWidth + 12; radius: 9
-                    color: Qt.rgba(ThemeManager.primaryColor.r,
-                                   ThemeManager.primaryColor.g,
+                    color: Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g,
                                    ThemeManager.primaryColor.b, 0.15)
                     Text {
-                        id: countBadge
-                        anchors.centerIn: parent
-                        text: variablesModel.count
-                        font.pixelSize: 10; color: ThemeManager.primaryColor
+                        id: countBadge; anchors.centerIn: parent
+                        text: VariableManager.count; font.pixelSize: 10
+                        color: ThemeManager.primaryColor
                     }
                 }
 
-                // Add button
                 Rectangle {
                     width: 24; height: 24; radius: 5
                     color: root.addFormOpen
                            ? ThemeManager.primaryColor
-                           : Qt.rgba(ThemeManager.primaryColor.r,
-                                     ThemeManager.primaryColor.g,
+                           : Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g,
                                      ThemeManager.primaryColor.b, 0.15)
                     Behavior on color { ColorAnimation { duration: 120 } }
-
                     Qaterial.ColorIcon {
                         source: root.addFormOpen ? Qaterial.Icons.close : Qaterial.Icons.plus
                         color: root.addFormOpen ? ThemeManager.backgroundColor : ThemeManager.primaryColor
@@ -131,10 +138,12 @@ Item {
         // ── Add variable form ───────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            height: root.addFormOpen ? 120 : 0
+            Layout.preferredHeight: _formH
             clip: true
             color: Qt.darker(ThemeManager.backgroundColor, 1.08)
-            Behavior on height { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+
+            property real _formH: root.addFormOpen ? 152 : 0
+            Behavior on _formH { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
 
             Rectangle {
                 anchors.bottom: parent.bottom
@@ -144,155 +153,212 @@ Item {
 
             ColumnLayout {
                 anchors.fill: parent; anchors.margins: 10; spacing: 8
-                visible: root.addFormOpen
 
                 // Row 1: Name + Type
                 RowLayout {
                     Layout.fillWidth: true; spacing: 8
 
-                    // Name field
                     Rectangle {
                         Layout.fillWidth: true; height: 30; radius: 4
-                        color: Qt.rgba(ThemeManager.textColor.r,
-                                       ThemeManager.textColor.g,
+                        color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g,
                                        ThemeManager.textColor.b, 0.06)
                         border.width: newVarName.activeFocus ? 1 : 0
                         border.color: ThemeManager.primaryColor
 
-                        RowLayout {
+                        Text {
+                            anchors.left: parent.left; anchors.leftMargin: 8
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "name"; font.pixelSize: 9
+                            color: ThemeManager.textColor; opacity: 0.35
+                            visible: !newVarName.text.length && !newVarName.activeFocus
+                        }
+                        TextInput {
+                            id: newVarName
                             anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 8
-                            spacing: 4
-
-                            Text {
-                                text: "name"
-                                font.pixelSize: 9; color: ThemeManager.textColor; opacity: 0.35
-                            }
-                            TextInput {
-                                id: newVarName
-                                Layout.fillWidth: true
-                                font.pixelSize: 12; color: ThemeManager.textColor
-                                clip: true; selectionColor: ThemeManager.primaryColor
-                            }
+                            verticalAlignment: TextInput.AlignVCenter
+                            font.pixelSize: 12; color: ThemeManager.textColor
+                            clip: true; selectionColor: ThemeManager.primaryColor
+                            Keys.onReturnPressed: root._addVariable()
                         }
                     }
 
-                    // Type selector
                     Rectangle {
-                        width: 80; height: 30; radius: 4
-                        color: Qt.rgba(ThemeManager.textColor.r,
-                                       ThemeManager.textColor.g,
+                        width: 84; height: 30; radius: 4
+                        color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g,
                                        ThemeManager.textColor.b, 0.06)
 
                         RowLayout {
                             anchors.fill: parent; anchors.leftMargin: 6; anchors.rightMargin: 4
-                            spacing: 4
-
+                            spacing: 4; enabled: false
                             Rectangle {
                                 width: 8; height: 8; radius: 4
-                                color: root._typeColor(root._typeKeys[newVarType.currentIndex])
+                                color: root._typeColor(root._newVarType)
                             }
                             Text {
-                                Layout.fillWidth: true
-                                text: root._typeKeys[newVarType.currentIndex]
-                                font.pixelSize: 10; color: ThemeManager.textColor
-                                elide: Text.ElideRight
+                                Layout.fillWidth: true; text: root._newVarType
+                                font.pixelSize: 10; color: ThemeManager.textColor; elide: Text.ElideRight
                             }
                             Qaterial.ColorIcon {
                                 source: Qaterial.Icons.chevronDown
-                                color: ThemeManager.textColor; opacity: 0.5
-                                width: 10; height: 10
+                                color: ThemeManager.textColor; opacity: 0.5; width: 10; height: 10
                             }
                         }
 
-                        Contrl.ComboBox {
+                        CustomComboBox {
                             id: newVarType
                             anchors.fill: parent; opacity: 0
                             model: root._typeKeys
+                            onCurrentIndexChanged: root._newVarType = root._typeKeys[currentIndex]
                         }
                     }
                 }
 
-                // Row 2: Value
-                Rectangle {
-                    Layout.fillWidth: true; height: 30; radius: 4
-                    color: Qt.rgba(ThemeManager.textColor.r,
-                                   ThemeManager.textColor.g,
-                                   ThemeManager.textColor.b, 0.06)
-                    border.width: newVarValue.activeFocus ? 1 : 0
-                    border.color: ThemeManager.primaryColor
+                // Row 2: Type-aware value input
+                Item {
+                    Layout.fillWidth: true
+                    height: root._newVarType === "COLOR" ? 36 : 30
 
-                    RowLayout {
-                        anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 8
-                        spacing: 4
+                    // ── STRING / NUMBER / ARRAY ──────────────────────────────
+                    Rectangle {
+                        visible: root._newVarType !== "BOOLEAN" && root._newVarType !== "COLOR"
+                        anchors.fill: parent; radius: 4
+                        color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g,
+                                       ThemeManager.textColor.b, 0.06)
+                        border.width: newVarValue.activeFocus ? 1 : 0
+                        border.color: ThemeManager.primaryColor
 
                         Text {
-                            text: "value"
+                            anchors.left: parent.left; anchors.leftMargin: 8
+                            anchors.verticalCenter: parent.verticalCenter
                             font.pixelSize: 9; color: ThemeManager.textColor; opacity: 0.35
+                            text: root._newVarType === "ARRAY" ? "item1, item2, …" : "value"
+                            visible: !newVarValue.text.length && !newVarValue.activeFocus
                         }
                         TextInput {
                             id: newVarValue
-                            Layout.fillWidth: true
+                            anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 8
+                            verticalAlignment: TextInput.AlignVCenter
                             font.pixelSize: 12; color: ThemeManager.textColor
                             clip: true; selectionColor: ThemeManager.primaryColor
-                            Keys.onReturnPressed: root._addVariable(
-                                newVarName.text,
-                                root._typeKeys[newVarType.currentIndex],
-                                newVarValue.text
-                            )
+                            validator: root._newVarType === "NUMBER" ? _formNumValidator : null
+                            inputMethodHints: root._newVarType === "NUMBER"
+                                             ? Qt.ImhFormattedNumbersOnly : Qt.ImhNone
+                            Keys.onReturnPressed: root._addVariable()
+                        }
+                        DoubleValidator {
+                            id: _formNumValidator
+                            notation: DoubleValidator.StandardNotation
                         }
                     }
-                }
 
-                // Row 3: Actions
-                RowLayout {
-                    Layout.fillWidth: true; spacing: 8
+                    // ── BOOLEAN ──────────────────────────────────────────────
+                    RowLayout {
+                        visible: root._newVarType === "BOOLEAN"
+                        anchors.fill: parent; spacing: 8
 
-                    Item { Layout.fillWidth: true }
-
-                    // Cancel
-                    Rectangle {
-                        height: 24; width: cancelBtn.implicitWidth + 16; radius: 4
-                        color: Qt.rgba(ThemeManager.textColor.r,
-                                       ThemeManager.textColor.g,
-                                       ThemeManager.textColor.b, 0.08)
-                        Text {
-                            id: cancelBtn
-                            anchors.centerIn: parent
-                            text: "Cancel"; font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.6
+                        Rectangle {
+                            Layout.fillWidth: true; height: 30; radius: 4
+                            color: root._newVarBool
+                                   ? Qt.rgba(0.07, 0.73, 0.51, 0.2)
+                                   : Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g,
+                                             ThemeManager.textColor.b, 0.06)
+                            border.width: root._newVarBool ? 1 : 0
+                            border.color: "#10B981"
+                            Behavior on color { ColorAnimation { duration: 100 } }
+                            Text {
+                                anchors.centerIn: parent; text: "TRUE"
+                                font.pixelSize: 11; font.bold: root._newVarBool
+                                color: root._newVarBool ? "#10B981" : ThemeManager.textColor
+                                opacity: root._newVarBool ? 1.0 : 0.4
+                            }
+                            MouseArea {
+                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                onClicked: root._newVarBool = true
+                            }
                         }
-                        MouseArea {
-                            anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                root.addFormOpen = false
-                                newVarName.text  = ""
-                                newVarValue.text = ""
+
+                        Rectangle {
+                            Layout.fillWidth: true; height: 30; radius: 4
+                            color: !root._newVarBool
+                                   ? Qt.rgba(0.94, 0.27, 0.27, 0.2)
+                                   : Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g,
+                                             ThemeManager.textColor.b, 0.06)
+                            border.width: !root._newVarBool ? 1 : 0
+                            border.color: "#EF4444"
+                            Behavior on color { ColorAnimation { duration: 100 } }
+                            Text {
+                                anchors.centerIn: parent; text: "FALSE"
+                                font.pixelSize: 11; font.bold: !root._newVarBool
+                                color: !root._newVarBool ? "#EF4444" : ThemeManager.textColor
+                                opacity: !root._newVarBool ? 1.0 : 0.4
+                            }
+                            MouseArea {
+                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                onClicked: root._newVarBool = false
                             }
                         }
                     }
 
-                    // Add
+                    // ── COLOR ─────────────────────────────────────────────────
+                    ColorPicker {
+                        id: newVarColorPicker
+                        visible: root._newVarType === "COLOR"
+                        anchors.fill: parent
+                        showHex: true; label: ""
+                        value: root._newVarColor
+                        onAccepted: function(c) { root._newVarColor = c }
+                    }
+                }
+
+                // Row 3: ReadOnly + Cancel + Add
+                RowLayout {
+                    Layout.fillWidth: true; spacing: 8
+
+                    CustomCheckBox {
+                        text: ""
+                        checked: root._newVarReadOnly
+                        onCheckedChanged: {
+                            root._newVarReadOnly = checked
+                        }
+                    }
+
+                    Text {
+                        text: "Read-only"; font.pixelSize: 11
+                        color: ThemeManager.textColor; opacity: 0.6
+                    }
+
+                    Item { Layout.fillWidth: true }
+
                     Rectangle {
-                        height: 24; width: addBtn.implicitWidth + 16; radius: 4
+                        height: 24; width: cancelLbl.implicitWidth + 16; radius: 4
+                        color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g,
+                                       ThemeManager.textColor.b, 0.08)
+                        Text {
+                            id: cancelLbl; anchors.centerIn: parent
+                            text: "Cancel"; font.pixelSize: 11
+                            color: ThemeManager.textColor; opacity: 0.6
+                        }
+                        MouseArea {
+                            anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                            onClicked: root._resetForm()
+                        }
+                    }
+
+                    Rectangle {
+                        height: 24; width: addLbl.implicitWidth + 16; radius: 4
                         color: newVarName.text.trim().length > 0
                                ? ThemeManager.primaryColor
-                               : Qt.rgba(ThemeManager.primaryColor.r,
-                                         ThemeManager.primaryColor.g,
+                               : Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g,
                                          ThemeManager.primaryColor.b, 0.25)
                         Behavior on color { ColorAnimation { duration: 120 } }
-
                         Text {
-                            id: addBtn
-                            anchors.centerIn: parent
+                            id: addLbl; anchors.centerIn: parent
                             text: "Add Variable"; font.pixelSize: 11
                             color: ThemeManager.backgroundColor
                         }
                         MouseArea {
                             anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                            onClicked: root._addVariable(
-                                newVarName.text,
-                                root._typeKeys[newVarType.currentIndex],
-                                newVarValue.text
-                            )
+                            onClicked: root._addVariable()
                         }
                     }
                 }
@@ -326,16 +392,12 @@ Item {
                                 ? ThemeManager.primaryColor.toString()
                                 : root._typeColor(modelData)
                             height: 18; width: chipLbl.implicitWidth + 14; radius: 9
-                            color: active
-                                   ? chipColor
-                                   : Qt.rgba(ThemeManager.primaryColor.r,
-                                             ThemeManager.primaryColor.g,
+                            color: active ? chipColor
+                                   : Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g,
                                              ThemeManager.primaryColor.b, 0.12)
                             Behavior on color { ColorAnimation { duration: 100 } }
-
                             Text {
-                                id: chipLbl
-                                anchors.centerIn: parent
+                                id: chipLbl; anchors.centerIn: parent
                                 text: modelData === "ALL" ? "All"
                                       : (root._typeSymbol(modelData) + " " + root.typeConfig[modelData].label)
                                 font.pixelSize: 9
@@ -356,39 +418,34 @@ Item {
         Item {
             Layout.fillWidth: true; Layout.fillHeight: true; clip: true
 
-            // Empty state
             Column {
                 anchors.centerIn: parent; spacing: 12
-                visible: variablesModel.count === 0
+                visible: VariableManager.count === 0
 
                 Rectangle {
                     width: 48; height: 48; radius: 24; anchors.horizontalCenter: parent.horizontalCenter
-                    color: Qt.rgba(ThemeManager.primaryColor.r,
-                                   ThemeManager.primaryColor.g,
+                    color: Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g,
                                    ThemeManager.primaryColor.b, 0.08)
-
                     Qaterial.ColorIcon {
-                        source: Qaterial.Icons.codeJson
-                        color: ThemeManager.primaryColor; opacity: 0.4
+                        source: Qaterial.Icons.codeJson; color: ThemeManager.primaryColor; opacity: 0.4
                         width: 22; height: 22; anchors.centerIn: parent
                     }
                 }
                 Text {
-                    text: "No variables yet"
-                    font.pixelSize: 12; color: ThemeManager.textColor; opacity: 0.35
+                    text: "No variables yet"; font.pixelSize: 12
+                    color: ThemeManager.textColor; opacity: 0.35
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
                 Text {
-                    text: "Click + to add a global variable"
-                    font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.22
+                    text: "Click + to add a global variable"; font.pixelSize: 10
+                    color: ThemeManager.textColor; opacity: 0.22
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
             }
 
             ListView {
                 id: varList
-                anchors.fill: parent; clip: true
-                spacing: 0
+                anchors.fill: parent; clip: true; spacing: 0
 
                 Contrl.ScrollBar.vertical: Contrl.ScrollBar {
                     contentItem: Rectangle {
@@ -397,24 +454,31 @@ Item {
                     }
                 }
 
-                model: variablesModel
+                model: VariableManager.variables
 
                 delegate: Item {
                     id: varRow
-                    width: varList.width; height: visible ? 44 : 0
-                    visible: {
-                        if (root.typeFilter !== "ALL" && varType !== root.typeFilter)
-                            return false
-                        if (root.searchText && varName.toLowerCase().indexOf(root.searchText.toLowerCase()) < 0)
-                            return false
+                    property var    varObj:    modelData
+                    property bool   _editing:  false
+                    property string _editText: ""
+
+                    function _passFilter() {
+                        if (!varObj) return false
+                        if (root.typeFilter !== "ALL" && varObj.type !== root.typeFilter) return false
+                        if (root.searchText && varObj.name.toLowerCase().indexOf(
+                                root.searchText.toLowerCase()) < 0) return false
                         return true
                     }
+
+                    width: varList.width
+                    height: _passFilter() ? 44 : 0
+                    visible: _passFilter()
+                    clip: true
 
                     Rectangle {
                         anchors.fill: parent
                         color: rowHover.containsMouse
-                               ? Qt.rgba(ThemeManager.primaryColor.r,
-                                         ThemeManager.primaryColor.g,
+                               ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g,
                                          ThemeManager.primaryColor.b, 0.06)
                                : "transparent"
                         Behavior on color { ColorAnimation { duration: 80 } }
@@ -434,113 +498,210 @@ Item {
                             Rectangle {
                                 width: 28; height: 20; radius: 4
                                 color: Qt.rgba(
-                                    parseInt(root._typeColor(varType).slice(1,3), 16)/255,
-                                    parseInt(root._typeColor(varType).slice(3,5), 16)/255,
-                                    parseInt(root._typeColor(varType).slice(5,7), 16)/255,
-                                    0.2
-                                )
+                                    parseInt(root._typeColor(varObj ? varObj.type : "STRING").slice(1,3), 16)/255,
+                                    parseInt(root._typeColor(varObj ? varObj.type : "STRING").slice(3,5), 16)/255,
+                                    parseInt(root._typeColor(varObj ? varObj.type : "STRING").slice(5,7), 16)/255,
+                                    0.2)
                                 Text {
                                     anchors.centerIn: parent
-                                    text: root._typeSymbol(varType)
+                                    text: root._typeSymbol(varObj ? varObj.type : "STRING")
                                     font.pixelSize: 9
-                                    color: root._typeColor(varType)
+                                    color: root._typeColor(varObj ? varObj.type : "STRING")
                                 }
                             }
 
                             // Name
                             Text {
-                                Layout.preferredWidth: 80
-                                text: varName; font.pixelSize: 12; font.bold: true
+                                Layout.preferredWidth: 72
+                                text: varObj ? varObj.name : ""
+                                font.pixelSize: 12; font.bold: true
                                 color: ThemeManager.textColor; elide: Text.ElideRight
                             }
 
-                            // Value (inline edit)
+                            // ── Value area (type-aware) ──────────────────────
                             Item {
-                                Layout.fillWidth: true; height: 28
+                                Layout.fillWidth: true
+                                height: (varObj && varObj.type === "COLOR") ? 34 : 26
 
-                                Rectangle {
-                                    anchors.fill: parent; radius: 4
-                                    color: editing
-                                           ? Qt.rgba(ThemeManager.textColor.r,
-                                                     ThemeManager.textColor.g,
-                                                     ThemeManager.textColor.b, 0.08)
-                                           : "transparent"
-                                    border.width: editing ? 1 : 0
-                                    border.color: ThemeManager.primaryColor
-
-                                    Text {
-                                        anchors.fill: parent
-                                        anchors.leftMargin: editing ? 6 : 0
-                                        verticalAlignment: Text.AlignVCenter
-                                        text: varValue || "—"
-                                        font.pixelSize: 11
-                                        color: varValue
-                                               ? ThemeManager.textColor
-                                               : ThemeManager.textColor
-                                        opacity: varValue ? 0.75 : 0.3
-                                        elide: Text.ElideRight
-                                        visible: !editing
+                                // ── COLOR: inline ColorPicker (its own popup handles picking) ──
+                                ColorPicker {
+                                    visible: varObj && varObj.type === "COLOR"
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: Math.min(parent.width, 160)
+                                    height: parent.height
+                                    showHex: true; label: ""
+                                    enabled: varObj && !varObj.readOnly
+                                    value: (varObj && varObj.value) ? varObj.value : "#888888"
+                                    onAccepted: function(c) {
+                                        if (varObj)
+                                            VariableManager.setVariableValue(
+                                                varObj.id, c.toString().toUpperCase())
                                     }
+                                }
 
-                                    TextInput {
-                                        id: valueEdit
-                                        anchors.fill: parent; anchors.leftMargin: 6
-                                        verticalAlignment: TextInput.AlignVCenter
-                                        font.pixelSize: 11; color: ThemeManager.textColor
-                                        clip: true; selectionColor: ThemeManager.primaryColor
-                                        visible: editing
-                                        text: varValue
+                                // ── BOOLEAN: pill toggle ──────────────────────
+                                Item {
+                                    visible: varObj && varObj.type === "BOOLEAN"
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    height: 20
+                                    width: boolPill.width
 
-                                        onActiveFocusChanged: {
-                                            if (!activeFocus && editing) {
-                                                variablesModel.setProperty(index, "varValue", text)
-                                                variablesModel.setProperty(index, "editing", false)
+                                    Rectangle {
+                                        id: boolPill
+                                        height: 20; radius: 10
+                                        width: boolLbl.implicitWidth + 16
+                                        color: (varObj && varObj.value === "true")
+                                               ? Qt.rgba(0.07, 0.73, 0.51, 0.22)
+                                               : Qt.rgba(0.94, 0.27, 0.27, 0.22)
+                                        Behavior on color { ColorAnimation { duration: 100 } }
+                                        Text {
+                                            id: boolLbl; anchors.centerIn: parent
+                                            text: varObj ? (varObj.value || "false") : "false"
+                                            font.pixelSize: 10; font.bold: true
+                                            color: (varObj && varObj.value === "true")
+                                                   ? "#10B981" : "#EF4444"
+                                        }
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            enabled: varObj && !varObj.readOnly
+                                            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                            onClicked: {
+                                                if (varObj)
+                                                    VariableManager.setVariableValue(
+                                                        varObj.id,
+                                                        varObj.value === "true" ? "false" : "true")
                                             }
                                         }
-                                        Keys.onReturnPressed: {
-                                            variablesModel.setProperty(index, "varValue", text)
-                                            variablesModel.setProperty(index, "editing", false)
+                                    }
+                                }
+
+                                // ── STRING / NUMBER / ARRAY ───────────────────
+                                Item {
+                                    visible: varObj && varObj.type !== "COLOR" && varObj.type !== "BOOLEAN"
+                                    anchors.fill: parent
+
+                                    Rectangle {
+                                        anchors.fill: parent; radius: 4
+                                        color: varRow._editing
+                                               ? Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g,
+                                                         ThemeManager.textColor.b, 0.08)
+                                               : "transparent"
+                                        border.width: varRow._editing ? 1 : 0
+                                        border.color: ThemeManager.primaryColor
+
+                                        Text {
+                                            visible: !varRow._editing
+                                            anchors.fill: parent; anchors.leftMargin: 4
+                                            verticalAlignment: Text.AlignVCenter
+                                            text: varObj ? (varObj.value || "—") : "—"
+                                            font.pixelSize: 11; color: ThemeManager.textColor
+                                            opacity: (varObj && varObj.value) ? 0.75 : 0.3
+                                            elide: Text.ElideRight
                                         }
-                                        Keys.onEscapePressed: {
-                                            text = varValue
-                                            variablesModel.setProperty(index, "editing", false)
+
+                                        TextInput {
+                                            id: valueEdit
+                                            visible: varRow._editing
+                                            anchors.fill: parent; anchors.leftMargin: 6
+                                            verticalAlignment: TextInput.AlignVCenter
+                                            font.pixelSize: 11; color: ThemeManager.textColor
+                                            clip: true; selectionColor: ThemeManager.primaryColor
+                                            text: varRow._editText
+                                            validator: (varObj && varObj.type === "NUMBER")
+                                                       ? _rowNumValidator : null
+                                            inputMethodHints: (varObj && varObj.type === "NUMBER")
+                                                              ? Qt.ImhFormattedNumbersOnly : Qt.ImhNone
+
+                                            onActiveFocusChanged: {
+                                                if (!activeFocus && varRow._editing) {
+                                                    VariableManager.setVariableValue(varObj.id, text)
+                                                    varRow._editing = false
+                                                }
+                                            }
+                                            Keys.onReturnPressed: {
+                                                VariableManager.setVariableValue(varObj.id, text)
+                                                varRow._editing = false
+                                            }
+                                            Keys.onEscapePressed: { varRow._editing = false }
+                                        }
+
+                                        DoubleValidator {
+                                            id: _rowNumValidator
+                                            notation: DoubleValidator.StandardNotation
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        visible: !varRow._editing
+                                        cursorShape: (!varObj || varObj.readOnly)
+                                                     ? Qt.ArrowCursor : Qt.IBeamCursor
+                                        onDoubleClicked: {
+                                            if (!varObj || varObj.readOnly) return
+                                            varRow._editText = varObj.value
+                                            varRow._editing  = true
+                                            valueEdit.forceActiveFocus()
                                         }
                                     }
                                 }
 
-                                MouseArea {
-                                    anchors.fill: parent; cursorShape: Qt.IBeamCursor
-                                    visible: !editing
-                                    onDoubleClicked: {
-                                        variablesModel.setProperty(index, "editing", true)
-                                        valueEdit.text = varValue
-                                        valueEdit.forceActiveFocus()
-                                    }
-                                }
                             }
 
-                            // Delete button (visible on hover)
-                            Rectangle {
-                                width: 20; height: 20; radius: 4
-                                visible: rowHover.containsMouse
-                                color: delHover.containsMouse
-                                       ? "#EF4444"
-                                       : Qt.rgba(ThemeManager.textColor.r,
-                                                 ThemeManager.textColor.g,
-                                                 ThemeManager.textColor.b, 0.1)
-                                Behavior on color { ColorAnimation { duration: 80 } }
+                            // ReadOnly lock
+                            Qaterial.ColorIcon {
+                                source: Qaterial.Icons.lockOutline
+                                color: ThemeManager.primaryColor
+                                opacity: (varObj && varObj.readOnly) ? 0.65 : 0.0
+                                width: 12; height: 12
+                                Behavior on opacity { NumberAnimation { duration: 100 } }
+                            }
 
-                                Qaterial.ColorIcon {
-                                    source: Qaterial.Icons.trashCanOutline
-                                    color: delHover.containsMouse ? "#ffffff" : ThemeManager.textColor
-                                    opacity: delHover.containsMouse ? 1.0 : 0.5
-                                    width: 11; height: 11; anchors.centerIn: parent
+                            // Action buttons (hover)
+                            Row {
+                                spacing: 4
+                                visible: rowHover.containsMouse && !varRow._editing
+
+                                Rectangle {
+                                    width: 20; height: 20; radius: 4
+                                    color: lockHover.containsMouse
+                                           ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g,
+                                                     ThemeManager.primaryColor.b, 0.25)
+                                           : Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g,
+                                                     ThemeManager.textColor.b, 0.1)
+                                    Behavior on color { ColorAnimation { duration: 80 } }
+                                    Qaterial.ColorIcon {
+                                        source: (varObj && varObj.readOnly)
+                                                ? Qaterial.Icons.lockOutline : Qaterial.Icons.lockOpenOutline
+                                        color: ThemeManager.primaryColor; opacity: 0.7
+                                        width: 11; height: 11; anchors.centerIn: parent
+                                    }
+                                    MouseArea {
+                                        id: lockHover; anchors.fill: parent
+                                        hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            if (varObj)
+                                                VariableManager.setVariableReadOnly(varObj.id, !varObj.readOnly)
+                                        }
+                                    }
                                 }
-                                MouseArea {
-                                    id: delHover
-                                    anchors.fill: parent; hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: variablesModel.remove(index)
+
+                                Rectangle {
+                                    width: 20; height: 20; radius: 4
+                                    color: delHover.containsMouse ? "#EF4444"
+                                           : Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g,
+                                                     ThemeManager.textColor.b, 0.1)
+                                    Behavior on color { ColorAnimation { duration: 80 } }
+                                    Qaterial.ColorIcon {
+                                        source: Qaterial.Icons.trashCanOutline
+                                        color: delHover.containsMouse ? "#ffffff" : ThemeManager.textColor
+                                        opacity: delHover.containsMouse ? 1.0 : 0.5
+                                        width: 11; height: 11; anchors.centerIn: parent
+                                    }
+                                    MouseArea {
+                                        id: delHover; anchors.fill: parent
+                                        hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                        onClicked: { if (varObj) VariableManager.removeVariable(varObj.id) }
+                                    }
                                 }
                             }
                         }
@@ -548,7 +709,6 @@ Item {
 
                     MouseArea {
                         id: rowHover; anchors.fill: parent; hoverEnabled: true
-                        // passes through to children — just for hover state
                         propagateComposedEvents: true
                         onClicked: mouse.accepted = false
                         onPressed: mouse.accepted = false
