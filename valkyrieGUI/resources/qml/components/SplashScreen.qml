@@ -27,15 +27,14 @@ Rectangle {
         id: leftPanel
         width:  Math.max(260, parent.width * 0.32)
         height: parent.height
-        color:  Qt.darker(ThemeManager.backgroundColor, 1.35)
+        color:  ThemeManager.foregroundColor
 
         Rectangle {
             anchors.right:  parent.right
             anchors.top:    parent.top
             anchors.bottom: parent.bottom
             width: 1
-            color:   ThemeManager.primaryColor
-            opacity: 0.18
+            color:   ThemeManager.borderColor
         }
 
         Column {
@@ -107,8 +106,8 @@ Rectangle {
                 visible: GlobalProperties.lastWorkspace !== ""
                 width:  leftPanel.width - 72
                 height: 1
-                color:  ThemeManager.primaryColor
-                opacity: 0.12
+                color:  ThemeManager.borderColor
+                opacity: 0.5
             }
 
             Item {
@@ -127,15 +126,27 @@ Rectangle {
         }
 
         // Version tag at bottom-left
-        Text {
+        Column {
             anchors.left:         parent.left
             anchors.leftMargin:   36
             anchors.bottom:       parent.bottom
             anchors.bottomMargin: 24
-            text:    "Qt 6.5.3  •  C++17"
-            font.pixelSize: 9
-            color:   ThemeManager.foregroundColor
-            opacity: 0.25
+            spacing: 4
+
+            Text {
+                text:    "Valkyrie v1.0.0"
+                font.pixelSize: 9
+                font.bold: true
+                color:   ThemeManager.primaryColor
+                opacity: 0.6
+            }
+
+            Text {
+                text:    "Qt 6.5.3  •  C++17"
+                font.pixelSize: 8
+                color:   ThemeManager.textSecondaryColor
+                opacity: 0.5
+            }
         }
     }
 
@@ -154,13 +165,24 @@ Rectangle {
             width: parent.width - 96
             spacing: 0
 
-            Text {
-                text: "RECENT"
-                font.pixelSize: 9
-                font.bold: true
-                color:   ThemeManager.primaryColor
-                opacity: 0.6
-                font.letterSpacing: 2
+            Row {
+                spacing: 12
+                Qaterial.ColorIcon {
+                    source: Qaterial.Icons.history
+                    color:  ThemeManager.primaryColor
+                    width: 16; height: 16
+                    anchors.verticalCenter: parent.verticalCenter
+                    opacity: 0.7
+                }
+                Text {
+                    text: "RECENT PROJECTS"
+                    font.pixelSize: 10
+                    font.bold: true
+                    color:   ThemeManager.primaryColor
+                    opacity: 0.7
+                    font.letterSpacing: 1.2
+                    anchors.verticalCenter: parent.verticalCenter
+                }
             }
 
             Item { height: 20; width: 1 }
@@ -169,8 +191,8 @@ Rectangle {
             Text {
                 visible: WorkspaceManager.workspaceList.length === 0
                 text: "No recent projects yet.\nCreate a project or open an existing one to get started."
-                color:       ThemeManager.foregroundColor
-                opacity:     0.35
+                color:       ThemeManager.textSecondaryColor
+                opacity:     0.6
                 font.pixelSize: 12
                 lineHeight:  1.7
                 wrapMode:    Text.WordWrap
@@ -198,14 +220,14 @@ Rectangle {
                     height: 60
                     radius: 6
                     color:  cardMouse.containsMouse
-                                ? Qt.rgba(ThemeManager.primaryColor.r,
-                                          ThemeManager.primaryColor.g,
-                                          ThemeManager.primaryColor.b, 0.1)
+                                ? Qt.rgba(ThemeManager.surfaceColor.r,
+                                          ThemeManager.surfaceColor.g,
+                                          ThemeManager.surfaceColor.b, 0.4)
                                 : isLast
-                                    ? Qt.rgba(ThemeManager.primaryColor.r,
-                                              ThemeManager.primaryColor.g,
-                                              ThemeManager.primaryColor.b, 0.05)
-                                    : "transparent"
+                                    ? ThemeManager.surfaceColor
+                                    : ThemeManager.backgroundColor
+                    border.width: isLast ? 1 : 0
+                    border.color: ThemeManager.borderColor
 
                     // Left accent bar for last-opened
                     Rectangle {
@@ -242,7 +264,7 @@ Rectangle {
                                 text:  modelData
                                 color: cardMouse.containsMouse || card.isLast
                                            ? ThemeManager.primaryColor
-                                           : ThemeManager.foregroundColor
+                                           : ThemeManager.textColor
                                 font.pixelSize: 13
                                 font.bold: card.isLast
                                 Behavior on color { ColorAnimation { duration: 100 } }
@@ -251,9 +273,10 @@ Rectangle {
                             Text {
                                 visible: card.isLast
                                 text:    "Last opened"
-                                color:   ThemeManager.primaryColor
-                                opacity: 0.55
-                                font.pixelSize: 10
+                                color:   ThemeManager.successColor
+                                opacity: 0.75
+                                font.pixelSize: 9
+                                font.weight: Font.Medium
                             }
                         }
                     }
@@ -321,9 +344,14 @@ Rectangle {
         color:  rowMouse.containsMouse
                     ? Qt.rgba(ThemeManager.primaryColor.r,
                               ThemeManager.primaryColor.g,
-                              ThemeManager.primaryColor.b, 0.1)
+                              ThemeManager.primaryColor.b, 0.08)
                     : "transparent"
+        border.width: rowMouse.containsMouse ? 1 : 0
+        border.color: Qt.rgba(ThemeManager.primaryColor.r,
+                              ThemeManager.primaryColor.g,
+                              ThemeManager.primaryColor.b, 0.3)
         Behavior on color { ColorAnimation { duration: 100 } }
+        Behavior on border.color { ColorAnimation { duration: 100 } }
 
         Row {
             anchors.verticalCenter: parent.verticalCenter
@@ -339,9 +367,10 @@ Rectangle {
             }
             Text {
                 text:  row.label
-                color: ThemeManager.foregroundColor
+                color: rowMouse.containsMouse ? ThemeManager.textColor : ThemeManager.textSecondaryColor
                 font.pixelSize: 13
                 anchors.verticalCenter: parent.verticalCenter
+                Behavior on color { ColorAnimation { duration: 100 } }
             }
         }
 

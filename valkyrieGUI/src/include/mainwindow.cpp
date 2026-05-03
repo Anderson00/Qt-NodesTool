@@ -14,6 +14,9 @@
 #include "subwindows/testconnectionwindow.h"
 #include "subwindows/taskmanagerwindow.h"
 #include "utils/xmlsavestate.h"
+#include "model/globalproperties.h"
+#include "model/presetmanager.h"
+#include "model/thememanager.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -27,6 +30,37 @@ MainWindow::MainWindow(QWidget *parent)
     this->ui->mdiArea->setViewport(this->m_viewPort);
 
     xml::XMLSaveState::instance()->setQMdiArea(this->ui->mdiArea);
+
+    ThemeManager* tm = ThemeManager::instance();
+
+    // Mark as initialized BEFORE loading to prevent any animations
+    tm->markInitialized();
+
+    // Load last preset
+    QString lastPresetId = GlobalProperties::instance()->lastPresetId();
+    PresetManager* pm = PresetManager::instance();
+    if (!lastPresetId.isEmpty()) {
+        for (int i = 0; i < pm->count(); ++i) {
+            if (pm->presetAt(i)->id() == lastPresetId) {
+                pm->applyPreset(i);
+                break;
+            }
+        }
+    } else {
+        // Load theme mode (light/dark) - if no preset was loaded, apply the mode
+        ThemeManager::ThemeMode themeMode = GlobalProperties::instance()->isDarkMode()
+            ? ThemeManager::ThemeMode::Dark
+            : ThemeManager::ThemeMode::Light;
+        tm->setThemeMode(themeMode);
+    }
+
+    // Load show fps setting
+    bool showFps = GlobalProperties::instance()->showFps();
+    ui->actionShow_fps->setChecked(showFps);
+    m_viewPort->setShowFps(showFps);
+
+    // Mark theme as initialized (now it will save changes)
+    ThemeManager::instance()->markInitialized();
 }
 
 MainWindow::~MainWindow()
@@ -93,5 +127,6 @@ void MainWindow::on_actionTask_Manager_triggered()
 void MainWindow::on_actionShow_fps_toggled(bool arg1)
 {
     this->m_viewPort->setShowFps(arg1);
+    GlobalProperties::instance()->setShowFps(arg1);
 }
 

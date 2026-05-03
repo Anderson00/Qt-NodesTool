@@ -56,6 +56,10 @@ void GlobalProperties::migrateFromIni() {
 void GlobalProperties::saveProperties() {
     QJsonObject debug;
     debug["enabled"] = m_debugMode;
+    debug["showFps"] = m_showFps;
+
+    QJsonObject theme;
+    theme["isDarkMode"] = m_isDarkMode;
 
     QJsonObject session;
     session["lastWorkspace"] = m_lastWorkspace;
@@ -64,6 +68,7 @@ void GlobalProperties::saveProperties() {
     QJsonObject root;
     root["version"] = 1;
     root["debug"]   = debug;
+    root["theme"]   = theme;
     root["session"] = session;
 
     QFile file(settingsFilePath());
@@ -74,7 +79,9 @@ void GlobalProperties::saveProperties() {
     file.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
     qDebug() << "[GlobalProperties] Saved -> lastWorkspace:" << m_lastWorkspace
              << "| lastPresetId:" << m_lastPresetId
-             << "| debugMode:" << m_debugMode;
+             << "| debugMode:" << m_debugMode
+             << "| showFps:" << m_showFps
+             << "| isDarkMode:" << m_isDarkMode;
 }
 
 void GlobalProperties::loadProperties() {
@@ -89,17 +96,25 @@ void GlobalProperties::loadProperties() {
     }
 
     const QJsonObject root = doc.object();
-    m_debugMode     = root["debug"].toObject()["enabled"].toBool(false);
+    const QJsonObject debugObj = root["debug"].toObject();
+    const QJsonObject themeObj = root["theme"].toObject();
+    m_debugMode     = debugObj["enabled"].toBool(false);
+    m_showFps       = debugObj["showFps"].toBool(false);
+    m_isDarkMode    = themeObj["isDarkMode"].toBool(true);
     m_lastWorkspace = root["session"].toObject()["lastWorkspace"].toString();
     m_lastPresetId  = root["session"].toObject()["lastPresetId"].toString();
     qDebug() << "[GlobalProperties] Loaded -> lastWorkspace:" << m_lastWorkspace
              << "| lastPresetId:" << m_lastPresetId
-             << "| debugMode:" << m_debugMode;
+             << "| debugMode:" << m_debugMode
+             << "| showFps:" << m_showFps
+             << "| isDarkMode:" << m_isDarkMode;
 }
 
 // ── Getters / Setters ─────────────────────────────────────────────────────────
 
 bool    GlobalProperties::debugMode()     const { return m_debugMode; }
+bool    GlobalProperties::showFps()       const { return m_showFps; }
+bool    GlobalProperties::isDarkMode()    const { return m_isDarkMode; }
 QString GlobalProperties::lastWorkspace() const { return m_lastWorkspace; }
 QString GlobalProperties::lastPresetId()  const { return m_lastPresetId; }
 
@@ -108,6 +123,22 @@ void GlobalProperties::setDebugMode(bool value) {
         m_debugMode = value;
         saveProperties();
         emit debugModeChanged();
+    }
+}
+
+void GlobalProperties::setShowFps(bool value) {
+    if (m_showFps != value) {
+        m_showFps = value;
+        saveProperties();
+        emit showFpsChanged();
+    }
+}
+
+void GlobalProperties::setIsDarkMode(bool value) {
+    if (m_isDarkMode != value) {
+        m_isDarkMode = value;
+        saveProperties();
+        emit isDarkModeChanged();
     }
 }
 

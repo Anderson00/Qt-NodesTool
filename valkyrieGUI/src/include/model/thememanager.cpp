@@ -1,4 +1,5 @@
 #include "thememanager.h"
+#include "globalproperties.h"
 
 ThemeManager* ThemeManager::instance() {
     static ThemeManager* _instance = []() {
@@ -106,6 +107,13 @@ QColor ThemeManager::selectionColor() const {
 }
 
 void ThemeManager::startColorTransition() {
+    if (!m_animationEnabled) {
+        m_transitionProgress = 1.0;
+        emit transitionProgressChanged();
+        emit themeChanged();
+        return;
+    }
+
     m_transitionAnimation->stop();
     m_transitionAnimation->setStartValue(0.0);
     m_transitionAnimation->setEndValue(1.0);
@@ -118,21 +126,26 @@ void ThemeManager::applyColorsWithAnimation(const QColor& bgColor, const QColor&
                                             const QColor& secondaryColor, const QColor& accentColor,
                                             const QColor& successColor, const QColor& warningColor,
                                             const QColor& dangerColor, const QColor& textColor,
-                                            const QColor& textSecondaryColor, const QColor& selectionColor) {
-    m_oldBackgroundColor = AbstractTheme::backgroundColor();
-    m_oldSurfaceColor = AbstractTheme::surfaceColor();
-    m_oldForegroundColor = AbstractTheme::foregroundColor();
-    m_oldBorderColor = AbstractTheme::borderColor();
-    m_oldShadowColor = AbstractTheme::shadowColor();
-    m_oldPrimaryColor = AbstractTheme::primaryColor();
-    m_oldSecondaryColor = AbstractTheme::secondaryColor();
-    m_oldAccentColor = AbstractTheme::accentColor();
-    m_oldSuccessColor = AbstractTheme::successColor();
-    m_oldWarningColor = AbstractTheme::warningColor();
-    m_oldDangerColor = AbstractTheme::dangerColor();
-    m_oldTextColor = AbstractTheme::textColor();
-    m_oldTextSecondaryColor = AbstractTheme::textSecondaryColor();
-    m_oldSelectionColor = AbstractTheme::selectionColor();
+                                            const QColor& textSecondaryColor, const QColor& selectionColor,
+                                            bool animate) {
+    if (animate) {
+        m_oldBackgroundColor = AbstractTheme::backgroundColor();
+        m_oldSurfaceColor = AbstractTheme::surfaceColor();
+        m_oldForegroundColor = AbstractTheme::foregroundColor();
+        m_oldBorderColor = AbstractTheme::borderColor();
+        m_oldShadowColor = AbstractTheme::shadowColor();
+        m_oldPrimaryColor = AbstractTheme::primaryColor();
+        m_oldSecondaryColor = AbstractTheme::secondaryColor();
+        m_oldAccentColor = AbstractTheme::accentColor();
+        m_oldSuccessColor = AbstractTheme::successColor();
+        m_oldWarningColor = AbstractTheme::warningColor();
+        m_oldDangerColor = AbstractTheme::dangerColor();
+        m_oldTextColor = AbstractTheme::textColor();
+        m_oldTextSecondaryColor = AbstractTheme::textSecondaryColor();
+        m_oldSelectionColor = AbstractTheme::selectionColor();
+    } else {
+        m_transitionProgress = 1.0;
+    }
 
     AbstractTheme::setBackgroundColor(bgColor);
     AbstractTheme::setSurfaceColor(surfaceColor);
@@ -149,10 +162,18 @@ void ThemeManager::applyColorsWithAnimation(const QColor& bgColor, const QColor&
     AbstractTheme::setTextSecondaryColor(textSecondaryColor);
     AbstractTheme::setSelectionColor(selectionColor);
 
-    startColorTransition();
+    if (animate) {
+        startColorTransition();
+    } else {
+        emit themeChanged();
+    }
 }
 
 void ThemeManager::applyTheme() {
+    if (m_initialized) {
+        GlobalProperties::instance()->setIsDarkMode(m_currentMode == ThemeMode::Dark);
+    }
+
     m_oldBackgroundColor = AbstractTheme::backgroundColor();
     m_oldSurfaceColor = AbstractTheme::surfaceColor();
     m_oldForegroundColor = AbstractTheme::foregroundColor();

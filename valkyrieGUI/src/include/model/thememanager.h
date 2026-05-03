@@ -29,6 +29,7 @@ public:
 
     Q_INVOKABLE void toggleTheme();
     Q_INVOKABLE void setThemeMode(ThemeMode mode);
+    void markInitialized() { m_initialized = true; m_animationEnabled = true; }
     Q_INVOKABLE SubTheme* getSubTheme(const QString& name);
     Q_INVOKABLE void addSubTheme(SubTheme* subTheme);
     Q_INVOKABLE void removeSubTheme(const QString& name);
@@ -40,7 +41,8 @@ public:
                                   const QColor& secondaryColor, const QColor& accentColor,
                                   const QColor& successColor, const QColor& warningColor,
                                   const QColor& dangerColor, const QColor& textColor,
-                                  const QColor& textSecondaryColor, const QColor& selectionColor);
+                                  const QColor& textSecondaryColor, const QColor& selectionColor,
+                                  bool animate = true);
 
     // Override color getters to support smooth transitions
     QColor backgroundColor() const override;
@@ -73,6 +75,8 @@ private:
     QList<SubTheme*> m_subThemes;
     QPropertyAnimation* m_transitionAnimation;
     qreal m_transitionProgress;
+    bool m_initialized = false;
+    bool m_animationEnabled = false;
 
     // Store previous colors for smooth transition
     QColor m_oldBackgroundColor;

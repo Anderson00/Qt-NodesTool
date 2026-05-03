@@ -1,5 +1,6 @@
 #include "presetmanager.h"
 #include "thememanager.h"
+#include "globalproperties.h"
 #include <QtQml/QQmlEngine>
 #include <QUuid>
 #include <QStandardPaths>
@@ -186,6 +187,7 @@ void PresetManager::applyPreset(int index) {
         p->secondaryColor(), p->accentColor(), p->successColor(),
         p->warningColor(), p->dangerColor(), p->textColor(),
         p->textSecondaryColor(), p->selectionColor());
+    GlobalProperties::instance()->setLastPresetId(p->id());
 }
 
 // ── CRUD ──────────────────────────────────────────────────────────────────────
