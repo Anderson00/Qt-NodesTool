@@ -14,7 +14,7 @@ Item {
     property var breadcrumbUrls:   [rootFolder]
     property var breadcrumbLabels: ["Root"]
 
-    property string extensionFilter: ""
+    property string extensionFilter: "json"
 
     signal fileActivated(string filePath)
 
@@ -168,7 +168,7 @@ Item {
                 spacing: 6
 
                 Repeater {
-                    model: ["all", "json", "vky", "txt"]
+                    model: ["all", "json", "txt"]
                     delegate: Rectangle {
                         property bool active: modelData === "all"
                                               ? root.extensionFilter === ""

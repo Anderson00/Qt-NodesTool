@@ -64,6 +64,7 @@ QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent),
         this->view()->rootContext()->setContextProperty("window", this);        
         this->view()->engine()->addImportPath("qrc:///");
         this->view()->engine()->addImportPath("components");
+        this->view()->engine()->rootContext()->setContextProperty("appDirPath", QCoreApplication::applicationDirPath());
     }
 
     this->setCentralWidget(QWidget::createWindowContainer(this->m_view, this));

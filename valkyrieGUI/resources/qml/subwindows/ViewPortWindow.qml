@@ -1653,7 +1653,7 @@ Rectangle {
                 ExplorerDrawer {
                     anchors.fill: parent
                     visible: selectedPanel === "explorer"
-                    rootFolder: "file:///" + Qt.application.applicationDirPath
+                    rootFolder: "file:///" + appDirPath
                 }
 
                 VariablesDrawer {
