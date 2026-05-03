@@ -17,7 +17,7 @@ Rectangle {
     id: root
     property var tt: ""
     property var count: 0
-    property int minWgrid: 20
+    property int minWgrid: GlobalProperties.minWgrid
     property int minZoom: 1
     property int maxZoom: 6
 
@@ -565,6 +565,7 @@ Rectangle {
             panY:     mycanvas.y
             zoom:     sliderZoom.value
             minWgrid: root.minWgrid
+            pattern:  GlobalProperties.gridPattern
         }
         Item {
             id: mycanvas

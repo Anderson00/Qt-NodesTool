@@ -769,14 +769,8 @@ Popup {
                         bottomPadding: 20
                     }
 
-                    Text {
-                        text: "DISPLAY"
-                        font.pixelSize: 10
-                        font.letterSpacing: 1.2
-                        color: ThemeManager.textColor
-                        opacity: 0.45
-                        bottomPadding: 14
-                    }
+                    // ── DISPLAY ─────────────────────────────────────────────────
+                    SectionLabel { text: "DISPLAY" }
 
                     RowLayout {
                         width: parent.width
@@ -785,7 +779,6 @@ Popup {
                         Column {
                             Layout.fillWidth: true
                             spacing: 2
-
                             Text {
                                 text: "Show FPS Counter"
                                 font.pixelSize: 12
@@ -802,9 +795,139 @@ Popup {
                         CustomSwitch {
                             id: fpsSwitch
                             checked: viewPort.showFps
-                            onToggled: viewPort.setShowFps(fpsSwitch.checked)
+                            onToggled: {
+                                viewPort.setShowFps(fpsSwitch.checked)
+                                GlobalProperties.showFps = fpsSwitch.checked
+                            }
                         }
                     }
+
+                    Item { width: 1; height: 8 }
+                    Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
+
+                    // ── GRID PATTERN ─────────────────────────────────────────────
+                    SectionLabel { text: "GRID PATTERN" }
+
+                    readonly property var _gridPatterns: [
+                        { id: "dots",    label: "Dots",    icon: Qaterial.Icons.dotsGrid },
+                        { id: "lines",   label: "Lines",   icon: Qaterial.Icons.viewSequential },
+                        { id: "circles", label: "Circles", icon: Qaterial.Icons.circleOutline },
+                        { id: "cross",   label: "Cross",   icon: Qaterial.Icons.plus },
+                        { id: "hexagon", label: "Hexagon", icon: Qaterial.Icons.hexagonOutline },
+                        { id: "none",    label: "None",    icon: Qaterial.Icons.eyeOffOutline }
+                    ]
+
+                    Flow {
+                        width: parent.width
+                        spacing: 8
+
+                        Repeater {
+                            model: viewportColumn._gridPatterns
+
+                            delegate: Rectangle {
+                                readonly property bool active: GlobalProperties.gridPattern === modelData.id
+                                width: 82; height: 68; radius: 8
+                                color: active
+                                    ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.15)
+                                    : ThemeManager.foregroundColor
+                                border.width: active ? 2 : 1
+                                border.color: active ? ThemeManager.primaryColor : ThemeManager.borderColor
+                                Behavior on color { ColorAnimation { duration: 120 } }
+
+                                Column {
+                                    anchors.centerIn: parent
+                                    spacing: 6
+
+                                    Qaterial.ColorIcon {
+                                        source: modelData.icon
+                                        color: active ? ThemeManager.primaryColor : ThemeManager.textSecondaryColor
+                                        width: 20; height: 20
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        Behavior on color { ColorAnimation { duration: 120 } }
+                                    }
+
+                                    Text {
+                                        text: modelData.label
+                                        font.pixelSize: 10
+                                        color: active ? ThemeManager.primaryColor : ThemeManager.textSecondaryColor
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        Behavior on color { ColorAnimation { duration: 120 } }
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: GlobalProperties.gridPattern = modelData.id
+                                }
+                            }
+                        }
+                    }
+
+                    Item { width: 1; height: 16 }
+                    Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
+
+                    // ── GRID SIZE ─────────────────────────────────────────────────
+                    SectionLabel { text: "GRID SIZE" }
+
+                    readonly property var _gridSizes: [
+                        { id: "compact",     label: "Compact",     value: 10 },
+                        { id: "normal",      label: "Normal",      value: 20 },
+                        { id: "comfortable", label: "Comfortable", value: 40 },
+                        { id: "spacious",    label: "Spacious",    value: 60 }
+                    ]
+
+                    Flow {
+                        width: parent.width
+                        spacing: 8
+                        bottomPadding: 8
+
+                        Repeater {
+                            model: viewportColumn._gridSizes
+
+                            delegate: Rectangle {
+                                readonly property bool active: GlobalProperties.gridPreset === modelData.id
+                                width: 100; height: 44; radius: 7
+                                color: active
+                                    ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.15)
+                                    : ThemeManager.foregroundColor
+                                border.width: active ? 2 : 1
+                                border.color: active ? ThemeManager.primaryColor : ThemeManager.borderColor
+                                Behavior on color { ColorAnimation { duration: 120 } }
+
+                                Column {
+                                    anchors.centerIn: parent
+                                    spacing: 2
+
+                                    Text {
+                                        text: modelData.label
+                                        font.pixelSize: 11
+                                        font.bold: active
+                                        color: active ? ThemeManager.primaryColor : ThemeManager.textColor
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        Behavior on color { ColorAnimation { duration: 120 } }
+                                    }
+
+                                    Text {
+                                        text: modelData.value + "px"
+                                        font.pixelSize: 9
+                                        color: ThemeManager.textSecondaryColor
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: GlobalProperties.gridPreset = modelData.id
+                                }
+                            }
+                        }
+                    }
+
+                    Item { width: 1; height: 20 }
                 }
             }
 

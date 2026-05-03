@@ -16,6 +16,9 @@ class GlobalProperties : public QObject
     Q_PROPERTY(bool    isDarkMode     READ isDarkMode     WRITE setIsDarkMode     NOTIFY isDarkModeChanged)
     Q_PROPERTY(QString lastWorkspace  READ lastWorkspace  WRITE setLastWorkspace  NOTIFY lastWorkspaceChanged)
     Q_PROPERTY(QString lastPresetId   READ lastPresetId   WRITE setLastPresetId   NOTIFY lastPresetIdChanged)
+    Q_PROPERTY(QString gridPreset     READ gridPreset     WRITE setGridPreset     NOTIFY gridPresetChanged)
+    Q_PROPERTY(int     minWgrid       READ minWgrid       WRITE setMinWgrid       NOTIFY minWgridChanged)
+    Q_PROPERTY(QString gridPattern    READ gridPattern    WRITE setGridPattern    NOTIFY gridPatternChanged)
 
 public:
     static GlobalProperties* instance();
@@ -26,15 +29,34 @@ public:
     bool    isDarkMode()    const;
     QString lastWorkspace() const;
     QString lastPresetId()  const;
+    QString gridPreset()    const;
+    int     minWgrid()      const;
+    QString gridPattern()   const;
 
     void setDebugMode(bool value);
     void setShowFps(bool value);
     void setIsDarkMode(bool value);
     void setLastWorkspace(const QString& name);
     void setLastPresetId(const QString& id);
+    void setGridPreset(const QString& preset);
+    void setMinWgrid(int value);
+    void setGridPattern(const QString& pattern);
 
     Q_INVOKABLE void saveProperties();
     Q_INVOKABLE void loadProperties();
+    Q_INVOKABLE void applyGridPreset(const QString& preset);
+
+    // Expose grid presets to QML
+    Q_INVOKABLE QStringList gridPresets() const {
+        return QStringList() << "compact" << "normal" << "comfortable" << "spacious";
+    }
+    Q_INVOKABLE int gridPresetValue(const QString& preset) const {
+        if (preset == "compact") return 10;
+        if (preset == "normal") return 20;
+        if (preset == "comfortable") return 40;
+        if (preset == "spacious") return 60;
+        return 20;
+    }
 
 signals:
     void debugModeChanged();
@@ -42,6 +64,9 @@ signals:
     void isDarkModeChanged();
     void lastWorkspaceChanged();
     void lastPresetIdChanged();
+    void gridPresetChanged();
+    void minWgridChanged();
+    void gridPatternChanged();
 
 private:
     explicit GlobalProperties(QObject* parent = nullptr);
@@ -58,6 +83,9 @@ private:
     bool    m_isDarkMode    = true;
     QString m_lastWorkspace;
     QString m_lastPresetId;
+    QString m_gridPreset    = "normal";
+    int     m_minWgrid      = 20;
+    QString m_gridPattern   = "dots";
 };
 
 #endif // GLOBALPROPERTIES_H

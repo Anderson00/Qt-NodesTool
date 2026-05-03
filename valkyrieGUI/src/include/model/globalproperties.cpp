@@ -61,6 +61,11 @@ void GlobalProperties::saveProperties() {
     QJsonObject theme;
     theme["isDarkMode"] = m_isDarkMode;
 
+    QJsonObject grid;
+    grid["preset"]   = m_gridPreset;
+    grid["minWgrid"] = m_minWgrid;
+    grid["pattern"]  = m_gridPattern;
+
     QJsonObject session;
     session["lastWorkspace"] = m_lastWorkspace;
     session["lastPresetId"]  = m_lastPresetId;
@@ -69,6 +74,7 @@ void GlobalProperties::saveProperties() {
     root["version"] = 1;
     root["debug"]   = debug;
     root["theme"]   = theme;
+    root["grid"]    = grid;
     root["session"] = session;
 
     QFile file(settingsFilePath());
@@ -81,7 +87,9 @@ void GlobalProperties::saveProperties() {
              << "| lastPresetId:" << m_lastPresetId
              << "| debugMode:" << m_debugMode
              << "| showFps:" << m_showFps
-             << "| isDarkMode:" << m_isDarkMode;
+             << "| isDarkMode:" << m_isDarkMode
+             << "| gridPreset:" << m_gridPreset
+             << "| minWgrid:" << m_minWgrid;
 }
 
 void GlobalProperties::loadProperties() {
@@ -98,16 +106,22 @@ void GlobalProperties::loadProperties() {
     const QJsonObject root = doc.object();
     const QJsonObject debugObj = root["debug"].toObject();
     const QJsonObject themeObj = root["theme"].toObject();
+    const QJsonObject gridObj = root["grid"].toObject();
     m_debugMode     = debugObj["enabled"].toBool(false);
     m_showFps       = debugObj["showFps"].toBool(false);
     m_isDarkMode    = themeObj["isDarkMode"].toBool(true);
+    m_gridPreset    = gridObj["preset"].toString("normal");
+    m_minWgrid      = gridObj["minWgrid"].toInt(20);
+    m_gridPattern   = gridObj["pattern"].toString("dots");
     m_lastWorkspace = root["session"].toObject()["lastWorkspace"].toString();
     m_lastPresetId  = root["session"].toObject()["lastPresetId"].toString();
     qDebug() << "[GlobalProperties] Loaded -> lastWorkspace:" << m_lastWorkspace
              << "| lastPresetId:" << m_lastPresetId
              << "| debugMode:" << m_debugMode
              << "| showFps:" << m_showFps
-             << "| isDarkMode:" << m_isDarkMode;
+             << "| isDarkMode:" << m_isDarkMode
+             << "| gridPreset:" << m_gridPreset
+             << "| minWgrid:" << m_minWgrid;
 }
 
 // ── Getters / Setters ─────────────────────────────────────────────────────────
@@ -117,6 +131,9 @@ bool    GlobalProperties::showFps()       const { return m_showFps; }
 bool    GlobalProperties::isDarkMode()    const { return m_isDarkMode; }
 QString GlobalProperties::lastWorkspace() const { return m_lastWorkspace; }
 QString GlobalProperties::lastPresetId()  const { return m_lastPresetId; }
+QString GlobalProperties::gridPreset()    const { return m_gridPreset; }
+int     GlobalProperties::minWgrid()      const { return m_minWgrid; }
+QString GlobalProperties::gridPattern()   const { return m_gridPattern; }
 
 void GlobalProperties::setDebugMode(bool value) {
     if (m_debugMode != value) {
@@ -155,5 +172,46 @@ void GlobalProperties::setLastPresetId(const QString& id) {
         m_lastPresetId = id;
         saveProperties();
         emit lastPresetIdChanged();
+    }
+}
+
+void GlobalProperties::setGridPreset(const QString& preset) {
+    if (m_gridPreset != preset) {
+        m_gridPreset = preset;
+        // Apply grid value based on preset
+        if (preset == "compact") {
+            m_minWgrid = 10;
+        } else if (preset == "normal") {
+            m_minWgrid = 20;
+        } else if (preset == "comfortable") {
+            m_minWgrid = 40;
+        } else if (preset == "spacious") {
+            m_minWgrid = 60;
+        }
+        saveProperties();
+        emit gridPresetChanged();
+        emit minWgridChanged();
+    }
+}
+
+void GlobalProperties::setMinWgrid(int value) {
+    if (m_minWgrid != value) {
+        m_minWgrid = value;
+        m_gridPreset = "custom";
+        saveProperties();
+        emit minWgridChanged();
+        emit gridPresetChanged();
+    }
+}
+
+void GlobalProperties::applyGridPreset(const QString& preset) {
+    setGridPreset(preset);
+}
+
+void GlobalProperties::setGridPattern(const QString& pattern) {
+    if (m_gridPattern != pattern) {
+        m_gridPattern = pattern;
+        saveProperties();
+        emit gridPatternChanged();
     }
 }

@@ -70,6 +70,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionShow_fps->setChecked(showFps);
     m_viewPort->setShowFps(showFps);
 
+    // Load grid preset (will be applied via QML binding to GlobalProperties)
+    int gridSize = GlobalProperties::instance()->minWgrid();
+    qDebug() << "[MainWindow] Loaded grid preset minWgrid:" << gridSize;
+
     // Mark theme as initialized (now it will save changes)
     ThemeManager::instance()->markInitialized();
 }

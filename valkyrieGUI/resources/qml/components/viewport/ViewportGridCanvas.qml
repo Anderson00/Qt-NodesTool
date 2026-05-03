@@ -21,6 +21,11 @@ Canvas {
     // Minor grid cell size in world units.
     property int minWgrid: 20
 
+    // Grid pattern: "dots" | "lines" | "circles" | "cross" | "hexagon" | "none"
+    property string pattern: "dots"
+    onPatternChanged:  requestPaint()
+    onMinWgridChanged: requestPaint()
+
     z: 0
 
     onPanXChanged:    requestPaint()
@@ -50,31 +55,138 @@ Canvas {
         var mox = ((px % major) + major) % major
         var moy = ((py % major) + major) % major
 
-        // ── Minor dots (LOD: only when cell ≥ 32 px) ────────────────────────
-        if (cell >= 32) {
-            var mr = Math.max(0.9, z * 0.48)
-            ctx.fillStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.20)
+        if (pattern === "dots") {
+            // ── Minor dots (LOD: only when cell ≥ 32 px) ────────────────────────
+            if (cell >= 32) {
+                var mr = Math.max(0.9, z * 0.48)
+                ctx.fillStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.20)
+                ctx.beginPath()
+                for (var ix = ox; ix <= width  + cell; ix += cell) {
+                    for (var iy = oy; iy <= height + cell; iy += cell) {
+                        ctx.moveTo(ix + mr, iy)
+                        ctx.arc(ix, iy, mr, 0, 6.2832)
+                    }
+                }
+                ctx.fill()
+            }
+
+            // ── Major dots ──────────────────────────────────────────────────────
+            var xr = Math.max(1.4, z * 0.88)
+            ctx.fillStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.48)
             ctx.beginPath()
-            for (var ix = ox; ix <= width  + cell; ix += cell) {
-                for (var iy = oy; iy <= height + cell; iy += cell) {
-                    ctx.moveTo(ix + mr, iy)
-                    ctx.arc(ix, iy, mr, 0, 6.2832)
+            for (var jx = mox; jx <= width  + major; jx += major) {
+                for (var jy = moy; jy <= height + major; jy += major) {
+                    ctx.moveTo(jx + xr, jy)
+                    ctx.arc(jx, jy, xr, 0, 6.2832)
                 }
             }
             ctx.fill()
-        }
 
-        // ── Major dots ──────────────────────────────────────────────────────
-        var xr = Math.max(1.4, z * 0.88)
-        ctx.fillStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.48)
-        ctx.beginPath()
-        for (var jx = mox; jx <= width  + major; jx += major) {
-            for (var jy = moy; jy <= height + major; jy += major) {
-                ctx.moveTo(jx + xr, jy)
-                ctx.arc(jx, jy, xr, 0, 6.2832)
+        } else if (pattern === "lines") {
+            // ── Minor lines (LOD: only when cell ≥ 32 px) ───────────────────────
+            ctx.lineWidth = 1
+            if (cell >= 32) {
+                ctx.strokeStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.12)
+                ctx.beginPath()
+                for (var lx = ox; lx <= width + cell; lx += cell) {
+                    ctx.moveTo(lx, 0); ctx.lineTo(lx, height)
+                }
+                for (var ly = oy; ly <= height + cell; ly += cell) {
+                    ctx.moveTo(0, ly); ctx.lineTo(width, ly)
+                }
+                ctx.stroke()
             }
+
+            // ── Major lines ──────────────────────────────────────────────────────
+            ctx.strokeStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.22)
+            ctx.beginPath()
+            for (var mlx = mox; mlx <= width + major; mlx += major) {
+                ctx.moveTo(mlx, 0); ctx.lineTo(mlx, height)
+            }
+            for (var mly = moy; mly <= height + major; mly += major) {
+                ctx.moveTo(0, mly); ctx.lineTo(width, mly)
+            }
+            ctx.stroke()
+
+        } else if (pattern === "circles") {
+            // ── Minor tiny dots (LOD: only when cell ≥ 32 px) ───────────────────
+            if (cell >= 32) {
+                var cmr = Math.max(0.9, z * 0.48)
+                ctx.fillStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.20)
+                ctx.beginPath()
+                for (var cix = ox; cix <= width  + cell; cix += cell) {
+                    for (var ciy = oy; ciy <= height + cell; ciy += cell) {
+                        ctx.moveTo(cix + cmr, ciy)
+                        ctx.arc(cix, ciy, cmr, 0, 6.2832)
+                    }
+                }
+                ctx.fill()
+            }
+
+            // ── Major hollow circles ─────────────────────────────────────────────
+            var cr = cell * 0.35
+            ctx.strokeStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.18)
+            ctx.lineWidth = 1
+            ctx.beginPath()
+            for (var cjx = mox; cjx <= width  + major; cjx += major) {
+                for (var cjy = moy; cjy <= height + major; cjy += major) {
+                    ctx.moveTo(cjx + cr, cjy)
+                    ctx.arc(cjx, cjy, cr, 0, 6.2832)
+                }
+            }
+            ctx.stroke()
+
+        } else if (pattern === "cross") {
+            // ── Minor crosses (LOD: only when cell ≥ 32 px) ─────────────────────
+            var half = cell * 0.14
+            if (cell >= 32) {
+                ctx.strokeStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.15)
+                ctx.lineWidth = 1
+                ctx.beginPath()
+                for (var xix = ox; xix <= width  + cell; xix += cell) {
+                    for (var xiy = oy; xiy <= height + cell; xiy += cell) {
+                        ctx.moveTo(xix - half, xiy); ctx.lineTo(xix + half, xiy)
+                        ctx.moveTo(xix, xiy - half); ctx.lineTo(xix, xiy + half)
+                    }
+                }
+                ctx.stroke()
+            }
+
+            // ── Major crosses ────────────────────────────────────────────────────
+            var xhalf = cell * 0.14
+            ctx.strokeStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.35)
+            ctx.lineWidth = 1
+            ctx.beginPath()
+            for (var xjx = mox; xjx <= width  + major; xjx += major) {
+                for (var xjy = moy; xjy <= height + major; xjy += major) {
+                    ctx.moveTo(xjx - xhalf, xjy); ctx.lineTo(xjx + xhalf, xjy)
+                    ctx.moveTo(xjx, xjy - xhalf); ctx.lineTo(xjx, xjy + xhalf)
+                }
+            }
+            ctx.stroke()
+
+        } else if (pattern === "hexagon") {
+            // ── Hexagons at major grid intersections (pointy-top) ────────────────
+            var hexSize = major * 0.42
+            ctx.strokeStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.22)
+            ctx.lineWidth = 1
+            ctx.beginPath()
+            for (var hx = mox; hx <= width  + major; hx += major) {
+                for (var hy = moy; hy <= height + major; hy += major) {
+                    for (var hi = 0; hi < 6; hi++) {
+                        var angle = (Math.PI / 180) * (60 * hi - 30)
+                        var hpx = hx + hexSize * Math.cos(angle)
+                        var hpy = hy + hexSize * Math.sin(angle)
+                        if (hi === 0) ctx.moveTo(hpx, hpy)
+                        else          ctx.lineTo(hpx, hpy)
+                    }
+                    ctx.closePath()
+                }
+            }
+            ctx.stroke()
+
         }
-        ctx.fill()
+        // pattern === "none": skip all grid drawing
 
         // ── Workspace boundary ───────────────────────────────────────────────
         var bL = px
