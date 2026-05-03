@@ -22,6 +22,11 @@ Rectangle {
     signal settingsRequested()
     signal saveRequested()
     signal openRequested()
+    signal undoRequested()
+    signal redoRequested()
+
+    property bool canUndo: false
+    property bool canRedo: false
 
     height: barHeight
     color: Qt.darker(ThemeManager.backgroundColor, 1.35)
@@ -244,6 +249,28 @@ Rectangle {
         Row {
             spacing: 0
             Layout.alignment: Qt.AlignVCenter
+
+            Qaterial.AppBarButton {
+                icon.source: Qaterial.Icons.undo
+                icon.color:  root.canUndo ? ThemeManager.textColor : Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.3)
+                enabled:     root.canUndo
+                ToolTip.text: "Undo (Ctrl+Z)"
+                ToolTip.visible: hovered
+                ToolTip.delay: 500
+                width: 40; height: 40
+                onClicked: root.undoRequested()
+            }
+
+            Qaterial.AppBarButton {
+                icon.source: Qaterial.Icons.redo
+                icon.color:  root.canRedo ? ThemeManager.textColor : Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.3)
+                enabled:     root.canRedo
+                ToolTip.text: "Redo (Ctrl+Y)"
+                ToolTip.visible: hovered
+                ToolTip.delay: 500
+                width: 40; height: 40
+                onClicked: root.redoRequested()
+            }
 
             Qaterial.AppBarButton {
                 icon.source: Qaterial.Icons.contentSave

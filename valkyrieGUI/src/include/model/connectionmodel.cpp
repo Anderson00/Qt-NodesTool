@@ -37,3 +37,13 @@ const QMetaMethod &ConnectionModel::slot() const
 {
     return m_slot;
 }
+
+const QMetaObject::Connection &ConnectionModel::connection() const
+{
+    return m_connection;
+}
+
+void ConnectionModel::setConnection(const QMetaObject::Connection &newConnection)
+{
+    m_connection = newConnection;
+}

@@ -48,6 +48,11 @@ Rectangle {
     signal frontOneStepClicked()
     signal backOneStepClicked()
     signal frontTotalClicked()
+
+    signal nodeDragEnded(real oldX, real oldY, real newX, real newY)
+
+    property real _pressX: 0
+    property real _pressY: 0
     signal backTotalClicked()
 
     color: Qt.rgba(ThemeManager.backgroundColor.r,
@@ -140,6 +145,22 @@ Rectangle {
     onWidthChanged:  if (behaviourObject) { behaviourObject.width = width; behaviourObject.contentWidth = width }
     onHeightChanged: if (behaviourObject) behaviourObject.height = root.height
 
+    // Sync C++ → visual (e.g. undo moves node back); disabled during user drag to avoid fighting
+    Binding {
+        target: root
+        property: "x"
+        value: behaviourObject ? behaviourObject.x : 0
+        when: behaviourObject !== null && !area.drag.active && !isResizing
+        restoreMode: Binding.RestoreNone
+    }
+    Binding {
+        target: root
+        property: "y"
+        value: behaviourObject ? behaviourObject.y : 0
+        when: behaviourObject !== null && !area.drag.active && !isResizing
+        restoreMode: Binding.RestoreNone
+    }
+
     Connections {
         target: rootBodyLoader
         function onLoaded() {
@@ -172,6 +193,14 @@ Rectangle {
         drag.maximumY: parent && parent.parent ? parent.parent.height - height : Number.MAX_VALUE
         acceptedButtons: Qt.AllButtons
 
+        onPressed: {
+            root._pressX = root.x
+            root._pressY = root.y
+        }
+        onReleased: {
+            if (Math.abs(root.x - root._pressX) > 0.5 || Math.abs(root.y - root._pressY) > 0.5)
+                root.nodeDragEnded(root._pressX, root._pressY, root.x, root.y)
+        }
         onClicked: function(mouse) {
             root.focus = true
             if (mouse.button === Qt.RightButton)

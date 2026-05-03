@@ -3,12 +3,17 @@
 #include "behaviours/connections.h"
 #include "model/connectionmodel.h"
 #include "utils/workspacemanager.h"
+#include "commands/nodeundocommands.h"
 #include <QUuid>
 #include <QVariantMap>
 
 ViewPortWindow::ViewPortWindow(QWidget* parent)
     : QMLWindow(parent, QUrl("qrc:/subwindows/ViewPortWindow.qml"))
 {
+    m_undoStack = new QUndoStack(this);
+    connect(m_undoStack, &QUndoStack::canUndoChanged, this, &ViewPortWindow::undoStateChanged);
+    connect(m_undoStack, &QUndoStack::canRedoChanged, this, &ViewPortWindow::undoStateChanged);
+
     m_frameTimer = new QTimer(this);
     m_frameTimer->setTimerType(Qt::PreciseTimer);
     m_frameTimer->setInterval(1000);
@@ -31,6 +36,10 @@ int   ViewPortWindow::fpsCount()      const { return m_fpsCount; }
 qreal ViewPortWindow::viewportX()     const { return m_viewportX; }
 qreal ViewPortWindow::viewportY()     const { return m_viewportY; }
 qreal ViewPortWindow::viewportScale() const { return m_viewportScale; }
+bool  ViewPortWindow::canUndo()       const { return m_undoStack->canUndo(); }
+bool  ViewPortWindow::canRedo()       const { return m_undoStack->canRedo(); }
+
+QUndoStack* ViewPortWindow::undoStack() const { return m_undoStack; }
 
 void ViewPortWindow::setFpsCount(int value) {
     m_fpsCount = value;
@@ -94,15 +103,7 @@ void ViewPortWindow::connectBehaviour(Behaviours* object) {
 
 bool ViewPortWindow::addBehaviour(const QString& path, const QJsonObject infos) {
     const QString uuid = QUuid::createUuid().toString(QUuid::WithoutBraces);
-    Behaviours* object = BehaviourLoader::instance()->loadBehaviour(path, infos);
-    if (!object) return false;
-
-    object->setBehaviourPath(path);
-    object->setBehaviourInfos(infos);
-    m_behaviours[uuid] = object;
-    connectBehaviour(object);
-    object->start();
-    emit behaviourAdded(object);
+    m_undoStack->push(new AddNodeCommand(this, NodeState{uuid, path, "", infos, 0, 0, 0, 0}));
     return true;
 }
 
@@ -136,8 +137,10 @@ bool ViewPortWindow::removeBehaviourFromUUID(const QString& uuid) {
 
 bool ViewPortWindow::removeBehaviourObject(Behaviours* object) {
     const QString key = m_behaviours.key(object);
+    m_behaviours.remove(key);
+    emit behaviourRemoved(object, key);  // notify QML before delete
     delete object;
-    return m_behaviours.remove(key);
+    return !key.isEmpty();
 }
 
 void ViewPortWindow::clearBehaviours() {
@@ -162,7 +165,81 @@ bool ViewPortWindow::addConnectionByUuids(const QString& outputUuid, const QStri
     Behaviours* outputBeh = m_behaviours.value(outputUuid);
     Behaviours* inputBeh  = m_behaviours.value(inputUuid);
     if (!outputBeh || !inputBeh) return false;
-    return outputBeh->addConnection(outputMethod, inputBeh, inputMethod);
+    if (!outputBeh->addConnection(outputMethod, inputBeh, inputMethod)) return false;
+    emit connectionAdded(outputUuid, outputMethod, inputUuid, inputMethod);
+    return true;
+}
+
+bool ViewPortWindow::removeConnectionByUuids(const QString& outputUuid, const QString& outputMethod,
+                                              const QString& inputUuid,  const QString& inputMethod)
+{
+    Behaviours* outputBeh = m_behaviours.value(outputUuid);
+    Behaviours* inputBeh  = m_behaviours.value(inputUuid);
+    if (!outputBeh || !inputBeh) return false;
+
+    const auto& outs = outputBeh->outputConns();
+    auto it = outs.find(outputMethod);
+    if (it == outs.end()) return false;
+
+    for (ConnectionModel* model : it.value()->getAllConnections()) {
+        if (model->input() == inputBeh &&
+            QString::fromLatin1(model->slot().methodSignature()) == inputMethod)
+        {
+            QObject::disconnect(model->connection());
+            delete model;
+            emit connectionRemoved(outputUuid, outputMethod, inputUuid, inputMethod);
+            return true;
+        }
+    }
+    return false;
+}
+
+// ── Undo/Redo ─────────────────────────────────────────────────────────────────
+
+void ViewPortWindow::undo() { m_undoStack->undo(); }
+void ViewPortWindow::redo() { m_undoStack->redo(); }
+
+bool ViewPortWindow::removeNodeWithUndo(const QString& uuid) {
+    Behaviours* beh = searchBehaviourFromUUID(uuid);
+    if (!beh) return false;
+
+    NodeState data{uuid, beh->behaviourPath(), beh->title(), beh->behaviourInfos(),
+                   beh->x(), beh->y(), beh->width(), beh->height()};
+
+    QList<ConnState> conns;
+    for (const QVariant& v : getAllConnections()) {
+        const QVariantMap m = v.toMap();
+        const QString out = m["outputUuid"].toString();
+        const QString in  = m["inputUuid"].toString();
+        if (out == uuid || in == uuid) {
+            conns.append({out, m["outputMethod"].toString(),
+                          in,  m["inputMethod"].toString()});
+        }
+    }
+
+    m_undoStack->push(new RemoveNodeCommand(this, data, conns));
+    return true;
+}
+
+bool ViewPortWindow::addConnectionWithUndo(const QString& outputUuid, const QString& outputMethod,
+                                            const QString& inputUuid,  const QString& inputMethod)
+{
+    m_undoStack->push(new AddConnectionCommand(this, ConnState{outputUuid, outputMethod, inputUuid, inputMethod}));
+    return true;
+}
+
+bool ViewPortWindow::removeConnectionWithUndo(const QString& outputUuid, const QString& outputMethod,
+                                               const QString& inputUuid,  const QString& inputMethod)
+{
+    m_undoStack->push(new RemoveConnectionCommand(this, ConnState{outputUuid, outputMethod, inputUuid, inputMethod}));
+    return true;
+}
+
+void ViewPortWindow::recordNodeMove(const QString& uuid,
+                                    double oldX, double oldY, double newX, double newY)
+{
+    if (qFuzzyCompare(oldX, newX) && qFuzzyCompare(oldY, newY)) return;
+    m_undoStack->push(new MoveNodeCommand(this, uuid, oldX, oldY, newX, newY));
 }
 
 // ── Workspace ─────────────────────────────────────────────────────────────────
@@ -203,5 +280,7 @@ bool ViewPortWindow::saveWorkspace(const QString& name) {
 }
 
 bool ViewPortWindow::loadWorkspace(const QString& name) {
-    return WorkspaceManager::instance()->loadWorkspace(name);
+    bool ok = WorkspaceManager::instance()->loadWorkspace(name);
+    if (ok) m_undoStack->clear();
+    return ok;
 }

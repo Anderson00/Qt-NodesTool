@@ -46,6 +46,7 @@ set(PROJECT_SOURCES
     src/include/model/presetmanager.h src/include/model/presetmanager.cpp
     src/include/model/globalproperties.h src/include/model/globalproperties.cpp
     src/include/behaviours/behaviours.h src/include/behaviours/behaviours.cpp
+    src/include/commands/nodeundocommands.h src/include/commands/nodeundocommands.cpp
     src/include/subwindows/taskmanagerwindow.h src/include/subwindows/taskmanagerwindow.cpp
     src/include/subwindows/testconnectionwindow.h src/include/subwindows/testconnectionwindow.cpp
     src/include/subwindows/qmlmdisubwindow.cpp

@@ -25,6 +25,7 @@ Rectangle {
     property var mouseYY
     property bool isConnecting: false
     property var shapeConn
+    property bool m_suppressConnectionDraw: false
     property var finalPoint
 
     //Behaviours properties
@@ -82,7 +83,7 @@ Rectangle {
         target: viewPort
 
         function onBehaviourAdded(obj){
-            nodes.model.append({'object':obj})
+            nodes.model.append({'object': obj, 'uuid': viewPort.getUUIDFromBehaviour(obj)})
         }
 
         function onBehavioursCleared() {
@@ -95,6 +96,43 @@ Rectangle {
             sliderZoom.value = scale
             mycanvas.x = x
             mycanvas.y = y
+        }
+
+        function onBehaviourRemoved(obj, uuid) {
+            for (var i = 0; i < nodes.model.count; i++) {
+                if (nodes.model.get(i).uuid === uuid) {
+                    nodes.model.remove(i)
+                    break
+                }
+            }
+            for (var ri = 0; ri < rectsArray.count; ri++) {
+                if (rectsArray.get(ri).uuid === uuid) {
+                    rectsArray.remove(ri)
+                    break
+                }
+            }
+            // Remove visual connection lines associated with this node
+            for (var ci = nodeConnections.model.count - 1; ci >= 0; ci--) {
+                var cm = nodeConnections.model.get(ci)
+                if (cm.outputUuid === uuid || cm.inputUuid === uuid)
+                    nodeConnections.model.remove(ci)
+            }
+        }
+
+        function onConnectionAdded(outputUuid, outputMethod, inputUuid, inputMethod) {
+            if (!root.m_suppressConnectionDraw)
+                Qt.callLater(function() { drawSavedConnection(outputUuid, outputMethod, inputUuid, inputMethod) })
+        }
+
+        function onConnectionRemoved(outputUuid, outputMethod, inputUuid, inputMethod) {
+            for (var i = nodeConnections.model.count - 1; i >= 0; i--) {
+                var m = nodeConnections.model.get(i)
+                if (m.outputUuid === outputUuid && m.inputUuid === inputUuid &&
+                    m.methodSignature1 === outputMethod && m.methodSignature2 === inputMethod) {
+                    nodeConnections.model.remove(i)
+                    break
+                }
+            }
         }
 
         // Visual connection drawing is managed by QML (manual) or restoreAllConnections() (load).
@@ -261,17 +299,30 @@ Rectangle {
             if (vr) {
                 let conn = vr.connectionOnXYPosition(lp.x, lp.y)
                 if (conn) {
-                    shapeConn.circleConn2   = conn.circleConn
-                    shapeConn.viewRectConn2 = node
-                    nodeConnections.model.set(lastConnection, { node2: node, methodSignature2: conn.name })
-
-                    let n1      = nodeConnections.model.get(lastConnection)
-                    let isValid = n1['node'].behaviourObject.addConnection(
-                                      n1['methodSignature1'], n1['node2'], n1['methodSignature2'])
-                    if (isValid)
-                        nodeConnected(node, shapeConn.viewRectConn2)
-                    else
+                    // Capture everything needed BEFORE touching the model (model.get returns a live proxy)
+                    let n1        = nodeConnections.model.get(lastConnection)
+                    let outUuid   = viewPort.getUUIDFromBehaviour(n1['node'].behaviourObject)
+                    let outMethod = n1['methodSignature1']
+                    let inUuid    = viewPort.getUUIDFromBehaviour(node)
+                    let inMethod  = conn.name
+                    if (outUuid && inUuid && outMethod && inMethod) {
+                        // Store uuids in the model entry so onBehaviourRemoved/onConnectionRemoved can identify it
+                        nodeConnections.model.set(lastConnection, {
+                            outputUuid: outUuid, inputUuid: inUuid,
+                            methodSignature2: inMethod, node2: node
+                        })
+                        // Draw visually using the original approach (direct circleConn2 set)
+                        // This is reliable because the Shape item is already in the scene.
+                        shapeConn.circleConn2   = conn.circleConn
+                        shapeConn.viewRectConn2 = node
+                        shapeConn = undefined
+                        // Record undo; suppress visual redraw since line is already drawn
+                        m_suppressConnectionDraw = true
+                        viewPort.addConnectionWithUndo(outUuid, outMethod, inUuid, inMethod)
+                        m_suppressConnectionDraw = false
+                    } else {
                         nodeConnections.model.remove(lastConnection)
+                    }
                 } else {
                     nodeConnections.model.remove(lastConnection)
                 }
@@ -603,10 +654,16 @@ Rectangle {
 
                         Component.onCompleted: {
                             circleConnPoint = model.circleConn.mapToItem(parent, 0, 0)
-                            if (model.initCircleConn2) {
-                                // Restored connection: set endpoints immediately
+                            if (model.isRestored) {
+                                // Restored connection (undo/redo/load): anchor to target port
                                 circleConn2   = model.initCircleConn2
                                 viewRectConn2 = model.initViewRectConn2
+                                // Recompute positions after layout
+                                Qt.callLater(function() {
+                                    circleConnPoint  = model.circleConn.mapToItem(shape.parent, 0, 0)
+                                    if (circleConn2)
+                                        circleConnPoint2 = circleConn2.mapToItem(shape.parent, 0, 0)
+                                })
                             } else {
                                 // New in-progress connection drawn by user
                                 shapeConn = shape
@@ -703,11 +760,14 @@ Rectangle {
                             if (focus) nodeOnFocus = this
                         }
 
-                        onConnectionSocketClicked: {
+                        onConnectionSocketClicked: function(conn) {
                             isConnecting = true
                             nodeConnections.model.append({
                                 methodSignature1: conn.name, node: this,
-                                circleConn: conn.circleConn, node2: null, methodSignature2: null
+                                circleConn: conn.circleConn, node2: this, methodSignature2: "",
+                                outputUuid: "", inputUuid: "",
+                                initCircleConn2: conn.circleConn, initViewRectConn2: this,
+                                isRestored: false
                             })
                             mouseAreaGlobal.enabled = true
                         }
@@ -741,15 +801,14 @@ Rectangle {
                                           .concat(behavioursZ.slice(index + 1, behavioursZ.length))
                         }
 
+                        onNodeDragEnded: function(oldX, oldY, newX, newY) {
+                            viewPort.recordNodeMove(
+                                viewPort.getUUIDFromBehaviour(model.object),
+                                oldX, oldY, newX, newY)
+                        }
+
                         onCloseButtonClicked: {
-                            const uuid = viewPort.getUUIDFromBehaviour(model.object)
-                            for (let ri = 0; ri < rectsArray.count; ri++) {
-                                if (rectsArray.get(ri).uuid === uuid) {
-                                    rectsArray.remove(ri); break
-                                }
-                            }
-                            nodes.objectToDelete = model.object
-                            nodes.model.remove(index)
+                            viewPort.removeNodeWithUndo(viewPort.getUUIDFromBehaviour(model.object))
                         }
 
                         onFrontOneStepClicked: { z += 1 }
@@ -788,6 +847,8 @@ Rectangle {
         barHeight:      topBarHeight
         currentProject: root.currentProject
         selectedPanel:  root.selectedPanel
+        canUndo:        viewPort.canUndo
+        canRedo:        viewPort.canRedo
         onPanelToggled: function(panel) {
             if (root.selectedPanel === panel) {
                 root.selectedPanel = ""
@@ -805,6 +866,8 @@ Rectangle {
                 saveWorkspaceDialog.open()
         }
         onOpenRequested: openWorkspaceDialog.open()
+        onUndoRequested: viewPort.undo()
+        onRedoRequested: viewPort.redo()
     }
 
     // ─── Splash Screen ──────────────────────────────────────────────────────────
@@ -1024,13 +1087,16 @@ Rectangle {
             return
         }
         nodeConnections.model.append({
-            methodSignature1: outputMethod,
-            node:             sourceRect,
-            circleConn:       sourceConn.circleConn,
-            node2:            targetRect,
-            methodSignature2: inputMethod,
-            initCircleConn2:  targetConn.circleConn,
-            initViewRectConn2: targetRect
+            outputUuid:        outputUuid,
+            inputUuid:         inputUuid,
+            methodSignature1:  outputMethod,
+            node:              sourceRect,
+            circleConn:        sourceConn.circleConn,
+            node2:             targetRect,
+            methodSignature2:  inputMethod,
+            initCircleConn2:   targetConn.circleConn,
+            initViewRectConn2: targetRect,
+            isRestored:        true
         })
     }
 
