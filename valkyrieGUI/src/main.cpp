@@ -9,6 +9,7 @@
 #include <Qaterial/Qaterial.hpp>
 #include <model/tablemodel.h>
 #include <model/globalproperties.h>
+#include <utils/toastmanager.h>
 
 static QFile log_file(QDateTime::currentDateTime().toString().replace(":","-").append(".log"));
 
@@ -79,6 +80,9 @@ int main(int argc, char **argv)
 
     // Register GlobalProperties as singleton in QML
     qmlRegisterSingletonInstance("App.GlobalProperties", 1, 0, "GlobalProperties", GlobalProperties::instance());
+
+    // Register ToastManager as singleton in QML
+    qmlRegisterSingletonInstance("App.Toast", 1, 0, "ToastManager", ToastManager::instance());
 
     MainWindow w;
     w.show();

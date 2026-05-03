@@ -6,6 +6,7 @@ import QtQuick.Shapes 1.15
 import App.Theme 1.0
 import App.Properties 1.0
 import App.Workspace 1.0
+import App.Toast 1.0
 
 import "../components"
 import "../components/bottomsheets"
@@ -62,16 +63,6 @@ Rectangle {
     property string selectedPanel: ""
     property string currentProject: WorkspaceManager.currentWorkspace !== "" ? WorkspaceManager.currentWorkspace : "Untitled Project"
 
-    function showToast(msg, type) { toast.show(msg, type) }
-
-    // ─── Toast Notification ──────────────────────────────────────────────────────
-    Toast {
-        id: toast
-        anchors.top:           topBar.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin:     8
-        z: 9900
-    }
 
     anchors.fill: parent
     clip: true
@@ -192,8 +183,8 @@ Rectangle {
         } else if (event.key === Qt.Key_S && (event.modifiers & Qt.ControlModifier)) {
             if (WorkspaceManager.currentWorkspace !== "") {
                 const ok = viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
-                toast.show(ok ? "Project saved" : "Failed to save project",
-                           ok ? "success" : "error")
+                ToastManager.show(ok ? "Project saved" : "Failed to save project",
+                                  ok ? "success" : "error")
             } else {
                 saveWorkspaceDialog.open()
             }
@@ -893,8 +884,8 @@ Rectangle {
         onSaveRequested: {
             if (WorkspaceManager.currentWorkspace !== "") {
                 const ok = viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
-                toast.show(ok ? "Project saved" : "Failed to save project",
-                           ok ? "success" : "error")
+                ToastManager.show(ok ? "Project saved" : "Failed to save project",
+                                  ok ? "success" : "error")
             } else {
                 saveWorkspaceDialog.open()
             }
@@ -914,6 +905,14 @@ Rectangle {
     // ─── Settings Popup ─────────────────────────────────────────────────────────
     SettingsPopup {
         id: settingsPopup
+    }
+
+    // ─── Toast Display ──────────────────────────────────────────────────────────
+    Toast {
+        anchors.top:           topBar.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.topMargin:     16
+        z: 9900
     }
 
     // ─── Save Workspace Dialog ───────────────────────────────────────────────────
@@ -942,10 +941,8 @@ Rectangle {
             const ok = viewPort.saveWorkspace(name)
             GlobalProperties.lastWorkspace = name
             saveWorkspaceDialog.close()
-            Qt.callLater(function() {
-                root.showToast(ok ? "Project \"" + name + "\" saved" : "Failed to save project",
-                               ok ? "success" : "error")
-            })
+            ToastManager.show(ok ? "Project \"" + name + "\" saved" : "Failed to save project",
+                              ok ? "success" : "error")
         }
 
         Column {
@@ -1316,9 +1313,7 @@ Rectangle {
                                     onClicked: {
                                         const name = modelData
                                         WorkspaceManager.deleteWorkspace(name)
-                                        Qt.callLater(function() {
-                                            root.showToast("Deleted \"" + name + "\"", "warning")
-                                        })
+                                        ToastManager.show("Deleted \"" + name + "\"", "warning")
                                     }
                                 }
                             }
@@ -1525,7 +1520,7 @@ Rectangle {
     function doNewProject() {
         splashScreen.dismissed = true
         WorkspaceManager.newWorkspace()
-        toast.show("New project created", "success")
+        ToastManager.show("New project created", "success")
     }
 
     Component.onCompleted: {
@@ -1539,7 +1534,7 @@ Rectangle {
         function onWorkspaceLoaded(name) {
             console.log("[ViewPort] Workspace loaded signal received:", name, "- scheduling connection restore")
             restoreConnectionsTimer.restart()
-            toast.show("Opened \"" + name + "\"", "success")
+            ToastManager.show("Opened \"" + name + "\"", "success")
         }
     }
 

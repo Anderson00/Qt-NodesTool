@@ -1,38 +1,30 @@
 import QtQuick 2.12
 import App.Theme 1.0
+import App.Toast 1.0
 import Qaterial as Qaterial
 
-// Usage: place as a child, call toast.show(message, type)
-// Types: "success" | "error" | "warning" | "info"
+// Toast display driven by ToastManager singleton
+// Usage from C++: ToastManager::instance()->show("message", "type")
+// Usage from QML: ToastManager.show("message", "type")
 Item {
     id: root
 
-    property string message:   ""
-    property string toastType: "info"
-
-    function show(msg, typ) {
-        message   = msg
-        toastType = typ || "info"
-        _showAnim.restart()
-        _hideTimer.restart()
-    }
+    implicitWidth:  _bg.implicitWidth
+    implicitHeight: _bg.implicitHeight
+    opacity: ToastManager.visible ? 1.0 : 0.0
 
     readonly property color _typeColor: {
-        if (toastType === "success") return ThemeManager.successColor
-        if (toastType === "error")   return ThemeManager.dangerColor
-        if (toastType === "warning") return ThemeManager.warningColor
+        if (ToastManager.type === "success") return ThemeManager.successColor
+        if (ToastManager.type === "error")   return ThemeManager.dangerColor
+        if (ToastManager.type === "warning") return ThemeManager.warningColor
         return ThemeManager.primaryColor
     }
     readonly property string _typeIcon: {
-        if (toastType === "success") return Qaterial.Icons.checkCircleOutline
-        if (toastType === "error")   return Qaterial.Icons.alertCircleOutline
-        if (toastType === "warning") return Qaterial.Icons.alertOutline
+        if (ToastManager.type === "success") return Qaterial.Icons.checkCircleOutline
+        if (ToastManager.type === "error")   return Qaterial.Icons.alertCircleOutline
+        if (ToastManager.type === "warning") return Qaterial.Icons.alertOutline
         return Qaterial.Icons.informationOutline
     }
-
-    implicitWidth:  _bg.implicitWidth
-    implicitHeight: _bg.implicitHeight
-    opacity: 0
 
     Rectangle {
         id: _bg
@@ -72,7 +64,7 @@ Item {
             }
 
             Text {
-                text:           root.message
+                text:           ToastManager.message
                 color:          ThemeManager.textColor
                 font.pixelSize: 13
                 anchors.verticalCenter: parent.verticalCenter
@@ -82,28 +74,14 @@ Item {
 
     transform: Translate {
         id: _slide
-        y: 8
+        y: root.opacity === 1.0 ? 0 : 8
+        Behavior on y { NumberAnimation { duration: 210; easing.type: Easing.OutCubic } }
     }
 
-    SequentialAnimation {
-        id: _showAnim
-        ParallelAnimation {
-            NumberAnimation { target: root;   property: "opacity"; from: 0; to: 1; duration: 210; easing.type: Easing.OutCubic }
-            NumberAnimation { target: _slide; property: "y";       from: 8; to: 0; duration: 210; easing.type: Easing.OutCubic }
-        }
-    }
-
-    Timer {
-        id: _hideTimer
-        interval: 3200
-        onTriggered: _hideAnim.start()
-    }
-
-    SequentialAnimation {
-        id: _hideAnim
-        ParallelAnimation {
-            NumberAnimation { target: root;   property: "opacity"; to: 0; duration: 260; easing.type: Easing.InCubic }
-            NumberAnimation { target: _slide; property: "y";       to: 8; duration: 260; easing.type: Easing.InCubic }
+    Behavior on opacity {
+        NumberAnimation {
+            duration: root.opacity === 1.0 ? 210 : 260
+            easing.type: root.opacity === 1.0 ? Easing.OutCubic : Easing.InCubic
         }
     }
 }
