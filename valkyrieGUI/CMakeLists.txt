@@ -22,6 +22,8 @@ set(PROJECT_SOURCES
     src/include/cliente/midclient.h src/include/cliente/midclient.cpp
     src/include/utils/xmlsavestate.h src/include/utils/xmlsavestate.cpp
     src/include/utils/nodeserialize.h src/include/utils/nodeserialize.cpp
+    src/include/utils/workspacemanager.h src/include/utils/workspacemanager.cpp
+    src/include/utils/toastmanager.h src/include/utils/toastmanager.cpp
     src/include/mainwindow.cpp
     src/include/mainwindow.ui
     src/include/qmlwindow.h src/include/qmlwindow.cpp
@@ -40,8 +42,12 @@ set(PROJECT_SOURCES
     src/include/model/thememanager.h src/include/model/thememanager.cpp
     src/include/model/abstracttheme.h src/include/model/abstracttheme.cpp
     src/include/model/subtheme.h src/include/model/subtheme.cpp
+    src/include/model/nodetheme.h src/include/model/nodetheme.cpp
+    src/include/model/colorpreset.h src/include/model/colorpreset.cpp
+    src/include/model/presetmanager.h src/include/model/presetmanager.cpp
     src/include/model/globalproperties.h src/include/model/globalproperties.cpp
     src/include/behaviours/behaviours.h src/include/behaviours/behaviours.cpp
+    src/include/commands/nodeundocommands.h src/include/commands/nodeundocommands.cpp
     src/include/subwindows/taskmanagerwindow.h src/include/subwindows/taskmanagerwindow.cpp
     src/include/subwindows/testconnectionwindow.h src/include/subwindows/testconnectionwindow.cpp
     src/include/subwindows/qmlmdisubwindow.cpp

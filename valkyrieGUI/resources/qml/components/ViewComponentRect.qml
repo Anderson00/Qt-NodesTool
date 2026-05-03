@@ -4,6 +4,7 @@ import QtQuick.Controls 2.0
 import QtQuick.Controls.Material 2.12
 import QtGraphicalEffects 1.15
 
+import App.Theme 1.0
 import Qaterial 1.0 as Qaterial
 
 Rectangle {
@@ -11,9 +12,9 @@ Rectangle {
 
     property var connections: []
     property alias title: titleView.text
-    property string borderColor: "green"
+    property color borderColor: ThemeManager.primaryColor
 
-    color: Qt.rgba(0.2, 0.2, 0.2, 0.5)
+    color: Qt.rgba(ThemeManager.surfaceColor.r, ThemeManager.surfaceColor.g, ThemeManager.surfaceColor.b, 0.85)
     radius: 4
     border.width: 1
     border.color: root.borderColor
@@ -59,7 +60,7 @@ Rectangle {
         Rectangle {
             Layout.preferredHeight: 10
             width: 10
-            color: Qt.rgba(0.2, 0.2, 0.2, 0.5)
+            color: Qt.rgba(ThemeManager.surfaceColor.r, ThemeManager.surfaceColor.g, ThemeManager.surfaceColor.b, 0.85)
             radius: 10
 
             Column{
@@ -97,7 +98,7 @@ Rectangle {
         }
         Text {
             text: "Testando"
-            color: "#333"
+            color: ThemeManager.textSecondaryColor
             anchors.centerIn: parent
         }
     }

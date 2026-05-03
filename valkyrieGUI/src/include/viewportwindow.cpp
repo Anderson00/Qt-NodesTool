@@ -1,128 +1,302 @@
 #include "viewportwindow.h"
 #include "behaviours/behaviourloader.h"
+#include "behaviours/connections.h"
+#include "model/connectionmodel.h"
+#include "utils/workspacemanager.h"
+#include "commands/nodeundocommands.h"
 #include <QUuid>
+#include <QVariantMap>
+#include <QQmlContext>
 
-ViewPortWindow::ViewPortWindow(QWidget *parent) :
-    QMLWindow(parent, QUrl("qrc:/subwindows/ViewPortWindow.qml"))
+ViewPortWindow::ViewPortWindow(QWidget* parent)
+    : QMLWindow(parent, QUrl("qrc:/subwindows/ViewPortWindow.qml"))
 {
-    this->m_frameTimer = new QTimer(this);
-    this->m_frameTimer->setTimerType(Qt::PreciseTimer);
-    this->m_frameTimer->setInterval(1000);
+    m_undoStack = new QUndoStack(this);
+    connect(m_undoStack, &QUndoStack::canUndoChanged, this, &ViewPortWindow::undoStateChanged);
+    connect(m_undoStack, &QUndoStack::canRedoChanged, this, &ViewPortWindow::undoStateChanged);
+    connect(m_undoStack, &QUndoStack::cleanChanged,   this, &ViewPortWindow::undoStateChanged);
 
-    this->showWindow(QVector<QMLWindow::PropertyPair>({
-                                                          QMLWindow::PropertyPair({"viewPort", this}),
-                                                          QMLWindow::PropertyPair({"behaviourLoader", BehaviourLoader::instance()})
-                                                      }));
+    m_frameTimer = new QTimer(this);
+    m_frameTimer->setTimerType(Qt::PreciseTimer);
+    m_frameTimer->setInterval(1000);
 
+    showWindow(QVector<QMLWindow::PropertyPair>({
+        { "viewPort",        this },
+        { "behaviourLoader", BehaviourLoader::instance() }
+    }));
+
+    WorkspaceManager::instance()->setViewPort(this);
 }
 
 ViewPortWindow::~ViewPortWindow()
 {
+    // Destroy the QQuickView NOW, while ViewPortWindow is still fully alive.
+    // If deferred to QMLWindow::~QMLWindow(), the vptr has already changed
+    // and QML teardown callbacks (qt_metacall) hit the wrong vtable → ASSERT.
+    destroyView();
 
+    WorkspaceManager::instance()->setViewPort(nullptr);
+
+    qDeleteAll(m_behaviours);
+    m_behaviours.clear();
 }
 
-QHash<QString, Behaviours *> ViewPortWindow::behaviours()
-{
-    return this->m_behaviours;
-}
+// ── Properties ────────────────────────────────────────────────────────────────
 
-bool ViewPortWindow::showFps()
-{
-    return this->m_showFps;
-}
+QHash<QString, Behaviours*> ViewPortWindow::behaviours() { return m_behaviours; }
+bool  ViewPortWindow::showFps()       const { return m_showFps; }
+int   ViewPortWindow::fpsCount()      const { return m_fpsCount; }
+qreal ViewPortWindow::viewportX()     const { return m_viewportX; }
+qreal ViewPortWindow::viewportY()     const { return m_viewportY; }
+qreal ViewPortWindow::viewportScale() const { return m_viewportScale; }
+bool  ViewPortWindow::canUndo()       const { return m_undoStack->canUndo(); }
+bool  ViewPortWindow::canRedo()       const { return m_undoStack->canRedo(); }
+bool  ViewPortWindow::isClean()       const { return m_undoStack->isClean(); }
 
-void ViewPortWindow::setShowFps(bool state)
-{
-    this->m_showFps = state;
-    emit showFpsChanged();
+QUndoStack* ViewPortWindow::undoStack() const { return m_undoStack; }
 
-    disconnect(this->m_timerTriggerConn);
-    disconnect(this->m_frameSwappedConn);
-
-    if(state == true){
-        this->m_timerTriggerConn = connect(this->m_frameTimer, &QTimer::timeout, [&](){
-            this->setFpsCount(m_frameCount);
-            m_frameCount = 0;
-        });
-
-        this->m_frameSwappedConn = connect(this->view(), &QQuickView::frameSwapped, [&](){
-            this->m_frameCount++;
-        });
-
-        this->m_frameTimer->start();
-    } else {
-        this->m_frameTimer->stop();
-    }
-}
-
-int ViewPortWindow::fpsCount()
-{
-    return this->m_fpsCount;
-}
-
-void ViewPortWindow::setFpsCount(int value)
-{
-    this->m_fpsCount = value;
+void ViewPortWindow::setFpsCount(int value) {
+    m_fpsCount = value;
     emit fpsCountChanged();
 }
 
-void ViewPortWindow::setFullScreen(bool isFull)
-{
-    emit this->fullScreenToogle();
+void ViewPortWindow::setViewportX(qreal x) {
+    if (!qFuzzyCompare(m_viewportX, x)) { m_viewportX = x; emit viewportStateChanged(); }
+}
+void ViewPortWindow::setViewportY(qreal y) {
+    if (!qFuzzyCompare(m_viewportY, y)) { m_viewportY = y; emit viewportStateChanged(); }
+}
+void ViewPortWindow::setViewportScale(qreal s) {
+    if (!qFuzzyCompare(m_viewportScale, s)) { m_viewportScale = s; emit viewportStateChanged(); }
 }
 
-bool ViewPortWindow::addBehaviour(const QString &path, const QJsonObject infos)
-{
-    QString uuid = QUuid::createUuid().toString(QUuid::WithoutBraces);
-    Behaviours *object = BehaviourLoader::instance()->loadBehaviour(path, infos);
-    if(object != nullptr){
-        this->m_behaviours[uuid] = object;
+// ── FPS ───────────────────────────────────────────────────────────────────────
 
-        auto lambdaFun = [&, object](ConnectionModel * model){
-            Behaviours * output = model->output();
-            Behaviours * input = model->input();
+void ViewPortWindow::setShowFps(bool state) {
+    m_showFps = state;
+    emit showFpsChanged();
 
-            if(output == object){
-                emit behaviourConnection(object, input);
-            }else{
-                emit behaviourConnection(object, output);
-            }
-        };
+    disconnect(m_timerTriggerConn);
+    disconnect(m_frameSwappedConn);
 
-        QMetaObject::Connection outputConn = QObject::connect(object, &Behaviours::outputConnected, lambdaFun);
-        QMetaObject::Connection inputConn = QObject::connect(object, &Behaviours::inputConnected, lambdaFun);
-
-        QObject::connect(object, &Behaviours::destroyed, [=](){
-            QObject::disconnect(outputConn);
-            QObject::disconnect(inputConn);
+    if (state) {
+        m_timerTriggerConn = connect(m_frameTimer, &QTimer::timeout, [&]() {
+            setFpsCount(m_frameCount);
+            m_frameCount = 0;
         });
-
-        object->start();
-        emit this->behaviourAdded(object);
-        return true;
+        m_frameSwappedConn = connect(view(), &QQuickView::frameSwapped, [&]() {
+            m_frameCount++;
+        });
+        m_frameTimer->start();
+    } else {
+        m_frameTimer->stop();
     }
+}
 
+void ViewPortWindow::setFullScreen(bool) {
+    emit fullScreenToogle();
+}
+
+// ── Node management ───────────────────────────────────────────────────────────
+
+void ViewPortWindow::connectBehaviour(Behaviours* object) {
+    auto lambdaFun = [&, object](ConnectionModel* model) {
+        Behaviours* output = model->output();
+        Behaviours* input  = model->input();
+        emit behaviourConnection(object, (output == object) ? input : output);
+    };
+
+    QMetaObject::Connection out = QObject::connect(object, &Behaviours::outputConnected, lambdaFun);
+    QMetaObject::Connection in  = QObject::connect(object, &Behaviours::inputConnected,  lambdaFun);
+
+    QObject::connect(object, &Behaviours::destroyed, [=]() {
+        QObject::disconnect(out);
+        QObject::disconnect(in);
+    });
+}
+
+bool ViewPortWindow::addBehaviour(const QString& path, const QJsonObject infos) {
+    const QString uuid = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    m_undoStack->push(new AddNodeCommand(this, NodeState{uuid, path, "", infos, 0, 0, 0, 0}));
+    return true;
+}
+
+bool ViewPortWindow::addBehaviourWithUuid(const QString& path, const QJsonObject& infos,
+                                           const QString& uuid,
+                                           double x, double y, double w, double h,
+                                           const QString& title)
+{
+    Behaviours* object = BehaviourLoader::instance()->loadBehaviour(path, infos);
+    if (!object) return false;
+
+    object->setBehaviourPath(path);
+    object->setBehaviourInfos(infos);
+    // Set geometry BEFORE emitting behaviourAdded so QML reads correct initial values
+    object->setX(x);
+    object->setY(y);
+    if (w > 0) object->setWidth(w);
+    if (h > 0) object->setHeight(h);
+    if (!title.isEmpty()) object->setTitle(title);
+
+    m_behaviours[uuid] = object;
+    connectBehaviour(object);
+    object->start();
+    emit behaviourAdded(object);
+    return true;
+}
+
+bool ViewPortWindow::removeBehaviourFromUUID(const QString& uuid) {
+    return m_behaviours.remove(uuid);
+}
+
+bool ViewPortWindow::removeBehaviourObject(Behaviours* object) {
+    const QString key = m_behaviours.key(object);
+    m_behaviours.remove(key);
+    emit behaviourRemoved(object, key);  // notify QML before delete
+    delete object;
+    return !key.isEmpty();
+}
+
+void ViewPortWindow::clearBehaviours() {
+    emit behavioursCleared();
+    qDeleteAll(m_behaviours);
+    m_behaviours.clear();
+}
+
+Behaviours* ViewPortWindow::searchBehaviourFromUUID(const QString& uuid) {
+    return m_behaviours.value(uuid);
+}
+
+QString ViewPortWindow::getUUIDFromBehaviour(Behaviours* object) {
+    return m_behaviours.key(object);
+}
+
+// ── Connections ───────────────────────────────────────────────────────────────
+
+bool ViewPortWindow::addConnectionByUuids(const QString& outputUuid, const QString& outputMethod,
+                                           const QString& inputUuid,  const QString& inputMethod)
+{
+    Behaviours* outputBeh = m_behaviours.value(outputUuid);
+    Behaviours* inputBeh  = m_behaviours.value(inputUuid);
+    if (!outputBeh || !inputBeh) return false;
+    if (!outputBeh->addConnection(outputMethod, inputBeh, inputMethod)) return false;
+    emit connectionAdded(outputUuid, outputMethod, inputUuid, inputMethod);
+    return true;
+}
+
+bool ViewPortWindow::removeConnectionByUuids(const QString& outputUuid, const QString& outputMethod,
+                                              const QString& inputUuid,  const QString& inputMethod)
+{
+    Behaviours* outputBeh = m_behaviours.value(outputUuid);
+    Behaviours* inputBeh  = m_behaviours.value(inputUuid);
+    if (!outputBeh || !inputBeh) return false;
+
+    const auto& outs = outputBeh->outputConns();
+    auto it = outs.find(outputMethod);
+    if (it == outs.end()) return false;
+
+    for (ConnectionModel* model : it.value()->getAllConnections()) {
+        if (model->input() == inputBeh &&
+            QString::fromLatin1(model->slot().methodSignature()) == inputMethod)
+        {
+            QObject::disconnect(model->connection());
+            delete model;
+            emit connectionRemoved(outputUuid, outputMethod, inputUuid, inputMethod);
+            return true;
+        }
+    }
     return false;
 }
 
-bool ViewPortWindow::removeBehaviourFromUUID(const QString &uuid)
-{
-    return this->m_behaviours.remove(uuid);
+// ── Undo/Redo ─────────────────────────────────────────────────────────────────
+
+void ViewPortWindow::undo() { m_undoStack->undo(); }
+void ViewPortWindow::redo() { m_undoStack->redo(); }
+
+bool ViewPortWindow::removeNodeWithUndo(const QString& uuid) {
+    Behaviours* beh = searchBehaviourFromUUID(uuid);
+    if (!beh) return false;
+
+    NodeState data{uuid, beh->behaviourPath(), beh->title(), beh->behaviourInfos(),
+                   beh->x(), beh->y(), beh->width(), beh->height()};
+
+    QList<ConnState> conns;
+    for (const QVariant& v : getAllConnections()) {
+        const QVariantMap m = v.toMap();
+        const QString out = m["outputUuid"].toString();
+        const QString in  = m["inputUuid"].toString();
+        if (out == uuid || in == uuid) {
+            conns.append({out, m["outputMethod"].toString(),
+                          in,  m["inputMethod"].toString()});
+        }
+    }
+
+    m_undoStack->push(new RemoveNodeCommand(this, data, conns));
+    return true;
 }
 
-bool ViewPortWindow::removeBehaviourObject(Behaviours *object)
+bool ViewPortWindow::addConnectionWithUndo(const QString& outputUuid, const QString& outputMethod,
+                                            const QString& inputUuid,  const QString& inputMethod)
 {
-    QString key = this->m_behaviours.key(object);
-    delete object;
-    return this->m_behaviours.remove(key);
+    m_undoStack->push(new AddConnectionCommand(this, ConnState{outputUuid, outputMethod, inputUuid, inputMethod}));
+    return true;
 }
 
-Behaviours *ViewPortWindow::searchBehaviourFromUUID(const QString &uuid)
+bool ViewPortWindow::removeConnectionWithUndo(const QString& outputUuid, const QString& outputMethod,
+                                               const QString& inputUuid,  const QString& inputMethod)
 {
-    return this->m_behaviours[uuid];
+    m_undoStack->push(new RemoveConnectionCommand(this, ConnState{outputUuid, outputMethod, inputUuid, inputMethod}));
+    return true;
 }
 
-QString ViewPortWindow::getUUIDFromBehaviour(Behaviours *object)
+void ViewPortWindow::recordNodeMove(const QString& uuid,
+                                    double oldX, double oldY, double newX, double newY)
 {
-    return this->m_behaviours.key(object);
+    if (qFuzzyCompare(oldX, newX) && qFuzzyCompare(oldY, newY)) return;
+    m_undoStack->push(new MoveNodeCommand(this, uuid, oldX, oldY, newX, newY));
+}
+
+// ── Workspace ─────────────────────────────────────────────────────────────────
+
+void ViewPortWindow::restoreViewport(qreal x, qreal y, qreal scale) {
+    m_viewportX     = x;
+    m_viewportY     = y;
+    m_viewportScale = scale;
+    emit viewportRestoreRequested(x, y, scale);
+}
+
+QVariantList ViewPortWindow::getAllConnections() const {
+    QVariantList result;
+    for (auto it = m_behaviours.constBegin(); it != m_behaviours.constEnd(); ++it) {
+        const QString& outputUuid = it.key();
+        Behaviours* beh = it.value();
+        const auto& outs = beh->outputConns();
+        for (auto ci = outs.constBegin(); ci != outs.constEnd(); ++ci) {
+            const QString& outputMethod = ci.key();
+            Connections* conn = ci.value();
+            for (ConnectionModel* model : conn->getAllConnections()) {
+                const QString inputUuid = m_behaviours.key(model->input());
+                if (inputUuid.isEmpty()) continue;
+                QVariantMap entry;
+                entry["outputUuid"]   = outputUuid;
+                entry["outputMethod"] = outputMethod;
+                entry["inputUuid"]    = inputUuid;
+                entry["inputMethod"]  = QString::fromLatin1(model->slot().methodSignature());
+                result.append(entry);
+            }
+        }
+    }
+    return result;
+}
+
+bool ViewPortWindow::saveWorkspace(const QString& name) {
+    bool ok = WorkspaceManager::instance()->saveWorkspace(name);
+    if (ok) m_undoStack->setClean();
+    return ok;
+}
+
+bool ViewPortWindow::loadWorkspace(const QString& name) {
+    bool ok = WorkspaceManager::instance()->loadWorkspace(name);
+    if (ok) m_undoStack->clear();
+    return ok;
 }

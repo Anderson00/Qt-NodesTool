@@ -30,6 +30,7 @@ public:
 protected:
     void setQMLSourceUrl(const QUrl& url);
     QQuickView *view();
+    void destroyView();
 
 signals:
     void closeWindow();

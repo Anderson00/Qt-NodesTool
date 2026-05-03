@@ -6,7 +6,7 @@ Switch {
     id: control
 
     property color accentColor: ThemeManager.primaryColor
-    property color trackOffColor: Qt.rgba(1, 1, 1, 0.18)
+    property color trackOffColor: ThemeManager.borderColor
     property int trackWidth: 40
     property int trackHeight: 20
 

@@ -5,8 +5,19 @@ SubTheme::SubTheme(const QString& name, QObject* parent)
 
 QString SubTheme::name() const { return m_name; }
 
-void SubTheme::copyFromGlobal(const QColor& bg, const QColor& fg, const QColor& accent) {
-    setBackgroundColor(bg);
-    setForegroundColor(fg);
-    setAccentColor(accent);
+void SubTheme::copyFromGlobal(const AbstractTheme* source) {
+    setBackgroundColor(source->backgroundColor());
+    setSurfaceColor(source->surfaceColor());
+    setForegroundColor(source->foregroundColor());
+    setBorderColor(source->borderColor());
+    setShadowColor(source->shadowColor());
+    setPrimaryColor(source->primaryColor());
+    setSecondaryColor(source->secondaryColor());
+    setAccentColor(source->accentColor());
+    setSuccessColor(source->successColor());
+    setWarningColor(source->warningColor());
+    setDangerColor(source->dangerColor());
+    setTextColor(source->textColor());
+    setTextSecondaryColor(source->textSecondaryColor());
+    setSelectionColor(source->selectionColor());
 }

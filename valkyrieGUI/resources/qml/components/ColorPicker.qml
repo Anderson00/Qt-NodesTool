@@ -137,9 +137,9 @@ Item {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: {
-                        colorPopup.currentHue = (mouse.x / width) * 360
-                    }
+                    onPressed:         colorPopup.currentHue = Math.max(0, Math.min(360, (mouse.x / width) * 360))
+                    onPositionChanged: colorPopup.currentHue = Math.max(0, Math.min(360, (mouse.x / width) * 360))
+                    onClicked:         colorPopup.currentHue = Math.max(0, Math.min(360, (mouse.x / width) * 360))
                 }
 
                 Rectangle {
@@ -153,45 +153,50 @@ Item {
                 }
             }
 
-            // Color Gradient Selector
+            // Color Gradient Selector (HSV model)
             Rectangle {
                 id: colorGradient
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 radius: 4
                 clip: true
-                color: Qt.hsla(colorPopup.currentHue / 360, 1, 0.5, 1)
+                // Base: pure hue at full saturation and full value
+                color: Qt.hsva(colorPopup.currentHue / 360, 1, 1, 1)
 
-                // Vertical gradient overlay for brightness
-                Rectangle {
-                    anchors.fill: parent
-                    gradient: Gradient {
-                        orientation: Gradient.Vertical
-                        GradientStop { position: 0.0; color: Qt.hsla(colorPopup.currentHue / 360, 0, 1, 1) }
-                        GradientStop { position: 0.5; color: Qt.hsla(colorPopup.currentHue / 360, 1, 0.5, 1) }
-                        GradientStop { position: 1.0; color: Qt.hsla(colorPopup.currentHue / 360, 1, 0, 1) }
-                    }
-                }
-
-                // Horizontal gradient overlay for saturation
+                // White left → transparent right (reduces saturation)
                 Rectangle {
                     anchors.fill: parent
                     gradient: Gradient {
                         orientation: Gradient.Horizontal
-                        GradientStop { position: 0.0; color: Qt.hsla(colorPopup.currentHue / 360, 0, 0.5, 1) }
-                        GradientStop { position: 1.0; color: "transparent" }
+                        GradientStop { position: 0.0; color: "#ffffffff" }
+                        GradientStop { position: 1.0; color: "#00ffffff" }
+                    }
+                }
+
+                // Transparent top → black bottom (reduces value)
+                Rectangle {
+                    anchors.fill: parent
+                    gradient: Gradient {
+                        orientation: Gradient.Vertical
+                        GradientStop { position: 0.0; color: "#00000000" }
+                        GradientStop { position: 1.0; color: "#ff000000" }
                     }
                 }
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: {
-                        var sat = mouse.x / width
-                        var brightness = 1 - (mouse.y / height)
-                        colorPopup.selectedColor = Qt.hsla(colorPopup.currentHue / 360, sat, brightness * 0.5 + 0.25, 1)
-                        colorPopup.selectorX = mouse.x / width
-                        colorPopup.selectorY = mouse.y / height
+
+                    function updateFromMouse(mx, my) {
+                        var sat = Math.max(0, Math.min(1, mx / width))
+                        var val = 1 - Math.max(0, Math.min(1, my / height))
+                        colorPopup.selectorX = sat
+                        colorPopup.selectorY = 1 - val
+                        colorPopup.selectedColor = Qt.hsva(colorPopup.currentHue / 360, sat, val, 1)
                     }
+
+                    onPressed:         updateFromMouse(mouse.x, mouse.y)
+                    onPositionChanged: updateFromMouse(mouse.x, mouse.y)
+                    onClicked:         updateFromMouse(mouse.x, mouse.y)
                 }
 
                 Rectangle {
@@ -308,12 +313,18 @@ Item {
         property real selectorX: 0.5
         property real selectorY: 0.5
 
+        onCurrentHueChanged: {
+            selectedColor = Qt.hsva(currentHue / 360, selectorX, 1 - selectorY, 1)
+        }
+
         onOpenedChanged: {
             if (opened) {
-                selectedColor = root.value
-                currentHue = 0
-                selectorX = 0.5
-                selectorY = 0.5
+                var c = root.value
+                // Initialize selector from the pre-selected color (HSV decomposition)
+                selectorX = c.hsvSaturation
+                selectorY = 1 - c.hsvValue
+                currentHue = (c.hsvHue < 0 ? 0 : c.hsvHue) * 360
+                selectedColor = c
             }
         }
     }

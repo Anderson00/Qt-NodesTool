@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import Qt5Compat.GraphicalEffects
+import App.Theme 1.0
 
 Item {
     id: card
@@ -17,7 +18,7 @@ Item {
     Rectangle {
         id: background
         anchors.fill: parent
-        color: "white"
+        color: ThemeManager.surfaceColor
 
         radius: 0 // base sem radius
 
@@ -50,7 +51,7 @@ Item {
         verticalOffset: 4
         radius: 12
         samples: 16
-        color: "#80000000"
+        color: ThemeManager.shadowColor
         visible: card.shadow
     }
 
@@ -58,6 +59,6 @@ Item {
     Text {
         anchors.centerIn: parent
         text: "Card QML"
-        color: "black"
+        color: ThemeManager.textColor
     }
 }

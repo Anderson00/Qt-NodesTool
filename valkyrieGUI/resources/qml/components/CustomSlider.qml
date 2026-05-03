@@ -11,7 +11,7 @@ Item {
     //property alias orientation: slider.orientation;
     property string prefix: ""
     property string color: ""
-    property string textColor: "#fff"
+    property color textColor: ThemeManager.textColor
     //property alias color: slider.color
     property alias value: slider.value
     property alias from: slider.from
@@ -74,7 +74,7 @@ Item {
                 width: slider.availableWidth
                 height: 4
                 radius: 2
-                color: "#555555"
+                color: ThemeManager.borderColor
 
                 Rectangle {
                     width: slider.visualPosition * parent.width

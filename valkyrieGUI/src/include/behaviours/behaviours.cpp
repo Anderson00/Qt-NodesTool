@@ -7,6 +7,7 @@ Behaviours::Behaviours(QObject *parent) : QObject(parent)
 {
     this->m_x = 0;
     this->m_y = 0;
+    this->m_nodeTheme = new NodeTheme(this);
 }
 
 QMap<QString, QVariant> Behaviours::static_infos()
@@ -273,6 +274,17 @@ QQuickItem *Behaviours::viewRect()
 {
     return this->m_viewRectangle;
 }
+
+NodeTheme *Behaviours::nodeTheme()
+{
+    return this->m_nodeTheme;
+}
+
+QString Behaviours::behaviourPath() const  { return m_behaviourPath; }
+QJsonObject Behaviours::behaviourInfos() const { return m_behaviourInfos; }
+
+void Behaviours::setBehaviourPath(const QString& path)   { m_behaviourPath  = path; }
+void Behaviours::setBehaviourInfos(const QJsonObject& i) { m_behaviourInfos = i; }
 
 void Behaviours::save()
 {

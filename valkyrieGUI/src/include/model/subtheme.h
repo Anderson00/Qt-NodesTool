@@ -11,7 +11,7 @@ public:
     SubTheme(const QString& name, QObject* parent = nullptr);
 
     QString name() const;
-    void copyFromGlobal(const QColor& bg, const QColor& fg, const QColor& accent);
+    void copyFromGlobal(const AbstractTheme* source);
 
 private:
     QString m_name;

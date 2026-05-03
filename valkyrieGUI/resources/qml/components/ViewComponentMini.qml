@@ -18,7 +18,7 @@ Rectangle{
 
     signal doubleClicked();
 
-    color: "#222"
+    color: ThemeManager.surfaceColor
     border.width: 1
     border.color: ThemeManager.primaryColor
     radius: 4
@@ -30,9 +30,9 @@ Rectangle{
 
         onHoveredChanged: {
             if(containsMouse)
-                card.color = "#333"
+                card.color = ThemeManager.foregroundColor
             else
-                card.color = "#222"
+                card.color = ThemeManager.surfaceColor
         }
 
         onDoubleClicked: {
@@ -90,7 +90,7 @@ Rectangle{
             Layout.fillWidth: true
             Layout.rightMargin: 4
             height: 1
-            color: "#111"
+            color: ThemeManager.backgroundColor
         }
 
         Label {

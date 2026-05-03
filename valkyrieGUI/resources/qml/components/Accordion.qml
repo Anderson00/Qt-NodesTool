@@ -17,13 +17,13 @@ ColumnLayout {
     property bool opened: false
 
     // -- Theming --
-    property color headerColor: Qt.rgba(1, 1, 1, 0.06)
-    property color headerHoverColor: Qt.rgba(1, 1, 1, 0.10)
-    property color headerPressedColor: Qt.rgba(1, 1, 1, 0.14)
-    property color contentBgColor: Qt.rgba(1, 1, 1, 0.03)
+    property color headerColor: ThemeManager.foregroundColor
+    property color headerHoverColor: ThemeManager.borderColor
+    property color headerPressedColor: ThemeManager.selectionColor
+    property color contentBgColor: ThemeManager.surfaceColor
     property color titleColor: ThemeManager.textColor
     property color iconColor: ThemeManager.primaryColor
-    property color borderColor: Qt.rgba(1, 1, 1, 0.08)
+    property color borderColor: ThemeManager.borderColor
     property int headerHeight: 40
     property int radius: 6
 

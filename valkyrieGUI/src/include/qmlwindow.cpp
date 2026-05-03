@@ -11,6 +11,9 @@
 #include "model/thememanager.h"
 #include "model/subtheme.h"
 #include "model/globalproperties.h"
+#include "model/presetmanager.h"
+#include "model/colorpreset.h"
+#include "utils/workspacemanager.h"
 
 QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent),
     m_qml_url(qmlUrl)
@@ -33,6 +36,27 @@ QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent),
             GlobalProperties::qmlSingletonProvider
             );
 
+        qmlRegisterSingletonType<PresetManager>(
+            "App.Presets",
+            1, 0,
+            "PresetManager",
+            PresetManager::qmlSingletonProvider
+            );
+
+        qmlRegisterUncreatableType<ColorPreset>(
+            "App.Presets",
+            1, 0,
+            "ColorPreset",
+            "ColorPreset is created by PresetManager"
+            );
+
+        qmlRegisterSingletonType<WorkspaceManager>(
+            "App.Workspace",
+            1, 0,
+            "WorkspaceManager",
+            WorkspaceManager::qmlSingletonProvider
+            );
+
         m_subTheme = new SubTheme(QUuid::createUuid().toString(QUuid::WithoutBraces));
         ThemeManager::instance()->addSubTheme(m_subTheme);
 
@@ -51,7 +75,15 @@ QMLWindow::~QMLWindow()
 {
     ThemeManager::instance()->removeSubTheme(m_subTheme);
     delete m_subTheme;
-    delete m_view;
+    destroyView();
+}
+
+void QMLWindow::destroyView()
+{
+    if (m_view) {
+        delete m_view;
+        m_view = nullptr;
+    }
 }
 
 void QMLWindow::changeEvent(QEvent *e)

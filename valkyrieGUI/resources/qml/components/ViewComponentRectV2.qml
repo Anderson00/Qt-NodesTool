@@ -33,6 +33,9 @@ Rectangle {
         tlH.active || trH.active || blH.active || brH.active ||
         tH.active  || bH.active  || lH.active  || rH.active
 
+    // Explicit selection state — set externally by ViewPortWindow via nodeOnFocus
+    property bool isSelected: false
+
     // -- Signals --
     signal connectionSocketClicked(conn: var)
 
@@ -45,6 +48,11 @@ Rectangle {
     signal frontOneStepClicked()
     signal backOneStepClicked()
     signal frontTotalClicked()
+
+    signal nodeDragEnded(real oldX, real oldY, real newX, real newY)
+
+    property real _pressX: 0
+    property real _pressY: 0
     signal backTotalClicked()
 
     color: Qt.rgba(ThemeManager.backgroundColor.r,
@@ -67,6 +75,14 @@ Rectangle {
         const i = text.indexOf('(')
         if (i === -1) return text
         return text.slice(i, text.length - 1)
+    }
+
+    function connectionByName(name) {
+        const all = connectionsInput.concat(connectionsOutput)
+        for (let i = 0; i < all.length; i++) {
+            if (all[i].name === name) return all[i]
+        }
+        return undefined
     }
 
     function connectionOnXYPosition(x: double, y: double) {
@@ -129,6 +145,22 @@ Rectangle {
     onWidthChanged:  if (behaviourObject) { behaviourObject.width = width; behaviourObject.contentWidth = width }
     onHeightChanged: if (behaviourObject) behaviourObject.height = root.height
 
+    // Sync C++ → visual (e.g. undo moves node back); disabled during user drag to avoid fighting
+    Binding {
+        target: root
+        property: "x"
+        value: behaviourObject ? behaviourObject.x : 0
+        when: behaviourObject !== null && !area.drag.active && !isResizing
+        restoreMode: Binding.RestoreNone
+    }
+    Binding {
+        target: root
+        property: "y"
+        value: behaviourObject ? behaviourObject.y : 0
+        when: behaviourObject !== null && !area.drag.active && !isResizing
+        restoreMode: Binding.RestoreNone
+    }
+
     Connections {
         target: rootBodyLoader
         function onLoaded() {
@@ -161,6 +193,14 @@ Rectangle {
         drag.maximumY: parent && parent.parent ? parent.parent.height - height : Number.MAX_VALUE
         acceptedButtons: Qt.AllButtons
 
+        onPressed: {
+            root._pressX = root.x
+            root._pressY = root.y
+        }
+        onReleased: {
+            if (Math.abs(root.x - root._pressX) > 0.5 || Math.abs(root.y - root._pressY) > 0.5)
+                root.nodeDragEnded(root._pressX, root._pressY, root.x, root.y)
+        }
         onClicked: function(mouse) {
             root.focus = true
             if (mouse.button === Qt.RightButton)
@@ -192,7 +232,7 @@ Rectangle {
         antialiasing: true
         clip: true
         z: 1
-        color: root.focus ? root.borderColor : root.color
+        color: root.isSelected ? root.borderColor : root.color
 
         Rectangle {
             anchors.bottom: topHeaderRect.bottom
@@ -214,7 +254,7 @@ Rectangle {
                 Layout.fillWidth: true
                 text: ""
                 font.pixelSize: 12
-                color: root.focus ? ThemeManager.backgroundColor
+                color: root.isSelected ? ThemeManager.backgroundColor
                                   : ThemeManager.textColor
                 verticalAlignment: Text.AlignVCenter
                 elide: Text.ElideRight
@@ -266,8 +306,8 @@ Rectangle {
             implicitHeight: 40
         }
 
-        onOpened:     root.focus = true
-        onAboutToHide: root.focus = true
+        onOpened:      root.isSelected = true
+        onAboutToHide: root.isSelected = true
 
         MenuItem {
             text: qsTr("Close")
@@ -345,7 +385,7 @@ Rectangle {
                     Layout.fillWidth: true
                     SplitView.minimumWidth: 10
                     SplitView.preferredWidth: parent.width / 2
-                    color: Qt.rgba(1, 1, 1, 0.06)
+                    color: Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.08)
 
                     ColumnLayout {
                         id: columnLayoutInputConns
@@ -407,7 +447,7 @@ Rectangle {
                     Layout.fillWidth: true
                     SplitView.minimumWidth: 10
                     SplitView.preferredWidth: parent.width / 2
-                    color: Qt.rgba(0, 0, 0, 0.20)
+                    color: Qt.rgba(ThemeManager.successColor.r, ThemeManager.successColor.g, ThemeManager.successColor.b, 0.08)
 
                     ColumnLayout {
                         id: columnLayoutOutputConns
@@ -469,7 +509,7 @@ Rectangle {
             z: 2
             radius: root.radius
             clip: true
-            color: Qt.rgba(0, 0, 0, 0.35)
+            color: ThemeManager.surfaceColor
 
             Loader {
                 id: rootBodyLoader

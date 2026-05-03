@@ -7,6 +7,8 @@ import QtQml 2.14
 
 import Qaterial 1.0 as Qaterial
 
+import App.Theme 1.0
+
 import '../'
 
 Drawer {
@@ -34,7 +36,7 @@ Drawer {
     }
 
     background: Rectangle {
-        color: Qt.rgba(0.2, 0.2, 0.2, 0.8)
+        color: ThemeManager.foregroundColor
     }
 
     onSelectedObjectViewChanged: {
@@ -66,7 +68,7 @@ Drawer {
 
         Rectangle {
             width: parent.width
-            color: 'red'
+            color: ThemeManager.dangerColor
 
             ColumnLayout {
                 id: columnLayout
@@ -84,7 +86,7 @@ Drawer {
                     Layout.leftMargin: -5
                     Layout.rightMargin: -4
                     height: 40
-                    color: '#222'
+                    color: ThemeManager.surfaceColor
                     Label {
                         id: name
                         text: ''
@@ -149,7 +151,7 @@ Drawer {
                     Layout.fillWidth: true
                     Layout.leftMargin: -5
                     height: 1
-                    color: "#111"
+                    color: ThemeManager.backgroundColor
                 }
 
                 Accordion {
