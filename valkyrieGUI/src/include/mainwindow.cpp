@@ -25,7 +25,18 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    // Add actions to MainWindow to enable shortcuts without menubar
+    addAction(ui->actionFullscreen);
+    addAction(ui->actionUndo);
+    addAction(ui->actionRedo);
+    addAction(ui->actionOpen);
+    addAction(ui->actionSave);
+
     QObject::connect(m_viewPort, &ViewPortWindow::fullScreenToogle, this, &MainWindow::on_actionFullscreen_triggered);
+
+    // Connect undo/redo shortcuts to viewport
+    QObject::connect(ui->actionUndo, &QAction::triggered, m_viewPort, &ViewPortWindow::undo);
+    QObject::connect(ui->actionRedo, &QAction::triggered, m_viewPort, &ViewPortWindow::redo);
 
     this->ui->mdiArea->setViewport(this->m_viewPort);
 
