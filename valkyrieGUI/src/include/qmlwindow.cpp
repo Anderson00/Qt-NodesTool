@@ -75,7 +75,15 @@ QMLWindow::~QMLWindow()
 {
     ThemeManager::instance()->removeSubTheme(m_subTheme);
     delete m_subTheme;
-    delete m_view;
+    destroyView();
+}
+
+void QMLWindow::destroyView()
+{
+    if (m_view) {
+        delete m_view;
+        m_view = nullptr;
+    }
 }
 
 void QMLWindow::changeEvent(QEvent *e)

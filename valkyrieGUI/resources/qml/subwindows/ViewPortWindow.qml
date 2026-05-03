@@ -1022,7 +1022,11 @@ Rectangle {
                         hoverEnabled: true
                         cursorShape:  Qt.PointingHandCursor
                         onClicked: {
+                            // Suppress visual connection drawing from onConnectionAdded
+                            // during load; restoreAllConnections() handles it instead.
+                            root.m_suppressConnectionDraw = true
                             viewPort.loadWorkspace(modelData)
+                            root.m_suppressConnectionDraw = false
                             GlobalProperties.lastWorkspace = modelData
                             openWorkspaceDialog.close()
                         }

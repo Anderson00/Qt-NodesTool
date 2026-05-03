@@ -6,6 +6,7 @@
 #include "commands/nodeundocommands.h"
 #include <QUuid>
 #include <QVariantMap>
+#include <QQmlContext>
 
 ViewPortWindow::ViewPortWindow(QWidget* parent)
     : QMLWindow(parent, QUrl("qrc:/subwindows/ViewPortWindow.qml"))
@@ -26,7 +27,18 @@ ViewPortWindow::ViewPortWindow(QWidget* parent)
     WorkspaceManager::instance()->setViewPort(this);
 }
 
-ViewPortWindow::~ViewPortWindow() {}
+ViewPortWindow::~ViewPortWindow()
+{
+    // Destroy the QQuickView NOW, while ViewPortWindow is still fully alive.
+    // If deferred to QMLWindow::~QMLWindow(), the vptr has already changed
+    // and QML teardown callbacks (qt_metacall) hit the wrong vtable → ASSERT.
+    destroyView();
+
+    WorkspaceManager::instance()->setViewPort(nullptr);
+
+    qDeleteAll(m_behaviours);
+    m_behaviours.clear();
+}
 
 // ── Properties ────────────────────────────────────────────────────────────────
 
