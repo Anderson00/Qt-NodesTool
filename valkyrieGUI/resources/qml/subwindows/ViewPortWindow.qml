@@ -642,14 +642,6 @@ Rectangle {
                         property var circleConn2
                         property var viewRectConn2
 
-                        // Marching ants animation
-                        NumberAnimation on dashOffset {
-                            from: 0
-                            to: -12
-                            duration: 400
-                            loops: Animation.Infinite
-                            running: true
-                        }
                         property real dashOffset: 0
 
                         Component.onCompleted: {
@@ -703,7 +695,16 @@ Rectangle {
                             capStyle: ShapePath.RoundCap
                             strokeStyle: ShapePath.DashLine
                             dashPattern: [8, 4]
-                            dashOffset: shape.dashOffset
+
+                            // Marching ants — animate ShapePath.dashOffset directly
+                            // so the renderer marks the path dirty each frame.
+                            NumberAnimation on dashOffset {
+                                from: 0
+                                to: -12
+                                duration: 400
+                                loops: Animation.Infinite
+                                running: true
+                            }
 
                             startX: circleConnPoint.x + model.circleConn.width / 2
                             startY: circleConnPoint.y + model.circleConn.height / 2
@@ -1074,6 +1075,13 @@ Rectangle {
     }
 
     function drawSavedConnection(outputUuid, outputMethod, inputUuid, inputMethod) {
+        // Deduplicate: skip if this visual already exists
+        for (let k = 0; k < nodeConnections.model.count; k++) {
+            const ex = nodeConnections.model.get(k)
+            if (ex.outputUuid === outputUuid && ex.inputUuid === inputUuid &&
+                ex.methodSignature1 === outputMethod && ex.methodSignature2 === inputMethod)
+                return
+        }
         let sourceRect, targetRect
         for (let i = 0; i < rectsArray.count; i++) {
             const e = rectsArray.get(i)
