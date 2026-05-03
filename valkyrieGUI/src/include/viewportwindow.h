@@ -24,8 +24,9 @@ class ViewPortWindow : public QMLWindow
     Q_PROPERTY(qreal viewportY     READ viewportY     WRITE setViewportY     NOTIFY viewportStateChanged)
     Q_PROPERTY(qreal viewportScale READ viewportScale WRITE setViewportScale NOTIFY viewportStateChanged)
 
-    Q_PROPERTY(bool canUndo READ canUndo NOTIFY undoStateChanged)
-    Q_PROPERTY(bool canRedo READ canRedo NOTIFY undoStateChanged)
+    Q_PROPERTY(bool canUndo  READ canUndo  NOTIFY undoStateChanged)
+    Q_PROPERTY(bool canRedo  READ canRedo  NOTIFY undoStateChanged)
+    Q_PROPERTY(bool isClean  READ isClean  NOTIFY undoStateChanged)
 
 public:
     explicit ViewPortWindow(QWidget* parent = nullptr);
@@ -39,6 +40,7 @@ public:
     qreal viewportScale() const;
     bool  canUndo()       const;
     bool  canRedo()       const;
+    bool  isClean()       const;
 
     QUndoStack* undoStack() const;
 

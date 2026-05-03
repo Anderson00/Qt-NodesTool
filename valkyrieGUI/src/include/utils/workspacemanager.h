@@ -29,6 +29,7 @@ public slots:
     bool deleteWorkspace(const QString& name);
     bool renameWorkspace(const QString& oldName, const QString& newName);
     void refreshWorkspaceList();
+    Q_INVOKABLE void newWorkspace();
 
 signals:
     void workspaceListChanged();

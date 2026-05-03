@@ -14,6 +14,7 @@ ViewPortWindow::ViewPortWindow(QWidget* parent)
     m_undoStack = new QUndoStack(this);
     connect(m_undoStack, &QUndoStack::canUndoChanged, this, &ViewPortWindow::undoStateChanged);
     connect(m_undoStack, &QUndoStack::canRedoChanged, this, &ViewPortWindow::undoStateChanged);
+    connect(m_undoStack, &QUndoStack::cleanChanged,   this, &ViewPortWindow::undoStateChanged);
 
     m_frameTimer = new QTimer(this);
     m_frameTimer->setTimerType(Qt::PreciseTimer);
@@ -50,6 +51,7 @@ qreal ViewPortWindow::viewportY()     const { return m_viewportY; }
 qreal ViewPortWindow::viewportScale() const { return m_viewportScale; }
 bool  ViewPortWindow::canUndo()       const { return m_undoStack->canUndo(); }
 bool  ViewPortWindow::canRedo()       const { return m_undoStack->canRedo(); }
+bool  ViewPortWindow::isClean()       const { return m_undoStack->isClean(); }
 
 QUndoStack* ViewPortWindow::undoStack() const { return m_undoStack; }
 
@@ -288,7 +290,9 @@ QVariantList ViewPortWindow::getAllConnections() const {
 }
 
 bool ViewPortWindow::saveWorkspace(const QString& name) {
-    return WorkspaceManager::instance()->saveWorkspace(name);
+    bool ok = WorkspaceManager::instance()->saveWorkspace(name);
+    if (ok) m_undoStack->setClean();
+    return ok;
 }
 
 bool ViewPortWindow::loadWorkspace(const QString& name) {

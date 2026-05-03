@@ -62,6 +62,17 @@ Rectangle {
     property string selectedPanel: ""
     property string currentProject: WorkspaceManager.currentWorkspace !== "" ? WorkspaceManager.currentWorkspace : "Untitled Project"
 
+    function showToast(msg, type) { toast.show(msg, type) }
+
+    // ─── Toast Notification ──────────────────────────────────────────────────────
+    Toast {
+        id: toast
+        anchors.top:           topBar.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.topMargin:     8
+        z: 9900
+    }
+
     anchors.fill: parent
     clip: true
 
@@ -176,9 +187,23 @@ Rectangle {
 
     Keys.enabled: true
     Keys.onPressed: {
-        if (event.key == Qt.Key_Shift) {
-
-            event.accepted = true;
+        if (event.key === Qt.Key_Shift) {
+            event.accepted = true
+        } else if (event.key === Qt.Key_S && (event.modifiers & Qt.ControlModifier)) {
+            if (WorkspaceManager.currentWorkspace !== "") {
+                const ok = viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
+                toast.show(ok ? "Project saved" : "Failed to save project",
+                           ok ? "success" : "error")
+            } else {
+                saveWorkspaceDialog.open()
+            }
+            event.accepted = true
+        } else if (event.key === Qt.Key_Z && (event.modifiers & Qt.ControlModifier)) {
+            viewPort.undo()
+            event.accepted = true
+        } else if (event.key === Qt.Key_Y && (event.modifiers & Qt.ControlModifier)) {
+            viewPort.redo()
+            event.accepted = true
         }
     }
 
@@ -850,6 +875,7 @@ Rectangle {
         selectedPanel:  root.selectedPanel
         canUndo:        viewPort.canUndo
         canRedo:        viewPort.canRedo
+        isDirty:        !viewPort.isClean
         onPanelToggled: function(panel) {
             if (root.selectedPanel === panel) {
                 root.selectedPanel = ""
@@ -859,12 +885,19 @@ Rectangle {
                 leftPanelDrawer.open()
             }
         }
-        onSettingsRequested: settingsPopup.open()
+        onSettingsRequested:    settingsPopup.open()
+        onNewProjectRequested:  {
+            if (!viewPort.isClean) confirmNewProjectDialog.open()
+            else                   doNewProject()
+        }
         onSaveRequested: {
-            if (WorkspaceManager.currentWorkspace !== "")
-                viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
-            else
+            if (WorkspaceManager.currentWorkspace !== "") {
+                const ok = viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
+                toast.show(ok ? "Project saved" : "Failed to save project",
+                           ok ? "success" : "error")
+            } else {
                 saveWorkspaceDialog.open()
+            }
         }
         onOpenRequested: openWorkspaceDialog.open()
         onUndoRequested: viewPort.undo()
@@ -886,67 +919,195 @@ Rectangle {
     // ─── Save Workspace Dialog ───────────────────────────────────────────────────
     Popup {
         id: saveWorkspaceDialog
-        width: 300
+        width: 380
         x: (parent.width  - width)  / 2
         y: (parent.height - height) / 2
         z: 1000
         modal: true
-        padding: 20
+        padding: 0
         closePolicy: Popup.CloseOnEscape
 
         background: Rectangle {
             color:  ThemeManager.surfaceColor
-            radius: 8
-            border.color: ThemeManager.borderColor
+            radius: 10
+            border.color: Qt.rgba(ThemeManager.borderColor.r,
+                                  ThemeManager.borderColor.g,
+                                  ThemeManager.borderColor.b, 0.5)
             border.width: 1
+        }
+
+        function doConfirm() {
+            const name = saveNameField.text.trim()
+            if (name === "") return
+            const ok = viewPort.saveWorkspace(name)
+            GlobalProperties.lastWorkspace = name
+            saveWorkspaceDialog.close()
+            Qt.callLater(function() {
+                root.showToast(ok ? "Project \"" + name + "\" saved" : "Failed to save project",
+                               ok ? "success" : "error")
+            })
         }
 
         Column {
             width: parent.width
-            spacing: 12
+            spacing: 0
 
-            Text {
-                text: "Save Workspace"
-                font.pixelSize: 14
-                font.bold: true
-                color: ThemeManager.foregroundColor
-            }
-
-            TextField {
-                id: saveNameField
+            // ── Header ─────────────────────────────────────────────────────────
+            Item {
                 width: parent.width
-                placeholderText: "Workspace name..."
-                text: WorkspaceManager.currentWorkspace
-                color: ThemeManager.foregroundColor
-                background: Rectangle {
-                    color: Qt.darker(ThemeManager.surfaceColor, 1.2)
-                    radius: 4
-                    border.color: ThemeManager.borderColor
-                }
-                Keys.onReturnPressed: {
-                    if (text.trim() !== "") saveConfirmBtn.clicked()
-                }
-            }
+                height: 64
 
-            Row {
-                spacing: 8
-                anchors.right: parent.right
+                Row {
+                    anchors.left:           parent.left
+                    anchors.leftMargin:     24
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 14
 
-                Button {
-                    text: "Cancel"
-                    flat: true
+                    Qaterial.ColorIcon {
+                        source: Qaterial.Icons.contentSaveOutline
+                        color:  ThemeManager.primaryColor
+                        width: 22; height: 22
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2
+
+                        Text {
+                            text:           "Save Project"
+                            font.pixelSize: 14
+                            font.bold:      true
+                            color:          ThemeManager.textColor
+                        }
+                        Text {
+                            text:           "Enter a name for this workspace"
+                            font.pixelSize: 11
+                            color:          ThemeManager.textSecondaryColor
+                        }
+                    }
+                }
+
+                Qaterial.AppBarButton {
+                    anchors.right:          parent.right
+                    anchors.rightMargin:    8
+                    anchors.verticalCenter: parent.verticalCenter
+                    icon.source: Qaterial.Icons.close
+                    icon.color:  ThemeManager.textSecondaryColor
+                    width: 36; height: 36
                     onClicked: saveWorkspaceDialog.close()
                 }
+            }
 
-                Button {
-                    id: saveConfirmBtn
-                    text: "Save"
-                    enabled: saveNameField.text.trim() !== ""
-                    onClicked: {
-                        const name = saveNameField.text.trim()
-                        viewPort.saveWorkspace(name)
-                        GlobalProperties.lastWorkspace = name
-                        saveWorkspaceDialog.close()
+            Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.4 }
+
+            // ── Body ───────────────────────────────────────────────────────────
+            Item {
+                width: parent.width
+                height: saveBodyCol.implicitHeight + 48
+
+                Column {
+                    id: saveBodyCol
+                    x: 24; y: 24
+                    width: parent.width - 48
+                    spacing: 16
+
+                    // Styled name input
+                    Rectangle {
+                        width:  parent.width
+                        height: 40
+                        radius: 6
+                        color:  Qt.darker(ThemeManager.surfaceColor, 1.3)
+                        border.color: saveNameField.activeFocus
+                                           ? ThemeManager.primaryColor
+                                           : ThemeManager.borderColor
+                        border.width: saveNameField.activeFocus ? 1.5 : 1
+                        Behavior on border.color { ColorAnimation { duration: 120 } }
+
+                        TextInput {
+                            id: saveNameField
+                            anchors.fill:        parent
+                            anchors.leftMargin:  12
+                            anchors.rightMargin: 12
+                            verticalAlignment:   TextInput.AlignVCenter
+
+                            text:           WorkspaceManager.currentWorkspace
+                            color:          ThemeManager.textColor
+                            font.pixelSize: 13
+                            selectByMouse:  true
+                            selectionColor: Qt.rgba(ThemeManager.primaryColor.r,
+                                                    ThemeManager.primaryColor.g,
+                                                    ThemeManager.primaryColor.b, 0.4)
+                            Keys.onReturnPressed: saveWorkspaceDialog.doConfirm()
+
+                            Text {
+                                visible:        parent.text === ""
+                                text:           "Project name..."
+                                color:          ThemeManager.textSecondaryColor
+                                font.pixelSize: 13
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                        }
+                    }
+
+                    // Action buttons
+                    Row {
+                        anchors.right: parent.right
+                        spacing: 8
+
+                        Rectangle {
+                            width: 80; height: 36; radius: 6
+                            color: saveDlgCancelHover.containsMouse
+                                       ? Qt.rgba(ThemeManager.borderColor.r,
+                                                 ThemeManager.borderColor.g,
+                                                 ThemeManager.borderColor.b, 0.25)
+                                       : "transparent"
+                            border.color: ThemeManager.borderColor
+                            border.width: 1
+                            Behavior on color { ColorAnimation { duration: 100 } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text:           "Cancel"
+                                color:          ThemeManager.textSecondaryColor
+                                font.pixelSize: 12
+                            }
+                            MouseArea {
+                                id: saveDlgCancelHover
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape:  Qt.PointingHandCursor
+                                onClicked:    saveWorkspaceDialog.close()
+                            }
+                        }
+
+                        Rectangle {
+                            readonly property bool ready: saveNameField.text.trim() !== ""
+                            width: 80; height: 36; radius: 6
+                            color: ready
+                                       ? (saveDlgConfirmHover.containsMouse
+                                              ? Qt.lighter(ThemeManager.primaryColor, 1.1)
+                                              : ThemeManager.primaryColor)
+                                       : Qt.rgba(ThemeManager.primaryColor.r,
+                                                 ThemeManager.primaryColor.g,
+                                                 ThemeManager.primaryColor.b, 0.35)
+                            Behavior on color { ColorAnimation { duration: 100 } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text:           "Save"
+                                color:          "white"
+                                font.pixelSize: 12
+                                font.bold:      true
+                            }
+                            MouseArea {
+                                id: saveDlgConfirmHover
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape:  parent.ready ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                onClicked:    saveWorkspaceDialog.doConfirm()
+                            }
+                        }
                     }
                 }
             }
@@ -956,92 +1117,415 @@ Rectangle {
     // ─── Open Workspace Dialog ───────────────────────────────────────────────────
     Popup {
         id: openWorkspaceDialog
-        width: 300
+        width: 420
         x: (parent.width  - width)  / 2
         y: (parent.height - height) / 2
         z: 1000
         modal: true
-        padding: 20
+        padding: 0
         closePolicy: Popup.CloseOnEscape
 
         background: Rectangle {
             color:  ThemeManager.surfaceColor
-            radius: 8
-            border.color: ThemeManager.borderColor
+            radius: 10
+            border.color: Qt.rgba(ThemeManager.borderColor.r,
+                                  ThemeManager.borderColor.g,
+                                  ThemeManager.borderColor.b, 0.5)
             border.width: 1
         }
 
         Column {
             width: parent.width
-            spacing: 12
+            spacing: 0
 
-            Text {
-                text: "Open Workspace"
-                font.pixelSize: 14
-                font.bold: true
-                color: ThemeManager.foregroundColor
-            }
+            // ── Header ─────────────────────────────────────────────────────────
+            Item {
+                width: parent.width
+                height: 64
 
-            Text {
-                visible: WorkspaceManager.workspaceList.length === 0
-                text: "No saved workspaces yet."
-                color: ThemeManager.textSecondaryColor
-                font.pixelSize: 12
-            }
+                Row {
+                    anchors.left:           parent.left
+                    anchors.leftMargin:     24
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 14
 
-            ListView {
-                visible: WorkspaceManager.workspaceList.length > 0
-                width:  parent.width
-                height: Math.min(WorkspaceManager.workspaceList.length * 40, 200)
-                model:  WorkspaceManager.workspaceList
-                clip:   true
-
-                delegate: Rectangle {
-                    width:  parent ? parent.width : 0
-                    height: 40
-                    radius: 4
-                    color:  wsItemMouse.containsMouse
-                                ? Qt.rgba(ThemeManager.primaryColor.r,
-                                          ThemeManager.primaryColor.g,
-                                          ThemeManager.primaryColor.b, 0.12)
-                                : "transparent"
-
-                    Text {
+                    Qaterial.ColorIcon {
+                        source: Qaterial.Icons.folderOpenOutline
+                        color:  ThemeManager.primaryColor
+                        width: 22; height: 22
                         anchors.verticalCenter: parent.verticalCenter
-                        anchors.left:           parent.left
-                        anchors.leftMargin:     8
-                        text:  modelData
-                        color: modelData === WorkspaceManager.currentWorkspace
-                                   ? ThemeManager.primaryColor
-                                   : ThemeManager.foregroundColor
-                        font.pixelSize: 12
                     }
 
-                    MouseArea {
-                        id: wsItemMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape:  Qt.PointingHandCursor
-                        onClicked: {
-                            // Suppress visual connection drawing from onConnectionAdded
-                            // during load; restoreAllConnections() handles it instead.
-                            root.m_suppressConnectionDraw = true
-                            viewPort.loadWorkspace(modelData)
-                            root.m_suppressConnectionDraw = false
-                            GlobalProperties.lastWorkspace = modelData
-                            openWorkspaceDialog.close()
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2
+
+                        Text {
+                            text:           "Open Project"
+                            font.pixelSize: 14
+                            font.bold:      true
+                            color:          ThemeManager.textColor
+                        }
+                        Text {
+                            text:           "Select a saved workspace"
+                            font.pixelSize: 11
+                            color:          ThemeManager.textSecondaryColor
+                        }
+                    }
+                }
+
+                Qaterial.AppBarButton {
+                    anchors.right:          parent.right
+                    anchors.rightMargin:    8
+                    anchors.verticalCenter: parent.verticalCenter
+                    icon.source: Qaterial.Icons.close
+                    icon.color:  ThemeManager.textSecondaryColor
+                    width: 36; height: 36
+                    onClicked: openWorkspaceDialog.close()
+                }
+            }
+
+            Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.4 }
+
+            // ── Body ───────────────────────────────────────────────────────────
+            Item {
+                width: parent.width
+                height: openBodyCol.implicitHeight + 48
+
+                Column {
+                    id: openBodyCol
+                    x: 16; y: 16
+                    width: parent.width - 32
+                    spacing: 4
+
+                    // Empty state
+                    Item {
+                        visible: WorkspaceManager.workspaceList.length === 0
+                        width: parent.width
+                        height: 80
+
+                        Column {
+                            anchors.centerIn: parent
+                            spacing: 8
+
+                            Qaterial.ColorIcon {
+                                source: Qaterial.Icons.folderOutline
+                                color:  ThemeManager.textSecondaryColor
+                                width: 28; height: 28
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                opacity: 0.4
+                            }
+                            Text {
+                                text:           "No saved projects yet"
+                                color:          ThemeManager.textSecondaryColor
+                                font.pixelSize: 12
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                opacity: 0.7
+                            }
+                        }
+                    }
+
+                    // Workspace list
+                    Repeater {
+                        model: WorkspaceManager.workspaceList
+
+                        delegate: Rectangle {
+                            id: wsCard
+                            readonly property bool isCurrent: modelData === WorkspaceManager.currentWorkspace
+
+                            width:  parent ? parent.width : 0
+                            height: 48
+                            radius: 6
+                            color:  wsDel.containsMouse
+                                        ? Qt.rgba(ThemeManager.dangerColor.r,
+                                                  ThemeManager.dangerColor.g,
+                                                  ThemeManager.dangerColor.b, 0.08)
+                                        : wsItemMouse.containsMouse || isCurrent
+                                              ? Qt.rgba(ThemeManager.primaryColor.r,
+                                                        ThemeManager.primaryColor.g,
+                                                        ThemeManager.primaryColor.b,
+                                                        isCurrent ? 0.08 : 0.06)
+                                              : "transparent"
+                            Behavior on color { ColorAnimation { duration: 100 } }
+
+                            // Active indicator bar
+                            Rectangle {
+                                visible: wsCard.isCurrent
+                                width: 3; height: parent.height * 0.5; radius: 2
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.left:           parent.left
+                                anchors.leftMargin:     2
+                                color: ThemeManager.primaryColor
+                                opacity: 0.8
+                            }
+
+                            Row {
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.left:           parent.left
+                                anchors.leftMargin:     16
+                                spacing: 10
+
+                                Qaterial.ColorIcon {
+                                    source: Qaterial.Icons.vectorSquare
+                                    color:  wsCard.isCurrent ? ThemeManager.primaryColor : ThemeManager.textSecondaryColor
+                                    width: 16; height: 16
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Text {
+                                    text:  modelData + (wsCard.isCurrent ? "  (current)" : "")
+                                    color: wsCard.isCurrent
+                                               ? ThemeManager.primaryColor
+                                               : wsItemMouse.containsMouse
+                                                     ? ThemeManager.textColor
+                                                     : ThemeManager.textSecondaryColor
+                                    font.pixelSize: 13
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                            }
+
+                            // Delete button (appears on hover)
+                            Rectangle {
+                                id: wsDeleteBtn
+                                anchors.right:          parent.right
+                                anchors.rightMargin:    8
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 28; height: 28; radius: 4
+                                color: wsDel.containsMouse
+                                           ? Qt.rgba(ThemeManager.dangerColor.r,
+                                                     ThemeManager.dangerColor.g,
+                                                     ThemeManager.dangerColor.b, 0.18)
+                                           : "transparent"
+                                opacity: wsItemMouse.containsMouse || wsDel.containsMouse ? 1.0 : 0.0
+                                Behavior on opacity { NumberAnimation { duration: 120 } }
+                                Behavior on color   { ColorAnimation   { duration: 100 } }
+
+                                Qaterial.ColorIcon {
+                                    source: Qaterial.Icons.trashCanOutline
+                                    color:  ThemeManager.dangerColor
+                                    width: 16; height: 16
+                                    anchors.centerIn: parent
+                                }
+
+                                MouseArea {
+                                    id: wsDel
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape:  Qt.PointingHandCursor
+                                    onClicked: {
+                                        const name = modelData
+                                        WorkspaceManager.deleteWorkspace(name)
+                                        Qt.callLater(function() {
+                                            root.showToast("Deleted \"" + name + "\"", "warning")
+                                        })
+                                    }
+                                }
+                            }
+
+                            MouseArea {
+                                id: wsItemMouse
+                                anchors.fill:   parent
+                                anchors.rightMargin: 36
+                                hoverEnabled:   true
+                                cursorShape:    Qt.PointingHandCursor
+                                onClicked: {
+                                    root.m_suppressConnectionDraw = true
+                                    viewPort.loadWorkspace(modelData)
+                                    root.m_suppressConnectionDraw = false
+                                    GlobalProperties.lastWorkspace = modelData
+                                    openWorkspaceDialog.close()
+                                }
+                            }
+                        }
+                    }
+
+                    // Bottom cancel row
+                    Item {
+                        width: parent.width
+                        height: 48
+
+                        Rectangle {
+                            anchors.right:          parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 80; height: 36; radius: 6
+                            color: openCancelHover.containsMouse
+                                       ? Qt.rgba(ThemeManager.borderColor.r,
+                                                 ThemeManager.borderColor.g,
+                                                 ThemeManager.borderColor.b, 0.25)
+                                       : "transparent"
+                            border.color: ThemeManager.borderColor
+                            border.width: 1
+                            Behavior on color { ColorAnimation { duration: 100 } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text:           "Cancel"
+                                color:          ThemeManager.textSecondaryColor
+                                font.pixelSize: 12
+                            }
+                            MouseArea {
+                                id: openCancelHover
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape:  Qt.PointingHandCursor
+                                onClicked:    openWorkspaceDialog.close()
+                            }
                         }
                     }
                 }
             }
+        }
+    }
 
-            Button {
-                text: "Cancel"
-                flat: true
-                anchors.right: parent.right
-                onClicked: openWorkspaceDialog.close()
+    // ─── Toast Notification ──────────────────────────────────────────────────────
+    // ─── Confirm New Project Dialog ───────────────────────────────────────────────
+    Popup {
+        id: confirmNewProjectDialog
+        width: 360
+        x: (parent.width  - width)  / 2
+        y: (parent.height - height) / 2
+        z: 1000
+        modal: true
+        padding: 0
+        closePolicy: Popup.CloseOnEscape
+
+        background: Rectangle {
+            color:  ThemeManager.surfaceColor
+            radius: 10
+            border.color: Qt.rgba(ThemeManager.borderColor.r,
+                                  ThemeManager.borderColor.g,
+                                  ThemeManager.borderColor.b, 0.5)
+            border.width: 1
+        }
+
+        Column {
+            width: parent.width
+            spacing: 0
+
+            Item {
+                width: parent.width
+                height: 64
+
+                Row {
+                    anchors.left:           parent.left
+                    anchors.leftMargin:     24
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 14
+
+                    Qaterial.ColorIcon {
+                        source: Qaterial.Icons.alertOutline
+                        color:  "#ff9800"
+                        width: 22; height: 22
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Text {
+                        text:           "New Project"
+                        font.pixelSize: 14
+                        font.bold:      true
+                        color:          ThemeManager.textColor
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                Qaterial.AppBarButton {
+                    anchors.right:          parent.right
+                    anchors.rightMargin:    8
+                    anchors.verticalCenter: parent.verticalCenter
+                    icon.source: Qaterial.Icons.close
+                    icon.color:  ThemeManager.textSecondaryColor
+                    width: 36; height: 36
+                    onClicked: confirmNewProjectDialog.close()
+                }
+            }
+
+            Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.4 }
+
+            Item {
+                width: parent.width
+                height: confirmBodyCol.implicitHeight + 48
+
+                Column {
+                    id: confirmBodyCol
+                    x: 24; y: 24
+                    width: parent.width - 48
+                    spacing: 20
+
+                    Text {
+                        width: parent.width
+                        text: "This project has unsaved changes. They will be permanently lost if you create a new project."
+                        color:          ThemeManager.textSecondaryColor
+                        font.pixelSize: 13
+                        lineHeight:     1.5
+                        wrapMode:       Text.WordWrap
+                    }
+
+                    Row {
+                        anchors.right: parent.right
+                        spacing: 8
+
+                        Rectangle {
+                            width: 80; height: 36; radius: 6
+                            color: confCancelHover.containsMouse
+                                       ? Qt.rgba(ThemeManager.borderColor.r,
+                                                 ThemeManager.borderColor.g,
+                                                 ThemeManager.borderColor.b, 0.25)
+                                       : "transparent"
+                            border.color: ThemeManager.borderColor
+                            border.width: 1
+                            Behavior on color { ColorAnimation { duration: 100 } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text:           "Cancel"
+                                color:          ThemeManager.textSecondaryColor
+                                font.pixelSize: 12
+                            }
+                            MouseArea {
+                                id: confCancelHover
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape:  Qt.PointingHandCursor
+                                onClicked:    confirmNewProjectDialog.close()
+                            }
+                        }
+
+                        Rectangle {
+                            width: 120; height: 36; radius: 6
+                            color: confDiscardHover.containsMouse
+                                       ? Qt.lighter(ThemeManager.dangerColor, 1.1)
+                                       : ThemeManager.dangerColor
+                            Behavior on color { ColorAnimation { duration: 100 } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text:           "Discard & New"
+                                color:          "white"
+                                font.pixelSize: 12
+                                font.bold:      true
+                            }
+                            MouseArea {
+                                id: confDiscardHover
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape:  Qt.PointingHandCursor
+                                onClicked: {
+                                    confirmNewProjectDialog.close()
+                                    doNewProject()
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
+    }
+
+    function doNewProject() {
+        splashScreen.dismissed = true
+        WorkspaceManager.newWorkspace()
+        toast.show("New project created", "success")
     }
 
     Component.onCompleted: {
@@ -1055,6 +1539,7 @@ Rectangle {
         function onWorkspaceLoaded(name) {
             console.log("[ViewPort] Workspace loaded signal received:", name, "- scheduling connection restore")
             restoreConnectionsTimer.restart()
+            toast.show("Opened \"" + name + "\"", "success")
         }
     }
 

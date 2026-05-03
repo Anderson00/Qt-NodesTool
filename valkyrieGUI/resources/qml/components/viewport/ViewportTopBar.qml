@@ -20,13 +20,15 @@ Rectangle {
     // The parent should toggle the drawer and update selectedPanel.
     signal panelToggled(string panel)
     signal settingsRequested()
+    signal newProjectRequested()
     signal saveRequested()
     signal openRequested()
     signal undoRequested()
     signal redoRequested()
 
-    property bool canUndo: false
-    property bool canRedo: false
+    property bool canUndo:  false
+    property bool canRedo:  false
+    property bool isDirty:  false
 
     height: barHeight
     color: Qt.darker(ThemeManager.backgroundColor, 1.35)
@@ -74,12 +76,14 @@ Rectangle {
             Item { width: 12; height: 1 }
 
             Text {
-                text: root.currentProject
+                text: root.currentProject + (root.isDirty ? " •" : "")
                 font.pixelSize: 12
-                color:   ThemeManager.textColor
-                opacity: 0.55
+                color:   root.isDirty ? ThemeManager.primaryColor : ThemeManager.textColor
+                opacity: root.isDirty ? 0.75 : 0.55
                 height:  root.barHeight
                 verticalAlignment: Text.AlignVCenter
+                Behavior on color   { ColorAnimation { duration: 150 } }
+                Behavior on opacity { NumberAnimation { duration: 150 } }
             }
         }
 
@@ -273,13 +277,29 @@ Rectangle {
             }
 
             Qaterial.AppBarButton {
-                icon.source: Qaterial.Icons.contentSave
+                icon.source: Qaterial.Icons.filePlusOutline
                 icon.color:  ThemeManager.textColor
-                ToolTip.text: "Save"
+                ToolTip.text: "New Project"
                 ToolTip.visible: hovered
-                ToolTip.delay: 500
+                ToolTip.delay:   500
+                width: 40; height: 40
+                onClicked: root.newProjectRequested()
+            }
+
+            Qaterial.AppBarButton {
+                icon.source: Qaterial.Icons.contentSave
+                icon.color:  root.isDirty
+                                 ? ThemeManager.textColor
+                                 : Qt.rgba(ThemeManager.textColor.r,
+                                           ThemeManager.textColor.g,
+                                           ThemeManager.textColor.b, 0.3)
+                enabled:     root.isDirty
+                ToolTip.text: "Save  (Ctrl+S)"
+                ToolTip.visible: hovered
+                ToolTip.delay:   500
                 width: 40; height: 40
                 onClicked: root.saveRequested()
+                Behavior on icon.color { ColorAnimation { duration: 150 } }
             }
 
             Qaterial.AppBarButton {
@@ -287,7 +307,7 @@ Rectangle {
                 icon.color:  ThemeManager.textColor
                 ToolTip.text: "Open Project"
                 ToolTip.visible: hovered
-                ToolTip.delay: 500
+                ToolTip.delay:   500
                 width: 40; height: 40
                 onClicked: root.openRequested()
             }

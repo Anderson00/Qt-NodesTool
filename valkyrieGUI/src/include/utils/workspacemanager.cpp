@@ -57,6 +57,16 @@ void WorkspaceManager::refreshWorkspaceList()
     emit workspaceListChanged();
 }
 
+void WorkspaceManager::newWorkspace()
+{
+    if (m_viewPort) {
+        m_viewPort->clearBehaviours();
+        m_viewPort->undoStack()->clear();
+    }
+    m_currentWorkspace = "";
+    emit currentWorkspaceChanged();
+}
+
 // ── Save ──────────────────────────────────────────────────────────────────────
 
 bool WorkspaceManager::saveWorkspace(const QString& name)
