@@ -221,50 +221,6 @@ Rectangle {
         }
     }
 
-    Qaterial.MiniFabButton {
-        id: fabBottomMenu
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 22
-        anchors.horizontalCenter: parent.horizontalCenter
-        z: 100
-
-        icon.source: Qaterial.Icons.folderTable
-        icon.color: ThemeManager.primaryColor
-        flat: false
-        radius: 0
-
-        onClicked: {
-            if(bottomDrawerOpened)
-                drawerFolder.close()
-            else
-                drawerFolder.open()
-        }
-    }
-
-    FolderBottomSheet {
-        id: drawerFolder
-
-        viewPortWindow: root
-
-        onBehaviourSelected: {
-            console.log(viewPort.addBehaviour(path, infos))
-        }
-
-        onOpened: {
-            bottomDrawerOpened = true
-        }
-
-        onClosed: {
-            bottomDrawerOpened = false
-        }
-
-        onYChanged: {
-            fabBottomMenu.anchors.bottomMargin = (parent.height - y) + 22
-            toolbar.anchors.bottomMargin = (parent.height - y) + 22
-            viewRect.anchors.bottomMargin = (parent.height - y) + 22 + 8
-        }
-    }
-
     NodeSettings {
         id: drawer
         width: 200
@@ -1715,6 +1671,7 @@ Rectangle {
         closePolicy: Popup.NoAutoClose
         padding: 0
         background: null
+        z: 200          // must exceed leftPanelDrawer.z (199)
         width: 136; height: 52
 
         property string currentPath:  ""
