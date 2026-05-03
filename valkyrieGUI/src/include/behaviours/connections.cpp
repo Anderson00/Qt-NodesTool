@@ -12,7 +12,7 @@ Connections::Connections(Behaviours *obj, QMetaMethod metaMethod, QObject *paren
 
 Connections::~Connections()
 {
-    qDebug() << "CONNNN deleted";
+
 }
 
 QString Connections::methodSignature()
