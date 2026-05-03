@@ -180,21 +180,12 @@ int PresetManager::customCount() const {
 void PresetManager::applyPreset(int index) {
     if (index < 0 || index >= m_presets.size()) return;
     const ColorPreset* p = m_presets.at(index);
-    ThemeManager* tm = ThemeManager::instance();
-    tm->setBackgroundColor(p->backgroundColor());
-    tm->setSurfaceColor(p->surfaceColor());
-    tm->setForegroundColor(p->foregroundColor());
-    tm->setBorderColor(p->borderColor());
-    tm->setShadowColor(p->shadowColor());
-    tm->setPrimaryColor(p->primaryColor());
-    tm->setSecondaryColor(p->secondaryColor());
-    tm->setAccentColor(p->accentColor());
-    tm->setSuccessColor(p->successColor());
-    tm->setWarningColor(p->warningColor());
-    tm->setDangerColor(p->dangerColor());
-    tm->setTextColor(p->textColor());
-    tm->setTextSecondaryColor(p->textSecondaryColor());
-    tm->setSelectionColor(p->selectionColor());
+    ThemeManager::instance()->applyColorsWithAnimation(
+        p->backgroundColor(), p->surfaceColor(), p->foregroundColor(),
+        p->borderColor(), p->shadowColor(), p->primaryColor(),
+        p->secondaryColor(), p->accentColor(), p->successColor(),
+        p->warningColor(), p->dangerColor(), p->textColor(),
+        p->textSecondaryColor(), p->selectionColor());
 }
 
 // ── CRUD ──────────────────────────────────────────────────────────────────────

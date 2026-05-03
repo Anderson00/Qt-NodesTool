@@ -14,14 +14,160 @@ QObject* ThemeManager::qmlSingletonProvider(QQmlEngine*, QJSEngine*) {
 }
 
 ThemeManager::ThemeManager(QObject* parent)
-    : AbstractTheme(parent), m_currentMode(ThemeMode::Dark)
-{}
+    : AbstractTheme(parent), m_currentMode(ThemeMode::Dark), m_transitionProgress(1.0)
+{
+    m_transitionAnimation = new QPropertyAnimation(this, "transitionProgress", this);
+    m_transitionAnimation->setDuration(300);
+    m_transitionAnimation->setEasingCurve(QEasingCurve::InOutQuad);
+}
 
 bool ThemeManager::isDarkMode() const {
     return m_currentMode == ThemeMode::Dark;
 }
 
+qreal ThemeManager::transitionProgress() const {
+    return m_transitionProgress;
+}
+
+void ThemeManager::setTransitionProgress(qreal progress) {
+    if (m_transitionProgress != progress) {
+        m_transitionProgress = progress;
+        emit transitionProgressChanged();
+        emit themeChanged();
+    }
+}
+
+QColor ThemeManager::interpolateColor(const QColor& fromColor, const QColor& toColor, qreal progress) const {
+    if (progress >= 1.0) return toColor;
+    if (progress <= 0.0) return fromColor;
+
+    qreal r = fromColor.redF() + (toColor.redF() - fromColor.redF()) * progress;
+    qreal g = fromColor.greenF() + (toColor.greenF() - fromColor.greenF()) * progress;
+    qreal b = fromColor.blueF() + (toColor.blueF() - fromColor.blueF()) * progress;
+    qreal a = fromColor.alphaF() + (toColor.alphaF() - fromColor.alphaF()) * progress;
+
+    return QColor::fromRgbF(r, g, b, a);
+}
+
+QColor ThemeManager::backgroundColor() const {
+    return (m_transitionProgress < 1.0) ? interpolateColor(m_oldBackgroundColor, AbstractTheme::backgroundColor(), m_transitionProgress) : AbstractTheme::backgroundColor();
+}
+
+QColor ThemeManager::surfaceColor() const {
+    return (m_transitionProgress < 1.0) ? interpolateColor(m_oldSurfaceColor, AbstractTheme::surfaceColor(), m_transitionProgress) : AbstractTheme::surfaceColor();
+}
+
+QColor ThemeManager::foregroundColor() const {
+    return (m_transitionProgress < 1.0) ? interpolateColor(m_oldForegroundColor, AbstractTheme::foregroundColor(), m_transitionProgress) : AbstractTheme::foregroundColor();
+}
+
+QColor ThemeManager::borderColor() const {
+    return (m_transitionProgress < 1.0) ? interpolateColor(m_oldBorderColor, AbstractTheme::borderColor(), m_transitionProgress) : AbstractTheme::borderColor();
+}
+
+QColor ThemeManager::shadowColor() const {
+    return (m_transitionProgress < 1.0) ? interpolateColor(m_oldShadowColor, AbstractTheme::shadowColor(), m_transitionProgress) : AbstractTheme::shadowColor();
+}
+
+QColor ThemeManager::primaryColor() const {
+    return (m_transitionProgress < 1.0) ? interpolateColor(m_oldPrimaryColor, AbstractTheme::primaryColor(), m_transitionProgress) : AbstractTheme::primaryColor();
+}
+
+QColor ThemeManager::secondaryColor() const {
+    return (m_transitionProgress < 1.0) ? interpolateColor(m_oldSecondaryColor, AbstractTheme::secondaryColor(), m_transitionProgress) : AbstractTheme::secondaryColor();
+}
+
+QColor ThemeManager::accentColor() const {
+    return (m_transitionProgress < 1.0) ? interpolateColor(m_oldAccentColor, AbstractTheme::accentColor(), m_transitionProgress) : AbstractTheme::accentColor();
+}
+
+QColor ThemeManager::successColor() const {
+    return (m_transitionProgress < 1.0) ? interpolateColor(m_oldSuccessColor, AbstractTheme::successColor(), m_transitionProgress) : AbstractTheme::successColor();
+}
+
+QColor ThemeManager::warningColor() const {
+    return (m_transitionProgress < 1.0) ? interpolateColor(m_oldWarningColor, AbstractTheme::warningColor(), m_transitionProgress) : AbstractTheme::warningColor();
+}
+
+QColor ThemeManager::dangerColor() const {
+    return (m_transitionProgress < 1.0) ? interpolateColor(m_oldDangerColor, AbstractTheme::dangerColor(), m_transitionProgress) : AbstractTheme::dangerColor();
+}
+
+QColor ThemeManager::textColor() const {
+    return (m_transitionProgress < 1.0) ? interpolateColor(m_oldTextColor, AbstractTheme::textColor(), m_transitionProgress) : AbstractTheme::textColor();
+}
+
+QColor ThemeManager::textSecondaryColor() const {
+    return (m_transitionProgress < 1.0) ? interpolateColor(m_oldTextSecondaryColor, AbstractTheme::textSecondaryColor(), m_transitionProgress) : AbstractTheme::textSecondaryColor();
+}
+
+QColor ThemeManager::selectionColor() const {
+    return (m_transitionProgress < 1.0) ? interpolateColor(m_oldSelectionColor, AbstractTheme::selectionColor(), m_transitionProgress) : AbstractTheme::selectionColor();
+}
+
+void ThemeManager::startColorTransition() {
+    m_transitionAnimation->stop();
+    m_transitionAnimation->setStartValue(0.0);
+    m_transitionAnimation->setEndValue(1.0);
+    m_transitionAnimation->start();
+}
+
+void ThemeManager::applyColorsWithAnimation(const QColor& bgColor, const QColor& surfaceColor,
+                                            const QColor& fgColor, const QColor& borderColor,
+                                            const QColor& shadowColor, const QColor& primaryColor,
+                                            const QColor& secondaryColor, const QColor& accentColor,
+                                            const QColor& successColor, const QColor& warningColor,
+                                            const QColor& dangerColor, const QColor& textColor,
+                                            const QColor& textSecondaryColor, const QColor& selectionColor) {
+    m_oldBackgroundColor = AbstractTheme::backgroundColor();
+    m_oldSurfaceColor = AbstractTheme::surfaceColor();
+    m_oldForegroundColor = AbstractTheme::foregroundColor();
+    m_oldBorderColor = AbstractTheme::borderColor();
+    m_oldShadowColor = AbstractTheme::shadowColor();
+    m_oldPrimaryColor = AbstractTheme::primaryColor();
+    m_oldSecondaryColor = AbstractTheme::secondaryColor();
+    m_oldAccentColor = AbstractTheme::accentColor();
+    m_oldSuccessColor = AbstractTheme::successColor();
+    m_oldWarningColor = AbstractTheme::warningColor();
+    m_oldDangerColor = AbstractTheme::dangerColor();
+    m_oldTextColor = AbstractTheme::textColor();
+    m_oldTextSecondaryColor = AbstractTheme::textSecondaryColor();
+    m_oldSelectionColor = AbstractTheme::selectionColor();
+
+    AbstractTheme::setBackgroundColor(bgColor);
+    AbstractTheme::setSurfaceColor(surfaceColor);
+    AbstractTheme::setForegroundColor(fgColor);
+    AbstractTheme::setBorderColor(borderColor);
+    AbstractTheme::setShadowColor(shadowColor);
+    AbstractTheme::setPrimaryColor(primaryColor);
+    AbstractTheme::setSecondaryColor(secondaryColor);
+    AbstractTheme::setAccentColor(accentColor);
+    AbstractTheme::setSuccessColor(successColor);
+    AbstractTheme::setWarningColor(warningColor);
+    AbstractTheme::setDangerColor(dangerColor);
+    AbstractTheme::setTextColor(textColor);
+    AbstractTheme::setTextSecondaryColor(textSecondaryColor);
+    AbstractTheme::setSelectionColor(selectionColor);
+
+    startColorTransition();
+}
+
 void ThemeManager::applyTheme() {
+    m_oldBackgroundColor = AbstractTheme::backgroundColor();
+    m_oldSurfaceColor = AbstractTheme::surfaceColor();
+    m_oldForegroundColor = AbstractTheme::foregroundColor();
+    m_oldBorderColor = AbstractTheme::borderColor();
+    m_oldShadowColor = AbstractTheme::shadowColor();
+    m_oldPrimaryColor = AbstractTheme::primaryColor();
+    m_oldSecondaryColor = AbstractTheme::secondaryColor();
+    m_oldAccentColor = AbstractTheme::accentColor();
+    m_oldSuccessColor = AbstractTheme::successColor();
+    m_oldWarningColor = AbstractTheme::warningColor();
+    m_oldDangerColor = AbstractTheme::dangerColor();
+    m_oldTextColor = AbstractTheme::textColor();
+    m_oldTextSecondaryColor = AbstractTheme::textSecondaryColor();
+    m_oldSelectionColor = AbstractTheme::selectionColor();
+
     if (m_currentMode == ThemeMode::Light) {
         // Light — cool blue-gray base, indigo primary
         setBackgroundColor(QColor(240, 242, 245));   // #F0F2F5 — canvas
@@ -63,7 +209,7 @@ void ThemeManager::applyTheme() {
     }
 
     syncSubThemes();
-    emit themeChanged();
+    startColorTransition();
 }
 
 void ThemeManager::syncSubThemes() {

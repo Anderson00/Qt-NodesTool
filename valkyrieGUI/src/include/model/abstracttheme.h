@@ -34,20 +34,20 @@ class AbstractTheme : public QObject {
 public:
     explicit AbstractTheme(QObject* parent = nullptr);
 
-    QColor backgroundColor()    const;
-    QColor surfaceColor()       const;
-    QColor foregroundColor()    const;
-    QColor borderColor()        const;
-    QColor shadowColor()        const;
-    QColor primaryColor()       const;
-    QColor secondaryColor()     const;
-    QColor accentColor()        const;
-    QColor successColor()       const;
-    QColor warningColor()       const;
-    QColor dangerColor()        const;
-    QColor textColor()          const;
-    QColor textSecondaryColor() const;
-    QColor selectionColor()     const;
+    virtual QColor backgroundColor()    const;
+    virtual QColor surfaceColor()       const;
+    virtual QColor foregroundColor()    const;
+    virtual QColor borderColor()        const;
+    virtual QColor shadowColor()        const;
+    virtual QColor primaryColor()       const;
+    virtual QColor secondaryColor()     const;
+    virtual QColor accentColor()        const;
+    virtual QColor successColor()       const;
+    virtual QColor warningColor()       const;
+    virtual QColor dangerColor()        const;
+    virtual QColor textColor()          const;
+    virtual QColor textSecondaryColor() const;
+    virtual QColor selectionColor()     const;
 
     void setBackgroundColor(const QColor& color);
     void setSurfaceColor(const QColor& color);
