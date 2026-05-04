@@ -16,6 +16,7 @@ Rectangle {
     property var topLeftAnchor: topBar
     property var nodes
     property var focusedNode: null
+    property var onNodeSelected: null
     property string position: GlobalProperties.nodesListPosition || "bottom-left"
     property bool _animating: false
 
@@ -184,6 +185,10 @@ Rectangle {
                     onClicked: {
                         const nodeItem = root.nodes.itemAt(index)
                         if (nodeItem && !root._animating) {
+                            if (root.onNodeSelected) {
+                                root.onNodeSelected(nodeItem)
+                            }
+
                             const nodeX = nodeItem.x
                             const nodeY = nodeItem.y
                             const nodeW = nodeItem.width

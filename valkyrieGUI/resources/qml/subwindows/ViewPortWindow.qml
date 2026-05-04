@@ -893,6 +893,9 @@ Rectangle {
         topLeftAnchor: fullscreenFab
         focusedNode: root.nodeOnFocus
         nodes: nodes
+        onNodeSelected: function(nodeItem) {
+            root.nodeOnFocus = nodeItem
+        }
     }
 
     // ─── Save Workspace Dialog ───────────────────────────────────────────────────
