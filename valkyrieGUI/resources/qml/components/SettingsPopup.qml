@@ -989,16 +989,19 @@ Popup {
 
                                             function updatePosition() {
                                                 const id = modelData.id
-                                                const px = parent.width / 2 - 3
-                                                const py = parent.height / 2 - 3
+                                                const w = parent.width
+                                                const h = parent.height
+                                                const cx = Math.max(2, Math.min(w - 8, w / 2 - 3))
+                                                const cy = Math.max(2, Math.min(h - 8, h / 2 - 3))
+
                                                 if (id === "top-left") { x = 2; y = 2 }
-                                                else if (id === "top-center") { x = px; y = 2 }
-                                                else if (id === "top-right") { x = parent.width - 8; y = 2 }
-                                                else if (id === "mid-left") { x = 2; y = py }
-                                                else if (id === "mid-right") { x = parent.width - 8; y = py }
-                                                else if (id === "bottom-left") { x = 2; y = parent.height - 8 }
-                                                else if (id === "bottom-center") { x = px; y = parent.height - 8 }
-                                                else if (id === "bottom-right") { x = parent.width - 8; y = parent.height - 8 }
+                                                else if (id === "top-center") { x = cx; y = 2 }
+                                                else if (id === "top-right") { x = Math.max(2, w - 8); y = 2 }
+                                                else if (id === "mid-left") { x = 2; y = cy }
+                                                else if (id === "mid-right") { x = Math.max(2, w - 8); y = cy }
+                                                else if (id === "bottom-left") { x = 2; y = Math.max(2, h - 8) }
+                                                else if (id === "bottom-center") { x = cx; y = Math.max(2, h - 8) }
+                                                else if (id === "bottom-right") { x = Math.max(2, w - 8); y = Math.max(2, h - 8) }
                                             }
 
                                             Component.onCompleted: updatePosition()

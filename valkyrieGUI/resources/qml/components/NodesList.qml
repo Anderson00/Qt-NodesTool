@@ -13,6 +13,7 @@ Rectangle {
     property var sliderZoom
     property var statusBar
     property var topBar
+    property var topLeftAnchor: topBar
     property var nodes
     property string position: GlobalProperties.nodesListPosition || "bottom-left"
     property bool _animating: false
@@ -48,7 +49,7 @@ Rectangle {
 
         switch(position) {
             case "top-left":
-                root.anchors.top = topBar.bottom
+                root.anchors.top = topLeftAnchor.bottom
                 root.anchors.topMargin = margin
                 root.anchors.left = root.parent.left
                 root.anchors.leftMargin = margin
