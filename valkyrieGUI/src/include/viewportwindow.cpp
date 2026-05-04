@@ -7,6 +7,11 @@
 #include <QUuid>
 #include <QVariantMap>
 #include <QQmlContext>
+#include <QPixmap>
+#include <QDir>
+#include <QFileInfo>
+#include <QGuiApplication>
+#include <QScreen>
 
 ViewPortWindow::ViewPortWindow(QWidget* parent)
     : QMLWindow(parent, QUrl("qrc:/subwindows/ViewPortWindow.qml"))
@@ -299,4 +304,14 @@ bool ViewPortWindow::loadWorkspace(const QString& name) {
     bool ok = WorkspaceManager::instance()->loadWorkspace(name);
     if (ok) m_undoStack->clear();
     return ok;
+}
+
+void ViewPortWindow::takeScreenshot(const QString& filePath) {
+    QDir dir(QFileInfo(filePath).absolutePath());
+    if (!dir.exists()) {
+        dir.mkpath(".");
+    }
+    QImage image = view()->grabWindow();
+    QPixmap screenshot = QPixmap::fromImage(image);
+    screenshot.save(filePath);
 }

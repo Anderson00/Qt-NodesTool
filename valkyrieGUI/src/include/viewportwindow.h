@@ -89,6 +89,9 @@ public slots:
     Q_INVOKABLE bool loadWorkspace(const QString& name);
     Q_INVOKABLE QVariantList getAllConnections() const;
 
+    // Screenshot
+    Q_INVOKABLE void takeScreenshot(const QString& filePath);
+
     void restoreViewport(qreal x, qreal y, qreal scale);
 
 signals:

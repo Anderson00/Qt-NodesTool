@@ -582,6 +582,8 @@ Rectangle {
                 drag.smoothed: true
                 drag.target: isConnecting ? undefined : mycanvas
 
+                cursorShape: dragArea.drag.active ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+
                 onClicked: {
                     root.focus = true
                     nodeOnFocus = null
@@ -851,6 +853,12 @@ Rectangle {
         onOpenRequested: openWorkspaceDialog.open()
         onUndoRequested: viewPort.undo()
         onRedoRequested: viewPort.redo()
+        onScreenshotRequested: {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+            const path = appDirPath + "/screenshots/screenshot_" + timestamp + ".png"
+            viewPort.takeScreenshot(path)
+            ToastManager.show("Screenshot saved", "success")
+        }
     }
 
     // ─── Splash Screen ──────────────────────────────────────────────────────────
