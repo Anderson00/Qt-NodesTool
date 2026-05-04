@@ -100,6 +100,7 @@ Rectangle {
         root.anchors.left = undefined
         root.anchors.right = undefined
         root.anchors.horizontalCenter = undefined
+        root.anchors.verticalCenter = undefined
         root.anchors.topMargin = 0
         root.anchors.bottomMargin = 0
         root.anchors.leftMargin = 0

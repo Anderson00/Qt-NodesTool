@@ -954,7 +954,7 @@ Popup {
 
                             delegate: Rectangle {
                                 readonly property bool active: GlobalProperties.nodesListPosition === modelData.id
-                                width: (parent.width - 16) / 3; height: 44; radius: 7
+                                width: (parent.width - 16) / 3; height: 60; radius: 7
                                 color: active
                                     ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.15)
                                     : ThemeManager.foregroundColor
@@ -963,15 +963,54 @@ Popup {
                                 Behavior on color { ColorAnimation { duration: 120 } }
 
                                 Column {
-                                    anchors.centerIn: parent
-                                    spacing: 2
+                                    anchors.fill: parent
+                                    anchors.margins: 6
+                                    spacing: 4
+
+                                    // Position visualization
+                                    Rectangle {
+                                        width: parent.width
+                                        height: 28
+                                        radius: 3
+                                        color: Qt.rgba(ThemeManager.primaryColor.r,
+                                                       ThemeManager.primaryColor.g,
+                                                       ThemeManager.primaryColor.b, 0.1)
+                                        border.width: 1
+                                        border.color: ThemeManager.primaryColor
+                                        opacity: 0.6
+                                        clip: true
+
+                                        Rectangle {
+                                            id: positionMarker
+                                            width: 6
+                                            height: 6
+                                            radius: 3
+                                            color: ThemeManager.primaryColor
+
+                                            function updatePosition() {
+                                                const id = modelData.id
+                                                const px = parent.width / 2 - 3
+                                                const py = parent.height / 2 - 3
+                                                if (id === "top-left") { x = 2; y = 2 }
+                                                else if (id === "top-center") { x = px; y = 2 }
+                                                else if (id === "top-right") { x = parent.width - 8; y = 2 }
+                                                else if (id === "mid-left") { x = 2; y = py }
+                                                else if (id === "mid-right") { x = parent.width - 8; y = py }
+                                                else if (id === "bottom-left") { x = 2; y = parent.height - 8 }
+                                                else if (id === "bottom-center") { x = px; y = parent.height - 8 }
+                                                else if (id === "bottom-right") { x = parent.width - 8; y = parent.height - 8 }
+                                            }
+
+                                            Component.onCompleted: updatePosition()
+                                        }
+                                    }
 
                                     Text {
                                         text: modelData.label
                                         font.pixelSize: 10
                                         font.bold: active
                                         color: active ? ThemeManager.primaryColor : ThemeManager.textColor
-                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        Layout.alignment: Qt.AlignHCenter
                                         Behavior on color { ColorAnimation { duration: 120 } }
                                     }
                                 }
