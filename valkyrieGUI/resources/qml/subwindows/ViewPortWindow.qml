@@ -891,6 +891,7 @@ Rectangle {
         statusBar: statusBar
         topBar: topBar
         topLeftAnchor: fullscreenFab
+        focusedNode: root.nodeOnFocus
         nodes: nodes
     }
 

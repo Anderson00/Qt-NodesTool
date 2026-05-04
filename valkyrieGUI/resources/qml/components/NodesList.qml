@@ -15,6 +15,7 @@ Rectangle {
     property var topBar
     property var topLeftAnchor: topBar
     property var nodes
+    property var focusedNode: null
     property string position: GlobalProperties.nodesListPosition || "bottom-left"
     property bool _animating: false
 
@@ -139,14 +140,27 @@ Rectangle {
             }
 
             delegate: Rectangle {
+                id: delegateRect
                 width: ListView.view.width - 2
                 height: 28
                 radius: 4
-                color: delegateHover.containsMouse
+
+                readonly property bool isFocused: {
+                    const nodeItem = root.nodes.itemAt(index)
+                    return nodeItem === root.focusedNode
+                }
+
+                color: isFocused
                        ? Qt.rgba(ThemeManager.primaryColor.r,
                                  ThemeManager.primaryColor.g,
-                                 ThemeManager.primaryColor.b, 0.15)
-                       : "transparent"
+                                 ThemeManager.primaryColor.b, 0.25)
+                       : (delegateHover.containsMouse
+                          ? Qt.rgba(ThemeManager.primaryColor.r,
+                                    ThemeManager.primaryColor.g,
+                                    ThemeManager.primaryColor.b, 0.15)
+                          : "transparent")
+                border.width: isFocused ? 1 : 0
+                border.color: isFocused ? ThemeManager.primaryColor : "transparent"
                 Behavior on color { ColorAnimation { duration: 100 } }
 
                 Text {
@@ -155,9 +169,11 @@ Rectangle {
                     anchors.rightMargin: 6
                     text: model.object.title || "Node " + index
                     font.pixelSize: 11
-                    color: ThemeManager.textColor
+                    font.bold: delegateRect.isFocused
+                    color: delegateRect.isFocused ? ThemeManager.primaryColor : ThemeManager.textColor
                     elide: Text.ElideRight
                     verticalAlignment: Text.AlignVCenter
+                    Behavior on color { ColorAnimation { duration: 100 } }
                 }
 
                 MouseArea {
