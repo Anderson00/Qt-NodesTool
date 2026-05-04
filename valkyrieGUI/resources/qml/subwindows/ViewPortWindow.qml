@@ -890,6 +890,7 @@ Rectangle {
         sliderZoom: sliderZoom
         statusBar: statusBar
         topBar: topBar
+        topLeftAnchor: fullscreenFab
         nodes: nodes
     }
 
