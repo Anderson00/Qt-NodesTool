@@ -224,6 +224,8 @@ Rectangle {
         id: drawer
         modal: false
         interactive: false
+        topMargin: topBar.height
+        height: parent.height - topBar.height - statusBar.height
 
         viewPortWindow: root
         selectedObjectView: root.nodeOnFocus
