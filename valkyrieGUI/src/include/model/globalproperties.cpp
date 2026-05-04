@@ -70,12 +70,16 @@ void GlobalProperties::saveProperties() {
     session["lastWorkspace"] = m_lastWorkspace;
     session["lastPresetId"]  = m_lastPresetId;
 
+    QJsonObject ui;
+    ui["nodesListPosition"] = m_nodesListPosition;
+
     QJsonObject root;
     root["version"] = 1;
     root["debug"]   = debug;
     root["theme"]   = theme;
     root["grid"]    = grid;
     root["session"] = session;
+    root["ui"]      = ui;
 
     QFile file(settingsFilePath());
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
@@ -107,6 +111,7 @@ void GlobalProperties::loadProperties() {
     const QJsonObject debugObj = root["debug"].toObject();
     const QJsonObject themeObj = root["theme"].toObject();
     const QJsonObject gridObj = root["grid"].toObject();
+    const QJsonObject uiObj = root["ui"].toObject();
     m_debugMode     = debugObj["enabled"].toBool(false);
     m_showFps       = debugObj["showFps"].toBool(false);
     m_isDarkMode    = themeObj["isDarkMode"].toBool(true);
@@ -115,6 +120,7 @@ void GlobalProperties::loadProperties() {
     m_gridPattern   = gridObj["pattern"].toString("dots");
     m_lastWorkspace = root["session"].toObject()["lastWorkspace"].toString();
     m_lastPresetId  = root["session"].toObject()["lastPresetId"].toString();
+    m_nodesListPosition = uiObj["nodesListPosition"].toString("bottom-left");
     qDebug() << "[GlobalProperties] Loaded -> lastWorkspace:" << m_lastWorkspace
              << "| lastPresetId:" << m_lastPresetId
              << "| debugMode:" << m_debugMode
@@ -134,6 +140,7 @@ QString GlobalProperties::lastPresetId()  const { return m_lastPresetId; }
 QString GlobalProperties::gridPreset()    const { return m_gridPreset; }
 int     GlobalProperties::minWgrid()      const { return m_minWgrid; }
 QString GlobalProperties::gridPattern()   const { return m_gridPattern; }
+QString GlobalProperties::nodesListPosition() const { return m_nodesListPosition; }
 
 void GlobalProperties::setDebugMode(bool value) {
     if (m_debugMode != value) {
@@ -213,5 +220,13 @@ void GlobalProperties::setGridPattern(const QString& pattern) {
         m_gridPattern = pattern;
         saveProperties();
         emit gridPatternChanged();
+    }
+}
+
+void GlobalProperties::setNodesListPosition(const QString& position) {
+    if (m_nodesListPosition != position) {
+        m_nodesListPosition = position;
+        saveProperties();
+        emit nodesListPositionChanged();
     }
 }

@@ -881,99 +881,16 @@ Rectangle {
         z: 9900
     }
 
-    // ─── Nodes List (Bottom-Left) ───────────────────────────────────────────────
-    Rectangle {
-        anchors.bottom: statusBar.top
-        anchors.left: parent.left
-        anchors.bottomMargin: 12
-        anchors.leftMargin: 12
-        width: 220
-        height: Math.min(nodes.model.count * 32 + 38, 230)
-        radius: 8
-        color: Qt.rgba(ThemeManager.backgroundColor.r,
-                       ThemeManager.backgroundColor.g,
-                       ThemeManager.backgroundColor.b, 0.85)
-        border.color: ThemeManager.borderColor
-        border.width: 1
-        z: 150
-        visible: nodes.model.count > 0
-
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: 6
-            spacing: 4
-
-            Text {
-                text: "Nodes (" + nodes.model.count + ")"
-                font.pixelSize: 11
-                font.bold: true
-                color: ThemeManager.primaryColor
-                Layout.fillWidth: true
-            }
-
-            ListView {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                clip: true
-                model: nodes.model
-
-                ScrollBar.vertical: ScrollBar {
-                    active: true
-                    policy: ScrollBar.AsNeeded
-                    contentItem: Rectangle {
-                        implicitWidth: 2
-                        radius: 1
-                        color: ThemeManager.primaryColor
-                        opacity: 0.3
-                    }
-                }
-
-                delegate: Rectangle {
-                    width: ListView.view.width - 2
-                    height: 28
-                    radius: 4
-                    color: delegateHover.containsMouse
-                           ? Qt.rgba(ThemeManager.primaryColor.r,
-                                     ThemeManager.primaryColor.g,
-                                     ThemeManager.primaryColor.b, 0.15)
-                           : "transparent"
-                    Behavior on color { ColorAnimation { duration: 100 } }
-
-                    Text {
-                        anchors.fill: parent
-                        anchors.leftMargin: 8
-                        anchors.rightMargin: 6
-                        text: model.object.title || "Node " + index
-                        font.pixelSize: 11
-                        color: ThemeManager.textColor
-                        elide: Text.ElideRight
-                        verticalAlignment: Text.AlignVCenter
-                    }
-
-                    MouseArea {
-                        id: delegateHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            const nodeItem = nodes.itemAt(index)
-                            if (nodeItem) {
-                                const nodeX = nodeItem.x
-                                const nodeY = nodeItem.y
-                                const nodeW = nodeItem.width
-                                const nodeH = nodeItem.height
-                                const nodeCenterX = nodeX + nodeW / 2
-                                const nodeCenterY = nodeY + nodeH / 2
-                                const viewCenterScreenX = containerCanvas.width / 2
-                                const viewCenterScreenY = containerCanvas.height / 2
-                                mycanvas.x = viewCenterScreenX - nodeCenterX * sliderZoom.value
-                                mycanvas.y = viewCenterScreenY - nodeCenterY * sliderZoom.value
-                            }
-                        }
-                    }
-                }
-            }
-        }
+    // ─── Nodes List ─────────────────────────────────────────────────────────────
+    NodesList {
+        id: nodesList
+        nodesModel: nodes.model
+        containerCanvas: containerCanvas
+        mycanvas: mycanvas
+        sliderZoom: sliderZoom
+        statusBar: statusBar
+        topBar: topBar
+        nodes: nodes
     }
 
     // ─── Save Workspace Dialog ───────────────────────────────────────────────────

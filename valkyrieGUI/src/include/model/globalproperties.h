@@ -19,6 +19,7 @@ class GlobalProperties : public QObject
     Q_PROPERTY(QString gridPreset     READ gridPreset     WRITE setGridPreset     NOTIFY gridPresetChanged)
     Q_PROPERTY(int     minWgrid       READ minWgrid       WRITE setMinWgrid       NOTIFY minWgridChanged)
     Q_PROPERTY(QString gridPattern    READ gridPattern    WRITE setGridPattern    NOTIFY gridPatternChanged)
+    Q_PROPERTY(QString nodesListPosition READ nodesListPosition WRITE setNodesListPosition NOTIFY nodesListPositionChanged)
 
 public:
     static GlobalProperties* instance();
@@ -32,6 +33,7 @@ public:
     QString gridPreset()    const;
     int     minWgrid()      const;
     QString gridPattern()   const;
+    QString nodesListPosition() const;
 
     void setDebugMode(bool value);
     void setShowFps(bool value);
@@ -41,6 +43,7 @@ public:
     void setGridPreset(const QString& preset);
     void setMinWgrid(int value);
     void setGridPattern(const QString& pattern);
+    void setNodesListPosition(const QString& position);
 
     Q_INVOKABLE void saveProperties();
     Q_INVOKABLE void loadProperties();
@@ -67,6 +70,7 @@ signals:
     void gridPresetChanged();
     void minWgridChanged();
     void gridPatternChanged();
+    void nodesListPositionChanged();
 
 private:
     explicit GlobalProperties(QObject* parent = nullptr);
@@ -86,6 +90,7 @@ private:
     QString m_gridPreset    = "normal";
     int     m_minWgrid      = 20;
     QString m_gridPattern   = "dots";
+    QString m_nodesListPosition = "bottom-left";
 };
 
 #endif // GLOBALPROPERTIES_H

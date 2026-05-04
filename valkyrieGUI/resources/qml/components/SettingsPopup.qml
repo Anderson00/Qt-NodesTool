@@ -929,6 +929,64 @@ Popup {
                     }
 
                     Item { width: 1; height: 20 }
+                    Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
+
+                    // ── NODES LIST ──────────────────────────────────────────────────
+                    SectionLabel { text: "NODES LIST" }
+
+                    readonly property var _nodesListPositions: [
+                        { id: "top-left",      label: "Top Left" },
+                        { id: "top-center",    label: "Top Center" },
+                        { id: "top-right",     label: "Top Right" },
+                        { id: "mid-left",      label: "Mid Left" },
+                        { id: "mid-right",     label: "Mid Right" },
+                        { id: "bottom-left",   label: "Bottom Left" },
+                        { id: "bottom-center", label: "Bottom Center" },
+                        { id: "bottom-right",  label: "Bottom Right" }
+                    ]
+
+                    Flow {
+                        width: parent.width
+                        spacing: 8
+
+                        Repeater {
+                            model: viewportColumn._nodesListPositions
+
+                            delegate: Rectangle {
+                                readonly property bool active: GlobalProperties.nodesListPosition === modelData.id
+                                width: (parent.width - 16) / 3; height: 44; radius: 7
+                                color: active
+                                    ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.15)
+                                    : ThemeManager.foregroundColor
+                                border.width: active ? 2 : 1
+                                border.color: active ? ThemeManager.primaryColor : ThemeManager.borderColor
+                                Behavior on color { ColorAnimation { duration: 120 } }
+
+                                Column {
+                                    anchors.centerIn: parent
+                                    spacing: 2
+
+                                    Text {
+                                        text: modelData.label
+                                        font.pixelSize: 10
+                                        font.bold: active
+                                        color: active ? ThemeManager.primaryColor : ThemeManager.textColor
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        Behavior on color { ColorAnimation { duration: 120 } }
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: GlobalProperties.nodesListPosition = modelData.id
+                                }
+                            }
+                        }
+                    }
+
+                    Item { width: 1; height: 20 }
                 }
             }
 

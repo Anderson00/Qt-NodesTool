@@ -37,6 +37,7 @@
         <file alias="SettingsPopup.qml">qml/components/SettingsPopup.qml</file>
         <file alias="SplashScreen.qml">qml/components/SplashScreen.qml</file>
         <file alias="Toast.qml">qml/components/Toast.qml</file>
+        <file alias="NodesList.qml">qml/components/NodesList.qml</file>
     </qresource>
     <qresource prefix="/subwindows">
         <file alias="DebuggerMain.qml">qml/subwindows/DebuggerMain.qml</file>
