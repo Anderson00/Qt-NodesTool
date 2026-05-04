@@ -37,6 +37,7 @@
         <file alias="SettingsPopup.qml">qml/components/SettingsPopup.qml</file>
         <file alias="SplashScreen.qml">qml/components/SplashScreen.qml</file>
         <file alias="Toast.qml">qml/components/Toast.qml</file>
+        <file alias="NodesList.qml">qml/components/NodesList.qml</file>
     </qresource>
     <qresource prefix="/subwindows">
         <file alias="DebuggerMain.qml">qml/subwindows/DebuggerMain.qml</file>
@@ -53,6 +54,11 @@
         <file alias="ViewportStatusBar.qml">qml/components/viewport/ViewportStatusBar.qml</file>
         <file alias="ViewportGridCanvas.qml">qml/components/viewport/ViewportGridCanvas.qml</file>
         <file alias="ViewportOriginMarker.qml">qml/components/viewport/ViewportOriginMarker.qml</file>
+    </qresource>
+    <qresource prefix="/components/drawers">
+        <file alias="NodesDrawer.qml">qml/components/drawers/NodesDrawer.qml</file>
+        <file alias="ExplorerDrawer.qml">qml/components/drawers/ExplorerDrawer.qml</file>
+        <file alias="VariablesDrawer.qml">qml/components/drawers/VariablesDrawer.qml</file>
     </qresource>
     <qresource prefix="/behaviours">
         <file alias="BaseBehaviour.qml">qml/behaviours/BaseBehaviour.qml</file>

@@ -11,6 +11,7 @@ import App.Toast 1.0
 import "../components"
 import "../components/bottomsheets"
 import "../components/viewport"
+import "../components/drawers"
 import Qaterial as Qaterial
 
 Rectangle {
@@ -200,80 +201,34 @@ Rectangle {
 
     Qaterial.MiniFabButton {
         id: fabRightMenu
+        visible: nodeOnFocus !== null && nodeOnFocus !== undefined
         anchors.right: parent.right
         anchors.top: topBar.bottom
+        anchors.margins: 8
         z: 100
-        opacity: (nodeOnFocus)? 1 : 0.3
 
         icon.source: Qaterial.Icons.tune
         icon.color: ThemeManager.primaryColor
         flat: false
-        radius: 0
+        radius: 6
 
         onClicked: {
-            if(opacity === 1){
-                if(rightDrawerOpened)
-                    drawer.close()
-                else
-                    drawer.open()
-            }
-        }
-    }
-
-    Qaterial.MiniFabButton {
-        id: fabBottomMenu
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 22
-        anchors.horizontalCenter: parent.horizontalCenter
-        z: 100
-
-        icon.source: Qaterial.Icons.folderTable
-        icon.color: ThemeManager.primaryColor
-        flat: false
-        radius: 0
-
-        onClicked: {
-            if(bottomDrawerOpened)
-                drawerFolder.close()
+            if(rightDrawerOpened)
+                drawer.close()
             else
-                drawerFolder.open()
-        }
-    }
-
-    FolderBottomSheet {
-        id: drawerFolder
-
-        viewPortWindow: root
-
-        onBehaviourSelected: {
-            console.log(viewPort.addBehaviour(path, infos))
-        }
-
-        onOpened: {
-            bottomDrawerOpened = true
-        }
-
-        onClosed: {
-            bottomDrawerOpened = false
-        }
-
-        onYChanged: {
-            fabBottomMenu.anchors.bottomMargin = (parent.height - y) + 22
-            toolbar.anchors.bottomMargin = (parent.height - y) + 22
-            viewRect.anchors.bottomMargin = (parent.height - y) + 22 + 8
+                drawer.open()
         }
     }
 
     NodeSettings {
         id: drawer
-        width: 200
-        height: (parent.height - (parent.height - viewRect.y)) + viewRect.height + 8
         modal: false
-        edge: Qt.RightEdge
         interactive: false
+        topMargin: topBar.height
+        height: parent.height - topBar.height - statusBar.height
 
         viewPortWindow: root
-        selectedObjectView: nodeOnFocus
+        selectedObjectView: root.nodeOnFocus
 
         onOpened: {
             rightDrawerOpened = true
@@ -284,10 +239,11 @@ Rectangle {
         }
 
         onXChanged: {
-            fabRightMenu.anchors.rightMargin = parent.width - x
-            viewRect.anchors.rightMargin = fabRightMenu.anchors.rightMargin + 8
+            if (x > 0) {
+                fabRightMenu.anchors.rightMargin = parent.width - x + 8
+                viewRect.anchors.rightMargin = parent.width - x + 8
+            }
         }
-
     }
 
     MouseArea {
@@ -625,6 +581,8 @@ Rectangle {
                 drag.smoothed: true
                 drag.target: isConnecting ? undefined : mycanvas
 
+                cursorShape: dragArea.drag.active ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+
                 onClicked: {
                     root.focus = true
                     nodeOnFocus = null
@@ -894,6 +852,12 @@ Rectangle {
         onOpenRequested: openWorkspaceDialog.open()
         onUndoRequested: viewPort.undo()
         onRedoRequested: viewPort.redo()
+        onScreenshotRequested: {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+            const path = appDirPath + "/screenshots/screenshot_" + timestamp + ".png"
+            viewPort.takeScreenshot(path)
+            ToastManager.show("Screenshot saved", "success")
+        }
     }
 
     // ─── Splash Screen ──────────────────────────────────────────────────────────
@@ -914,6 +878,23 @@ Rectangle {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.topMargin:     16
         z: 9900
+    }
+
+    // ─── Nodes List ─────────────────────────────────────────────────────────────
+    NodesList {
+        id: nodesList
+        nodesModel: nodes.model
+        containerCanvas: containerCanvas
+        mycanvas: mycanvas
+        sliderZoom: sliderZoom
+        statusBar: statusBar
+        topBar: topBar
+        topLeftAnchor: fullscreenFab
+        focusedNode: root.nodeOnFocus
+        nodes: nodes
+        onNodeSelected: function(nodeItem) {
+            root.nodeOnFocus = nodeItem
+        }
     }
 
     // ─── Save Workspace Dialog ───────────────────────────────────────────────────
@@ -1596,7 +1577,7 @@ Rectangle {
     // ─── Left Panel Drawer ───────────────────────────────────────────────────────
     Drawer {
         id: leftPanelDrawer
-        width: 280
+        width: 320
         y: topBarHeight
         height: parent.height - topBarHeight
         edge: Qt.LeftEdge
@@ -1662,12 +1643,82 @@ Rectangle {
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
 
+                NodesDrawer {
+                    id: nodesDrawer
+                    anchors.fill: parent
+                    visible: selectedPanel === "nodes"
+
+                    onBehaviourSelected: function(path, infos) {
+                        viewPort.addBehaviour(path, infos)
+                    }
+                    onDragStarted: function(path, infos, lx, ly) {
+                        var gp = nodesDrawer.mapToItem(root, lx, ly)
+                        nodeDragGhost.currentPath  = path
+                        nodeDragGhost.currentInfos = infos
+                        nodeDragGhost.x = gp.x - nodeDragGhost.width  / 2
+                        nodeDragGhost.y = gp.y - nodeDragGhost.height / 2
+                        nodeDragGhost.open()
+                    }
+                    onDragUpdated: function(lx, ly) {
+                        var gp = nodesDrawer.mapToItem(root, lx, ly)
+                        nodeDragGhost.x = gp.x - nodeDragGhost.width  / 2
+                        nodeDragGhost.y = gp.y - nodeDragGhost.height / 2
+                    }
+                    onDragEnded: function(lx, ly) {
+                        nodeDragGhost.close()
+                        if (lx < -9000) return  // onCanceled path — don't add node
+                        var gp = nodesDrawer.mapToItem(root, lx, ly)
+                        if (gp.x > leftPanelDrawer.width + 20)
+                            viewPort.addBehaviour(nodeDragGhost.currentPath,
+                                                  nodeDragGhost.currentInfos)
+                    }
+                }
+
+                ExplorerDrawer {
+                    anchors.fill: parent
+                    visible: selectedPanel === "explorer"
+                    rootFolder: "file:///" + appDirPath
+                }
+
+                VariablesDrawer {
+                    anchors.fill: parent
+                    visible: selectedPanel === "variables"
+                }
+            }
+        }
+    }
+
+    // ─── Node drag ghost (Popup → renders in Overlay above Drawer) ─────────────
+    Popup {
+        id: nodeDragGhost
+        modal: false
+        closePolicy: Popup.NoAutoClose
+        padding: 0
+        background: null
+        z: 200          // must exceed leftPanelDrawer.z (199)
+        width: 136; height: 52
+
+        property string currentPath:  ""
+        property var    currentInfos: null
+
+        Rectangle {
+            anchors.fill: parent; radius: 7
+            color: Qt.rgba(ThemeManager.primaryColor.r,
+                           ThemeManager.primaryColor.g,
+                           ThemeManager.primaryColor.b, 0.92)
+
+            ColumnLayout {
+                anchors.fill: parent; anchors.margins: 10; spacing: 2
                 Text {
-                    anchors.centerIn: parent
-                    text: selectedPanel ? (selectedPanel.charAt(0).toUpperCase() + selectedPanel.slice(1) + " panel") : ""
-                    color: ThemeManager.textColor
-                    opacity: 0.35
-                    font.pixelSize: 12
+                    Layout.fillWidth: true
+                    text: nodeDragGhost.currentInfos
+                          ? (nodeDragGhost.currentInfos.name || "") : ""
+                    font.pixelSize: 12; font.bold: true
+                    color: "white"; elide: Text.ElideRight
+                }
+                Text {
+                    text: "→ drop on canvas"
+                    font.pixelSize: 9; color: "white"; opacity: 0.7
                 }
             }
         }

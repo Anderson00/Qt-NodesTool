@@ -17,161 +17,394 @@ Drawer {
     property QtObject viewPortWindow
     property var selectedObjectView
 
-    width: parent.width
-    height: 200
+    width: 280
+    height: parent.height
     modal: false
-    edge: Qt.BottomEdge
+    edge: Qt.RightEdge
     interactive: false
-
-    function clear(){
-
-    }
-
-    function clamp(value, min, max){
-        if(value <= min)
-            return min
-        else if(value >= max)
-            return max
-        return value
-    }
+    visible: selectedObjectView !== null && selectedObjectView !== undefined
 
     background: Rectangle {
-        color: ThemeManager.foregroundColor
+        color: Qt.rgba(ThemeManager.surfaceColor.r,
+                      ThemeManager.surfaceColor.g,
+                      ThemeManager.surfaceColor.b, 0.15)
+        border.width: 1
+        border.color: Qt.rgba(ThemeManager.primaryColor.r,
+                             ThemeManager.primaryColor.g,
+                             ThemeManager.primaryColor.b, 0.2)
     }
 
     onSelectedObjectViewChanged: {
-        if(selectedObjectView){
+        if (selectedObjectView) {
             name.text = selectedObjectView.behaviourObject.title
-            objectX.text = selectedObjectView.x
-            objectY.text = selectedObjectView.y
-        }else{
-            clear()
+            updateValues()
+        }
+    }
+
+    function updateValues() {
+        if (selectedObjectView && viewPortWindow) {
+            posXVal.text = Math.round(selectedObjectView.x - 5000)
+            posYVal.text = Math.round(selectedObjectView.y - 5000)
+            widthVal.text = Math.round(selectedObjectView.width)
+            heightVal.text = Math.round(selectedObjectView.height)
+            zVal.text = selectedObjectView.z
         }
     }
 
     Connections {
         target: selectedObjectView
 
-        function onXChanged(){
-            objectX.text = selectedObjectView.x.toFixed(0)
+        function onXChanged() {
+            updateValues()
         }
 
-        function onYChanged(){
-            objectY.text = selectedObjectView.y.toFixed(0)
+        function onYChanged() {
+            updateValues()
+        }
+
+        function onWidthChanged() {
+            updateValues()
+        }
+
+        function onHeightChanged() {
+            updateValues()
+        }
+
+        function onZChanged() {
+            updateValues()
         }
     }
 
-    // TODO: content, list of properties insipired in unity3d, blender, etc.
-    ScrollView {
-        width: root.width
-        height: parent.height
+    function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value))
+    }
 
+    ColumnLayout {
+        anchors.fill: parent
+        anchors.margins: 12
+        spacing: 12
+
+        // Header with node title
         Rectangle {
-            width: parent.width
-            color: ThemeManager.dangerColor
+            Layout.fillWidth: true
+            Layout.preferredHeight: 56
+            radius: 8
+            color: Qt.rgba(ThemeManager.primaryColor.r,
+                          ThemeManager.primaryColor.g,
+                          ThemeManager.primaryColor.b, 0.15)
+            border.width: 1
+            border.color: Qt.rgba(ThemeManager.primaryColor.r,
+                                 ThemeManager.primaryColor.g,
+                                 ThemeManager.primaryColor.b, 0.3)
 
             ColumnLayout {
-                id: columnLayout
-                spacing: 0
-                width: parent.width
-                anchors.top: parent.top
-                anchors.left: parent.left
-                anchors.right: parent.right
+                anchors.fill: parent
+                anchors.margins: 10
+                spacing: 2
 
-                anchors.margins: 4
+                Text {
+                    text: "Selected Node"
+                    font.pixelSize: 10
+                    font.bold: true
+                    color: ThemeManager.textSecondaryColor
+                    opacity: 0.7
+                }
 
-                Rectangle {
+                Text {
+                    id: name
+                    text: ""
+                    font.pixelSize: 14
+                    font.bold: true
+                    color: ThemeManager.primaryColor
+                    elide: Text.ElideRight
                     Layout.fillWidth: true
-                    Layout.topMargin: -4
-                    Layout.leftMargin: -5
-                    Layout.rightMargin: -4
-                    height: 40
-                    color: ThemeManager.surfaceColor
-                    Label {
-                        id: name
-                        text: ''
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.left: parent.left
-                        anchors.leftMargin: 4
-                        color: Material.accentColor
-                    }
+                }
+            }
+        }
+
+        // Position section
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 120
+            radius: 6
+            color: Qt.rgba(ThemeManager.backgroundColor.r,
+                          ThemeManager.backgroundColor.g,
+                          ThemeManager.backgroundColor.b, 0.4)
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 12
+                spacing: 10
+
+                Text {
+                    text: "Position (relative to center)"
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: ThemeManager.textSecondaryColor
+                    opacity: 0.7
                 }
 
                 RowLayout {
-                    Label {
-                        text: 'X:'
-                    }
+                    Layout.fillWidth: true
+                    spacing: 10
 
-                    CustomTextField {
-                        id: objectX
-                        placeholderText: '0.00'
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 50
+                        radius: 4
+                        color: Qt.rgba(ThemeManager.primaryColor.r,
+                                      ThemeManager.primaryColor.g,
+                                      ThemeManager.primaryColor.b, 0.08)
+                        border.width: 1
+                        border.color: Qt.rgba(ThemeManager.primaryColor.r,
+                                             ThemeManager.primaryColor.g,
+                                             ThemeManager.primaryColor.b, 0.2)
 
-                        onTextEdited: {
-                            objectX.text = Number(/[0-9]*/.exec(objectX.text)).toFixed(0)
-                            selectedObjectView.x = Number(clamp(objectX.text, 0, viewPortWindow.width - selectedObjectView.width)).toFixed(0)
-                            objectX.forceActiveFocus()
+                        ColumnLayout {
+                            anchors.fill: parent
+                            anchors.margins: 8
+                            spacing: 3
+
+                            Text {
+                                text: "X"
+                                font.pixelSize: 9
+                                color: ThemeManager.textSecondaryColor
+                                opacity: 0.7
+                            }
+
+                            Text {
+                                id: posXVal
+                                text: "0"
+                                font.pixelSize: 16
+                                font.bold: true
+                                color: ThemeManager.primaryColor
+                            }
                         }
                     }
 
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 50
+                        radius: 4
+                        color: Qt.rgba(ThemeManager.primaryColor.r,
+                                      ThemeManager.primaryColor.g,
+                                      ThemeManager.primaryColor.b, 0.08)
+                        border.width: 1
+                        border.color: Qt.rgba(ThemeManager.primaryColor.r,
+                                             ThemeManager.primaryColor.g,
+                                             ThemeManager.primaryColor.b, 0.2)
 
-                    Label {
-                        text: 'Y:'
-                    }
+                        ColumnLayout {
+                            anchors.fill: parent
+                            anchors.margins: 8
+                            spacing: 3
 
-                    CustomTextField {
-                        id: objectY
-                        placeholderText: '0.00'
+                            Text {
+                                text: "Y"
+                                font.pixelSize: 9
+                                color: ThemeManager.textSecondaryColor
+                                opacity: 0.7
+                            }
 
-                        onTextEdited: {
-                            objectY.text = Number(/[0-9]*/.exec(objectY.text)).toFixed(0)
-                            selectedObjectView.y = Number(clamp(objectY.text, 0, viewPortWindow.height - selectedObjectView.height)).toFixed(0)
-                            objectY.forceActiveFocus()
+                            Text {
+                                id: posYVal
+                                text: "0"
+                                font.pixelSize: 16
+                                font.bold: true
+                                color: ThemeManager.primaryColor
+                            }
                         }
                     }
                 }
+            }
+        }
 
-                Accordion {
-                    title: 'Inputs'
-                    Layout.leftMargin: -5
-                    loaderHeight: 50
-                    loader: Component {
+        // Size section
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 120
+            radius: 6
+            color: Qt.rgba(ThemeManager.backgroundColor.r,
+                          ThemeManager.backgroundColor.g,
+                          ThemeManager.backgroundColor.b, 0.4)
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 12
+                spacing: 10
+
+                Text {
+                    text: "Size"
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: ThemeManager.textSecondaryColor
+                    opacity: 0.7
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 50
+                        radius: 4
+                        color: Qt.rgba(ThemeManager.successColor.r,
+                                      ThemeManager.successColor.g,
+                                      ThemeManager.successColor.b, 0.08)
+                        border.width: 1
+                        border.color: Qt.rgba(ThemeManager.successColor.r,
+                                             ThemeManager.successColor.g,
+                                             ThemeManager.successColor.b, 0.2)
+
                         ColumnLayout {
-                            id: bodyLayout
                             anchors.fill: parent
-                            height: 50
+                            anchors.margins: 8
+                            spacing: 3
 
-                            Label {
-                                text: "TESTANDO"
+                            Text {
+                                text: "Width"
+                                font.pixelSize: 9
+                                color: ThemeManager.textSecondaryColor
+                                opacity: 0.7
+                            }
+
+                            Text {
+                                id: widthVal
+                                text: "0"
+                                font.pixelSize: 16
+                                font.bold: true
+                                color: ThemeManager.successColor
                             }
                         }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 50
+                        radius: 4
+                        color: Qt.rgba(ThemeManager.successColor.r,
+                                      ThemeManager.successColor.g,
+                                      ThemeManager.successColor.b, 0.08)
+                        border.width: 1
+                        border.color: Qt.rgba(ThemeManager.successColor.r,
+                                             ThemeManager.successColor.g,
+                                             ThemeManager.successColor.b, 0.2)
+
+                        ColumnLayout {
+                            anchors.fill: parent
+                            anchors.margins: 8
+                            spacing: 3
+
+                            Text {
+                                text: "Height"
+                                font.pixelSize: 9
+                                color: ThemeManager.textSecondaryColor
+                                opacity: 0.7
+                            }
+
+                            Text {
+                                id: heightVal
+                                text: "0"
+                                font.pixelSize: 16
+                                font.bold: true
+                                color: ThemeManager.successColor
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Z-index section
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 48
+            radius: 6
+            color: Qt.rgba(ThemeManager.warningColor.r,
+                          ThemeManager.warningColor.g,
+                          ThemeManager.warningColor.b, 0.08)
+            border.width: 1
+            border.color: Qt.rgba(ThemeManager.warningColor.r,
+                                 ThemeManager.warningColor.g,
+                                 ThemeManager.warningColor.b, 0.2)
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: 10
+                spacing: 10
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 2
+
+                    Text {
+                        text: "Z-Index (Layer)"
+                        font.pixelSize: 10
+                        font.bold: true
+                        color: ThemeManager.textSecondaryColor
+                        opacity: 0.6
+                    }
+
+                    Text {
+                        id: zVal
+                        text: "0"
+                        font.pixelSize: 12
+                        font.bold: true
+                        color: ThemeManager.warningColor
                     }
                 }
 
                 Rectangle {
-                    Layout.fillWidth: true
-                    Layout.leftMargin: -5
-                    height: 1
-                    color: ThemeManager.backgroundColor
-                }
+                    Layout.preferredWidth: 60
+                    Layout.preferredHeight: 28
+                    radius: 4
+                    color: Qt.rgba(ThemeManager.primaryColor.r,
+                                  ThemeManager.primaryColor.g,
+                                  ThemeManager.primaryColor.b, 0.2)
 
-                Accordion {
-                    title: 'Outputs'
-                    Layout.leftMargin: -5
-                    loaderHeight: 100
-                    loader: Component {
-                        ColumnLayout {
-                            id: bodyLayout2
-                            anchors.fill: parent
-                            height: 100
+                    Text {
+                        anchors.centerIn: parent
+                        text: "Front"
+                        font.pixelSize: 10
+                        color: ThemeManager.textColor
+                    }
 
-                            Label {
-                                text: "TESTANDO Out"
-                            }
-                        }
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: selectedObjectView.z += 1
                     }
                 }
 
+                Rectangle {
+                    Layout.preferredWidth: 60
+                    Layout.preferredHeight: 28
+                    radius: 4
+                    color: Qt.rgba(ThemeManager.primaryColor.r,
+                                  ThemeManager.primaryColor.g,
+                                  ThemeManager.primaryColor.b, 0.2)
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "Back"
+                        font.pixelSize: 10
+                        color: ThemeManager.textColor
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: selectedObjectView.z = Math.max(0, selectedObjectView.z - 1)
+                    }
+                }
             }
+        }
+
+        Item {
+            Layout.fillHeight: true
         }
     }
 }

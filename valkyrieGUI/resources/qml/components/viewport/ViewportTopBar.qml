@@ -20,6 +20,7 @@ Rectangle {
     // The parent should toggle the drawer and update selectedPanel.
     signal panelToggled(string panel)
     signal settingsRequested()
+    signal screenshotRequested()
     signal newProjectRequested()
     signal saveRequested()
     signal openRequested()
@@ -310,6 +311,16 @@ Rectangle {
                 ToolTip.delay:   500
                 width: 40; height: 40
                 onClicked: root.openRequested()
+            }
+
+            Qaterial.AppBarButton {
+                width: 40; height: 40
+                icon.source: Qaterial.Icons.cameraOutline
+                icon.color:  ThemeManager.textColor
+                ToolTip.text: "Screenshot"
+                ToolTip.visible: hovered
+                ToolTip.delay: 500
+                onClicked: root.screenshotRequested()
             }
 
             Qaterial.AppBarButton {

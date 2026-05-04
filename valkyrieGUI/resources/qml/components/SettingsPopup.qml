@@ -813,6 +813,7 @@ Popup {
                         { id: "lines",   label: "Lines",   icon: Qaterial.Icons.viewSequential },
                         { id: "circles", label: "Circles", icon: Qaterial.Icons.circleOutline },
                         { id: "cross",   label: "Cross",   icon: Qaterial.Icons.plus },
+                        { id: "x",       label: "X",       icon: Qaterial.Icons.close },
                         { id: "hexagon", label: "Hexagon", icon: Qaterial.Icons.hexagonOutline },
                         { id: "none",    label: "None",    icon: Qaterial.Icons.eyeOffOutline }
                     ]
@@ -922,6 +923,106 @@ Popup {
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: GlobalProperties.gridPreset = modelData.id
+                                }
+                            }
+                        }
+                    }
+
+                    Item { width: 1; height: 20 }
+                    Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
+
+                    // ── NODES LIST ──────────────────────────────────────────────────
+                    SectionLabel { text: "NODES LIST" }
+
+                    readonly property var _nodesListPositions: [
+                        { id: "top-left",      label: "Top Left" },
+                        { id: "top-center",    label: "Top Center" },
+                        { id: "top-right",     label: "Top Right" },
+                        { id: "mid-left",      label: "Mid Left" },
+                        { id: "mid-right",     label: "Mid Right" },
+                        { id: "bottom-left",   label: "Bottom Left" },
+                        { id: "bottom-center", label: "Bottom Center" },
+                        { id: "bottom-right",  label: "Bottom Right" }
+                    ]
+
+                    Flow {
+                        width: parent.width
+                        spacing: 8
+
+                        Repeater {
+                            model: viewportColumn._nodesListPositions
+
+                            delegate: Rectangle {
+                                readonly property bool active: GlobalProperties.nodesListPosition === modelData.id
+                                width: (parent.width - 16) / 3; height: 60; radius: 7
+                                color: active
+                                    ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.15)
+                                    : ThemeManager.foregroundColor
+                                border.width: active ? 2 : 1
+                                border.color: active ? ThemeManager.primaryColor : ThemeManager.borderColor
+                                Behavior on color { ColorAnimation { duration: 120 } }
+
+                                Column {
+                                    anchors.fill: parent
+                                    anchors.margins: 6
+                                    spacing: 4
+
+                                    // Position visualization
+                                    Rectangle {
+                                        width: parent.width
+                                        height: 28
+                                        radius: 3
+                                        color: Qt.rgba(ThemeManager.primaryColor.r,
+                                                       ThemeManager.primaryColor.g,
+                                                       ThemeManager.primaryColor.b, 0.1)
+                                        border.width: 1
+                                        border.color: ThemeManager.primaryColor
+                                        opacity: 0.6
+                                        clip: true
+
+                                        Rectangle {
+                                            id: positionMarker
+                                            width: 6
+                                            height: 6
+                                            radius: 3
+                                            color: ThemeManager.primaryColor
+
+                                            function updatePosition() {
+                                                const id = modelData.id
+                                                const w = parent.width
+                                                const h = parent.height
+                                                const cx = Math.max(2, Math.min(w - 8, w / 2 - 3))
+                                                const cy = Math.max(2, Math.min(h - 8, h / 2 - 3))
+
+                                                if (id === "top-left") { x = 2; y = 2 }
+                                                else if (id === "top-center") { x = cx; y = 2 }
+                                                else if (id === "top-right") { x = Math.max(2, w - 8); y = 2 }
+                                                else if (id === "mid-left") { x = 2; y = cy }
+                                                else if (id === "mid-right") { x = Math.max(2, w - 8); y = cy }
+                                                else if (id === "bottom-left") { x = 2; y = Math.max(2, h - 8) }
+                                                else if (id === "bottom-center") { x = cx; y = Math.max(2, h - 8) }
+                                                else if (id === "bottom-right") { x = Math.max(2, w - 8); y = Math.max(2, h - 8) }
+                                            }
+
+                                            Component.onCompleted: updatePosition()
+                                        }
+                                    }
+
+                                    Text {
+                                        text: modelData.label
+                                        font.pixelSize: 10
+                                        font.bold: active
+                                        color: active ? ThemeManager.primaryColor : ThemeManager.textColor
+                                        Layout.alignment: Qt.AlignHCenter
+                                        Behavior on color { ColorAnimation { duration: 120 } }
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: GlobalProperties.nodesListPosition = modelData.id
                                 }
                             }
                         }
