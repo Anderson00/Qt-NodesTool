@@ -201,36 +201,32 @@ Rectangle {
 
     Qaterial.MiniFabButton {
         id: fabRightMenu
+        visible: nodeOnFocus !== null && nodeOnFocus !== undefined
         anchors.right: parent.right
         anchors.top: topBar.bottom
+        anchors.margins: 8
         z: 100
-        opacity: (nodeOnFocus)? 1 : 0.3
 
         icon.source: Qaterial.Icons.tune
         icon.color: ThemeManager.primaryColor
         flat: false
-        radius: 0
+        radius: 6
 
         onClicked: {
-            if(opacity === 1){
-                if(rightDrawerOpened)
-                    drawer.close()
-                else
-                    drawer.open()
-            }
+            if(rightDrawerOpened)
+                drawer.close()
+            else
+                drawer.open()
         }
     }
 
     NodeSettings {
         id: drawer
-        width: 200
-        height: (parent.height - (parent.height - viewRect.y)) + viewRect.height + 8
         modal: false
-        edge: Qt.RightEdge
         interactive: false
 
         viewPortWindow: root
-        selectedObjectView: nodeOnFocus
+        selectedObjectView: root.nodeOnFocus
 
         onOpened: {
             rightDrawerOpened = true
@@ -241,10 +237,11 @@ Rectangle {
         }
 
         onXChanged: {
-            fabRightMenu.anchors.rightMargin = parent.width - x
-            viewRect.anchors.rightMargin = fabRightMenu.anchors.rightMargin + 8
+            if (x > 0) {
+                fabRightMenu.anchors.rightMargin = parent.width - x + 8
+                viewRect.anchors.rightMargin = parent.width - x + 8
+            }
         }
-
     }
 
     MouseArea {
