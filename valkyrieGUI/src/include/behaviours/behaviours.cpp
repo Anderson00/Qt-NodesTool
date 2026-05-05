@@ -125,6 +125,21 @@ Connections* Behaviours::getConnectionFromMethodSignature(const QString &signatu
     return nullptr;
 }
 
+bool Behaviours::isConnectionCompatible(const QString &sender, Behaviours *target, const QString &receiver)
+{
+    Connections *connections = this->getConnectionFromMethodSignature(sender);
+    Connections *outputConn = target ? target->getConnectionFromMethodSignature(receiver) : nullptr;
+
+    if (connections != nullptr && outputConn != nullptr) {
+        if (connections->methodType() == Connections::Signal && outputConn->methodType() == Connections::Slot) {
+            return QMetaObject::checkConnectArgs(connections->metaMethod().methodSignature().constData(), outputConn->metaMethod().methodSignature().constData());
+        } else if (connections->methodType() == Connections::Slot && outputConn->methodType() == Connections::Signal) {
+            return QMetaObject::checkConnectArgs(outputConn->metaMethod().methodSignature().constData(), connections->metaMethod().methodSignature().constData());
+        }
+    }
+    return false;
+}
+
 bool Behaviours::addConnection(const QString &sender, Behaviours *target, const QString &receiver)
 {
     qDebug() << "addConnection" << target << sender << receiver;
@@ -134,6 +149,12 @@ bool Behaviours::addConnection(const QString &sender, Behaviours *target, const 
         qDebug() << connections;
         Connections *outputConn = target->getConnectionFromMethodSignature(receiver);
         if(outputConn != nullptr){
+            // Check compatibility
+            if (!this->isConnectionCompatible(sender, target, receiver)) {
+                qDebug() << "Incompatible connection parameters between" << sender << "and" << receiver;
+                return false;
+            }
+
             ConnectionModel *model = connections->addConnection(target, outputConn->metaMethod());
             if(model != nullptr){
                 if(isInputMethodSignature(sender)){

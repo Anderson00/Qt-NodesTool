@@ -4,6 +4,7 @@
 #include "model/connectionmodel.h"
 #include "utils/workspacemanager.h"
 #include "commands/nodeundocommands.h"
+#include "utils/toastmanager.h"
 #include <QUuid>
 #include <QVariantMap>
 #include <QQmlContext>
@@ -250,6 +251,15 @@ bool ViewPortWindow::removeNodeWithUndo(const QString& uuid) {
 bool ViewPortWindow::addConnectionWithUndo(const QString& outputUuid, const QString& outputMethod,
                                             const QString& inputUuid,  const QString& inputMethod)
 {
+    Behaviours* outputBeh = m_behaviours.value(outputUuid);
+    Behaviours* inputBeh  = m_behaviours.value(inputUuid);
+    if (!outputBeh || !inputBeh) return false;
+
+    if (!outputBeh->isConnectionCompatible(outputMethod, inputBeh, inputMethod)) {
+        ToastManager::instance()->show("Incompatible connection parameters", "error");
+        return false;
+    }
+
     m_undoStack->push(new AddConnectionCommand(this, ConnState{outputUuid, outputMethod, inputUuid, inputMethod}));
     return true;
 }

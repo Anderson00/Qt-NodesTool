@@ -99,6 +99,8 @@ public slots:
 
     void start();
 
+    bool isConnectionCompatible(const QString &sender, Behaviours *target, const QString &receiver);
+
 signals:
     void titleChanged(QString newText);
     void widthChanged(double newWidth);

@@ -285,8 +285,11 @@ Rectangle {
                         shapeConn = undefined
                         // Record undo; suppress visual redraw since line is already drawn
                         m_suppressConnectionDraw = true
-                        viewPort.addConnectionWithUndo(outUuid, outMethod, inUuid, inMethod)
+                        let ok = viewPort.addConnectionWithUndo(outUuid, outMethod, inUuid, inMethod)
                         m_suppressConnectionDraw = false
+                        if (!ok) {
+                            nodeConnections.model.remove(lastConnection)
+                        }
                     } else {
                         nodeConnections.model.remove(lastConnection)
                     }
