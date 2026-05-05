@@ -1,5 +1,5 @@
 #include "viewportwindow.h"
-#include "behaviours/behaviourloader.h"
+#include "behaviours/behaviourregistry.h"
 #include "behaviours/connections.h"
 #include "model/connectionmodel.h"
 #include "utils/workspacemanager.h"
@@ -26,8 +26,7 @@ ViewPortWindow::ViewPortWindow(QWidget* parent)
     m_frameTimer->setInterval(1000);
 
     showWindow(QVector<QMLWindow::PropertyPair>({
-        { "viewPort",        this },
-        { "behaviourLoader", BehaviourLoader::instance() }
+        { "viewPort",        this }
     }));
 
     WorkspaceManager::instance()->setViewPort(this);
@@ -132,7 +131,7 @@ bool ViewPortWindow::addBehaviourWithUuid(const QString& path, const QJsonObject
                                            const QString& title,
                                            const QJsonObject& state)
 {
-    Behaviours* object = BehaviourLoader::instance()->loadBehaviour(path, infos);
+    Behaviours* object = BehaviourRegistry::instance().create(infos["className"].toString());
     if (!object) return false;
 
     object->setBehaviourPath(path);

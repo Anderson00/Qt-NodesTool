@@ -5,6 +5,7 @@ import QtQuick.Window 2.2
 import QtQuick 2.14
 import QtQml 2.14
 import App.Theme 1.0
+import App.NodeRegistry 1.0
 
 import Qaterial 1.0 as Qaterial
 
@@ -315,7 +316,7 @@ Contrl.Drawer {
                         height: parent ? Math.min(contentHeight, parent.height) : contentHeight
 
                         Component.onCompleted: {
-                            treeView.model = behaviourLoader.discoverAllToTree();
+                            treeView.model = NodeRegistry.discoverAllToTree();
                         }
 
                         itemDelegate: Qaterial.ItemDelegate
@@ -386,7 +387,7 @@ Contrl.Drawer {
                                     selectedElement = model
 
                                     path = path.join("/")
-                                    let infos = behaviourLoader.discoverAll()[path];
+                                    let infos = NodeRegistry.discoverAll()[path];
                                     gridView.model = infos;
                                 }
 

@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15 as Contrl
 import QtQuick.Layouts 1.14
 import App.Theme 1.0
+import App.NodeRegistry 1.0
 import Qaterial 1.0 as Qaterial
 
 Item {
@@ -30,7 +31,7 @@ Item {
     Component.onCompleted: _loadData()
 
     function _loadData() {
-        var data = behaviourLoader.discoverAll()
+        var data = NodeRegistry.discoverAll()
         root.categoryData = data
         root.categoryKeys = Object.keys(data)
     }

@@ -1,9 +1,26 @@
 #include "behaviourregistry.h"
 #include <QDebug>
+#include <QDir>
+
+BehaviourRegistry::BehaviourRegistry() : QObject(nullptr) {
+    m_treeModelPaths = new qaterial::TreeModel(this);
+
+    // Create plugin directories if they don't exist
+    QDir().mkdir("Behaviours");
+    QDir dir("Behaviours");
+    dir.mkdir("Debug");
+    dir.mkdir("Plugins");
+}
 
 BehaviourRegistry& BehaviourRegistry::instance() {
     static BehaviourRegistry s_instance;
     return s_instance;
+}
+
+QObject* BehaviourRegistry::qmlSingletonProvider(QQmlEngine*, QJSEngine*) {
+    // QML singletons must NOT be garbage-collected by the engine
+    QQmlEngine::setObjectOwnership(&instance(), QQmlEngine::CppOwnership);
+    return &instance();
 }
 
 bool BehaviourRegistry::add(const BehaviourMeta& meta) {
@@ -13,6 +30,7 @@ bool BehaviourRegistry::add(const BehaviourMeta& meta) {
         return false;
     }
     m_registry.insert(meta.className, meta);
+    m_dirty = true;
     qDebug() << "[BehaviourRegistry] Registered:" << meta.className
              << "(" << meta.category << ")";
     return true;
@@ -51,17 +69,62 @@ QStringList BehaviourRegistry::categories() const {
     return cats.values();
 }
 
-QJsonObject BehaviourRegistry::toDiscoveryJson() const {
-    // Group by category, keyed as "Debug/{category}"
-    // for backward-compat with the existing NodesDrawer / BehaviourLoader consumers
-    QMap<QString, QJsonArray> grouped;
-    for (const auto& meta : m_registry) {
-        grouped[meta.category].append(meta.toJson());
+// ── QML-facing slots ─────────────────────────────────────────────────────────
+
+QJsonObject BehaviourRegistry::discoverAll() {
+    if (m_dirty) {
+        // Group by category, keyed as "Debug/{category}" for NodesDrawer
+        QMap<QString, QJsonArray> grouped;
+        for (const auto& meta : m_registry)
+            grouped[meta.category].append(meta.toJson());
+
+        m_cachedDiscovery = QJsonObject();
+        for (auto it = grouped.constBegin(); it != grouped.constEnd(); ++it)
+            m_cachedDiscovery["Debug/" + it.key()] = it.value();
+
+        m_dirty = false;
+    }
+    return m_cachedDiscovery;
+}
+
+qaterial::TreeElement* BehaviourRegistry::discoverAllToTree() {
+    QJsonObject paths = discoverAll();
+
+    qaterial::TreeElement *root = new qaterial::TreeElement(this);
+    QMap<QString, qaterial::TreeElement*> roots;
+
+    QStringList pathKeys = paths.keys();
+    for (QString key : pathKeys) {
+        QStringList keySplit = key.split("/");
+        if (keySplit.length() > 0) {
+            qaterial::TreeElement *element;
+            if (roots.contains(keySplit[0])) {
+                element = roots[keySplit[0]];
+            } else {
+                element = new qaterial::TreeElement(m_treeModelPaths);
+                roots[keySplit[0]] = element;
+                root->append(element);
+                m_treeModelPaths->append(element);
+            }
+
+            element->setText(keySplit[0]);
+
+            if (keySplit.length() > 1) {
+                auto *newTree = new qaterial::TreeElement(m_treeModelPaths);
+                element->append(newTree);
+
+                for (int i = 0; i < keySplit.size(); i++) {
+                    newTree->setText(keySplit.join(";"));
+                    keySplit.removeAt(0);
+                    if (i < keySplit.size() - 1) {
+                        auto *newTreeNext = new qaterial::TreeElement(m_treeModelPaths);
+                        newTree->append(newTreeNext);
+                        newTree = newTreeNext;
+                    }
+                }
+            }
+        }
     }
 
-    QJsonObject result;
-    for (auto it = grouped.constBegin(); it != grouped.constEnd(); ++it) {
-        result["Debug/" + it.key()] = it.value();
-    }
-    return result;
+    return root->children();
 }

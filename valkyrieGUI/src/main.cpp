@@ -7,6 +7,7 @@
 #include <model/tablemodel.h>
 #include <model/globalproperties.h>
 #include <utils/toastmanager.h>
+#include <behaviours/behaviourregistry.h>
 
 static QFile log_file(QDateTime::currentDateTime().toString().replace(":","-").append(".log"));
 
@@ -80,6 +81,10 @@ int main(int argc, char **argv)
 
     // Register ToastManager as singleton in QML
     qmlRegisterSingletonInstance("App.Toast", 1, 0, "ToastManager", ToastManager::instance());
+
+    // Register BehaviourRegistry (node discovery + factory) as singleton in QML
+    qmlRegisterSingletonType<BehaviourRegistry>("App.NodeRegistry", 1, 0, "NodeRegistry",
+                                                 &BehaviourRegistry::qmlSingletonProvider);
 
     MainWindow w;
     w.show();

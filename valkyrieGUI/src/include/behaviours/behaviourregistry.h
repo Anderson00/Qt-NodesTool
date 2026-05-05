@@ -1,12 +1,17 @@
 #ifndef BEHAVIOURREGISTRY_H
 #define BEHAVIOURREGISTRY_H
 
+#include <QObject>
 #include <QString>
 #include <QMap>
 #include <QList>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QQmlEngine>
 #include <functional>
+
+#include "Qaterial/Navigation/TreeElement.hpp"
+#include "Qaterial/Qaterial.hpp"
 
 class Behaviours;
 
@@ -14,8 +19,7 @@ class Behaviours;
  * @brief Metadata describing a registered node type.
  *
  * Each Behaviour subclass populates one of these at static-init time
- * via the REGISTER_BEHAVIOUR macro. The registry uses it for both
- * factory instantiation and UI discovery.
+ * via the REGISTER_BEHAVIOUR macro.
  */
 struct BehaviourMeta {
     QString className;
@@ -26,7 +30,7 @@ struct BehaviourMeta {
     int     outputsCount = 0;
     std::function<Behaviours*()> factory;
 
-    /// Convert to the QJsonObject format expected by BehaviourLoader / NodesDrawer
+    /// Convert to the QJsonObject format expected by the NodesDrawer QML
     QJsonObject toJson() const {
         QJsonObject obj;
         obj["name"]          = displayName;
@@ -41,16 +45,19 @@ struct BehaviourMeta {
 };
 
 /**
- * @brief Global, thread-safe registry of all available Behaviour types.
+ * @brief Global registry of all available Behaviour types.
  *
  * Nodes register themselves at static-init via the REGISTER_BEHAVIOUR macro.
- * BehaviourLoader delegates instantiation and discovery to this class.
+ * Exposed to QML as a singleton ("App.NodeRegistry") so the NodesDrawer and
+ * FolderBottomSheet can call discoverAll() / discoverAllToTree() directly.
  */
-class BehaviourRegistry {
+class BehaviourRegistry : public QObject {
+    Q_OBJECT
 public:
     static BehaviourRegistry& instance();
+    static QObject* qmlSingletonProvider(QQmlEngine*, QJSEngine*);
 
-    /// Register a node type. Returns true on success, false if className already exists.
+    /// Register a node type. Returns true on success.
     bool add(const BehaviourMeta& meta);
 
     /// Instantiate a Behaviour by className. Returns nullptr if unknown.
@@ -62,21 +69,32 @@ public:
     /// Get all registered metadata entries.
     QList<BehaviourMeta> allMeta() const;
 
-    /// Get metadata for a specific category (e.g. "common")
+    /// Get metadata for a specific category.
     QList<BehaviourMeta> metaByCategory(const QString& category) const;
 
     /// Get all unique category names.
     QStringList categories() const;
 
+public slots:
     /**
-     * @brief Build a QJsonObject keyed by "Debug/{category}" for
-     *        backward-compatibility with discoverAll() consumers.
+     * @brief Returns a QJsonObject keyed by "Debug/{category}" with node arrays.
+     * Called from QML: nodeRegistry.discoverAll()
      */
-    QJsonObject toDiscoveryJson() const;
+    QJsonObject discoverAll();
+
+    /**
+     * @brief Builds a qaterial::TreeElement hierarchy for the FolderBottomSheet tree.
+     * Called from QML: nodeRegistry.discoverAllToTree()
+     */
+    qaterial::TreeElement* discoverAllToTree();
 
 private:
-    BehaviourRegistry() = default;
+    BehaviourRegistry();
     QMap<QString, BehaviourMeta> m_registry;
+    QJsonObject m_cachedDiscovery;
+    bool m_dirty = true;
+
+    qaterial::TreeModel* m_treeModelPaths = nullptr;
 };
 
 // ─── Auto-registration macro ────────────────────────────────────────────────
