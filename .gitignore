@@ -1,3 +1,6 @@
+# =========================
+# C++
+# =========================
 # Prerequisites
 *.d
 
@@ -31,5 +34,71 @@
 *.out
 *.app
 
-# User local Files
+# =========================
+# Build & CMake
+# =========================
+# Build directories
+build/
+build-*/
+out/
+bin/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps/
+
+# =========================
+# Qt & Qt Creator
+# =========================
+# Moc / Rcc / Uic generated files
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+qmlcache_*.cpp
+qmlcache_*.js
+*.qmlc
+*.jsc
+*.qm
+
+# Qt Creator
 *.user
+*.user.*
+.qmake.stash
+
+# =========================
+# IDEs and Editors
+# =========================
+# VS Code
+.vscode/
+*.code-workspace
+
+# Visual Studio
+.vs/
+*.sln
+*.suo
+*.vcxproj
+*.vcxproj.user
+*.vcxproj.filters
+
+# CLion / JetBrains
+.idea/
+cmake-build-*/
+
+# =========================
+# OS generated files
+# =========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
