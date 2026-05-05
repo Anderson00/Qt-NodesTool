@@ -6,6 +6,20 @@
         <file alias="LineChartViewer.qml">qml/behaviours/common/LineChartViewer.qml</file>
         <file alias="RandomGeneratorViewer.qml">qml/behaviours/common/RandomGeneratorViewer.qml</file>
         <file alias="ComponentsViewer.qml">qml/behaviours/common/ComponentsViewer.qml</file>
+        <file alias="ConstantValue.qml">qml/behaviours/common/ConstantValue.qml</file>
+        <file alias="TextDisplay.qml">qml/behaviours/common/TextDisplay.qml</file>
+        <file alias="TimerNode.qml">qml/behaviours/common/TimerNode.qml</file>
+        <file alias="Counter.qml">qml/behaviours/common/Counter.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/math">
+        <file alias="MathOperation.qml">qml/behaviours/math/MathOperation.qml</file>
+        <file alias="MathFunction.qml">qml/behaviours/math/MathFunction.qml</file>
+        <file alias="Clamp.qml">qml/behaviours/math/Clamp.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/logic">
+        <file alias="Comparison.qml">qml/behaviours/logic/Comparison.qml</file>
+        <file alias="Gate.qml">qml/behaviours/logic/Gate.qml</file>
+        <file alias="StringFormat.qml">qml/behaviours/logic/StringFormat.qml</file>
     </qresource>
     <qresource prefix="/components">
         <file alias="Accordion.qml">qml/components/Accordion.qml</file>

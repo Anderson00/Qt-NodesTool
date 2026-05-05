@@ -35,6 +35,16 @@ set(PROJECT_SOURCES
     src/include/behaviours/common/linechartviewer.h src/include/behaviours/common/linechartviewer.cpp
     src/include/behaviours/common/randomgeneratorviewer.h src/include/behaviours/common/randomgeneratorviewer.cpp
     src/include/behaviours/logic/hub.h src/include/behaviours/logic/hub.cpp
+    src/include/behaviours/logic/comparison.h src/include/behaviours/logic/comparison.cpp
+    src/include/behaviours/logic/gate.h src/include/behaviours/logic/gate.cpp
+    src/include/behaviours/logic/stringformat.h src/include/behaviours/logic/stringformat.cpp
+    src/include/behaviours/common/constantvalue.h src/include/behaviours/common/constantvalue.cpp
+    src/include/behaviours/common/textdisplay.h src/include/behaviours/common/textdisplay.cpp
+    src/include/behaviours/common/timernode.h src/include/behaviours/common/timernode.cpp
+    src/include/behaviours/common/counter.h src/include/behaviours/common/counter.cpp
+    src/include/behaviours/math/mathoperation.h src/include/behaviours/math/mathoperation.cpp
+    src/include/behaviours/math/mathfunction.h src/include/behaviours/math/mathfunction.cpp
+    src/include/behaviours/math/clamp.h src/include/behaviours/math/clamp.cpp
     src/include/behaviours/behaviourregistry.h src/include/behaviours/behaviourregistry.cpp
     src/include/behaviours/connections.h src/include/behaviours/connections.cpp
     src/include/model/tablemodel.h src/include/model/tablemodel.cpp
