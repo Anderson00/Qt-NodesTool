@@ -389,10 +389,10 @@ Rectangle {
 
                     Flow {
                         id: columnLayoutInputConns
-                        width: parent.width - 8
+                        width: GlobalProperties.connectionStyle === "list" ? parent.width : parent.width - 8
                         anchors.left: parent.left
                         anchors.top: parent.top
-                        anchors.leftMargin: 4
+                        anchors.leftMargin: GlobalProperties.connectionStyle === "list" ? 4 : 4
                         anchors.topMargin: 4
                         spacing: 4
 
@@ -465,10 +465,10 @@ Rectangle {
 
                     Flow {
                         id: columnLayoutOutputConns
-                        width: parent.width - 8
+                        width: GlobalProperties.connectionStyle === "list" ? parent.width : parent.width - 8
                         anchors.right: parent.right
                         anchors.top: parent.top
-                        anchors.rightMargin: 4
+                        anchors.rightMargin: GlobalProperties.connectionStyle === "list" ? 4 : 4
                         anchors.topMargin: 4
                         spacing: 4
                         layoutDirection: Qt.RightToLeft
