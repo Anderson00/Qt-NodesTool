@@ -1,4 +1,7 @@
 #include "processesviewer.h"
+#include "behaviours/behaviourregistry.h"
+
+REGISTER_BEHAVIOUR(ProcessesViewer, "Processes Viewer", "Retrieves the process identifier for each process object in the system", "common", 0, 1)
 
 ProcessesViewer::ProcessesViewer(QObject *parent)
 {

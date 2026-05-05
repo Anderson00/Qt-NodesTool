@@ -11,17 +11,6 @@
 #include "Qaterial/Navigation/TreeElement.hpp"
 #include "Qaterial/Qaterial.hpp"
 
-//namespace behaviour {
-//namespace category {
-//QString tag = "Debug";
-//QString common = "Common";
-//QString conditional = "Conditional";
-//QString connections = "Connections";
-
-//};
-//};
-
-
 class BehaviourLoader : public QObject
 {
     Q_OBJECT
@@ -33,6 +22,9 @@ public slots:
     QJsonObject discoverAll();
     qaterial::TreeElement* discoverAllToTree();
 
+    /// Force re-read from BehaviourRegistry (e.g. after loading a plugin DLL)
+    void invalidateCache();
+
 signals:
 
 private:
@@ -40,11 +32,9 @@ private:
     explicit BehaviourLoader(QObject *parent = nullptr);
 
     void createDirsIfNotExists();
-    Behaviours *loadBehaviourAux(const QJsonObject infos);    
-    Behaviours *loadBehaviourFromClassName(const QString &className);
 
     qaterial::TreeModel *m_treeModelPaths;
-
+    QJsonObject m_cachedDiscovery;
 };
 
 #endif // BEHAVIOURLOADER_H

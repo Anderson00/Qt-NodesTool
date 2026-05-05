@@ -129,7 +129,8 @@ bool ViewPortWindow::addBehaviour(const QString& path, const QJsonObject infos) 
 bool ViewPortWindow::addBehaviourWithUuid(const QString& path, const QJsonObject& infos,
                                            const QString& uuid,
                                            double x, double y, double w, double h,
-                                           const QString& title)
+                                           const QString& title,
+                                           const QJsonObject& state)
 {
     Behaviours* object = BehaviourLoader::instance()->loadBehaviour(path, infos);
     if (!object) return false;
@@ -147,6 +148,11 @@ bool ViewPortWindow::addBehaviourWithUuid(const QString& path, const QJsonObject
     m_behaviours[uuid] = object;
     connectBehaviour(object);
     object->start();
+
+    // Restore internal state (from workspace load or undo/redo)
+    if (!state.isEmpty())
+        object->loadState(state);
+
     emit behaviourAdded(object);
     return true;
 }
@@ -224,7 +230,8 @@ bool ViewPortWindow::removeNodeWithUndo(const QString& uuid) {
     if (!beh) return false;
 
     NodeState data{uuid, beh->behaviourPath(), beh->title(), beh->behaviourInfos(),
-                   beh->x(), beh->y(), beh->width(), beh->height()};
+                   beh->x(), beh->y(), beh->width(), beh->height(),
+                   beh->saveState()};
 
     QList<ConnState> conns;
     for (const QVariant& v : getAllConnections()) {
@@ -281,7 +288,7 @@ QVariantList ViewPortWindow::getAllConnections() const {
             const QString& outputMethod = ci.key();
             Connections* conn = ci.value();
             for (ConnectionModel* model : conn->getAllConnections()) {
-                const QString inputUuid = m_behaviours.key(model->input());
+                const QString inputUuid = model->input()->uuid();
                 if (inputUuid.isEmpty()) continue;
                 QVariantMap entry;
                 entry["outputUuid"]   = outputUuid;

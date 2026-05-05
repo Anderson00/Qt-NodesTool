@@ -1,4 +1,7 @@
 #include "linechartviewer.h"
+#include "behaviours/behaviourregistry.h"
+
+REGISTER_BEHAVIOUR(LineChartViewer, "Line Chart", "Advanced XY line chart with multi-series, zoom/pan and live stats", "common", 13, 0)
 
 LineChartViewer::LineChartViewer(QObject *parent)
 {
@@ -78,3 +81,20 @@ void LineChartViewer::setChartTitle(const QString &title)
     }
 }
 
+QJsonObject LineChartViewer::saveState() const {
+    QJsonObject state;
+    state["maxPoints"]  = m_maxPoints;
+    state["autoScale"]  = m_autoScale;
+    if (!m_chartTitle.isEmpty())
+        state["chartTitle"] = m_chartTitle;
+    return state;
+}
+
+void LineChartViewer::loadState(const QJsonObject& state) {
+    if (state.contains("maxPoints"))
+        setMaxPoints(state["maxPoints"].toInt(500));
+    if (state.contains("autoScale"))
+        setAutoScale(state["autoScale"].toBool(true));
+    if (state.contains("chartTitle"))
+        setChartTitle(state["chartTitle"].toString());
+}

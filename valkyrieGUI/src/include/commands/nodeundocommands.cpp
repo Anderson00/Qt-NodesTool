@@ -10,18 +10,20 @@ AddNodeCommand::AddNodeCommand(ViewPortWindow* vp, NodeState data, QUndoCommand*
 void AddNodeCommand::undo() {
     auto* beh = m_vp->searchBehaviourFromUUID(m_data.uuid);
     if (!beh) return;
-    // Capture current geometry so redo restores correct position
+    // Capture current geometry and internal state so redo can restore them
     m_data.x     = beh->x();
     m_data.y     = beh->y();
     m_data.w     = beh->width();
     m_data.h     = beh->height();
     m_data.title = beh->title();
+    m_data.state = beh->saveState();
     m_vp->removeBehaviourObject(beh);
 }
 
 void AddNodeCommand::redo() {
     m_vp->addBehaviourWithUuid(m_data.path, m_data.infos, m_data.uuid,
-                               m_data.x, m_data.y, m_data.w, m_data.h, m_data.title);
+                               m_data.x, m_data.y, m_data.w, m_data.h,
+                               m_data.title, m_data.state);
 }
 
 // ── RemoveNodeCommand ─────────────────────────────────────────────────────────
@@ -32,14 +34,18 @@ RemoveNodeCommand::RemoveNodeCommand(ViewPortWindow* vp, NodeState data, QList<C
 
 void RemoveNodeCommand::undo() {
     m_vp->addBehaviourWithUuid(m_data.path, m_data.infos, m_data.uuid,
-                               m_data.x, m_data.y, m_data.w, m_data.h, m_data.title);
+                               m_data.x, m_data.y, m_data.w, m_data.h,
+                               m_data.title, m_data.state);
     for (const ConnState& c : std::as_const(m_conns))
         m_vp->addConnectionByUuids(c.outputUuid, c.outputMethod, c.inputUuid, c.inputMethod);
 }
 
 void RemoveNodeCommand::redo() {
     auto* beh = m_vp->searchBehaviourFromUUID(m_data.uuid);
-    if (beh) m_vp->removeBehaviourObject(beh);
+    if (!beh) return;
+    // Capture internal state before removal so undo can restore it
+    m_data.state = beh->saveState();
+    m_vp->removeBehaviourObject(beh);
 }
 
 // ── MoveNodeCommand ───────────────────────────────────────────────────────────

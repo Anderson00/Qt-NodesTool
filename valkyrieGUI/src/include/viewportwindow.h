@@ -58,7 +58,8 @@ public slots:
     bool addBehaviourWithUuid(const QString& path, const QJsonObject& infos,
                                const QString& uuid,
                                double x, double y, double w, double h,
-                               const QString& title);
+                               const QString& title,
+                               const QJsonObject& state = QJsonObject());
 
     bool removeBehaviourFromUUID(const QString& uuid);
     bool removeBehaviourObject(Behaviours* object);

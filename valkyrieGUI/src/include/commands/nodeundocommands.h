@@ -11,6 +11,7 @@ struct NodeState {
     QString uuid, path, title;
     QJsonObject infos;
     double x = 0, y = 0, w = 0, h = 0;
+    QJsonObject state;  // Internal node state (saveState/loadState)
 };
 
 struct ConnState {

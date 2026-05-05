@@ -289,14 +289,12 @@ void Behaviours::setBehaviourInfos(const QJsonObject& i) { m_behaviourInfos = i;
 const QString &Behaviours::uuid() const { return m_uuid; }
 void Behaviours::setUuid(const QString &uuid) { m_uuid = uuid; }
 
-void Behaviours::save()
-{
-
+QJsonObject Behaviours::saveState() const {
+    return {};
 }
 
-void Behaviours::load()
-{
-
+void Behaviours::loadState(const QJsonObject& state) {
+    Q_UNUSED(state);
 }
 
 void Behaviours::setViewRectangle(QQuickItem *view)

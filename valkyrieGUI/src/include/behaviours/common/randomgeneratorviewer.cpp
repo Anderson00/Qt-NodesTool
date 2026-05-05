@@ -1,5 +1,8 @@
 #include "randomgeneratorviewer.h"
+#include "behaviours/behaviourregistry.h"
 #include <random>
+
+REGISTER_BEHAVIOUR(RandomGeneratorViewer, "Random Generator", "Generate Random Values", "common", 1, 1)
 
 RandomGeneratorViewer::RandomGeneratorViewer(QObject *parent)
 {

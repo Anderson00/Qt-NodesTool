@@ -15,6 +15,9 @@ public:
     virtual QMap<QString, QVariant> loadInfos() override;
     static QMap<QString, QVariant> static_infos();
 
+    QJsonObject saveState() const override;
+    void loadState(const QJsonObject& state) override;
+
     int hexColumns();
 
     void setHexColumns(int hexColumns);

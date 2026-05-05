@@ -1,7 +1,10 @@
 #include "fileopener.h"
+#include "behaviours/behaviourregistry.h"
 #include <QTextStream>
 #include <QDebug>
 #include <QFileDialog>
+
+REGISTER_BEHAVIOUR(FileOpener, "File Opener", "Open and manipulate files", "common", 0, 1)
 
 FileOpener::FileOpener(QObject *parent) : Behaviours(parent)
 {
@@ -72,4 +75,17 @@ void FileOpener::openFile(QString filePath)
     emit output(in.readAll().toUtf8());
 
     file.close();
+}
+
+QJsonObject FileOpener::saveState() const {
+    QJsonObject state;
+    if (!m_filePath.isEmpty())
+        state["filePath"] = m_filePath;
+    return state;
+}
+
+void FileOpener::loadState(const QJsonObject& state) {
+    m_filePath = state["filePath"].toString();
+    if (!m_filePath.isEmpty())
+        openFile(m_filePath);
 }

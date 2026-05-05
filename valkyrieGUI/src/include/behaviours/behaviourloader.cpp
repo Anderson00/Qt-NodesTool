@@ -1,17 +1,10 @@
 #include "behaviourloader.h"
+#include "behaviourregistry.h"
 #include <QFile>
 #include <QDir>
 #include <QDirIterator>
 #include <QDebug>
 #include <QJsonArray>
-
-#include "behaviours/common/fileopener.h"
-#include "behaviours/common/hexviewer.h"
-#include "behaviours/common/processesviewer.h"
-#include "behaviours/common/linechartviewer.h"
-#include "behaviours/common/randomgeneratorviewer.h"
-#include "behaviours/common/componentsviewer.h"
-#include "behaviours/logic/hub.h"
 
 BehaviourLoader *BehaviourLoader::m_instance = nullptr;
 
@@ -19,7 +12,9 @@ BehaviourLoader::BehaviourLoader(QObject *parent) : QObject(parent),
     m_treeModelPaths(new qaterial::TreeModel(this))
 {
     createDirsIfNotExists();
-    discoverAll();
+
+    // Cache the discovery result once at startup
+    m_cachedDiscovery = BehaviourRegistry::instance().toDiscoveryJson();
 }
 
 void BehaviourLoader::createDirsIfNotExists()
@@ -39,99 +34,28 @@ BehaviourLoader *BehaviourLoader::instance()
     return m_instance;
 }
 
-Behaviours *BehaviourLoader::loadBehaviourAux(const QJsonObject infos)
-{
-    if(infos.contains("type")){
-        int typeInteger = infos["type"].toInt(-1);
-        if(typeInteger == -1)
-            return nullptr;
-        Behaviours::Type type = static_cast<Behaviours::Type>(typeInteger);
-        switch(type) {
-        case Behaviours::CPP:
-            if(infos.contains("className")){
-                return loadBehaviourFromClassName(infos["className"].toString(""));
-            }
-            break;
-        case Behaviours::DLL:
-            break;
-        case Behaviours::PYTHON:
-            break;
-        }
-    }
-    return nullptr;
-}
-
-Behaviours *BehaviourLoader::loadBehaviourFromClassName(const QString &className)
-{
-    if(className == "FileOpener"){
-        return new FileOpener;
-    }else if(className == "Hub"){
-        return new Hub;
-    }else if(className == "HexViewer"){
-        return new HexViewer;
-    }else if(className == "ProcessesViewer"){
-        return new ProcessesViewer;
-    }else if(className == "LineChartViewer"){
-        return new LineChartViewer;
-    }else if(className == "RandomGeneratorViewer"){
-        return new RandomGeneratorViewer;
-    }else if(className == "ComponentsViewer"){
-        return new ComponentsViewer;
-    }
-
-    return nullptr;
-}
-
 Behaviours *BehaviourLoader::loadBehaviour(const QString &path, const QJsonObject infos)
 {
-    QJsonArray array = discoverAll()[path].toArray();
-    if(!array.isEmpty()){
-        for(QJsonValue value : array){
-            if(value.isObject()){
-                QJsonObject valueInfos = value.toObject();
-                for(QString key : valueInfos.keys()){
-                    if(infos.contains(key) && infos[key] == valueInfos[key]){
-                        return loadBehaviourAux(infos);
-                    }
-                }
-            }
-        }
+    Q_UNUSED(path);
+
+    // Delegate directly to the registry — O(1) lookup by className
+    const QString className = infos["className"].toString();
+    if (className.isEmpty()) {
+        qWarning() << "[BehaviourLoader] Missing className in infos";
+        return nullptr;
     }
 
-    return nullptr;
+    return BehaviourRegistry::instance().create(className);
 }
 
 QJsonObject BehaviourLoader::discoverAll()
 {
-    //   DirPath   |   Name   |     {Key    , Value}
-    QJsonObject result;
-    QDir dir("Behaviours");
-    QFileInfoList infos = dir.entryInfoList();
+    return m_cachedDiscovery;
+}
 
-    result["Debug/common"] = QJsonArray({
-                                            QJsonObject::fromVariantMap(QVariantMap(FileOpener::static_infos())),
-                                            QJsonObject::fromVariantMap(QVariantMap(ProcessesViewer::static_infos())),
-                                            QJsonObject::fromVariantMap(QVariantMap(HexViewer::static_infos())),
-                                            QJsonObject::fromVariantMap(QVariantMap(LineChartViewer::static_infos())),
-                                            QJsonObject::fromVariantMap(QVariantMap(RandomGeneratorViewer::static_infos())),
-                                            QJsonObject::fromVariantMap(QVariantMap(ComponentsViewer::static_infos()))
-                                        });
-
-    result["Debug/logic"] = QJsonArray({
-                                           QJsonObject::fromVariantMap(QVariantMap(Hub::static_infos()))
-                                       });
-
-    QDirIterator it("Behaviours", QDirIterator::Subdirectories);
-    while (it.hasNext()) {
-        QFileInfo fileInfo(it.next());
-        if(fileInfo.isFile()){
-            //result.dirName();
-            //qDebug() << fileInfo.dir().dirName();
-
-        }
-    }
-
-    return result;
+void BehaviourLoader::invalidateCache()
+{
+    m_cachedDiscovery = BehaviourRegistry::instance().toDiscoveryJson();
 }
 
 qaterial::TreeElement* BehaviourLoader::discoverAllToTree()

@@ -11,13 +11,12 @@
 #include <QJsonObject>
 #include <QtQuick/QQuickItem>
 #include "connections.h"
-#include "utils/nodeserialize.h"
 #include "model/nodetheme.h"
 
 class ConnectionModel;
 class Connections;
 
-class Behaviours : public QObject, Presets::NodeSerialize
+class Behaviours : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged)
@@ -45,6 +44,13 @@ public:
 
     virtual QMap<QString, QVariant> loadInfos() = 0;
     virtual void loadConnections();
+
+    // ── State serialization ──────────────────────────────────────────────
+    // Override in subclasses to persist internal state to JSON.
+    // Called by WorkspaceManager on save and by UndoCommands on node removal.
+    virtual QJsonObject saveState() const;
+    virtual void loadState(const QJsonObject& state);
+
     const QString &qmlBodyUrl();
     const QString &title();
     double width();
@@ -79,9 +85,6 @@ public:
 
     void setBehaviourPath(const QString& path);
     void setBehaviourInfos(const QJsonObject& infos);
-
-    void save() override;
-    void load() override;
 
 public slots:
     void setViewRectangle(QQuickItem *view);

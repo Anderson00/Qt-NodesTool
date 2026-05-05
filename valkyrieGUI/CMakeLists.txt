@@ -36,6 +36,7 @@ set(PROJECT_SOURCES
     src/include/behaviours/common/randomgeneratorviewer.h src/include/behaviours/common/randomgeneratorviewer.cpp
     src/include/behaviours/logic/hub.h src/include/behaviours/logic/hub.cpp
     src/include/behaviours/behaviourloader.h src/include/behaviours/behaviourloader.cpp
+    src/include/behaviours/behaviourregistry.h src/include/behaviours/behaviourregistry.cpp
     src/include/behaviours/connections.h src/include/behaviours/connections.cpp
     src/include/model/tablemodel.h src/include/model/tablemodel.cpp
     src/include/model/connectionmodel.h src/include/model/connectionmodel.cpp

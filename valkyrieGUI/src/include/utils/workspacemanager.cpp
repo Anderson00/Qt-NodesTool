@@ -14,6 +14,8 @@
 #include <QtQml/QQmlEngine>
 #include <QDebug>
 
+static constexpr int WORKSPACE_VERSION = 2;
+
 WorkspaceManager::WorkspaceManager(QObject* parent) : QObject(parent)
 {
     refreshWorkspaceList();
@@ -92,6 +94,7 @@ bool WorkspaceManager::saveWorkspace(const QString& name)
         node["width"]  = beh->width();
         node["height"] = beh->height();
         node["title"]  = beh->title();
+        node["state"]  = beh->saveState();
         nodes.append(node);
     }
 
@@ -122,7 +125,7 @@ bool WorkspaceManager::saveWorkspace(const QString& name)
     viewport["scale"] = m_viewPort->viewportScale();
 
     QJsonObject root;
-    root["version"]     = 1;
+    root["version"]     = WORKSPACE_VERSION;
     root["nodes"]       = nodes;
     root["connections"] = connections;
     root["viewport"]    = viewport;
@@ -182,7 +185,8 @@ bool WorkspaceManager::loadWorkspace(const QString& name)
             n["y"].toDouble(),
             n["width"].toDouble(),
             n["height"].toDouble(),
-            n["title"].toString()
+            n["title"].toString(),
+            n.contains("state") ? n["state"].toObject() : QJsonObject()
         );
     }
 

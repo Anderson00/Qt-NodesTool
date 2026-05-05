@@ -1,4 +1,7 @@
 #include "componentsviewer.h"
+#include "behaviours/behaviourregistry.h"
+
+REGISTER_BEHAVIOUR(ComponentsViewer, "Components Viewer", "All Components and test tool", "common", 0, 0)
 
 ComponentsViewer::ComponentsViewer(QObject *parent)
 {
