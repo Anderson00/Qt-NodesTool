@@ -379,6 +379,7 @@ Rectangle {
 
                 Rectangle {
                     id: connectionsInputBody
+                    clip: true
                     Layout.preferredHeight:
                         Math.max(columnLayoutInputConns.height,
                                  columnLayoutOutputConns.height) + 4
@@ -387,21 +388,25 @@ Rectangle {
                     SplitView.preferredWidth: parent.width / 2
                     color: Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.08)
 
-                    ColumnLayout {
+                    Flow {
                         id: columnLayoutInputConns
-                        width: parent.width
+                        width: parent.width - 8
                         anchors.left: parent.left
                         anchors.top: parent.top
                         anchors.leftMargin: 4
-                        anchors.topMargin: 2
+                        anchors.topMargin: 4
+                        spacing: 4
 
                         Repeater {
                             model: connectionsInput
                             Rectangle {
                                 id: inputArea
-                                width: connInName.width + connInConnCircle.width
-                                height: rowInput.height
-                                color: 'transparent'
+                                width: rowInput.implicitWidth + 12
+                                height: 20
+                                radius: 10
+                                color: inputMouse.containsMouse ? Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.25) : "transparent"
+                                border.width: 1
+                                border.color: Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.4)
 
                                 Component.onCompleted: {
                                     connectionsInput[index].connArea = inputArea
@@ -409,28 +414,35 @@ Rectangle {
                                 }
 
                                 MouseArea {
+                                    id: inputMouse
                                     anchors.fill: parent
+                                    hoverEnabled: true
                                     preventStealing: true
+                                    cursorShape: Qt.PointingHandCursor
                                     onClicked: root.connectionSocketClicked(connectionsInput[index])
                                 }
 
                                 Row {
                                     id: rowInput
-                                    spacing: 2
+                                    anchors.centerIn: parent
+                                    spacing: 4
 
                                     Rectangle {
                                         id: connInConnCircle
-                                        width: 4
-                                        height: width
-                                        radius: width
-                                        color: stringToColour(extractParams(connInName.text))
-                                        anchors.verticalCenter: connInName.verticalCenter
+                                        width: 8
+                                        height: 8
+                                        radius: 4
+                                        color: stringToColour(extractParams(modelData.name))
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        border.width: 1
+                                        border.color: Qt.rgba(0,0,0,0.2)
                                     }
                                     Text {
                                         id: connInName
-                                        font.pixelSize: 8
+                                        font.pixelSize: 9
                                         color: ThemeManager.textColor
                                         text: modelData.name
+                                        anchors.verticalCenter: parent.verticalCenter
                                     }
                                 }
                             }
@@ -439,8 +451,8 @@ Rectangle {
                 }
 
                 Rectangle {
-                    clip: true
                     id: connectionsOutputBody
+                    clip: true
                     Layout.preferredHeight:
                         Math.max(columnLayoutInputConns.height,
                                  columnLayoutOutputConns.height) + 4
@@ -449,21 +461,26 @@ Rectangle {
                     SplitView.preferredWidth: parent.width / 2
                     color: Qt.rgba(ThemeManager.successColor.r, ThemeManager.successColor.g, ThemeManager.successColor.b, 0.08)
 
-                    ColumnLayout {
+                    Flow {
                         id: columnLayoutOutputConns
+                        width: parent.width - 8
                         anchors.right: parent.right
                         anchors.top: parent.top
                         anchors.rightMargin: 4
-                        anchors.topMargin: 2
+                        anchors.topMargin: 4
+                        spacing: 4
+                        layoutDirection: Qt.RightToLeft
 
                         Repeater {
                             model: connectionsOutput
                             Rectangle {
                                 id: outputArea
-                                width: connOutName.width + 8
-                                Layout.alignment: Qt.AlignRight
-                                height: connOutName.height
-                                color: 'transparent'
+                                width: rowOutput.implicitWidth + 12
+                                height: 20
+                                radius: 10
+                                color: outputMouse.containsMouse ? Qt.rgba(ThemeManager.successColor.r, ThemeManager.successColor.g, ThemeManager.successColor.b, 0.25) : "transparent"
+                                border.width: 1
+                                border.color: Qt.rgba(ThemeManager.successColor.r, ThemeManager.successColor.g, ThemeManager.successColor.b, 0.4)
 
                                 Component.onCompleted: {
                                     connectionsOutput[index].connArea = outputArea
@@ -471,28 +488,35 @@ Rectangle {
                                 }
 
                                 MouseArea {
+                                    id: outputMouse
                                     anchors.fill: parent
+                                    hoverEnabled: true
+                                    preventStealing: true
+                                    cursorShape: Qt.PointingHandCursor
                                     onClicked: root.connectionSocketClicked(connectionsOutput[index])
                                 }
 
                                 Row {
                                     id: rowOutput
-                                    anchors.right: parent.right
-                                    spacing: 2
+                                    anchors.centerIn: parent
+                                    spacing: 4
 
                                     Text {
                                         id: connOutName
-                                        font.pixelSize: 8
+                                        font.pixelSize: 9
                                         color: ThemeManager.textColor
                                         text: modelData.name
+                                        anchors.verticalCenter: parent.verticalCenter
                                     }
                                     Rectangle {
                                         id: connOutConnCircle
-                                        width: 4
-                                        height: width
-                                        radius: width
-                                        color: stringToColour(extractParams(connOutName.text))
-                                        anchors.verticalCenter: connOutName.verticalCenter
+                                        width: 8
+                                        height: 8
+                                        radius: 4
+                                        color: stringToColour(extractParams(modelData.name))
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        border.width: 1
+                                        border.color: Qt.rgba(0,0,0,0.2)
                                     }
                                 }
                             }
