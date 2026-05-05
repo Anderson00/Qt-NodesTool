@@ -20,6 +20,8 @@ Rectangle {
     property int minWgrid: GlobalProperties.minWgrid
     property int minZoom: 1
     property int maxZoom: 6
+    property real zoomScale: minZoom
+    onZoomScaleChanged: viewPort.viewportScale = zoomScale
 
     // mouse properties
     property var mouseXX
@@ -94,7 +96,7 @@ Rectangle {
         }
 
         function onViewportRestoreRequested(x, y, scale) {
-            sliderZoom.value = scale
+            zoomScale = scale
             mycanvas.x = x
             mycanvas.y = y
         }
@@ -143,8 +145,8 @@ Rectangle {
     function viewSubWindowsWidthHeightArea() {
         // Re-anchor the canvas so the same world point stays centered after resize.
         if (!mycanvas.initialized) return
-        mycanvas.x = containerCanvas.width  / 2 - viewCenterX * sliderZoom.value
-        mycanvas.y = containerCanvas.height / 2 - viewCenterY * sliderZoom.value
+        mycanvas.x = containerCanvas.width  / 2 - viewCenterX * zoomScale
+        mycanvas.y = containerCanvas.height / 2 - viewCenterY * zoomScale
     }
 
 
@@ -157,8 +159,8 @@ Rectangle {
     // Converts viewport coordinates to mycanvas local coordinates.
     function toLocal(vx, vy) {
         return Qt.point(
-            (vx - mycanvas.x) / sliderZoom.value,
-            (vy - mycanvas.y) / sliderZoom.value
+            (vx - mycanvas.x) / zoomScale,
+            (vy - mycanvas.y) / zoomScale
         )
     }
 
@@ -342,9 +344,9 @@ Rectangle {
             if (isConnecting)
                 return
 
-            var oldZoom = sliderZoom.value
+            var oldZoom = zoomScale
             var newZoom = oldZoom + (wheel.angleDelta.y > 0 ? 0.1 : -0.1)
-            newZoom = Math.max(sliderZoom.from, Math.min(sliderZoom.to, newZoom))
+            newZoom = clamp(newZoom, minZoom, maxZoom)
 
             // Keep the content point under the mouse stationary during zoom.
             // Visual position of workspace origin: mycanvas.x + localX * zoom
@@ -356,79 +358,14 @@ Rectangle {
 
             canvasScale.origin.x = 0
             canvasScale.origin.y = 0
-            sliderZoom.value = newZoom
+            zoomScale = newZoom
         }
-    }
-
-    Column {
-        id: fullscreenFab
-        anchors.top: topBar.bottom
-        anchors.left: root.left
-        anchors.margins: 8
-        spacing: 2
-        z: 100
-
-        Qaterial.MiniFabButton {
-            id: fullscreenButton
-            icon.source: Qaterial.Icons.fullscreen
-            icon.color: ThemeManager.accentColor
-            flat: false
-
-            onClicked: {
-                if(icon.source === Qaterial.Icons.fullscreen)
-                    icon.source = Qaterial.Icons.fullscreenExit
-                else
-                    icon.source = Qaterial.Icons.fullscreen
-
-                viewPort.setFullScreen(true);
-            }
-        }
-
-        Qaterial.MiniFabButton {
-            id: centerButton
-            icon.source: Qaterial.Icons.setCenter
-            icon.color: ThemeManager.accentColor
-            flat: false
-
-            readonly property real homeX: (containerCanvas.width  - mycanvas.width)  / 2
-            readonly property real homeY: (containerCanvas.height - mycanvas.height) / 2
-
-            opacity: (Math.abs(mycanvas.x - homeX) < 1 &&
-                      Math.abs(mycanvas.y - homeY) < 1 &&
-                      sliderZoom.value === 1) ? 0.3 : 1
-
-            onClicked: {
-                if (opacity < 1) return
-                root.isAnimatingCenter = true
-                mycanvas.x = homeX
-                mycanvas.y = homeY
-                zoomAnim.to = 1
-                zoomAnim.start()
-            }
-        }
-    }
-
-    CustomSlider {
-        id: sliderZoom
-        from: minZoom
-        to: maxZoom
-        value: minZoom
-        z: 100
-        enabled: !isConnecting
-        color: ThemeManager.primaryColor
-        textColor: ThemeManager.textColor
-        anchors.left: fullscreenFab.right
-        anchors.top: topBar.bottom
-        anchors.topMargin: 22
-        prefix: "x"
-
-        onValueChanged: viewPort.viewportScale = value
     }
 
     NumberAnimation {
         id: zoomAnim
-        target: sliderZoom
-        property: "value"
+        target: root
+        property: "zoomScale"
         duration: 400
         easing.type: Easing.InOutCubic
     }
@@ -502,7 +439,7 @@ Rectangle {
             anchors.fill: parent
             panX:     mycanvas.x
             panY:     mycanvas.y
-            zoom:     sliderZoom.value
+            zoom:     zoomScale
             minWgrid: root.minWgrid
             pattern:  GlobalProperties.gridPattern
         }
@@ -515,11 +452,11 @@ Rectangle {
 
             // Keep viewCenterX/Y and C++ viewport state in sync when panning.
             onXChanged: if (initialized) {
-                root.viewCenterX  = (containerCanvas.width  / 2 - x) / sliderZoom.value
+                root.viewCenterX  = (containerCanvas.width  / 2 - x) / zoomScale
                 viewPort.viewportX = x
             }
             onYChanged: if (initialized) {
-                root.viewCenterY  = (containerCanvas.height / 2 - y) / sliderZoom.value
+                root.viewCenterY  = (containerCanvas.height / 2 - y) / zoomScale
                 viewPort.viewportY = y
             }
 
@@ -543,8 +480,8 @@ Rectangle {
                 // Qt.callLater defers until after the first layout pass,
                 // guaranteeing containerCanvas.width/height are final.
                 Qt.callLater(function() {
-                    mycanvas.x = containerCanvas.width  / 2 - 5000 * sliderZoom.value
-                    mycanvas.y = containerCanvas.height / 2 - 5000 * sliderZoom.value
+                    mycanvas.x = containerCanvas.width  / 2 - 5000 * zoomScale
+                    mycanvas.y = containerCanvas.height / 2 - 5000 * zoomScale
                     mycanvas.initialized = true
                 })
             }
@@ -553,8 +490,8 @@ Rectangle {
                 id: canvasScale
                 origin.x: 0
                 origin.y: 0
-                xScale: sliderZoom.value
-                yScale: sliderZoom.value
+                xScale: zoomScale
+                yScale: zoomScale
             }
 
             MouseArea {
@@ -670,10 +607,10 @@ Rectangle {
                             PathCubic {
                                 readonly property real ex: circleConn2
                                     ? circleConnPoint2.x + circleConn2.width  / 2
-                                    : (mouseAreaGlobal.mouseX - mycanvas.x) / sliderZoom.value
+                                    : (mouseAreaGlobal.mouseX - mycanvas.x) / zoomScale
                                 readonly property real ey: circleConn2
                                     ? circleConnPoint2.y + circleConn2.height / 2
-                                    : (mouseAreaGlobal.mouseY - mycanvas.y) / sliderZoom.value
+                                    : (mouseAreaGlobal.mouseY - mycanvas.y) / zoomScale
 
                                 // Control points: horizontal tangents from each endpoint.
                                 // Offset proportional to horizontal distance for a natural S-curve.
@@ -746,8 +683,8 @@ Rectangle {
                             if (model.object.x !== 0 || model.object.y !== 0) {
                                 // ViewComponentRectV2.Component.onCompleted already set x/y from behaviourObject
                             } else {
-                                var cx = (containerCanvas.width  / 2 - mycanvas.x) / sliderZoom.value
-                                var cy = (containerCanvas.height / 2 - mycanvas.y) / sliderZoom.value
+                                var cx = (containerCanvas.width  / 2 - mycanvas.x) / zoomScale
+                                var cy = (containerCanvas.height / 2 - mycanvas.y) / zoomScale
                                 viewComponentRectV2.x = cx - viewComponentRectV2.width  / 2
                                 viewComponentRectV2.y = cy - viewComponentRectV2.height / 2
                             }
@@ -854,10 +791,10 @@ Rectangle {
         nodesModel: nodes.model
         containerCanvas: containerCanvas
         mycanvas: mycanvas
-        sliderZoom: sliderZoom
+        zoomScale: root.zoomScale
         statusBar: statusBar
         topBar: topBar
-        topLeftAnchor: fullscreenFab
+        topLeftAnchor: topBar
         focusedNode: root.nodeOnFocus
         nodes: nodes
         onNodeSelected: function(nodeItem) {
@@ -1731,11 +1668,63 @@ Rectangle {
             border.color: "#ccc"
             radius: 4
 
-            width: viewRect.width / sliderZoom.value
-            height: viewRect.height / sliderZoom.value
+            width: viewRect.width / zoomScale
+            height: viewRect.height / zoomScale
 
-            x: -(mycanvas.x * viewRect.width) / (containerCanvas.width * sliderZoom.value)
-            y: -(mycanvas.y * viewRect.height) / (containerCanvas.height * sliderZoom.value)
+            x: -(mycanvas.x * viewRect.width) / (containerCanvas.width * zoomScale)
+            y: -(mycanvas.y * viewRect.height) / (containerCanvas.height * zoomScale)
+        }
+    }
+
+    // ─── Bottom Floating Toolbar ────────────────────────────────────────────────
+    ViewportBottomToolBar {
+        id: bottomToolBar
+        visible: !splashScreen.visible
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 48 // Above status bar
+        anchors.horizontalCenter: parent.horizontalCenter
+        z: 900
+        
+        zoomScale: root.zoomScale
+        minZoom: root.minZoom
+        maxZoom: root.maxZoom
+        showGrid: GlobalProperties.gridPattern !== "None" // Check if grid is visible
+
+        onZoomIn: {
+            zoomScale = clamp(zoomScale + 0.5, minZoom, maxZoom)
+            zoomAnim.to = zoomScale
+            zoomAnim.start()
+        }
+        onZoomOut: {
+            zoomScale = clamp(zoomScale - 0.5, minZoom, maxZoom)
+            zoomAnim.to = zoomScale
+            zoomAnim.start()
+        }
+        onResetZoom: {
+            zoomScale = 1.0
+            zoomAnim.to = zoomScale
+            zoomAnim.start()
+        }
+        onCenterView: {
+            root.isAnimatingCenter = true
+            mycanvas.x = (containerCanvas.width  - mycanvas.width)  / 2
+            mycanvas.y = (containerCanvas.height - mycanvas.height) / 2
+            zoomScale = 1.0
+            zoomAnim.to = zoomScale
+            zoomAnim.start()
+        }
+        onToggleGrid: {
+            if (GlobalProperties.gridPattern === "None") {
+                GlobalProperties.gridPattern = "Dots" // Default grid pattern
+            } else {
+                GlobalProperties.gridPattern = "None"
+            }
+        }
+        onToggleFps: {
+            viewPort.showFps = !viewPort.showFps
+        }
+        onToggleFullscreen: {
+            viewPort.setFullScreen(true)
         }
     }
 
@@ -1750,7 +1739,7 @@ Rectangle {
         canvasPosY:      mycanvas.y
         containerWidth:  containerCanvas.width
         containerHeight: containerCanvas.height
-        zoom:            sliderZoom.value
+        zoom:            zoomScale
         hoverX:          globalHover.point.position.x
         hoverY:          globalHover.point.position.y
         nodeOnFocus:     root.nodeOnFocus

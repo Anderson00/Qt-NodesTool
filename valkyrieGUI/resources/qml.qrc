@@ -68,6 +68,7 @@
         <file alias="ViewportStatusBar.qml">qml/components/viewport/ViewportStatusBar.qml</file>
         <file alias="ViewportGridCanvas.qml">qml/components/viewport/ViewportGridCanvas.qml</file>
         <file alias="ViewportOriginMarker.qml">qml/components/viewport/ViewportOriginMarker.qml</file>
+        <file alias="ViewportBottomToolBar.qml">qml/components/viewport/ViewportBottomToolBar.qml</file>
     </qresource>
     <qresource prefix="/components/drawers">
         <file alias="NodesDrawer.qml">qml/components/drawers/NodesDrawer.qml</file>

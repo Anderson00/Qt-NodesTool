@@ -10,7 +10,7 @@ Rectangle {
     property var nodesModel
     property var containerCanvas
     property var mycanvas
-    property var sliderZoom
+    property real zoomScale: 1.0
     property var statusBar
     property var topBar
     property var topLeftAnchor: topBar
@@ -197,8 +197,8 @@ Rectangle {
                             const nodeCenterY = nodeY + nodeH / 2
                             const viewCenterScreenX = root.containerCanvas.width / 2
                             const viewCenterScreenY = root.containerCanvas.height / 2
-                            const targetX = viewCenterScreenX - nodeCenterX * root.sliderZoom.value
-                            const targetY = viewCenterScreenY - nodeCenterY * root.sliderZoom.value
+                            const targetX = viewCenterScreenX - nodeCenterX * root.zoomScale
+                            const targetY = viewCenterScreenY - nodeCenterY * root.zoomScale
 
                             root._animating = true
                             animX.to = targetX
