@@ -9,7 +9,7 @@
 #include "behaviours/common/hexviewer.h"
 #include "behaviours/common/processesviewer.h"
 #include "behaviours/common/linechartviewer.h"
-#include "behaviours/common/randomgeneratorviwer.h"
+#include "behaviours/common/randomgeneratorviewer.h"
 #include "behaviours/common/componentsviewer.h"
 #include "behaviours/logic/hub.h"
 
@@ -73,8 +73,8 @@ Behaviours *BehaviourLoader::loadBehaviourFromClassName(const QString &className
         return new ProcessesViewer;
     }else if(className == "LineChartViewer"){
         return new LineChartViewer;
-    }else if(className == "RandomGeneratorViwer"){
-        return new RandomGeneratorViwer;
+    }else if(className == "RandomGeneratorViewer"){
+        return new RandomGeneratorViewer;
     }else if(className == "ComponentsViewer"){
         return new ComponentsViewer;
     }
@@ -113,7 +113,7 @@ QJsonObject BehaviourLoader::discoverAll()
                                             QJsonObject::fromVariantMap(QVariantMap(ProcessesViewer::static_infos())),
                                             QJsonObject::fromVariantMap(QVariantMap(HexViewer::static_infos())),
                                             QJsonObject::fromVariantMap(QVariantMap(LineChartViewer::static_infos())),
-                                            QJsonObject::fromVariantMap(QVariantMap(RandomGeneratorViwer::static_infos())),
+                                            QJsonObject::fromVariantMap(QVariantMap(RandomGeneratorViewer::static_infos())),
                                             QJsonObject::fromVariantMap(QVariantMap(ComponentsViewer::static_infos()))
                                         });
 

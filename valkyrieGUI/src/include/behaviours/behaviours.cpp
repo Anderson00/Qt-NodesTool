@@ -286,6 +286,9 @@ QJsonObject Behaviours::behaviourInfos() const { return m_behaviourInfos; }
 void Behaviours::setBehaviourPath(const QString& path)   { m_behaviourPath  = path; }
 void Behaviours::setBehaviourInfos(const QJsonObject& i) { m_behaviourInfos = i; }
 
+const QString &Behaviours::uuid() const { return m_uuid; }
+void Behaviours::setUuid(const QString &uuid) { m_uuid = uuid; }
+
 void Behaviours::save()
 {
 

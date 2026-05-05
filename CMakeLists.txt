@@ -14,12 +14,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(GOOGLETEST_DIR "${CMAKE_BUILD_DIRECTORY}/lib")
-set(ZLIB_INCLUDE_DIR extern/zlib)
-set(ZLIB_LIBRARY extern/zlib)
-set(OPENSSL_ROOT_DIR "C:\\Users\\ander\\Downloads\\openssl-1.1\\x64\\lib")
-set(PERL_EXECUTABLE "C:\\Users\\ander\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\ActiveState\\ActiveState Perl-5.32 CLI")
-
-#set(ZLIB_INCLUDE_DIR extern/zlib)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -34,18 +28,8 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-fPIE -fPIC)
 endif()
 
-#add_subdirectory(extern/zlib)
 add_subdirectory(tests)
-#add_subdirectory(extern/retdec)
-#add_subdirectory(extern/capstone)
 add_subdirectory(extern/cxxopts)
 add_subdirectory(valkyrieGUI)
 add_subdirectory(middleware)
-#add_subdirectory(Emu)
-
-if(WIN32)
-
-elseif(UNIX)
-    #TODO: 
-endif(WIN32)
 

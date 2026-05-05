@@ -16,7 +16,6 @@ import Qaterial as Qaterial
 
 Rectangle {
     id: root
-    property var tt: ""
     property var count: 0
     property int minWgrid: GlobalProperties.minWgrid
     property int minZoom: 1
@@ -28,7 +27,6 @@ Rectangle {
     property bool isConnecting: false
     property var shapeConn
     property bool m_suppressConnectionDraw: false
-    property var finalPoint
 
     //Behaviours properties
     property var behavioursZ: []
@@ -149,9 +147,6 @@ Rectangle {
         mycanvas.y = containerCanvas.height / 2 - viewCenterY * sliderZoom.value
     }
 
-    function addWindow(){
-
-    }
 
     function getBehaviourGreaterZ(){
         let aux = []
@@ -434,22 +429,6 @@ Rectangle {
         easing.type: Easing.InOutCubic
     }
 
-    CustomSliderVertical {
-        id: slider2
-        visible: false
-        from: 1
-        to: 100
-        value: 1
-        z: 100
-        anchors.top: fullscreenFab.bottom
-        anchors.topMargin: -8
-        anchors.left: fullscreenFab.left
-        state: "left"
-
-        onValueChanged: {
-
-        }
-    }
 
     Rectangle {
         id: fpsCounterContainer
@@ -797,21 +776,6 @@ Rectangle {
         }
     }
 
-    CustomToolbar {
-        id: toolbar
-        anchors.bottom: parent.bottom
-        visible: false
-
-        width: 350
-        height: 50
-        actions : [
-            {text: "OK", icon: "play", onClicked: ()=>{console.log(3232)} },
-            {text: "OK", icon: "stop", onClicked: ()=>{console.log(3232)} },
-            {text: "OK", icon: "debug-step-into", onClicked: ()=>{console.log(3232)} },
-            {text: "OK", onClicked: ()=>{console.log(3232)} }
-        ]
-
-    }
 
     // ─── Top Bar ────────────────────────────────────────────────────────────────
     ViewportTopBar {

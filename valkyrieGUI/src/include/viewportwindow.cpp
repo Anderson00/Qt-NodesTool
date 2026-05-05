@@ -136,6 +136,7 @@ bool ViewPortWindow::addBehaviourWithUuid(const QString& path, const QJsonObject
 
     object->setBehaviourPath(path);
     object->setBehaviourInfos(infos);
+    object->setUuid(uuid);
     // Set geometry BEFORE emitting behaviourAdded so QML reads correct initial values
     object->setX(x);
     object->setY(y);
@@ -155,7 +156,7 @@ bool ViewPortWindow::removeBehaviourFromUUID(const QString& uuid) {
 }
 
 bool ViewPortWindow::removeBehaviourObject(Behaviours* object) {
-    const QString key = m_behaviours.key(object);
+    const QString key = object->uuid();
     m_behaviours.remove(key);
     emit behaviourRemoved(object, key);  // notify QML before delete
     delete object;
@@ -173,7 +174,7 @@ Behaviours* ViewPortWindow::searchBehaviourFromUUID(const QString& uuid) {
 }
 
 QString ViewPortWindow::getUUIDFromBehaviour(Behaviours* object) {
-    return m_behaviours.key(object);
+    return object ? object->uuid() : QString();
 }
 
 // ── Connections ───────────────────────────────────────────────────────────────

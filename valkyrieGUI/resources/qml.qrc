@@ -4,7 +4,7 @@
         <file alias="HexViewer.qml">qml/behaviours/common/HexViewer.qml</file>
         <file alias="ProcessesViewer.qml">qml/behaviours/common/ProcessesViewer.qml</file>
         <file alias="LineChartViewer.qml">qml/behaviours/common/LineChartViewer.qml</file>
-        <file alias="RandomGeneratorViwer.qml">qml/behaviours/common/RandomGeneratorViwer.qml</file>
+        <file alias="RandomGeneratorViewer.qml">qml/behaviours/common/RandomGeneratorViewer.qml</file>
         <file alias="ComponentsViewer.qml">qml/behaviours/common/ComponentsViewer.qml</file>
     </qresource>
     <qresource prefix="/components">

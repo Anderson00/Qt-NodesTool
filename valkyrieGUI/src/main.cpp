@@ -3,9 +3,6 @@
 #include <iostream>
 
 #include "include/mainwindow.h"
-//#include <unicorn/unicorn.h>
-//#include <capstone/capstone.h>
-//#include <retdec/fileformat/fileformat.h>
 #include <Qaterial/Qaterial.hpp>
 #include <model/tablemodel.h>
 #include <model/globalproperties.h>

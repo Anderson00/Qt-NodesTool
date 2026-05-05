@@ -1,4 +1,4 @@
-﻿#ifndef BEHAVIOURS_H
+#ifndef BEHAVIOURS_H
 #define BEHAVIOURS_H
 
 #include <QMetaMethod>
@@ -61,7 +61,8 @@ public:
     int qtdInputs();
     int qtdOutputs();
 
-    static const QString &getUuid();
+    const QString &uuid() const;
+    void setUuid(const QString &uuid);
 
     void setQmlBodyUrl(const QString &newQmlBodyUrl);
     void setTitle(QString title);
@@ -132,6 +133,7 @@ private:
     QJsonObject  m_behaviourInfos;
 
     QList<QString> m_listOfExclusions;
+    QString m_uuid;
 };
 
 #endif // BEHAVIOURS_H

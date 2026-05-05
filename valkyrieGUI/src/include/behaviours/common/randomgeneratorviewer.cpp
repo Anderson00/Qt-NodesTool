@@ -1,35 +1,35 @@
-#include "randomgeneratorviwer.h"
+#include "randomgeneratorviewer.h"
 #include <random>
 
-RandomGeneratorViwer::RandomGeneratorViwer(QObject *parent)
+RandomGeneratorViewer::RandomGeneratorViewer(QObject *parent)
 {
     this->setWidth(200);
     this->setHeight(200);
     this->setContentHeight(200);
-    this->setQmlBodyUrl("qrc:/behaviours/common/RandomGeneratorViwer.qml");
+    this->setQmlBodyUrl("qrc:/behaviours/common/RandomGeneratorViewer.qml");
     this->addInputOutputExclusion(QList<QString>({
                                                     "genNewNumber(double,double)"
                                                  }));
 }
 
-QMap<QString, QVariant> RandomGeneratorViwer::loadInfos()
+QMap<QString, QVariant> RandomGeneratorViewer::loadInfos()
 {
-    return RandomGeneratorViwer::static_infos();
+    return RandomGeneratorViewer::static_infos();
 }
 
-QMap<QString, QVariant> RandomGeneratorViwer::static_infos()
+QMap<QString, QVariant> RandomGeneratorViewer::static_infos()
 {
     return QMap<QString, QVariant>({
-                                       {"name", "RandomGeneratorViwer"},
+                                       {"name", "RandomGeneratorViewer"},
                                        {"type", Behaviours::Type::CPP},
-                                       {"className", "RandomGeneratorViwer"},
+                                       {"className", "RandomGeneratorViewer"},
                                        {"desc", "Generate Random Values"},
                                        {"inputs_count", "1"},
                                        {"outputs_count", "1"}
                                    });
 }
 
-double RandomGeneratorViwer::genNewNumber(double min, double max)
+double RandomGeneratorViewer::genNewNumber(double min, double max)
 {
     std::random_device rd;  // Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()

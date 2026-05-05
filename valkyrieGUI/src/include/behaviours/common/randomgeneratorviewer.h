@@ -1,14 +1,14 @@
-#ifndef RANDOMGENERATORVIWER_H
-#define RANDOMGENERATORVIWER_H
+#ifndef RANDOMGENERATORVIEWER_H
+#define RANDOMGENERATORVIEWER_H
 
 #include <QObject>
 #include <behaviours/behaviours.h>
 
-class RandomGeneratorViwer : public Behaviours
+class RandomGeneratorViewer : public Behaviours
 {
     Q_OBJECT
 public:
-    RandomGeneratorViwer(QObject *parent = nullptr);
+    RandomGeneratorViewer(QObject *parent = nullptr);
     virtual QMap<QString, QVariant> loadInfos() override;
     static QMap<QString, QVariant> static_infos();
 
@@ -22,4 +22,4 @@ private:
     double m_currentNumber = 0.0;
 };
 
-#endif // RANDOMGENERATORVIWER_H
+#endif // RANDOMGENERATORVIEWER_H
