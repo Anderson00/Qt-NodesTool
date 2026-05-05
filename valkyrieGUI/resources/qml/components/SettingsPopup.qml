@@ -1029,6 +1029,65 @@ Popup {
                     }
 
                     Item { width: 1; height: 20 }
+                    Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
+
+                    // ── NODES CONNECTIONS ───────────────────────────────────────────
+                    SectionLabel { text: "NODE CONNECTIONS STYLE" }
+
+                    readonly property var _connectionStyles: [
+                        { id: "pills", label: "Pills", desc: "Modern wrapped tags" },
+                        { id: "list",  label: "List",  desc: "Classic vertical list" }
+                    ]
+
+                    Flow {
+                        width: parent.width
+                        spacing: 8
+
+                        Repeater {
+                            model: viewportColumn._connectionStyles
+
+                            delegate: Rectangle {
+                                readonly property bool active: GlobalProperties.connectionStyle === modelData.id
+                                width: (parent.width - 8) / 2; height: 60; radius: 7
+                                color: active
+                                    ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.15)
+                                    : ThemeManager.foregroundColor
+                                border.width: active ? 2 : 1
+                                border.color: active ? ThemeManager.primaryColor : ThemeManager.borderColor
+                                Behavior on color { ColorAnimation { duration: 120 } }
+
+                                Column {
+                                    anchors.centerIn: parent
+                                    spacing: 4
+
+                                    Text {
+                                        text: modelData.label
+                                        font.pixelSize: 12
+                                        font.bold: active
+                                        color: active ? ThemeManager.primaryColor : ThemeManager.textColor
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        Behavior on color { ColorAnimation { duration: 120 } }
+                                    }
+
+                                    Text {
+                                        text: modelData.desc
+                                        font.pixelSize: 9
+                                        color: ThemeManager.textSecondaryColor
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: GlobalProperties.connectionStyle = modelData.id
+                                }
+                            }
+                        }
+                    }
+
+                    Item { width: 1; height: 20 }
                 }
             }
 

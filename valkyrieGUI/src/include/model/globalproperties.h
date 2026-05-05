@@ -20,6 +20,7 @@ class GlobalProperties : public QObject
     Q_PROPERTY(int     minWgrid       READ minWgrid       WRITE setMinWgrid       NOTIFY minWgridChanged)
     Q_PROPERTY(QString gridPattern    READ gridPattern    WRITE setGridPattern    NOTIFY gridPatternChanged)
     Q_PROPERTY(QString nodesListPosition READ nodesListPosition WRITE setNodesListPosition NOTIFY nodesListPositionChanged)
+    Q_PROPERTY(QString connectionStyle   READ connectionStyle   WRITE setConnectionStyle   NOTIFY connectionStyleChanged)
 
 public:
     static GlobalProperties* instance();
@@ -34,6 +35,7 @@ public:
     int     minWgrid()      const;
     QString gridPattern()   const;
     QString nodesListPosition() const;
+    QString connectionStyle() const;
 
     void setDebugMode(bool value);
     void setShowFps(bool value);
@@ -44,6 +46,7 @@ public:
     void setMinWgrid(int value);
     void setGridPattern(const QString& pattern);
     void setNodesListPosition(const QString& position);
+    void setConnectionStyle(const QString& style);
 
     Q_INVOKABLE void saveProperties();
     Q_INVOKABLE void loadProperties();
@@ -71,6 +74,7 @@ signals:
     void minWgridChanged();
     void gridPatternChanged();
     void nodesListPositionChanged();
+    void connectionStyleChanged();
 
 private:
     explicit GlobalProperties(QObject* parent = nullptr);
@@ -91,6 +95,7 @@ private:
     int     m_minWgrid      = 20;
     QString m_gridPattern   = "dots";
     QString m_nodesListPosition = "bottom-left";
+    QString m_connectionStyle   = "pills";
 };
 
 #endif // GLOBALPROPERTIES_H

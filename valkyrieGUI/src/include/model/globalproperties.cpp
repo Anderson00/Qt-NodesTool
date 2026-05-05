@@ -72,6 +72,7 @@ void GlobalProperties::saveProperties() {
 
     QJsonObject ui;
     ui["nodesListPosition"] = m_nodesListPosition;
+    ui["connectionStyle"] = m_connectionStyle;
 
     QJsonObject root;
     root["version"] = 1;
@@ -121,6 +122,7 @@ void GlobalProperties::loadProperties() {
     m_lastWorkspace = root["session"].toObject()["lastWorkspace"].toString();
     m_lastPresetId  = root["session"].toObject()["lastPresetId"].toString();
     m_nodesListPosition = uiObj["nodesListPosition"].toString("bottom-left");
+    m_connectionStyle   = uiObj["connectionStyle"].toString("pills");
     qDebug() << "[GlobalProperties] Loaded -> lastWorkspace:" << m_lastWorkspace
              << "| lastPresetId:" << m_lastPresetId
              << "| debugMode:" << m_debugMode
@@ -141,6 +143,7 @@ QString GlobalProperties::gridPreset()    const { return m_gridPreset; }
 int     GlobalProperties::minWgrid()      const { return m_minWgrid; }
 QString GlobalProperties::gridPattern()   const { return m_gridPattern; }
 QString GlobalProperties::nodesListPosition() const { return m_nodesListPosition; }
+QString GlobalProperties::connectionStyle() const { return m_connectionStyle; }
 
 void GlobalProperties::setDebugMode(bool value) {
     if (m_debugMode != value) {
@@ -228,5 +231,13 @@ void GlobalProperties::setNodesListPosition(const QString& position) {
         m_nodesListPosition = position;
         saveProperties();
         emit nodesListPositionChanged();
+    }
+}
+
+void GlobalProperties::setConnectionStyle(const QString& style) {
+    if (m_connectionStyle != style) {
+        m_connectionStyle = style;
+        saveProperties();
+        emit connectionStyleChanged();
     }
 }

@@ -383,7 +383,6 @@ Rectangle {
                     Layout.preferredHeight:
                         Math.max(columnLayoutInputConns.height,
                                  columnLayoutOutputConns.height) + 4
-                    Layout.fillWidth: true
                     SplitView.minimumWidth: 10
                     SplitView.preferredWidth: parent.width / 2
                     color: Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.08)
@@ -401,12 +400,13 @@ Rectangle {
                             model: connectionsInput
                             Rectangle {
                                 id: inputArea
-                                width: rowInput.implicitWidth + 12
-                                height: 20
-                                radius: 10
-                                color: inputMouse.containsMouse ? Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.25) : "transparent"
-                                border.width: 1
-                                border.color: Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.4)
+                                readonly property string style: GlobalProperties.connectionStyle
+                                width: style === "list" ? columnLayoutInputConns.width : rowInput.implicitWidth + 16
+                                height: style === "list" ? 14 : 20
+                                radius: style === "list" ? 0 : 10
+                                color: style === "list" ? "transparent" : (inputMouse.containsMouse ? Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.25) : "transparent")
+                                border.width: style === "list" ? 0 : 1
+                                border.color: style === "list" ? "transparent" : Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.4)
 
                                 Component.onCompleted: {
                                     connectionsInput[index].connArea = inputArea
@@ -424,22 +424,24 @@ Rectangle {
 
                                 Row {
                                     id: rowInput
-                                    anchors.centerIn: parent
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.left: style === "list" ? parent.left : undefined
+                                    anchors.horizontalCenter: style !== "list" ? parent.horizontalCenter : undefined
                                     spacing: 4
 
                                     Rectangle {
                                         id: connInConnCircle
-                                        width: 8
-                                        height: 8
-                                        radius: 4
+                                        width: style === "list" ? 6 : 8
+                                        height: width
+                                        radius: width / 2
                                         color: stringToColour(extractParams(modelData.name))
                                         anchors.verticalCenter: parent.verticalCenter
-                                        border.width: 1
+                                        border.width: style === "list" ? 0 : 1
                                         border.color: Qt.rgba(0,0,0,0.2)
                                     }
                                     Text {
                                         id: connInName
-                                        font.pixelSize: 9
+                                        font.pixelSize: style === "list" ? 8 : 9
                                         color: ThemeManager.textColor
                                         text: modelData.name
                                         anchors.verticalCenter: parent.verticalCenter
@@ -456,9 +458,9 @@ Rectangle {
                     Layout.preferredHeight:
                         Math.max(columnLayoutInputConns.height,
                                  columnLayoutOutputConns.height) + 4
-                    Layout.fillWidth: true
                     SplitView.minimumWidth: 10
                     SplitView.preferredWidth: parent.width / 2
+                    SplitView.fillWidth: true
                     color: Qt.rgba(ThemeManager.successColor.r, ThemeManager.successColor.g, ThemeManager.successColor.b, 0.08)
 
                     Flow {
@@ -475,12 +477,13 @@ Rectangle {
                             model: connectionsOutput
                             Rectangle {
                                 id: outputArea
-                                width: rowOutput.implicitWidth + 12
-                                height: 20
-                                radius: 10
-                                color: outputMouse.containsMouse ? Qt.rgba(ThemeManager.successColor.r, ThemeManager.successColor.g, ThemeManager.successColor.b, 0.25) : "transparent"
-                                border.width: 1
-                                border.color: Qt.rgba(ThemeManager.successColor.r, ThemeManager.successColor.g, ThemeManager.successColor.b, 0.4)
+                                readonly property string style: GlobalProperties.connectionStyle
+                                width: style === "list" ? columnLayoutOutputConns.width : rowOutput.implicitWidth + 16
+                                height: style === "list" ? 14 : 20
+                                radius: style === "list" ? 0 : 10
+                                color: style === "list" ? "transparent" : (outputMouse.containsMouse ? Qt.rgba(ThemeManager.successColor.r, ThemeManager.successColor.g, ThemeManager.successColor.b, 0.25) : "transparent")
+                                border.width: style === "list" ? 0 : 1
+                                border.color: style === "list" ? "transparent" : Qt.rgba(ThemeManager.successColor.r, ThemeManager.successColor.g, ThemeManager.successColor.b, 0.4)
 
                                 Component.onCompleted: {
                                     connectionsOutput[index].connArea = outputArea
@@ -498,24 +501,26 @@ Rectangle {
 
                                 Row {
                                     id: rowOutput
-                                    anchors.centerIn: parent
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.right: style === "list" ? parent.right : undefined
+                                    anchors.horizontalCenter: style !== "list" ? parent.horizontalCenter : undefined
                                     spacing: 4
 
                                     Text {
                                         id: connOutName
-                                        font.pixelSize: 9
+                                        font.pixelSize: style === "list" ? 8 : 9
                                         color: ThemeManager.textColor
                                         text: modelData.name
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
                                     Rectangle {
                                         id: connOutConnCircle
-                                        width: 8
-                                        height: 8
-                                        radius: 4
+                                        width: style === "list" ? 6 : 8
+                                        height: width
+                                        radius: width / 2
                                         color: stringToColour(extractParams(modelData.name))
                                         anchors.verticalCenter: parent.verticalCenter
-                                        border.width: 1
+                                        border.width: style === "list" ? 0 : 1
                                         border.color: Qt.rgba(0,0,0,0.2)
                                     }
                                 }
