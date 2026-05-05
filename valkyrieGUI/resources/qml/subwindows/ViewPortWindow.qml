@@ -362,12 +362,25 @@ Rectangle {
         }
     }
 
-    NumberAnimation {
-        id: zoomAnim
-        target: root
-        property: "zoomScale"
-        duration: 400
-        easing.type: Easing.InOutCubic
+    ParallelAnimation {
+        id: zoomGroupAnim
+        NumberAnimation { id: zoomAnim; target: root; property: "zoomScale"; duration: 400; easing.type: Easing.InOutCubic }
+        NumberAnimation { id: zoomAnimX; target: mycanvas; property: "x"; duration: 400; easing.type: Easing.InOutCubic }
+        NumberAnimation { id: zoomAnimY; target: mycanvas; property: "y"; duration: 400; easing.type: Easing.InOutCubic }
+    }
+
+    function animateZoomToCenter(newZoom) {
+        var targetScreenX = containerCanvas.width / 2
+        var targetScreenY = containerCanvas.height / 2
+        
+        var oldZoom = zoomScale
+        var targetX = targetScreenX - (targetScreenX - mycanvas.x) * newZoom / oldZoom
+        var targetY = targetScreenY - (targetScreenY - mycanvas.y) * newZoom / oldZoom
+        
+        zoomAnim.to = newZoom
+        zoomAnimX.to = targetX
+        zoomAnimY.to = targetY
+        zoomGroupAnim.start()
     }
 
 
@@ -1691,27 +1704,22 @@ Rectangle {
         showGrid: GlobalProperties.gridPattern !== "none" // Check if grid is visible
 
         onZoomIn: {
-            zoomScale = clamp(zoomScale + 0.5, minZoom, maxZoom)
-            zoomAnim.to = zoomScale
-            zoomAnim.start()
+            var newZoom = clamp(zoomScale + 0.5, minZoom, maxZoom)
+            animateZoomToCenter(newZoom)
         }
         onZoomOut: {
-            zoomScale = clamp(zoomScale - 0.5, minZoom, maxZoom)
-            zoomAnim.to = zoomScale
-            zoomAnim.start()
+            var newZoom = clamp(zoomScale - 0.5, minZoom, maxZoom)
+            animateZoomToCenter(newZoom)
         }
         onResetZoom: {
-            zoomScale = 1.0
-            zoomAnim.to = zoomScale
-            zoomAnim.start()
+            animateZoomToCenter(1.0)
         }
         onCenterView: {
             root.isAnimatingCenter = true
-            mycanvas.x = (containerCanvas.width  - mycanvas.width)  / 2
-            mycanvas.y = (containerCanvas.height - mycanvas.height) / 2
-            zoomScale = 1.0
-            zoomAnim.to = zoomScale
-            zoomAnim.start()
+            zoomAnim.to = 1.0
+            zoomAnimX.to = (containerCanvas.width  - mycanvas.width)  / 2
+            zoomAnimY.to = (containerCanvas.height - mycanvas.height) / 2
+            zoomGroupAnim.start()
         }
         onToggleGrid: {
             if (GlobalProperties.gridPattern === "none") {
