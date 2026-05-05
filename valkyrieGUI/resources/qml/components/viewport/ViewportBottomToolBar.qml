@@ -11,8 +11,9 @@ Rectangle {
     radius: height / 2
     
     // Glassmorphism effect base
-    color: ThemeManager.primaryColor
-    opacity: 0.95
+    color: Qt.rgba(ThemeManager.backgroundColor.r,
+                   ThemeManager.backgroundColor.g,
+                   ThemeManager.backgroundColor.b, 0.85)
     border.color: ThemeManager.borderColor
     border.width: 1
 

@@ -18,9 +18,9 @@ Rectangle {
     id: root
     property var count: 0
     property int minWgrid: GlobalProperties.minWgrid
-    property int minZoom: 1
-    property int maxZoom: 6
-    property real zoomScale: minZoom
+    property real minZoom: 0.2
+    property real maxZoom: 5.0
+    property real zoomScale: 1.0
     onZoomScaleChanged: viewPort.viewportScale = zoomScale
 
     // mouse properties
@@ -1688,7 +1688,7 @@ Rectangle {
         zoomScale: root.zoomScale
         minZoom: root.minZoom
         maxZoom: root.maxZoom
-        showGrid: GlobalProperties.gridPattern !== "None" // Check if grid is visible
+        showGrid: GlobalProperties.gridPattern !== "none" // Check if grid is visible
 
         onZoomIn: {
             zoomScale = clamp(zoomScale + 0.5, minZoom, maxZoom)
@@ -1714,10 +1714,10 @@ Rectangle {
             zoomAnim.start()
         }
         onToggleGrid: {
-            if (GlobalProperties.gridPattern === "None") {
-                GlobalProperties.gridPattern = "Dots" // Default grid pattern
+            if (GlobalProperties.gridPattern === "none") {
+                GlobalProperties.gridPattern = "dots" // Default grid pattern
             } else {
-                GlobalProperties.gridPattern = "None"
+                GlobalProperties.gridPattern = "none"
             }
         }
         onToggleFps: {
