@@ -29,9 +29,11 @@ void Clamp::setMin(double min) { if(!qFuzzyCompare(m_min,min)){m_min=min; emit r
 void Clamp::setMax(double max) { if(!qFuzzyCompare(m_max,max)){m_max=max; emit rangeMaxChanged(); compute();} }
 
 void Clamp::compute() {
-    m_clamped = qBound(m_min, m_inputValue, m_max);
-    double range = m_max - m_min;
-    m_normalized = (range > 0.0) ? (m_clamped - m_min) / range : 0.0;
+    double actualMin = qMin(m_min, m_max);
+    double actualMax = qMax(m_min, m_max);
+    m_clamped = qBound(actualMin, m_inputValue, actualMax);
+    double range = actualMax - actualMin;
+    m_normalized = (range > 0.0) ? (m_clamped - actualMin) / range : 0.0;
     emit clampedValueChanged(); emit normalizedChanged();
     emit outputValue(m_clamped); emit outputNormalized(m_normalized);
 }

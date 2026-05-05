@@ -171,7 +171,9 @@ double RandomGeneratorViewer::generate() {
         std::normal_distribution<double> dist(m_mean, m_stddev);
         value = dist(s_rng);
         // Optionally clamp to range
-        value = qBound(m_rangeMin, value, m_rangeMax);
+        double actualMin = qMin(m_rangeMin, m_rangeMax);
+        double actualMax = qMax(m_rangeMin, m_rangeMax);
+        value = qBound(actualMin, value, actualMax);
         double factor = std::pow(10.0, m_precision);
         value = std::round(value * factor) / factor;
         break;

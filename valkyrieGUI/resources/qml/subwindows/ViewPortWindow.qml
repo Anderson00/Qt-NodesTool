@@ -278,16 +278,17 @@ Rectangle {
                             outputUuid: outUuid, inputUuid: inUuid,
                             methodSignature2: inMethod, node2: node
                         })
-                        // Draw visually using the original approach (direct circleConn2 set)
-                        // This is reliable because the Shape item is already in the scene.
-                        shapeConn.circleConn2   = conn.circleConn
-                        shapeConn.viewRectConn2 = node
-                        shapeConn = undefined
-                        // Record undo; suppress visual redraw since line is already drawn
+                        // Record undo; suppress visual redraw since we manually snap the line if valid
                         m_suppressConnectionDraw = true
                         let ok = viewPort.addConnectionWithUndo(outUuid, outMethod, inUuid, inMethod)
                         m_suppressConnectionDraw = false
-                        if (!ok) {
+                        
+                        if (ok) {
+                            shapeConn.circleConn2   = conn.circleConn
+                            shapeConn.viewRectConn2 = node
+                            shapeConn = undefined
+                        } else {
+                            shapeConn = undefined
                             nodeConnections.model.remove(lastConnection)
                         }
                     } else {
