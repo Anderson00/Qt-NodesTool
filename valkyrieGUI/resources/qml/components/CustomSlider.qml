@@ -62,11 +62,7 @@ Item {
 
         Slider {
             id: slider
-            from: 5
-            to: 100
             Layout.fillWidth: true
-
-            value: 5
 
             background: Rectangle {
                 x: slider.leftPadding
