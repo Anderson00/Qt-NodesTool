@@ -53,6 +53,9 @@ Rectangle {
 
     property real _pressX: 0
     property real _pressY: 0
+
+    property bool isConnectionsMinimized: false
+
     signal backTotalClicked()
 
     color: Qt.rgba(ThemeManager.backgroundColor.r,
@@ -336,7 +339,7 @@ Rectangle {
         }
     }
 
-    // ============== Divider ==============
+    // ============== Divider & Collapse Handle ==============
     Rectangle {
         id: divider
         color: root.border.color
@@ -346,6 +349,44 @@ Rectangle {
         anchors.right: parent.right
         anchors.leftMargin: 1
         anchors.rightMargin: 1
+        z: 4
+
+        Rectangle {
+            id: collapseHandle
+            width: 40
+            height: 10
+            radius: 5
+            anchors.centerIn: parent
+            color: collapseMouse.containsMouse ? ThemeManager.primaryColor : root.border.color
+            Behavior on color { ColorAnimation { duration: 150 } }
+            Behavior on width { NumberAnimation { duration: 150 } }
+
+            Text {
+                anchors.centerIn: parent
+                text: root.isConnectionsMinimized ? "▾" : "▴"
+                font.pixelSize: 14
+                color: ThemeManager.backgroundColor
+                rotation: root.isConnectionsMinimized ? 0 : 0
+                Behavior on rotation { NumberAnimation { duration: 200 } }
+                anchors.verticalCenterOffset: root.isConnectionsMinimized ? -1 : 1
+            }
+
+            MouseArea {
+                id: collapseMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    if (root.isConnectionsMinimized) {
+                        root.isConnectionsMinimized = false
+                        root.height += connectionsBody.targetHeight
+                    } else {
+                        root.isConnectionsMinimized = true
+                        root.height -= connectionsBody.targetHeight
+                    }
+                }
+            }
+        }
     }
 
     // ============== Body ==============
@@ -362,20 +403,29 @@ Rectangle {
         spacing: 0
         z: 2
 
-        RowLayout {
+        Item {
             id: connectionsBody
             Layout.fillWidth: true
-            spacing: 0
+            property real targetHeight: splitConns.implicitHeight
+            Layout.preferredHeight: root.isConnectionsMinimized ? 0 : targetHeight
+            Behavior on Layout.preferredHeight {
+                NumberAnimation { duration: 250; easing.type: Easing.InOutQuad }
+            }
+            opacity: root.isConnectionsMinimized ? 0 : 1
+            Behavior on opacity {
+                NumberAnimation { duration: 200 }
+            }
             z: 3
+            clip: true
             visible: connectionsInput.length > 0 || connectionsOutput.length > 0
 
             SplitView {
                 id: splitConns
                 orientation: Qt.Horizontal
-                Layout.fillWidth: true
-                Layout.preferredHeight:
-                    Math.max(columnLayoutInputConns.height,
-                             columnLayoutOutputConns.height) + 8
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: parent.targetHeight
+                implicitHeight: Math.max(columnLayoutInputConns.height, columnLayoutOutputConns.height) + 8
 
                 Rectangle {
                     id: connectionsInputBody
