@@ -479,6 +479,72 @@ Rectangle {
                 onClicked: {
                     root.focus = true
                     nodeOnFocus = null
+
+                    if (isConnecting) return;
+
+                    // ── Hit Test Connections ──
+                    var px = mouse.x;
+                    var py = mouse.y;
+                    
+                    var bestDist = 15; // 15 pixels tolerance
+                    var hitIndex = -1;
+                    
+                    // Simple bezier evaluation function
+                    function getBezierPoint(t, p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y) {
+                        var u = 1 - t;
+                        var tt = t * t, uu = u * u;
+                        var uuu = uu * u, ttt = tt * t;
+                        var x = uuu * p0x + 3 * uu * t * p1x + 3 * u * tt * p2x + ttt * p3x;
+                        var y = uuu * p0y + 3 * uu * t * p1y + 3 * u * tt * p2y + ttt * p3y;
+                        return {x: x, y: y};
+                    }
+
+                    for (var i = 0; i < nodeConnections.model.count; i++) {
+                        var shapeItem = nodeConnections.itemAt(i);
+                        if (!shapeItem) continue;
+
+                        var minD = Number.MAX_VALUE;
+                        // Approximate bezier with 20 segments
+                        for (var s = 0; s <= 20; s++) {
+                            var pt = getBezierPoint(s / 20, 
+                                shapeItem.startXPos, shapeItem.startYPos,
+                                shapeItem.ctrl1XPos, shapeItem.ctrl1YPos,
+                                shapeItem.ctrl2XPos, shapeItem.ctrl2YPos,
+                                shapeItem.endXPos, shapeItem.endYPos);
+                            
+                            var dx = px - pt.x;
+                            var dy = py - pt.y;
+                            var d = Math.sqrt(dx*dx + dy*dy);
+                            if (d < minD) minD = d;
+                        }
+                        
+                        // Because distance is calculated in canvas unscaled coordinates,
+                        // we must scale the tolerance relative to the zoom.
+                        var scaledDist = minD * zoomScale;
+                        if (scaledDist < bestDist) {
+                            bestDist = scaledDist;
+                            hitIndex = i;
+                        }
+                    }
+
+                    if (hitIndex !== -1) {
+                        var connData = nodeConnections.model.get(hitIndex);
+                        // Open radial menu
+                        var globalPos = dragArea.mapToItem(root, mouse.x, mouse.y);
+                        connMenu.originX = globalPos.x;
+                        connMenu.originY = globalPos.y;
+                        connMenu.connectionIndex = hitIndex;
+                        connMenu.outUuid = connData.outputUuid;
+                        connMenu.inUuid = connData.inputUuid;
+                        connMenu.outMethod = connData.methodSignature1;
+                        connMenu.inMethod = connData.methodSignature2;
+                        
+                        // Extract names if available
+                        connMenu.outNodeName = connData.node ? connData.node.title : "Nó Origem";
+                        connMenu.inNodeName = connData.node2 ? connData.node2.title : "Nó Destino";
+                        
+                        connMenu.open();
+                    }
                 }
             }
 
@@ -511,6 +577,16 @@ Rectangle {
                         property var viewRectConn2
 
                         property real dashOffset: 0
+
+                        // Exposed for hit testing
+                        property real startXPos: shapepath.startX
+                        property real startYPos: shapepath.startY
+                        property real endXPos: cubicPath.x
+                        property real endYPos: cubicPath.y
+                        property real ctrl1XPos: cubicPath.control1X
+                        property real ctrl1YPos: cubicPath.control1Y
+                        property real ctrl2XPos: cubicPath.control2X
+                        property real ctrl2YPos: cubicPath.control2Y
 
                         Component.onCompleted: {
                             circleConnPoint = model.circleConn.mapToItem(parent, 0, 0)
@@ -578,6 +654,7 @@ Rectangle {
                             startY: circleConnPoint.y + model.circleConn.height / 2
 
                             PathCubic {
+                                id: cubicPath
                                 readonly property real ex: circleConn2
                                     ? circleConnPoint2.x + circleConn2.width  / 2
                                     : (mouseAreaGlobal.mouseX - mycanvas.x) / zoomScale
@@ -756,6 +833,12 @@ Rectangle {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.topMargin:     16
         z: 9900
+    }
+
+    // ─── Connection Radial Menu ─────────────────────────────────────────────────
+    ConnectionRadialMenu {
+        id: connMenu
+        z: 9950
     }
 
     // ─── Nodes List ─────────────────────────────────────────────────────────────
