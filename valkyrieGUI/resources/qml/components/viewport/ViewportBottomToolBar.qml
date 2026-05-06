@@ -21,6 +21,7 @@ Rectangle {
     property real minZoom: 0.1
     property real maxZoom: 5.0
     property bool showGrid: true
+    property bool connectionsMinimized: false
 
     signal zoomIn()
     signal zoomOut()
@@ -29,6 +30,7 @@ Rectangle {
     signal toggleGrid()
     signal toggleFps()
     signal toggleFullscreen()
+    signal toggleConnectionsMinimized()
 
     RowLayout {
         id: layout
@@ -87,6 +89,22 @@ Rectangle {
             ToolTip.text: "Zoom In"
             ToolTip.visible: hovered
             onClicked: root.zoomIn()
+        }
+
+        Rectangle { width: 1; height: 32; color: ThemeManager.borderColor; Layout.alignment: Qt.AlignVCenter }
+
+        // Toggle Connections Minimize
+        Qaterial.ToolButton {
+            id: toggleConnsBtn
+            icon.source: root.connectionsMinimized
+                ? Qaterial.Icons.layoutRows
+                : Qaterial.Icons.layoutRowsOutline
+            icon.color: root.connectionsMinimized
+                ? ThemeManager.accentColor
+                : ThemeManager.textColor
+            ToolTip.text: root.connectionsMinimized ? "Expand All Connections" : "Collapse All Connections"
+            ToolTip.visible: hovered
+            onClicked: root.toggleConnectionsMinimized()
         }
 
         Rectangle { width: 1; height: 32; color: ThemeManager.borderColor; Layout.alignment: Qt.AlignVCenter }

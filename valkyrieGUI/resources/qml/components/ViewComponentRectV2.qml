@@ -114,6 +114,17 @@ Rectangle {
         root.connectionsOutput = connObj
     }
 
+    function setMinimized(minimized) {
+        if (root.isConnectionsMinimized === minimized) return
+        
+        if (minimized) {
+            root.height -= connectionsBody.targetHeight
+        } else {
+            root.height += connectionsBody.targetHeight
+        }
+        root.isConnectionsMinimized = minimized
+    }
+
     function _emitMenuAction(action) {
         menuActionTriggered(action)
         switch (action) {
@@ -377,13 +388,7 @@ Rectangle {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    if (root.isConnectionsMinimized) {
-                        root.isConnectionsMinimized = false
-                        root.height += connectionsBody.targetHeight
-                    } else {
-                        root.isConnectionsMinimized = true
-                        root.height -= connectionsBody.targetHeight
-                    }
+                    root.setMinimized(!root.isConnectionsMinimized)
                 }
             }
         }

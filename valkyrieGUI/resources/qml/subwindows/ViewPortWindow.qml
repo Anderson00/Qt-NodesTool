@@ -41,6 +41,7 @@ Rectangle {
     property real viewCenterY: 5000
 
     property var rectsArray: ListModel {}
+    property bool allConnectionsMinimized: false
 
     signal nodeConnected(var node1, var node2)
 
@@ -1796,6 +1797,7 @@ Rectangle {
         minZoom: root.minZoom
         maxZoom: root.maxZoom
         showGrid: GlobalProperties.gridPattern !== "none"
+        connectionsMinimized: root.allConnectionsMinimized
 
         onZoomIn: {
             var newZoom = clamp(zoomScale + 0.5, minZoom, maxZoom)
@@ -1827,6 +1829,15 @@ Rectangle {
         }
         onToggleFullscreen: {
             viewPort.setFullScreen(true)
+        }
+        onToggleConnectionsMinimized: {
+            root.allConnectionsMinimized = !root.allConnectionsMinimized
+            for (var i = 0; i < nodes.model.count; i++) {
+                var nodeItem = nodes.itemAt(i)
+                if (nodeItem) {
+                    nodeItem.setMinimized(root.allConnectionsMinimized)
+                }
+            }
         }
     }
 
