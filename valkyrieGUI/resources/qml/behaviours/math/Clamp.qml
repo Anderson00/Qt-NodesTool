@@ -70,7 +70,7 @@ Item {
                 from: -1000; to: 1000
                 value: behaviourObject ? behaviourObject.rangeMin : 0
                 textColor: ThemeManager.textColor; color: "#e74c3c"
-                onValueChanged: if(behaviourObject) behaviourObject.setMin(value)
+                onMoved: if(behaviourObject) behaviourObject.setMin(value)
             }
         }
 
@@ -83,7 +83,7 @@ Item {
                 from: -1000; to: 1000
                 value: behaviourObject ? behaviourObject.rangeMax : 1
                 textColor: ThemeManager.textColor; color: "#2ecc71"
-                onValueChanged: if(behaviourObject) behaviourObject.setMax(value)
+                onMoved: if(behaviourObject) behaviourObject.setMax(value)
             }
         }
     }

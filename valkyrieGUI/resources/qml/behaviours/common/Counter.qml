@@ -43,7 +43,7 @@ Item {
                 value: behaviourObject ? behaviourObject.step : 1
                 textColor: ThemeManager.textColor
                 color: ThemeManager.primaryColor
-                onValueChanged: if(behaviourObject) behaviourObject.setStep(Math.round(value))
+                onMoved: if(behaviourObject) behaviourObject.setStep(Math.round(value))
             }
         }
 

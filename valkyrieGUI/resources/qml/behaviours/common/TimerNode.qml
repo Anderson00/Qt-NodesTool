@@ -68,7 +68,7 @@ Item {
                 textColor: ThemeManager.textColor
                 color: ThemeManager.primaryColor
                 prefix: "ms"
-                onValueChanged: if (behaviourObject) behaviourObject.setInterval(Math.round(value))
+                onMoved: if (behaviourObject) behaviourObject.setInterval(Math.round(value))
             }
         }
 

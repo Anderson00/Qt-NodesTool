@@ -240,7 +240,7 @@ Item {
                     value: behaviourObject ? behaviourObject.rangeMin : 0
                     textColor: ThemeManager.textColor
                     color: ThemeManager.primaryColor
-                    onValueChanged: if (behaviourObject) behaviourObject.setRangeMin(value)
+                    onMoved: if (behaviourObject) behaviourObject.setRangeMin(value)
                 }
             }
 
@@ -255,7 +255,7 @@ Item {
                     value: behaviourObject ? behaviourObject.rangeMax : 100
                     textColor: ThemeManager.textColor
                     color: ThemeManager.primaryColor
-                    onValueChanged: if (behaviourObject) behaviourObject.setRangeMax(value)
+                    onMoved: if (behaviourObject) behaviourObject.setRangeMax(value)
                 }
             }
         }
@@ -275,7 +275,7 @@ Item {
                     value: behaviourObject ? behaviourObject.mean : 50
                     textColor: ThemeManager.textColor
                     color: "#7C4DFF"
-                    onValueChanged: if (behaviourObject) behaviourObject.setMean(value)
+                    onMoved: if (behaviourObject) behaviourObject.setMean(value)
                 }
             }
             RowLayout {
@@ -287,7 +287,7 @@ Item {
                     value: behaviourObject ? behaviourObject.stddev : 15
                     textColor: ThemeManager.textColor
                     color: "#7C4DFF"
-                    onValueChanged: if (behaviourObject) behaviourObject.setStddev(value)
+                    onMoved: if (behaviourObject) behaviourObject.setStddev(value)
                 }
             }
         }
@@ -315,7 +315,7 @@ Item {
                     value: behaviourObject ? behaviourObject.diceCount : 1
                     textColor: ThemeManager.textColor
                     color: "#FF6D00"
-                    onValueChanged: if (behaviourObject) behaviourObject.setDiceCount(Math.round(value))
+                    onMoved: if (behaviourObject) behaviourObject.setDiceCount(Math.round(value))
                 }
             }
             RowLayout {
@@ -327,7 +327,7 @@ Item {
                     value: behaviourObject ? behaviourObject.diceSides : 6
                     textColor: ThemeManager.textColor
                     color: "#FF6D00"
-                    onValueChanged: if (behaviourObject) behaviourObject.setDiceSides(Math.round(value))
+                    onMoved: if (behaviourObject) behaviourObject.setDiceSides(Math.round(value))
                 }
             }
         }
@@ -354,7 +354,7 @@ Item {
                     value: behaviourObject ? behaviourObject.probability * 100 : 50
                     textColor: ThemeManager.textColor
                     color: "#00C853"
-                    onValueChanged: if (behaviourObject) behaviourObject.setProbability(value / 100.0)
+                    onMoved: if (behaviourObject) behaviourObject.setProbability(value / 100.0)
                 }
             }
         }
@@ -374,7 +374,7 @@ Item {
                 textColor: ThemeManager.textColor
                 color: ThemeManager.textColor
                 prefix: " dec"
-                onValueChanged: if (behaviourObject) behaviourObject.setPrecision(Math.round(value))
+                onMoved: if (behaviourObject) behaviourObject.setPrecision(Math.round(value))
             }
         }
 

@@ -87,7 +87,7 @@ Item {
                 from: -100; to: 100
                 value: behaviourObject ? behaviourObject.inputValue : 0
                 textColor: ThemeManager.textColor; color: ThemeManager.primaryColor
-                onValueChanged: if(behaviourObject) behaviourObject.setInput(value)
+                onMoved: if(behaviourObject) behaviourObject.setInput(value)
             }
         }
     }

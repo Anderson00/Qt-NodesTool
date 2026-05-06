@@ -101,7 +101,7 @@ Item {
                 from: -1000; to: 1000
                 value: behaviourObject ? behaviourObject.valueA : 0
                 textColor: ThemeManager.textColor; color: "#2ecc71"
-                onValueChanged: if(behaviourObject) behaviourObject.setA(value)
+                onMoved: if(behaviourObject) behaviourObject.setA(value)
             }
         }
 
@@ -113,7 +113,7 @@ Item {
                 from: -1000; to: 1000
                 value: behaviourObject ? behaviourObject.valueB : 0
                 textColor: ThemeManager.textColor; color: "#3498db"
-                onValueChanged: if(behaviourObject) behaviourObject.setB(value)
+                onMoved: if(behaviourObject) behaviourObject.setB(value)
             }
         }
     }

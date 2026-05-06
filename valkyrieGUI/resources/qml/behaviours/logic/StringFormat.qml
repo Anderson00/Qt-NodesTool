@@ -74,7 +74,7 @@ Item {
                 value: behaviourObject ? behaviourObject.precision : 2
                 textColor: ThemeManager.textColor; color: ThemeManager.textColor
                 prefix: " dec"
-                onValueChanged: if(behaviourObject) behaviourObject.setPrecision(Math.round(value))
+                onMoved: if(behaviourObject) behaviourObject.setPrecision(Math.round(value))
             }
         }
     }
