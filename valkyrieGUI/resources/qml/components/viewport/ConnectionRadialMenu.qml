@@ -1,6 +1,7 @@
 import QtQuick 2.12
 import QtQuick.Controls 2.12
 import Qt5Compat.GraphicalEffects
+import QtQuick.Layouts 1.12
 import App.Theme 1.0
 import App.Toast 1.0
 
@@ -10,6 +11,7 @@ Popup {
     height: 160
     padding: 0
     modal: true
+    dim: false
     focus: true
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
@@ -69,7 +71,7 @@ Popup {
     RadialButton {
         id: infoBtn
         angle: -90
-        distance: 50 * root.expansion
+        distance: 55 * root.expansion
         iconSource: "qrc:/icons/information.svg"
         toolTipText: "Informação"
         onClicked: {
@@ -78,11 +80,11 @@ Popup {
         }
     }
 
-    // 2. Remove Button (Bottom Right)
+    // 2. Remove Button (Right)
     RadialButton {
         id: removeBtn
-        angle: 30
-        distance: 50 * root.expansion
+        angle: 0
+        distance: 55 * root.expansion
         iconSource: "qrc:/icons/close.svg"
         toolTipText: "Remover"
         iconColor: ThemeManager.errorColor
@@ -94,15 +96,106 @@ Popup {
         }
     }
 
-    // 3. Copy Button (Bottom Left)
+    // 3. Comment Button (Bottom)
+    RadialButton {
+        id: commentBtn
+        angle: 90
+        distance: 55 * root.expansion
+        iconSource: "qrc:/icons/file-document-edit-outline.svg" // Use an edit icon for comment
+        toolTipText: "Adicionar Comentário"
+        onClicked: {
+            commentDialog.open()
+        }
+    }
+
+    // Comment Input Dialog
+    Popup {
+        id: commentDialog
+        width: 320
+        height: 200
+        x: (root.width - width) / 2
+        y: (root.height - height) / 2
+        modal: true
+        dim: true
+        focus: true
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        
+        background: Rectangle {
+            color: ThemeManager.surfaceColor
+            radius: 8
+            border.color: ThemeManager.primaryColor
+            border.width: 1
+        }
+        
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 16
+            spacing: 12
+            
+            Text {
+                text: "Anotação da Conexão"
+                color: ThemeManager.textSecondaryColor
+                font.pixelSize: 14
+                font.bold: true
+            }
+            
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                
+                TextArea {
+                    id: commentInput
+                    placeholderText: "Escreva suas anotações aqui..."
+                    color: ThemeManager.textColor
+                    font.pixelSize: 14
+                    wrapMode: Text.Wrap
+                    background: Rectangle {
+                        color: Qt.rgba(ThemeManager.backgroundColor.r, ThemeManager.backgroundColor.g, ThemeManager.backgroundColor.b, 0.5)
+                        radius: 4
+                        border.width: 1
+                        border.color: ThemeManager.primaryColor
+                    }
+                }
+            }
+            
+            RowLayout {
+                Layout.alignment: Qt.AlignRight
+                Button {
+                    id: saveBtn
+                    text: "Salvar"
+                    flat: true
+                    contentItem: Text {
+                        text: saveBtn.text
+                        color: ThemeManager.primaryColor
+                        font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    onClicked: {
+                        viewPort.setConnectionComment(outUuid, outMethod, inUuid, inMethod, commentInput.text)
+                        ToastManager.show("Comentário salvo!", "success")
+                        commentDialog.close()
+                        root.close()
+                    }
+                }
+            }
+        }
+        
+        onOpened: {
+            commentInput.text = viewPort.getConnectionComment(outUuid, outMethod, inUuid, inMethod)
+            commentInput.forceActiveFocus()
+        }
+    }
+
+    // 4. Copy Button (Left)
     RadialButton {
         id: copyBtn
-        angle: 150
-        distance: 50 * root.expansion
-        iconSource: "qrc:/icons/file-document-edit-outline.svg"
-        toolTipText: "Copiar Dados"
+        angle: 180
+        distance: 55 * root.expansion
+        iconSource: "qrc:/icons/content-save-cog-outline.svg"
+        toolTipText: "Copiar UUIDs"
         onClicked: {
-            // Can be extended to copy to clipboard
             ToastManager.show("UUID Origem: " + outUuid + "\nUUID Destino: " + inUuid, "success")
             root.close()
         }
@@ -139,12 +232,19 @@ Popup {
         }
 
         Image {
+            id: iconImg
             anchors.centerIn: parent
             width: 20
             height: 20
             source: parent.iconSource
             sourceSize: Qt.size(20, 20)
-            // Color overlay if needed (QtGraphicalEffects ColorOverlay is typical, but we can just use opacity for now)
+            visible: false
+        }
+        
+        ColorOverlay {
+            anchors.fill: iconImg
+            source: iconImg
+            color: parent.iconColor
         }
 
         MouseArea {

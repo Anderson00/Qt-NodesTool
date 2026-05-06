@@ -38,6 +38,16 @@ Drawer {
         if (selectedObjectView) {
             name.text = selectedObjectView.behaviourObject.title
             updateValues()
+            updateConnectionsList()
+        }
+    }
+
+    function updateConnectionsList() {
+        if (selectedObjectView && viewPortWindow) {
+            var nodeUuid = viewPortWindow.getUUIDFromBehaviour(selectedObjectView.behaviourObject);
+            connsRepeater.model = viewPortWindow.getNodeConnections(nodeUuid);
+        } else {
+            connsRepeater.model = []
         }
     }
 
@@ -75,8 +85,14 @@ Drawer {
         }
     }
 
-    function clamp(value, min, max) {
+        function clamp(value, min, max) {
         return Math.max(min, Math.min(max, value))
+    }
+
+    Connections {
+        target: viewPortWindow
+        function onConnectionAdded() { updateConnectionsList() }
+        function onConnectionRemoved() { updateConnectionsList() }
     }
 
     ColumnLayout {
@@ -398,6 +414,162 @@ Drawer {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: selectedObjectView.z = Math.max(0, selectedObjectView.z - 1)
+                    }
+                }
+            }
+        }
+
+        // Connections section
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 180
+            radius: 6
+            color: Qt.rgba(ThemeManager.backgroundColor.r,
+                          ThemeManager.backgroundColor.g,
+                          ThemeManager.backgroundColor.b, 0.4)
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 12
+                spacing: 10
+
+                Text {
+                    text: "Connections"
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: ThemeManager.textSecondaryColor
+                    opacity: 0.7
+                }
+
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+
+                    ColumnLayout {
+                        width: parent.width
+                        spacing: 6
+
+                        Repeater {
+                            id: connsRepeater
+                            model: []
+
+                            delegate: Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 46
+                                radius: 4
+                                color: Qt.rgba(ThemeManager.surfaceColor.r,
+                                              ThemeManager.surfaceColor.g,
+                                              ThemeManager.surfaceColor.b, 0.4)
+                                border.width: 1
+                                border.color: Qt.rgba(ThemeManager.primaryColor.r,
+                                                     ThemeManager.primaryColor.g,
+                                                     ThemeManager.primaryColor.b, 0.2)
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: 6
+                                    spacing: 4
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+                                        Text {
+                                            text: {
+                                                // Identify if we are the input or output of this connection
+                                                var isOutput = (modelData.outputUuid === selectedObjectView.uuid);
+                                                var dir = isOutput ? "=> Destino" : "<= Origem";
+                                                return dir + " (" + (isOutput ? modelData.inputMethod : modelData.outputMethod) + ")"
+                                            }
+                                            font.pixelSize: 10
+                                            color: ThemeManager.textColor
+                                            elide: Text.ElideRight
+                                            Layout.fillWidth: true
+                                        }
+                                        Text {
+                                            text: "M: " + (modelData.outputUuid === selectedObjectView.uuid ? modelData.outputMethod : modelData.inputMethod)
+                                            font.pixelSize: 9
+                                            color: ThemeManager.textSecondaryColor
+                                            opacity: 0.8
+                                        }
+                                    }
+
+                                    // Comment Button
+                                    Rectangle {
+                                        Layout.preferredWidth: 26
+                                        Layout.preferredHeight: 26
+                                        radius: 4
+                                        color: "transparent"
+                                        Image {
+                                            anchors.centerIn: parent
+                                            width: 16
+                                            height: 16
+                                            source: "qrc:/icons/file-document-edit-outline.svg"
+                                            sourceSize: Qt.size(16, 16)
+                                        }
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                var cmt = viewPortWindow.getConnectionComment(modelData.outputUuid, modelData.outputMethod, modelData.inputUuid, modelData.inputMethod);
+                                                var msg = cmt ? cmt : "Sem anotação.";
+                                                ToastManager.show("Comentário: " + msg, "info");
+                                            }
+                                            onEntered: parent.color = Qt.rgba(1,1,1,0.1)
+                                            onExited: parent.color = "transparent"
+                                        }
+                                    }
+
+                                    // Values Button
+                                    Rectangle {
+                                        Layout.preferredWidth: 26
+                                        Layout.preferredHeight: 26
+                                        radius: 4
+                                        color: "transparent"
+                                        Image {
+                                            anchors.centerIn: parent
+                                            width: 16
+                                            height: 16
+                                            source: "qrc:/icons/view-week.svg"
+                                            sourceSize: Qt.size(16, 16)
+                                        }
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: ToastManager.show("Intercepção de valores requer o nó Debugger (Em breve)", "warning")
+                                            onEntered: parent.color = Qt.rgba(1,1,1,0.1)
+                                            onExited: parent.color = "transparent"
+                                        }
+                                    }
+
+                                    // Remove Button
+                                    Rectangle {
+                                        Layout.preferredWidth: 26
+                                        Layout.preferredHeight: 26
+                                        radius: 4
+                                        color: "transparent"
+                                        Image {
+                                            anchors.centerIn: parent
+                                            width: 16
+                                            height: 16
+                                            source: "qrc:/icons/close.svg"
+                                            sourceSize: Qt.size(16, 16)
+                                        }
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: viewPortWindow.removeConnectionWithUndo(modelData.outputUuid, modelData.outputMethod, modelData.inputUuid, modelData.inputMethod)
+                                            onEntered: parent.color = Qt.rgba(ThemeManager.errorColor.r, ThemeManager.errorColor.g, ThemeManager.errorColor.b, 0.2)
+                                            onExited: parent.color = "transparent"
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

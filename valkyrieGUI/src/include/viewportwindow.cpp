@@ -176,6 +176,7 @@ void ViewPortWindow::clearBehaviours() {
     emit behavioursCleared();
     qDeleteAll(m_behaviours);
     m_behaviours.clear();
+    m_connectionComments.clear();
 }
 
 Behaviours* ViewPortWindow::searchBehaviourFromUUID(const QString& uuid) {
@@ -312,6 +313,34 @@ QVariantList ViewPortWindow::getAllConnections() const {
         }
     }
     return result;
+}
+
+QVariantList ViewPortWindow::getNodeConnections(const QString& nodeUuid) const {
+    QVariantList result;
+    for (const QVariant& v : getAllConnections()) {
+        QVariantMap m = v.toMap();
+        if (m["outputUuid"].toString() == nodeUuid || m["inputUuid"].toString() == nodeUuid) {
+            result.append(m);
+        }
+    }
+    return result;
+}
+
+void ViewPortWindow::setConnectionComment(const QString& outputUuid, const QString& outputMethod,
+                                          const QString& inputUuid,  const QString& inputMethod,
+                                          const QString& comment) {
+    const QString key = outputUuid + ":" + outputMethod + "->" + inputUuid + ":" + inputMethod;
+    if (comment.isEmpty()) {
+        m_connectionComments.remove(key);
+    } else {
+        m_connectionComments[key] = comment;
+    }
+}
+
+QString ViewPortWindow::getConnectionComment(const QString& outputUuid, const QString& outputMethod,
+                                             const QString& inputUuid,  const QString& inputMethod) const {
+    const QString key = outputUuid + ":" + outputMethod + "->" + inputUuid + ":" + inputMethod;
+    return m_connectionComments.value(key, QString());
 }
 
 bool ViewPortWindow::saveWorkspace(const QString& name) {

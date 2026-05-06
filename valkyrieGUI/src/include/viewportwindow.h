@@ -89,6 +89,14 @@ public slots:
     Q_INVOKABLE bool saveWorkspace(const QString& name);
     Q_INVOKABLE bool loadWorkspace(const QString& name);
     Q_INVOKABLE QVariantList getAllConnections() const;
+    Q_INVOKABLE QVariantList getNodeConnections(const QString& nodeUuid) const;
+
+    // Comments
+    Q_INVOKABLE void setConnectionComment(const QString& outputUuid, const QString& outputMethod,
+                                          const QString& inputUuid,  const QString& inputMethod,
+                                          const QString& comment);
+    Q_INVOKABLE QString getConnectionComment(const QString& outputUuid, const QString& outputMethod,
+                                             const QString& inputUuid,  const QString& inputMethod) const;
 
     // Screenshot
     Q_INVOKABLE void takeScreenshot(const QString& filePath);
@@ -116,6 +124,7 @@ private:
 
     QHash<QString, Behaviours*> m_behaviours;
     QUndoStack* m_undoStack = nullptr;
+    QHash<QString, QString> m_connectionComments;
 
     QTimer*  m_frameTimer = nullptr;
     QMetaObject::Connection m_timerTriggerConn;

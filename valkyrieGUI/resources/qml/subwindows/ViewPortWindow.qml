@@ -474,7 +474,58 @@ Rectangle {
                 drag.smoothed: true
                 drag.target: isConnecting ? undefined : mycanvas
 
-                cursorShape: dragArea.drag.active ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                hoverEnabled: true
+                property bool isHoveringConnection: false
+
+                cursorShape: dragArea.drag.active ? Qt.ClosedHandCursor : (isHoveringConnection ? Qt.PointingHandCursor : Qt.OpenHandCursor)
+
+                onPositionChanged: {
+                    if (isConnecting || dragArea.drag.active) {
+                        isHoveringConnection = false;
+                        return;
+                    }
+                    
+                    var px = mouse.x;
+                    var py = mouse.y;
+                    var bestDist = 15;
+                    var hitFound = false;
+                    
+                    function getBezierPoint(t, p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y) {
+                        var u = 1 - t;
+                        var tt = t * t, uu = u * u;
+                        var uuu = uu * u, ttt = tt * t;
+                        var x = uuu * p0x + 3 * uu * t * p1x + 3 * u * tt * p2x + ttt * p3x;
+                        var y = uuu * p0y + 3 * uu * t * p1y + 3 * u * tt * p2y + ttt * p3y;
+                        return {x: x, y: y};
+                    }
+
+                    for (var i = 0; i < nodeConnections.model.count; i++) {
+                        var shapeItem = nodeConnections.itemAt(i);
+                        if (!shapeItem) continue;
+
+                        var minD = Number.MAX_VALUE;
+                        // Use 10 segments for faster hover evaluation
+                        for (var s = 0; s <= 10; s++) {
+                            var pt = getBezierPoint(s / 10, 
+                                shapeItem.startXPos, shapeItem.startYPos,
+                                shapeItem.ctrl1XPos, shapeItem.ctrl1YPos,
+                                shapeItem.ctrl2XPos, shapeItem.ctrl2YPos,
+                                shapeItem.endXPos, shapeItem.endYPos);
+                            
+                            var dx = px - pt.x;
+                            var dy = py - pt.y;
+                            var d = Math.sqrt(dx*dx + dy*dy);
+                            if (d < minD) minD = d;
+                        }
+                        
+                        if ((minD * zoomScale) < bestDist) {
+                            hitFound = true;
+                            break;
+                        }
+                    }
+                    
+                    isHoveringConnection = hitFound;
+                }
 
                 onClicked: {
                     root.focus = true

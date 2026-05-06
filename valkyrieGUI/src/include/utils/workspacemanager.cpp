@@ -113,6 +113,12 @@ bool WorkspaceManager::saveWorkspace(const QString& name)
                 c["outputMethod"] = conn->methodSignature();
                 c["inputUuid"]    = inputUuid;
                 c["inputMethod"]  = QString::fromLatin1(model->slot().methodSignature());
+                
+                QString comment = m_viewPort->getConnectionComment(outputUuid, c["outputMethod"].toString(), inputUuid, c["inputMethod"].toString());
+                if (!comment.isEmpty()) {
+                    c["comment"] = comment;
+                }
+                
                 connections.append(c);
             }
         }
@@ -198,6 +204,16 @@ bool WorkspaceManager::loadWorkspace(const QString& name)
             c["inputUuid"].toString(),
             c["inputMethod"].toString()
         );
+        
+        if (c.contains("comment")) {
+            m_viewPort->setConnectionComment(
+                c["outputUuid"].toString(),
+                c["outputMethod"].toString(),
+                c["inputUuid"].toString(),
+                c["inputMethod"].toString(),
+                c["comment"].toString()
+            );
+        }
     }
 
     const QJsonObject vp = root["viewport"].toObject();
