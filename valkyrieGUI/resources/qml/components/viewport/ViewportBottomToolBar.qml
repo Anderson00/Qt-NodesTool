@@ -39,6 +39,7 @@ Rectangle {
 
         // Tool Mode: Select
         Qaterial.ToolButton {
+            checkable: false
             icon.source: Qaterial.Icons.cursorDefault
             icon.color: ThemeManager.accentColor
             ToolTip.text: "Select Tool"
@@ -47,6 +48,7 @@ Rectangle {
 
         // Tool Mode: Pan
         Qaterial.ToolButton {
+            checkable: false
             icon.source: Qaterial.Icons.handBackRight
             icon.color: ThemeManager.textColor
             ToolTip.text: "Pan Tool"
@@ -57,6 +59,7 @@ Rectangle {
 
         // Zoom Out
         Qaterial.ToolButton {
+            checkable: false
             icon.source: Qaterial.Icons.minus
             icon.color: ThemeManager.textColor
             ToolTip.text: "Zoom Out"
@@ -84,6 +87,7 @@ Rectangle {
 
         // Zoom In
         Qaterial.ToolButton {
+            checkable: false
             icon.source: Qaterial.Icons.plus
             icon.color: ThemeManager.textColor
             ToolTip.text: "Zoom In"
@@ -96,13 +100,15 @@ Rectangle {
         // Toggle Connections Minimize
         Qaterial.ToolButton {
             id: toggleConnsBtn
+            checkable: false
+            display: AbstractButton.IconOnly
             icon.source: root.connectionsMinimized
-                ? Qaterial.Icons.layoutRows
-                : Qaterial.Icons.layoutRowsOutline
+                ? Qaterial.Icons.chevronUp
+                : Qaterial.Icons.chevronDown
             icon.color: root.connectionsMinimized
                 ? ThemeManager.accentColor
                 : ThemeManager.textColor
-            ToolTip.text: root.connectionsMinimized ? "Expand All Connections" : "Collapse All Connections"
+            ToolTip.text: root.connectionsMinimized ? "Expandir todas as conexões" : "Recolher todas as conexões"
             ToolTip.visible: hovered
             onClicked: root.toggleConnectionsMinimized()
         }
@@ -111,6 +117,7 @@ Rectangle {
 
         // Center View
         Qaterial.ToolButton {
+            checkable: false
             icon.source: Qaterial.Icons.imageFilterCenterFocus
             icon.color: ThemeManager.textColor
             ToolTip.text: "Center View"
