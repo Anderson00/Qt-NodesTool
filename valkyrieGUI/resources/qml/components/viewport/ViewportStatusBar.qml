@@ -28,6 +28,10 @@ Rectangle {
     // Total number of nodes on the canvas
     property int nodeCount: 0
 
+    // FPS Counter
+    property int fpsCount: 0
+    property bool showFps: false
+
     height: 22
     color: Qt.darker(ThemeManager.backgroundColor, 1.55)
 
@@ -165,5 +169,25 @@ Rectangle {
             Layout.alignment: Qt.AlignVCenter
             text: nodeCount + (nodeCount === 1 ? " node" : " nodes")
         }
+
+        Item { Layout.preferredWidth: 8; visible: showFps }
+
+        // ── FPS Display ──────────────────────────────────────────────────────
+        Rectangle {
+            Layout.preferredWidth: 1; Layout.preferredHeight: 12
+            Layout.alignment: Qt.AlignVCenter
+            color: ThemeManager.textColor; opacity: 0.18
+            visible: showFps
+        }
+        Item { Layout.preferredWidth: 8; visible: showFps }
+        Text {
+            font.pixelSize: 10
+            color: ThemeManager.successColor
+            opacity: 0.8
+            Layout.alignment: Qt.AlignVCenter
+            text: fpsCount + " FPS (" + (fpsCount > 0 ? (1000/fpsCount).toFixed(1) : "0.0") + " ms)"
+            visible: showFps
+        }
+        Item { Layout.preferredWidth: 4; visible: showFps }
     }
 }

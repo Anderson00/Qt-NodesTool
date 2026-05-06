@@ -384,46 +384,6 @@ Rectangle {
     }
 
 
-    Rectangle {
-        id: fpsCounterContainer
-        visible: viewPort.showFps
-        color: "transparent"
-        width: 100
-        height: 50
-        anchors.top: topBar.bottom
-        anchors.topMargin: 8
-        anchors.horizontalCenter: parent.horizontalCenter
-        radius: 8
-
-        Rectangle {
-            anchors.fill: parent
-            color: ThemeManager.primaryColor
-            opacity: 0.5
-            radius: fpsCounterContainer.radius
-        }
-
-        ColumnLayout {
-            anchors.fill: parent
-            Layout.alignment: Qt.AlignCenter
-            spacing: 0
-
-            Label {
-                id: fpsCounter
-                color: ThemeManager.textColor
-                font.pixelSize: 14
-                text: `${viewPort.fpsCount} FPS`
-                Layout.alignment: Qt.AlignCenter
-            }
-
-            Label {
-                id: fpsTime
-                color: ThemeManager.textColor
-                font.pixelSize: 14
-                text: `${viewPort.fpsCount > 0? (1000/viewPort.fpsCount).toFixed(2) : 0} ms`
-                Layout.alignment: Qt.AlignCenter
-            }
-        }
-    }
 
     Rectangle {
         id: containerCanvas
@@ -1701,7 +1661,7 @@ Rectangle {
         zoomScale: root.zoomScale
         minZoom: root.minZoom
         maxZoom: root.maxZoom
-        showGrid: GlobalProperties.gridPattern !== "none" // Check if grid is visible
+        showGrid: GlobalProperties.gridPattern !== "none"
 
         onZoomIn: {
             var newZoom = clamp(zoomScale + 0.5, minZoom, maxZoom)
@@ -1729,7 +1689,7 @@ Rectangle {
             }
         }
         onToggleFps: {
-            viewPort.showFps = !viewPort.showFps
+            GlobalProperties.showFps = !GlobalProperties.showFps
         }
         onToggleFullscreen: {
             viewPort.setFullScreen(true)
@@ -1752,5 +1712,7 @@ Rectangle {
         hoverY:          globalHover.point.position.y
         nodeOnFocus:     root.nodeOnFocus
         nodeCount:       nodes.model.count
+        fpsCount:        viewPort.fpsCount
+        showFps:         GlobalProperties.showFps
     }
 }

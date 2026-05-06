@@ -42,6 +42,9 @@ ViewPortWindow::~ViewPortWindow()
 
     WorkspaceManager::instance()->setViewPort(nullptr);
 
+    delete m_undoStack;
+    m_undoStack = nullptr;
+
     qDeleteAll(m_behaviours);
     m_behaviours.clear();
 }
