@@ -32,6 +32,7 @@ class Behaviours : public QObject
     Q_PROPERTY(NodeTheme   *nodeTheme      READ nodeTheme      CONSTANT)
     Q_PROPERTY(QString      behaviourPath  READ behaviourPath  CONSTANT)
     Q_PROPERTY(QJsonObject  behaviourInfos READ behaviourInfos CONSTANT)
+    Q_PROPERTY(QString      uuid           READ uuid           CONSTANT)
 public:
     enum Type{
         CPP = 0, DLL, PYTHON

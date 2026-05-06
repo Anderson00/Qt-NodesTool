@@ -224,7 +224,7 @@ Rectangle {
         topMargin: topBar.height
         height: parent.height - topBar.height - statusBar.height
 
-        viewPortWindow: root
+        viewPortWindow: viewPort
         selectedObjectView: root.nodeOnFocus
 
         onOpened: {

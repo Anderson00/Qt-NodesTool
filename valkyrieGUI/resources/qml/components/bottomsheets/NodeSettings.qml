@@ -34,6 +34,8 @@ Drawer {
                              ThemeManager.primaryColor.b, 0.2)
     }
 
+    property string currentNodeUuid: ""
+
     onSelectedObjectViewChanged: {
         if (selectedObjectView) {
             name.text = selectedObjectView.behaviourObject.title
@@ -43,11 +45,14 @@ Drawer {
     }
 
     function updateConnectionsList() {
-        if (selectedObjectView && viewPortWindow) {
-            var nodeUuid = viewPortWindow.getUUIDFromBehaviour(selectedObjectView.behaviourObject);
-            connsRepeater.model = viewPortWindow.getNodeConnections(nodeUuid);
+        console.log(viewPortWindow)
+        if (selectedObjectView && selectedObjectView.behaviourObject && viewPortWindow) {
+            currentNodeUuid = selectedObjectView.behaviourObject.uuid;
+            var conns = viewPortWindow.getNodeConnections(currentNodeUuid);
+            connsListView.model = conns;
         } else {
-            connsRepeater.model = []
+            currentNodeUuid = "";
+            connsListView.model = []
         }
     }
 
@@ -91,8 +96,8 @@ Drawer {
 
     Connections {
         target: viewPortWindow
-        function onConnectionAdded() { updateConnectionsList() }
-        function onConnectionRemoved() { updateConnectionsList() }
+        function onConnectionAdded(outU, outM, inU, inM) { updateConnectionsList() }
+        function onConnectionRemoved(outU, outM, inU, inM) { updateConnectionsList() }
     }
 
     ColumnLayout {
@@ -441,23 +446,18 @@ Drawer {
                     opacity: 0.7
                 }
 
-                ScrollView {
+                ListView {
+                    id: connsListView
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     clip: true
-                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                    spacing: 6
+                    model: []
+                    ScrollBar.vertical: ScrollBar {}
 
-                    ColumnLayout {
-                        width: parent.width
-                        spacing: 6
-
-                        Repeater {
-                            id: connsRepeater
-                            model: []
-
-                            delegate: Rectangle {
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: 46
+                    delegate: Rectangle {
+                        width: connsListView.width
+                        height: 46
                                 radius: 4
                                 color: Qt.rgba(ThemeManager.surfaceColor.r,
                                               ThemeManager.surfaceColor.g,
@@ -478,7 +478,7 @@ Drawer {
                                         Text {
                                             text: {
                                                 // Identify if we are the input or output of this connection
-                                                var isOutput = (modelData.outputUuid === selectedObjectView.uuid);
+                                                var isOutput = (modelData.outputUuid === root.currentNodeUuid);
                                                 var dir = isOutput ? "=> Destino" : "<= Origem";
                                                 return dir + " (" + (isOutput ? modelData.inputMethod : modelData.outputMethod) + ")"
                                             }
@@ -488,7 +488,7 @@ Drawer {
                                             Layout.fillWidth: true
                                         }
                                         Text {
-                                            text: "M: " + (modelData.outputUuid === selectedObjectView.uuid ? modelData.outputMethod : modelData.inputMethod)
+                                            text: "M: " + (modelData.outputUuid === root.currentNodeUuid ? modelData.outputMethod : modelData.inputMethod)
                                             font.pixelSize: 9
                                             color: ThemeManager.textSecondaryColor
                                             opacity: 0.8
@@ -569,8 +569,6 @@ Drawer {
                                     }
                                 }
                             }
-                        }
-                    }
                 }
             }
         }

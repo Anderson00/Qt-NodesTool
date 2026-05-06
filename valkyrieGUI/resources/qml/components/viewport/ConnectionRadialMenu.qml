@@ -111,8 +111,8 @@ Popup {
     // Comment Input Dialog
     Popup {
         id: commentDialog
-        width: 320
-        height: 200
+        width: 350
+        height: 250
         x: (root.width - width) / 2
         y: (root.height - height) / 2
         modal: true
@@ -121,41 +121,39 @@ Popup {
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
         
         background: Rectangle {
-            color: ThemeManager.surfaceColor
-            radius: 8
-            border.color: ThemeManager.primaryColor
-            border.width: 1
+            color: "transparent"
         }
         
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 16
-            spacing: 12
+            spacing: 8
             
             Text {
                 text: "Anotação da Conexão"
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 14
                 font.bold: true
+                Layout.leftMargin: 4
             }
             
-            ScrollView {
+            Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                clip: true
-                
+                color: Qt.rgba(ThemeManager.backgroundColor.r, ThemeManager.backgroundColor.g, ThemeManager.backgroundColor.b, 0.85)
+                radius: 8
+                border.width: 1
+                border.color: ThemeManager.primaryColor
+
+                    
                 TextArea {
                     id: commentInput
+                    anchors.fill: parent
+
                     placeholderText: "Escreva suas anotações aqui..."
                     color: ThemeManager.textColor
                     font.pixelSize: 14
                     wrapMode: Text.Wrap
-                    background: Rectangle {
-                        color: Qt.rgba(ThemeManager.backgroundColor.r, ThemeManager.backgroundColor.g, ThemeManager.backgroundColor.b, 0.5)
-                        radius: 4
-                        border.width: 1
-                        border.color: ThemeManager.primaryColor
-                    }
+                    background: Item {} // Transparent background
                 }
             }
             
@@ -163,11 +161,14 @@ Popup {
                 Layout.alignment: Qt.AlignRight
                 Button {
                     id: saveBtn
-                    text: "Salvar"
-                    flat: true
+                    text: "Salvar Anotação"
+                    background: Rectangle {
+                        color: ThemeManager.primaryColor
+                        radius: 6
+                    }
                     contentItem: Text {
                         text: saveBtn.text
-                        color: ThemeManager.primaryColor
+                        color: "#FFFFFF"
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
