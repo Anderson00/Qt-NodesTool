@@ -178,6 +178,79 @@ Rectangle {
         return Qt.point(snapX, snapY)
     }
 
+    // ── Edge snap for resize handles ────────────────────────────────────────
+    // Called by ResizeHandle during drag. rawEdgeX/rawEdgeY are the absolute
+    // canvas positions of the edge being moved; pass null when that axis is fixed.
+    // Updates the same guide overlays used by drag snap.
+    function computeEdgeSnap(rawEdgeX, rawEdgeY, draggedItem) {
+        if (!root.snapEnabled) {
+            _clearSnapGuides()
+            return Qt.point(rawEdgeX !== null ? rawEdgeX : 0,
+                            rawEdgeY !== null ? rawEdgeY : 0)
+        }
+
+        var sg        = root.effectiveSnapGridSize
+        var zm        = root.zoomScale
+        var threshold = GlobalProperties.snapRadius / zm
+        var mode      = GlobalProperties.snapMode
+
+        var snapX = rawEdgeX !== null ? rawEdgeX : 0
+        var snapY = rawEdgeY !== null ? rawEdgeY : 0
+        var gx = -1, gy = -1
+        var axList = [], ayList = []
+
+        // ── Grid snap ───────────────────────────────────────────────────────
+        if (rawEdgeX !== null && sg > 0) {
+            var gridX = Math.round(rawEdgeX / sg) * sg
+            if (mode === "soft") {
+                if (Math.abs(gridX - rawEdgeX) <= threshold) { snapX = gridX; gx = snapX }
+            } else { snapX = gridX; gx = snapX }
+        }
+        if (rawEdgeY !== null && sg > 0) {
+            var gridY = Math.round(rawEdgeY / sg) * sg
+            if (mode === "soft") {
+                if (Math.abs(gridY - rawEdgeY) <= threshold) { snapY = gridY; gy = snapY }
+            } else { snapY = gridY; gy = snapY }
+        }
+
+        // ── Node alignment snap ─────────────────────────────────────────────
+        if (GlobalProperties.snapToNodes && draggedItem) {
+            var alignThr  = Math.max(threshold * 1.5, 12 / zm)
+            var bestDx    = alignThr + 1
+            var bestDy    = alignThr + 1
+
+            for (var i = 0; i < nodes.model.count; i++) {
+                var other = nodes.itemAt(i)
+                if (!other || other === draggedItem) continue
+
+                if (rawEdgeX !== null) {
+                    var oXPts = [other.x, other.x + other.width * 0.5, other.x + other.width]
+                    for (var oi = 0; oi < oXPts.length; oi++) {
+                        var d = Math.abs(rawEdgeX - oXPts[oi])
+                        if (d < bestDx) { bestDx = d; snapX = oXPts[oi]; axList = [oXPts[oi]] }
+                    }
+                }
+                if (rawEdgeY !== null) {
+                    var oYPts = [other.y, other.y + other.height * 0.5, other.y + other.height]
+                    for (var oj = 0; oj < oYPts.length; oj++) {
+                        var dy2 = Math.abs(rawEdgeY - oYPts[oj])
+                        if (dy2 < bestDy) { bestDy = dy2; snapY = oYPts[oj]; ayList = [oYPts[oj]] }
+                    }
+                }
+            }
+            if (axList.length > 0) gx = snapX
+            if (ayList.length > 0) gy = snapY
+        }
+
+        root.snapGuideX     = gx
+        root.snapGuideY     = gy
+        root.alignGuidesX   = axList
+        root.alignGuidesY   = ayList
+        root.anyNodeSnapping = (gx >= 0 || gy >= 0 || axList.length > 0 || ayList.length > 0)
+
+        return Qt.point(snapX, snapY)
+    }
+
     signal nodeConnected(var node1, var node2)
 
     onNodeOnFocusChanged: {
@@ -884,13 +957,16 @@ Rectangle {
                     delegate: ViewComponentRectV2 {
                         id: viewComponentRectV2
 
-                        // Snap — computeSnap is the centralized function in ViewPortWindow
-                        snapEnabled:   root.snapEnabled
-                        snapGridSize:  root.effectiveSnapGridSize
-                        viewportSnap:  root.computeSnap
+                        // Snap — centralized functions in ViewPortWindow
+                        snapEnabled:       root.snapEnabled
+                        snapGridSize:      root.effectiveSnapGridSize
+                        viewportSnap:      root.computeSnap
+                        viewportEdgeSnap:  root.computeEdgeSnap
 
                         onXChanged: { if (isDragging && nodeOnFocus !== this) nodeOnFocus = this }
                         onYChanged: { if (isDragging && nodeOnFocus !== this) nodeOnFocus = this }
+
+                        onResizeEnded: root._clearSnapGuides()
 
                         onFocusChanged: {
                             if (focus) nodeOnFocus = this

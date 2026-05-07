@@ -940,7 +940,7 @@ Popup {
                         Column {
                             Layout.fillWidth: true; spacing: 2
                             Text { text: "Enable Grid Snap"; font.pixelSize: 12; color: ThemeManager.textColor }
-                            Text { text: "Shortcut: G"; font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.45 }
+                            Text { text: "Applies to drag and resize  ·  Shortcut: G"; font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.45 }
                         }
                         CustomSwitch {
                             checked: GlobalProperties.snapEnabled
@@ -1133,20 +1133,6 @@ Popup {
                         CustomSwitch {
                             checked: GlobalProperties.snapToNodes
                             onToggled: GlobalProperties.snapToNodes = checked
-                        }
-                    }
-
-                    // Snap during resize
-                    RowLayout {
-                        width: parent.width; height: 44
-                        Column {
-                            Layout.fillWidth: true; spacing: 2
-                            Text { text: "Snap During Resize"; font.pixelSize: 12; color: ThemeManager.textColor }
-                            Text { text: "Round node width and height to grid when resizing"; font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.45 }
-                        }
-                        CustomSwitch {
-                            checked: GlobalProperties.snapResizeEnabled
-                            onToggled: GlobalProperties.snapResizeEnabled = checked
                         }
                     }
 

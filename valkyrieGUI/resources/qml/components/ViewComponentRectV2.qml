@@ -26,9 +26,15 @@ Rectangle {
     // Snap — bound from ViewPortWindow delegate
     property bool snapEnabled:  false
     property int  snapGridSize: 20
-    // Centralized snap function provided by ViewPortWindow (rawX, rawY, node) -> Qt.point
-    // When null, falls back to simple grid snap.
-    property var  viewportSnap: null
+    // Drag snap:   viewportSnap(rawX, rawY, node)       → Qt.point  (updates guides)
+    // Resize snap: viewportEdgeSnap(rawX, rawY, node)   → Qt.point  (updates guides)
+    //   rawX / rawY accept null when that axis is not moving.
+    // Both are null when not provided — fallback to simple grid snap.
+    property var  viewportSnap:     null
+    property var  viewportEdgeSnap: null
+
+    signal resizeEnded()
+    onIsResizingChanged: { if (!isResizing) resizeEnded() }
 
     property bool isDragging: false   // managed by manual drag handler
 
@@ -273,14 +279,14 @@ Rectangle {
     }
 
     // ============== Resize handles (extracted to ResizeHandle.qml) ==============
-    ResizeHandle { id: tlH; direction: "top-left";     handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
-    ResizeHandle { id: trH; direction: "top-right";    handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
-    ResizeHandle { id: blH; direction: "bottom-left";  handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
-    ResizeHandle { id: brH; direction: "bottom-right"; handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
-    ResizeHandle { id: tH;  direction: "top";          handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
-    ResizeHandle { id: bH;  direction: "bottom";       handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
-    ResizeHandle { id: lH;  direction: "left";         handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
-    ResizeHandle { id: rH;  direction: "right";        handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
+    ResizeHandle { id: tlH; direction: "top-left";     handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap }
+    ResizeHandle { id: trH; direction: "top-right";    handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap }
+    ResizeHandle { id: blH; direction: "bottom-left";  handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap }
+    ResizeHandle { id: brH; direction: "bottom-right"; handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap }
+    ResizeHandle { id: tH;  direction: "top";          handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap }
+    ResizeHandle { id: bH;  direction: "bottom";       handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap }
+    ResizeHandle { id: lH;  direction: "left";         handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap }
+    ResizeHandle { id: rH;  direction: "right";        handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap }
 
     // ============== Header ==============
     Rectangle {

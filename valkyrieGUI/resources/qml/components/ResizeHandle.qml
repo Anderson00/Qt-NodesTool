@@ -2,6 +2,7 @@ import QtQuick 2.15
 import App.Properties 1.0
 
 // Generic resize handle for the 4 corners and 4 edges of a parent Rectangle.
+// Supports grid snap and node-alignment snap via viewportEdgeSnap.
 Rectangle {
     id: handle
 
@@ -14,11 +15,37 @@ Rectangle {
     property real  minHeight:   50
     property color highlightColor: "white"
 
-    // Snap — read directly from GlobalProperties so no binding gymnastics needed
-    readonly property bool _snapActive: GlobalProperties.snapEnabled && GlobalProperties.snapResizeEnabled
+    // Provided by ViewComponentRectV2 → ViewPortWindow.computeEdgeSnap
+    // Signature: (rawEdgeX, rawEdgeY, node) → Qt.point
+    //   rawEdgeX / rawEdgeY: canvas position of the edge being dragged, or null if that axis is fixed.
+    property var viewportEdgeSnap: null
+
+    // Fallback when viewportEdgeSnap is not available
+    readonly property bool _snapActive: GlobalProperties.snapEnabled
     readonly property int  _snapGrid:   GlobalProperties.snapSyncToGrid
                                         ? GlobalProperties.minWgrid
                                         : GlobalProperties.snapGridSize
+
+    function _fallbackSnapEdge(pos) {
+        if (!_snapActive || _snapGrid <= 0) return pos
+        return Math.round(pos / _snapGrid) * _snapGrid
+    }
+
+    // Snap a single edge: use viewport function when available, fallback otherwise.
+    // Returns the snapped position for a single axis.
+    function _snapX(rawX) {
+        if (viewportEdgeSnap) return viewportEdgeSnap(rawX, null, handle.target).x
+        return _fallbackSnapEdge(rawX)
+    }
+    function _snapY(rawY) {
+        if (viewportEdgeSnap) return viewportEdgeSnap(null, rawY, handle.target).y
+        return _fallbackSnapEdge(rawY)
+    }
+    // Snap both axes simultaneously (corners) — single call so guides reflect both.
+    function _snapXY(rawX, rawY) {
+        if (viewportEdgeSnap) return viewportEdgeSnap(rawX, rawY, handle.target)
+        return Qt.point(_fallbackSnapEdge(rawX), _fallbackSnapEdge(rawY))
+    }
 
     readonly property bool active: dragArea.pressed
 
@@ -121,12 +148,6 @@ Rectangle {
         return Qt.ArrowCursor
     }
 
-    // ── Snap helpers ───────────────────────────────────────────────────────────
-    function snapValue(v) {
-        if (!_snapActive || _snapGrid <= 0) return v
-        return Math.round(v / _snapGrid) * _snapGrid
-    }
-
     MouseArea {
         id: dragArea
         anchors.fill: parent
@@ -143,9 +164,9 @@ Rectangle {
         property real startTargetH: 0
 
         onPressed: function(mouse) {
-            const g  = mapToGlobal(mouse.x, mouse.y)
+            const g = mapToGlobal(mouse.x, mouse.y)
             startGlobalX = g.x;  startGlobalY = g.y
-            startTargetX = handle.target.x;   startTargetY = handle.target.y
+            startTargetX = handle.target.x;    startTargetY = handle.target.y
             startTargetW = handle.target.width; startTargetH = handle.target.height
             handle.resizeStarted()
         }
@@ -158,34 +179,53 @@ Rectangle {
             const dy  = g.y - startGlobalY
             const dir = handle.direction
 
-            // ── Horizontal ─────────────────────────────────────────────────────
-            if (dir.indexOf("left") !== -1) {
-                var rawW = startTargetW - dx
-                var snapW = handle.snapValue(rawW)
-                if (snapW >= handle.minWidth) {
-                    handle.target.x     = startTargetX + (startTargetW - snapW)
-                    handle.target.width = snapW
-                }
-            } else if (dir.indexOf("right") !== -1) {
-                var rawWr = startTargetW + dx
-                var snapWr = handle.snapValue(rawWr)
-                if (snapWr >= handle.minWidth)
-                    handle.target.width = snapWr
+            const isLeft   = dir.indexOf("left")   !== -1
+            const isRight  = dir.indexOf("right")  !== -1
+            const isTop    = dir.indexOf("top")    !== -1
+            const isBottom = dir.indexOf("bottom") !== -1
+            const isCorner = (isLeft || isRight) && (isTop || isBottom)
+
+            // Raw absolute canvas positions of the edges being moved
+            var rawX = isLeft  ? startTargetX + dx
+                     : isRight ? startTargetX + startTargetW + dx : null
+            var rawY = isTop    ? startTargetY + dy
+                     : isBottom ? startTargetY + startTargetH + dy : null
+
+            // Snap — single call for corners (both axes at once for coherent guides)
+            var snappedX, snappedY
+            if (isCorner) {
+                var s = handle._snapXY(rawX, rawY)
+                snappedX = s.x;  snappedY = s.y
+            } else if (rawX !== null) {
+                snappedX = handle._snapX(rawX)
+            } else {
+                snappedY = handle._snapY(rawY)
             }
 
-            // ── Vertical ───────────────────────────────────────────────────────
-            if (dir.indexOf("top") !== -1) {
-                var rawH = startTargetH - dy
-                var snapH = handle.snapValue(rawH)
-                if (snapH >= handle.minHeight) {
-                    handle.target.y      = startTargetY + (startTargetH - snapH)
-                    handle.target.height = snapH
+            // Apply horizontal result
+            if (isLeft) {
+                var newW = startTargetX + startTargetW - snappedX
+                if (newW >= handle.minWidth) {
+                    handle.target.x     = snappedX
+                    handle.target.width = newW
                 }
-            } else if (dir.indexOf("bottom") !== -1) {
-                var rawHb = startTargetH + dy
-                var snapHb = handle.snapValue(rawHb)
-                if (snapHb >= handle.minHeight)
-                    handle.target.height = snapHb
+            } else if (isRight) {
+                var newWr = snappedX - startTargetX
+                if (newWr >= handle.minWidth)
+                    handle.target.width = newWr
+            }
+
+            // Apply vertical result
+            if (isTop) {
+                var newH = startTargetY + startTargetH - snappedY
+                if (newH >= handle.minHeight) {
+                    handle.target.y      = snappedY
+                    handle.target.height = newH
+                }
+            } else if (isBottom) {
+                var newHb = snappedY - startTargetY
+                if (newHb >= handle.minHeight)
+                    handle.target.height = newHb
             }
         }
 
