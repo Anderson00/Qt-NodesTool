@@ -23,6 +23,12 @@ Rectangle {
     property alias bodySourceQML: rootBodyLoader.source
     property bool animEnabled: false
 
+    // Snap properties — bound from ViewPortWindow delegate
+    property bool snapEnabled:  false
+    property int  snapGridSize: 20
+
+    property bool isDragging: false   // managed by manual drag handler
+
     property double minWidth: 150
     property double minHeight: 100
 
@@ -164,14 +170,14 @@ Rectangle {
         target: root
         property: "x"
         value: behaviourObject ? behaviourObject.x : 0
-        when: behaviourObject !== null && !area.drag.active && !isResizing
+        when: behaviourObject !== null && !root.isDragging && !isResizing
         restoreMode: Binding.RestoreNone
     }
     Binding {
         target: root
         property: "y"
         value: behaviourObject ? behaviourObject.y : 0
-        when: behaviourObject !== null && !area.drag.active && !isResizing
+        when: behaviourObject !== null && !root.isDragging && !isResizing
         restoreMode: Binding.RestoreNone
     }
 
@@ -192,29 +198,63 @@ Rectangle {
     }
 
     // ============== Drag area ==============
+    // Manual drag: track press origin via mapToItem so snap can be applied
+    // BEFORE setting the position (avoids fighting the Qt drag system).
     MouseArea {
         id: area
         z: 1
         anchors.fill: root
         hoverEnabled: true
-        cursorShape: (area.containsMouse && !isResizing) ? Qt.OpenHandCursor : Qt.ArrowCursor
-        drag.smoothed: true
-        drag.target: root
-
-        drag.minimumX: 0
-        drag.minimumY: 0
-        drag.maximumX: parent && parent.parent ? parent.parent.width  - width  : Number.MAX_VALUE
-        drag.maximumY: parent && parent.parent ? parent.parent.height - height : Number.MAX_VALUE
+        cursorShape: (area.containsMouse && !isResizing)
+                     ? (area.pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor)
+                     : Qt.ArrowCursor
         acceptedButtons: Qt.AllButtons
 
-        onPressed: {
-            root._pressX = root.x
-            root._pressY = root.y
+        property real _pressParentX: 0   // mouse position in parent (canvas) space at press
+        property real _pressParentY: 0
+        property real _pressNodeX:   0   // root.x at press
+        property real _pressNodeY:   0
+
+        onPressed: function(mouse) {
+            var pt        = mapToItem(root.parent, mouse.x, mouse.y)
+            _pressParentX = pt.x
+            _pressParentY = pt.y
+            _pressNodeX   = root.x
+            _pressNodeY   = root.y
+            root._pressX  = root.x
+            root._pressY  = root.y
+            root.isDragging = true
         }
-        onReleased: {
+
+        onPositionChanged: function(mouse) {
+            if (!root.isDragging) return
+
+            var pt   = mapToItem(root.parent, mouse.x, mouse.y)
+            var newX = _pressNodeX + (pt.x - _pressParentX)
+            var newY = _pressNodeY + (pt.y - _pressParentY)
+
+            // Constrain within parent bounds
+            if (root.parent) {
+                newX = Math.max(0, Math.min(root.parent.width  - root.width,  newX))
+                newY = Math.max(0, Math.min(root.parent.height - root.height, newY))
+            }
+
+            // Apply grid snap before setting position
+            if (root.snapEnabled) {
+                newX = Math.round(newX / root.snapGridSize) * root.snapGridSize
+                newY = Math.round(newY / root.snapGridSize) * root.snapGridSize
+            }
+
+            root.x = newX
+            root.y = newY
+        }
+
+        onReleased: function(mouse) {
+            root.isDragging = false
             if (Math.abs(root.x - root._pressX) > 0.5 || Math.abs(root.y - root._pressY) > 0.5)
                 root.nodeDragEnded(root._pressX, root._pressY, root.x, root.y)
         }
+
         onClicked: function(mouse) {
             root.focus = true
             if (mouse.button === Qt.RightButton)

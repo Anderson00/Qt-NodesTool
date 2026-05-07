@@ -43,6 +43,13 @@ Rectangle {
     property var rectsArray: ListModel {}
     property bool allConnectionsMinimized: false
 
+    // ── Grid snap ──────────────────────────────────────────────────────────
+    property bool snapEnabled:     false
+    property int  snapGridSize:    20        // canvas units — aligns with default grid
+    property real snapGuideX:     -1         // canvas-space X of active snap line
+    property real snapGuideY:     -1         // canvas-space Y of active snap line
+    property bool anyNodeSnapping: false
+
     signal nodeConnected(var node1, var node2)
 
     onNodeOnFocusChanged: {
@@ -193,6 +200,10 @@ Rectangle {
             event.accepted = true
         } else if (event.key === Qt.Key_Y && (event.modifiers & Qt.ControlModifier)) {
             viewPort.redo()
+            event.accepted = true
+        } else if (event.key === Qt.Key_G && !event.modifiers) {
+            snapEnabled = !snapEnabled
+            if (!snapEnabled) { anyNodeSnapping = false; snapGuideX = -1; snapGuideY = -1 }
             event.accepted = true
         }
     }
@@ -746,12 +757,24 @@ Rectangle {
                     delegate: ViewComponentRectV2 {
                         id: viewComponentRectV2
 
+                        // Bind snap state into each node card
+                        snapEnabled:  root.snapEnabled
+                        snapGridSize: root.snapGridSize
+
                         onXChanged: {
                             if (nodeOnFocus !== this) nodeOnFocus = this
+                            if (root.snapEnabled && isDragging) {
+                                root.snapGuideX      = x
+                                root.anyNodeSnapping = true
+                            }
                         }
 
                         onYChanged: {
                             if (nodeOnFocus !== this) nodeOnFocus = this
+                            if (root.snapEnabled && isDragging) {
+                                root.snapGuideY      = y
+                                root.anyNodeSnapping = true
+                            }
                         }
 
                         onFocusChanged: {
@@ -800,6 +823,9 @@ Rectangle {
                         }
 
                         onNodeDragEnded: function(oldX, oldY, newX, newY) {
+                            root.anyNodeSnapping = false
+                            root.snapGuideX      = -1
+                            root.snapGuideY      = -1
                             viewPort.recordNodeMove(
                                 viewPort.getUUIDFromBehaviour(model.object),
                                 oldX, oldY, newX, newY)
@@ -819,6 +845,57 @@ Rectangle {
         }
     }
 
+
+    // ── Snap guide lines ───────────────────────────────────────────────────────
+    // Vertical guide — spans the viewport height at the snapped X
+    Rectangle {
+        id: snapGuideV
+        visible: root.snapEnabled && root.anyNodeSnapping && root.snapGuideX >= 0
+        anchors.top:    parent.top
+        anchors.bottom: parent.bottom
+        anchors.topMargin: root.topBarHeight
+        x: root.snapGuideX * root.zoomScale + mycanvas.x
+        width: 1
+        color: "#00e676"
+        opacity: 0.80
+        z: 290
+        Behavior on opacity { NumberAnimation { duration: 80 } }
+    }
+
+    // Horizontal guide — spans the viewport width at the snapped Y
+    Rectangle {
+        id: snapGuideH
+        visible: root.snapEnabled && root.anyNodeSnapping && root.snapGuideY >= 0
+        anchors.left:  parent.left
+        anchors.right: parent.right
+        y: root.topBarHeight + mycanvas.y + root.snapGuideY * root.zoomScale
+        height: 1
+        color: "#00e676"
+        opacity: 0.80
+        z: 290
+        Behavior on opacity { NumberAnimation { duration: 80 } }
+    }
+
+    // Crosshair dot at snap intersection
+    Rectangle {
+        visible: root.snapEnabled && root.anyNodeSnapping
+                 && root.snapGuideX >= 0 && root.snapGuideY >= 0
+        x: root.snapGuideX * root.zoomScale + mycanvas.x - 5
+        y: root.topBarHeight + mycanvas.y + root.snapGuideY * root.zoomScale - 5
+        width: 10; height: 10; radius: 5
+        color: "#00e676"
+        opacity: 0.95
+        z: 291
+        // Outer ring
+        Rectangle {
+            anchors.centerIn: parent
+            width: 18; height: 18; radius: 9
+            color: "transparent"
+            border.width: 1
+            border.color: "#00e676"
+            opacity: 0.45
+        }
+    }
 
     // ─── Top Bar ────────────────────────────────────────────────────────────────
     ViewportTopBar {
@@ -1798,6 +1875,7 @@ Rectangle {
         maxZoom: root.maxZoom
         showGrid: GlobalProperties.gridPattern !== "none"
         connectionsMinimized: root.allConnectionsMinimized
+        snapEnabled: root.snapEnabled
 
         onZoomIn: {
             var newZoom = clamp(zoomScale + 0.5, minZoom, maxZoom)
@@ -1837,6 +1915,14 @@ Rectangle {
                 if (nodeItem) {
                     nodeItem.setMinimized(root.allConnectionsMinimized)
                 }
+            }
+        }
+        onToggleSnap: {
+            root.snapEnabled = !root.snapEnabled
+            if (!root.snapEnabled) {
+                root.anyNodeSnapping = false
+                root.snapGuideX     = -1
+                root.snapGuideY     = -1
             }
         }
     }

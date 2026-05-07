@@ -22,6 +22,7 @@ Rectangle {
     property real maxZoom: 5.0
     property bool showGrid: true
     property bool connectionsMinimized: false
+    property bool snapEnabled: false
 
     signal zoomIn()
     signal zoomOut()
@@ -31,6 +32,7 @@ Rectangle {
     signal toggleFps()
     signal toggleFullscreen()
     signal toggleConnectionsMinimized()
+    signal toggleSnap()
 
     RowLayout {
         id: layout
@@ -123,6 +125,35 @@ Rectangle {
             ToolTip.text: "Center View"
             ToolTip.visible: hovered
             onClicked: root.centerView()
+        }
+
+        Rectangle { width: 1; height: 32; color: ThemeManager.borderColor; Layout.alignment: Qt.AlignVCenter }
+
+        // Grid Snap toggle
+        Qaterial.ToolButton {
+            id: snapBtn
+            checkable: true
+            checked: root.snapEnabled
+            icon.source: Qaterial.Icons.magnetOn
+            icon.color: root.snapEnabled ? "#00e676" : ThemeManager.textColor
+            ToolTip.text: "Grid Snap  [G]"
+            ToolTip.visible: hovered
+            ToolTip.delay: 600
+            onClicked: root.toggleSnap()
+
+            // Subtle green glow ring when active
+            Rectangle {
+                anchors.centerIn: parent
+                width:  parent.width  + 6
+                height: parent.height + 6
+                radius: width / 2
+                color: "transparent"
+                border.width: root.snapEnabled ? 1.5 : 0
+                border.color: "#00e676"
+                opacity: root.snapEnabled ? 0.55 : 0
+                Behavior on opacity  { NumberAnimation { duration: 150 } }
+                Behavior on border.width { NumberAnimation { duration: 150 } }
+            }
         }
 
         // View Menu
