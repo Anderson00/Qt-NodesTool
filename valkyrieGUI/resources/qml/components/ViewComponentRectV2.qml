@@ -23,9 +23,12 @@ Rectangle {
     property alias bodySourceQML: rootBodyLoader.source
     property bool animEnabled: false
 
-    // Snap properties — bound from ViewPortWindow delegate
+    // Snap — bound from ViewPortWindow delegate
     property bool snapEnabled:  false
     property int  snapGridSize: 20
+    // Centralized snap function provided by ViewPortWindow (rawX, rawY, node) -> Qt.point
+    // When null, falls back to simple grid snap.
+    property var  viewportSnap: null
 
     property bool isDragging: false   // managed by manual drag handler
 
@@ -239,10 +242,17 @@ Rectangle {
                 newY = Math.max(0, Math.min(root.parent.height - root.height, newY))
             }
 
-            // Apply grid snap before setting position
+            // Apply snap — delegate to viewport function (handles grid + alignment + soft modes)
+            // Falls back to simple grid snap when no function is provided.
             if (root.snapEnabled) {
-                newX = Math.round(newX / root.snapGridSize) * root.snapGridSize
-                newY = Math.round(newY / root.snapGridSize) * root.snapGridSize
+                if (root.viewportSnap) {
+                    var snapped = root.viewportSnap(newX, newY, root)
+                    newX = snapped.x
+                    newY = snapped.y
+                } else {
+                    newX = Math.round(newX / root.snapGridSize) * root.snapGridSize
+                    newY = Math.round(newY / root.snapGridSize) * root.snapGridSize
+                }
             }
 
             root.x = newX

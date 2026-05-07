@@ -11,6 +11,7 @@ class GlobalProperties : public QObject
 {
     Q_OBJECT
 
+    // ── Viewport / session ────────────────────────────────────────────────────
     Q_PROPERTY(bool    debugMode      READ debugMode      WRITE setDebugMode      NOTIFY debugModeChanged)
     Q_PROPERTY(bool    showFps        READ showFps        WRITE setShowFps        NOTIFY showFpsChanged)
     Q_PROPERTY(bool    isDarkMode     READ isDarkMode     WRITE setIsDarkMode     NOTIFY isDarkModeChanged)
@@ -22,21 +23,44 @@ class GlobalProperties : public QObject
     Q_PROPERTY(QString nodesListPosition READ nodesListPosition WRITE setNodesListPosition NOTIFY nodesListPositionChanged)
     Q_PROPERTY(QString connectionStyle   READ connectionStyle   WRITE setConnectionStyle   NOTIFY connectionStyleChanged)
 
+    // ── Snap ─────────────────────────────────────────────────────────────────
+    Q_PROPERTY(bool    snapEnabled       READ snapEnabled       WRITE setSnapEnabled       NOTIFY snapEnabledChanged)
+    Q_PROPERTY(int     snapGridSize      READ snapGridSize      WRITE setSnapGridSize      NOTIFY snapGridSizeChanged)
+    Q_PROPERTY(bool    snapSyncToGrid    READ snapSyncToGrid    WRITE setSnapSyncToGrid    NOTIFY snapSyncToGridChanged)
+    Q_PROPERTY(QString snapMode          READ snapMode          WRITE setSnapMode          NOTIFY snapModeChanged)
+    Q_PROPERTY(int     snapRadius        READ snapRadius        WRITE setSnapRadius        NOTIFY snapRadiusChanged)
+    Q_PROPERTY(bool    snapToNodes       READ snapToNodes       WRITE setSnapToNodes       NOTIFY snapToNodesChanged)
+    Q_PROPERTY(bool    snapShowCoords    READ snapShowCoords    WRITE setSnapShowCoords    NOTIFY snapShowCoordsChanged)
+    Q_PROPERTY(bool    snapResizeEnabled READ snapResizeEnabled WRITE setSnapResizeEnabled NOTIFY snapResizeEnabledChanged)
+    Q_PROPERTY(QString snapGuideColor    READ snapGuideColor    WRITE setSnapGuideColor    NOTIFY snapGuideColorChanged)
+
 public:
     static GlobalProperties* instance();
     static QObject* qmlSingletonProvider(QQmlEngine*, QJSEngine*);
 
-    bool    debugMode()     const;
-    bool    showFps()       const;
-    bool    isDarkMode()    const;
-    QString lastWorkspace() const;
-    QString lastPresetId()  const;
-    QString gridPreset()    const;
-    int     minWgrid()      const;
-    QString gridPattern()   const;
-    QString nodesListPosition() const;
-    QString connectionStyle() const;
+    // ── Getters ───────────────────────────────────────────────────────────────
+    bool    debugMode()          const;
+    bool    showFps()            const;
+    bool    isDarkMode()         const;
+    QString lastWorkspace()      const;
+    QString lastPresetId()       const;
+    QString gridPreset()         const;
+    int     minWgrid()           const;
+    QString gridPattern()        const;
+    QString nodesListPosition()  const;
+    QString connectionStyle()    const;
 
+    bool    snapEnabled()        const;
+    int     snapGridSize()       const;
+    bool    snapSyncToGrid()     const;
+    QString snapMode()           const;
+    int     snapRadius()         const;
+    bool    snapToNodes()        const;
+    bool    snapShowCoords()     const;
+    bool    snapResizeEnabled()  const;
+    QString snapGuideColor()     const;
+
+    // ── Setters ───────────────────────────────────────────────────────────────
     void setDebugMode(bool value);
     void setShowFps(bool value);
     void setIsDarkMode(bool value);
@@ -48,19 +72,28 @@ public:
     void setNodesListPosition(const QString& position);
     void setConnectionStyle(const QString& style);
 
+    void setSnapEnabled(bool value);
+    void setSnapGridSize(int value);
+    void setSnapSyncToGrid(bool value);
+    void setSnapMode(const QString& mode);
+    void setSnapRadius(int value);
+    void setSnapToNodes(bool value);
+    void setSnapShowCoords(bool value);
+    void setSnapResizeEnabled(bool value);
+    void setSnapGuideColor(const QString& color);
+
     Q_INVOKABLE void saveProperties();
     Q_INVOKABLE void loadProperties();
     Q_INVOKABLE void applyGridPreset(const QString& preset);
 
-    // Expose grid presets to QML
     Q_INVOKABLE QStringList gridPresets() const {
         return QStringList() << "compact" << "normal" << "comfortable" << "spacious";
     }
     Q_INVOKABLE int gridPresetValue(const QString& preset) const {
-        if (preset == "compact") return 10;
-        if (preset == "normal") return 20;
+        if (preset == "compact")     return 10;
+        if (preset == "normal")      return 20;
         if (preset == "comfortable") return 40;
-        if (preset == "spacious") return 60;
+        if (preset == "spacious")    return 60;
         return 20;
     }
 
@@ -76,6 +109,16 @@ signals:
     void nodesListPositionChanged();
     void connectionStyleChanged();
 
+    void snapEnabledChanged();
+    void snapGridSizeChanged();
+    void snapSyncToGridChanged();
+    void snapModeChanged();
+    void snapRadiusChanged();
+    void snapToNodesChanged();
+    void snapShowCoordsChanged();
+    void snapResizeEnabledChanged();
+    void snapGuideColorChanged();
+
 private:
     explicit GlobalProperties(QObject* parent = nullptr);
     ~GlobalProperties();
@@ -86,16 +129,28 @@ private:
     QString settingsFilePath() const;
     void    migrateFromIni();
 
-    bool    m_debugMode     = false;
-    bool    m_showFps       = false;
-    bool    m_isDarkMode    = true;
+    // ── Viewport / session members ────────────────────────────────────────────
+    bool    m_debugMode          = false;
+    bool    m_showFps            = false;
+    bool    m_isDarkMode         = true;
     QString m_lastWorkspace;
     QString m_lastPresetId;
-    QString m_gridPreset    = "normal";
-    int     m_minWgrid      = 20;
-    QString m_gridPattern   = "dots";
-    QString m_nodesListPosition = "bottom-left";
-    QString m_connectionStyle   = "pills";
+    QString m_gridPreset         = "normal";
+    int     m_minWgrid           = 20;
+    QString m_gridPattern        = "dots";
+    QString m_nodesListPosition  = "bottom-left";
+    QString m_connectionStyle    = "pills";
+
+    // ── Snap members ──────────────────────────────────────────────────────────
+    bool    m_snapEnabled        = false;
+    int     m_snapGridSize       = 20;
+    bool    m_snapSyncToGrid     = true;
+    QString m_snapMode           = "hard";
+    int     m_snapRadius         = 10;
+    bool    m_snapToNodes        = false;
+    bool    m_snapShowCoords     = true;
+    bool    m_snapResizeEnabled  = false;
+    QString m_snapGuideColor     = "#00e676";
 };
 
 #endif // GLOBALPROPERTIES_H

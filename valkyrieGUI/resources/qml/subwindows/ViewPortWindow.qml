@@ -44,11 +44,139 @@ Rectangle {
     property bool allConnectionsMinimized: false
 
     // ── Grid snap ──────────────────────────────────────────────────────────
-    property bool snapEnabled:     false
-    property int  snapGridSize:    20        // canvas units — aligns with default grid
-    property real snapGuideX:     -1         // canvas-space X of active snap line
-    property real snapGuideY:     -1         // canvas-space Y of active snap line
+    // Read-only mirror of GlobalProperties — all mutations go through GlobalProperties
+    // directly (G key, toolbar toggle, settings) to avoid binding-break issues.
+    readonly property bool snapEnabled: GlobalProperties.snapEnabled
+    onSnapEnabledChanged: { if (!snapEnabled) _clearSnapGuides() }
+
+    // Effective snap grid size: follow visual grid when syncToGrid is on.
+    readonly property int effectiveSnapGridSize: GlobalProperties.snapSyncToGrid
+                                                 ? GlobalProperties.minWgrid
+                                                 : GlobalProperties.snapGridSize
+
+    property real snapGuideX:      -1   // canvas-space X of grid snap guide
+    property real snapGuideY:      -1   // canvas-space Y of grid snap guide
+    property var  alignGuidesX:    []   // canvas-space X positions of node-alignment guides
+    property var  alignGuidesY:    []   // canvas-space Y positions of node-alignment guides
     property bool anyNodeSnapping: false
+
+    // Guide visibility opacity — fades out after drag ends
+    property real guideOpacity: 0
+
+    onAnyNodeSnappingChanged: {
+        if (anyNodeSnapping) {
+            guideFadeTimer.stop()
+            guideFade.stop()
+            guideOpacity = 0.82
+        } else {
+            guideFadeTimer.restart()
+        }
+    }
+
+    Timer {
+        id: guideFadeTimer
+        interval: 160
+        onTriggered: guideFade.start()
+    }
+    NumberAnimation {
+        id: guideFade
+        target: root; property: "guideOpacity"
+        to: 0; duration: 380; easing.type: Easing.InQuad
+        onStopped: { if (!root.anyNodeSnapping) root.guideOpacity = 0 }
+    }
+
+    function _clearSnapGuides() {
+        snapGuideX     = -1;   snapGuideY     = -1
+        alignGuidesX   = [];   alignGuidesY   = []
+        anyNodeSnapping = false
+    }
+
+    // ── Centralized snap computation ────────────────────────────────────────
+    // Called by each node's drag handler. Returns snapped Qt.point and updates
+    // all guide state as a side-effect.
+    function computeSnap(rawX, rawY, draggedItem) {
+        if (!root.snapEnabled) return Qt.point(rawX, rawY)
+
+        var sg        = root.effectiveSnapGridSize
+        var zm        = root.zoomScale
+        // Convert screen-pixel radius to canvas units
+        var threshold = GlobalProperties.snapRadius / zm
+        var mode      = GlobalProperties.snapMode
+
+        var snapX = rawX,  snapY = rawY
+        var gx    = -1,    gy    = -1
+        var axList = [],   ayList = []
+
+        // ── Grid snap ───────────────────────────────────────────────────────
+        if (sg > 0) {
+            var gridX = Math.round(rawX / sg) * sg
+            var gridY = Math.round(rawY / sg) * sg
+
+            if (mode === "soft") {
+                if (Math.abs(gridX - rawX) <= threshold) { snapX = gridX; gx = snapX }
+                if (Math.abs(gridY - rawY) <= threshold) { snapY = gridY; gy = snapY }
+            } else {
+                snapX = gridX; snapY = gridY; gx = snapX; gy = snapY
+            }
+        }
+
+        // ── Node alignment snap ─────────────────────────────────────────────
+        if (GlobalProperties.snapToNodes && draggedItem) {
+            var alignThr = Math.max(threshold * 1.5, 12 / zm)
+            var nodeW    = draggedItem.width
+            var nodeH    = draggedItem.height
+
+            var bestDx   = alignThr + 1
+            var bestDy   = alignThr + 1
+            var bestSX   = snapX
+            var bestSY   = snapY
+            var newAxList = [], newAyList = []
+
+            // Dragged node snap points: left, center, right / top, center, bottom
+            var myXPts = [rawX, rawX + nodeW * 0.5, rawX + nodeW]
+            var myYPts = [rawY, rawY + nodeH * 0.5, rawY + nodeH]
+
+            for (var i = 0; i < nodes.model.count; i++) {
+                var other = nodes.itemAt(i)
+                if (!other || other === draggedItem) continue
+
+                var oXPts = [other.x, other.x + other.width * 0.5, other.x + other.width]
+                var oYPts = [other.y, other.y + other.height * 0.5, other.y + other.height]
+
+                for (var oi = 0; oi < oXPts.length; oi++) {
+                    for (var mi = 0; mi < myXPts.length; mi++) {
+                        var d = Math.abs(myXPts[mi] - oXPts[oi])
+                        if (d < bestDx) {
+                            bestDx    = d
+                            bestSX    = rawX + (oXPts[oi] - myXPts[mi])
+                            newAxList = [oXPts[oi]]
+                        }
+                    }
+                }
+                for (var oj = 0; oj < oYPts.length; oj++) {
+                    for (var mj = 0; mj < myYPts.length; mj++) {
+                        var dy2 = Math.abs(myYPts[mj] - oYPts[oj])
+                        if (dy2 < bestDy) {
+                            bestDy    = dy2
+                            bestSY    = rawY + (oYPts[oj] - myYPts[mj])
+                            newAyList = [oYPts[oj]]
+                        }
+                    }
+                }
+            }
+
+            if (bestDx <= alignThr) { snapX = bestSX; gx = snapX; axList = newAxList }
+            if (bestDy <= alignThr) { snapY = bestSY; gy = snapY; ayList = newAyList }
+        }
+
+        root.snapGuideX    = gx
+        root.snapGuideY    = gy
+        root.alignGuidesX  = axList
+        root.alignGuidesY  = ayList
+        root.anyNodeSnapping = (gx >= 0 || gy >= 0 || axList.length > 0 || ayList.length > 0)
+
+        return Qt.point(snapX, snapY)
+    }
 
     signal nodeConnected(var node1, var node2)
 
@@ -202,8 +330,7 @@ Rectangle {
             viewPort.redo()
             event.accepted = true
         } else if (event.key === Qt.Key_G && !event.modifiers) {
-            snapEnabled = !snapEnabled
-            if (!snapEnabled) { anyNodeSnapping = false; snapGuideX = -1; snapGuideY = -1 }
+            GlobalProperties.snapEnabled = !GlobalProperties.snapEnabled
             event.accepted = true
         }
     }
@@ -757,25 +884,13 @@ Rectangle {
                     delegate: ViewComponentRectV2 {
                         id: viewComponentRectV2
 
-                        // Bind snap state into each node card
-                        snapEnabled:  root.snapEnabled
-                        snapGridSize: root.snapGridSize
+                        // Snap — computeSnap is the centralized function in ViewPortWindow
+                        snapEnabled:   root.snapEnabled
+                        snapGridSize:  root.effectiveSnapGridSize
+                        viewportSnap:  root.computeSnap
 
-                        onXChanged: {
-                            if (nodeOnFocus !== this) nodeOnFocus = this
-                            if (root.snapEnabled && isDragging) {
-                                root.snapGuideX      = x
-                                root.anyNodeSnapping = true
-                            }
-                        }
-
-                        onYChanged: {
-                            if (nodeOnFocus !== this) nodeOnFocus = this
-                            if (root.snapEnabled && isDragging) {
-                                root.snapGuideY      = y
-                                root.anyNodeSnapping = true
-                            }
-                        }
+                        onXChanged: { if (isDragging && nodeOnFocus !== this) nodeOnFocus = this }
+                        onYChanged: { if (isDragging && nodeOnFocus !== this) nodeOnFocus = this }
 
                         onFocusChanged: {
                             if (focus) nodeOnFocus = this
@@ -823,9 +938,7 @@ Rectangle {
                         }
 
                         onNodeDragEnded: function(oldX, oldY, newX, newY) {
-                            root.anyNodeSnapping = false
-                            root.snapGuideX      = -1
-                            root.snapGuideY      = -1
+                            root._clearSnapGuides()
                             viewPort.recordNodeMove(
                                 viewPort.getUUIDFromBehaviour(model.object),
                                 oldX, oldY, newX, newY)
@@ -846,54 +959,106 @@ Rectangle {
     }
 
 
-    // ── Snap guide lines ───────────────────────────────────────────────────────
-    // Vertical guide — spans the viewport height at the snapped X
+    // ── Snap guide overlays ────────────────────────────────────────────────────
+    // All guide elements use root.guideOpacity which fades out after drag ends.
+
+    // Grid snap — vertical guide
     Rectangle {
-        id: snapGuideV
-        visible: root.snapEnabled && root.anyNodeSnapping && root.snapGuideX >= 0
-        anchors.top:    parent.top
-        anchors.bottom: parent.bottom
+        visible: root.snapEnabled && root.snapGuideX >= 0 && root.guideOpacity > 0
+        anchors.top:       parent.top
+        anchors.bottom:    parent.bottom
         anchors.topMargin: root.topBarHeight
-        x: root.snapGuideX * root.zoomScale + mycanvas.x
-        width: 1
-        color: "#00e676"
-        opacity: 0.80
+        x:       root.snapGuideX * root.zoomScale + mycanvas.x
+        width:   1
+        color:   GlobalProperties.snapGuideColor
+        opacity: root.guideOpacity
         z: 290
-        Behavior on opacity { NumberAnimation { duration: 80 } }
     }
 
-    // Horizontal guide — spans the viewport width at the snapped Y
+    // Grid snap — horizontal guide
     Rectangle {
-        id: snapGuideH
-        visible: root.snapEnabled && root.anyNodeSnapping && root.snapGuideY >= 0
+        visible: root.snapEnabled && root.snapGuideY >= 0 && root.guideOpacity > 0
         anchors.left:  parent.left
         anchors.right: parent.right
-        y: root.topBarHeight + mycanvas.y + root.snapGuideY * root.zoomScale
+        y:      root.topBarHeight + mycanvas.y + root.snapGuideY * root.zoomScale
         height: 1
-        color: "#00e676"
-        opacity: 0.80
+        color:   GlobalProperties.snapGuideColor
+        opacity: root.guideOpacity
         z: 290
-        Behavior on opacity { NumberAnimation { duration: 80 } }
     }
 
-    // Crosshair dot at snap intersection
+    // Grid snap — crosshair dot
     Rectangle {
-        visible: root.snapEnabled && root.anyNodeSnapping
-                 && root.snapGuideX >= 0 && root.snapGuideY >= 0
+        visible: root.snapEnabled && root.snapGuideX >= 0 && root.snapGuideY >= 0
+                 && root.guideOpacity > 0
         x: root.snapGuideX * root.zoomScale + mycanvas.x - 5
         y: root.topBarHeight + mycanvas.y + root.snapGuideY * root.zoomScale - 5
         width: 10; height: 10; radius: 5
-        color: "#00e676"
-        opacity: 0.95
+        color:   GlobalProperties.snapGuideColor
+        opacity: root.guideOpacity
         z: 291
-        // Outer ring
+
         Rectangle {
             anchors.centerIn: parent
             width: 18; height: 18; radius: 9
             color: "transparent"
             border.width: 1
-            border.color: "#00e676"
-            opacity: 0.45
+            border.color: parent.color
+            opacity: 0.50
+        }
+    }
+
+    // Coordinate badge — world-space label next to the crosshair
+    Rectangle {
+        visible: root.snapEnabled && GlobalProperties.snapShowCoords
+                 && root.snapGuideX >= 0 && root.snapGuideY >= 0
+                 && root.guideOpacity > 0
+        x: root.snapGuideX * root.zoomScale + mycanvas.x + 10
+        y: root.topBarHeight + mycanvas.y + root.snapGuideY * root.zoomScale - 22
+        width:  coordBadgeText.implicitWidth + 14
+        height: 18
+        radius: 4
+        color:  Qt.rgba(0, 0, 0, 0.68)
+        opacity: root.guideOpacity
+        z: 292
+
+        Text {
+            id: coordBadgeText
+            anchors.centerIn: parent
+            // World origin is at canvas (5000, 5000); display as integer world coords
+            text: (root.snapGuideX - 5000) + ", " + (root.snapGuideY - 5000)
+            font.pixelSize: 10
+            font.family: "monospace"
+            color: GlobalProperties.snapGuideColor
+        }
+    }
+
+    // Node alignment guides — vertical lines (blue-tinted)
+    Repeater {
+        model: root.snapEnabled ? root.alignGuidesX : []
+        delegate: Rectangle {
+            anchors.top:       parent.top
+            anchors.bottom:    parent.bottom
+            anchors.topMargin: root.topBarHeight
+            x:       modelData * root.zoomScale + mycanvas.x
+            width:   1
+            color:   "#448aff"
+            opacity: root.guideOpacity * 0.85
+            z: 290
+        }
+    }
+
+    // Node alignment guides — horizontal lines (blue-tinted)
+    Repeater {
+        model: root.snapEnabled ? root.alignGuidesY : []
+        delegate: Rectangle {
+            anchors.left:  parent.left
+            anchors.right: parent.right
+            y:      root.topBarHeight + mycanvas.y + modelData * root.zoomScale
+            height: 1
+            color:  "#448aff"
+            opacity: root.guideOpacity * 0.85
+            z: 290
         }
     }
 
@@ -1918,12 +2083,7 @@ Rectangle {
             }
         }
         onToggleSnap: {
-            root.snapEnabled = !root.snapEnabled
-            if (!root.snapEnabled) {
-                root.anyNodeSnapping = false
-                root.snapGuideX     = -1
-                root.snapGuideY     = -1
-            }
+            GlobalProperties.snapEnabled = !GlobalProperties.snapEnabled
         }
     }
 
