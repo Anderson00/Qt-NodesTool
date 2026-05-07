@@ -10,11 +10,18 @@
         <file alias="TextDisplay.qml">qml/behaviours/common/TextDisplay.qml</file>
         <file alias="TimerNode.qml">qml/behaviours/common/TimerNode.qml</file>
         <file alias="Counter.qml">qml/behaviours/common/Counter.qml</file>
+        <file alias="PieChartViewer.qml">qml/behaviours/common/PieChartViewer.qml</file>
+        <file alias="BarChartViewer.qml">qml/behaviours/common/BarChartViewer.qml</file>
+        <file alias="GaugeViewer.qml">qml/behaviours/common/GaugeViewer.qml</file>
+        <file alias="SignalGenerator.qml">qml/behaviours/common/SignalGenerator.qml</file>
+        <file alias="SerialMonitor.qml">qml/behaviours/common/SerialMonitor.qml</file>
     </qresource>
     <qresource prefix="/behaviours/math">
         <file alias="MathOperation.qml">qml/behaviours/math/MathOperation.qml</file>
         <file alias="MathFunction.qml">qml/behaviours/math/MathFunction.qml</file>
         <file alias="Clamp.qml">qml/behaviours/math/Clamp.qml</file>
+        <file alias="MapRange.qml">qml/behaviours/math/MapRange.qml</file>
+        <file alias="Filter.qml">qml/behaviours/math/Filter.qml</file>
     </qresource>
     <qresource prefix="/behaviours/logic">
         <file alias="Comparison.qml">qml/behaviours/logic/Comparison.qml</file>
@@ -41,6 +48,7 @@
         <file alias="CustomSwitch.qml">qml/components/CustomSwitch.qml</file>
         <file alias="CustomComboBox.qml">qml/components/CustomComboBox.qml</file>
         <file alias="NumberSpinBox.qml">qml/components/NumberSpinBox.qml</file>
+        <file alias="NumericInputField.qml">qml/components/NumericInputField.qml</file>
         <file alias="PasswordField.qml">qml/components/PasswordField.qml</file>
         <file alias="ColorPicker.qml">qml/components/ColorPicker.qml</file>
         <file alias="TagInput.qml">qml/components/TagInput.qml</file>

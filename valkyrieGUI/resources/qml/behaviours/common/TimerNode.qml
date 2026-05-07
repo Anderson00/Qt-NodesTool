@@ -16,7 +16,7 @@ Item {
         anchors.margins: 6
         spacing: 6
 
-        // ── Pulse indicator ───────────────────────────────────────────────
+        // ── Pulse indicator ────────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 48
@@ -28,9 +28,8 @@ Item {
             RowLayout {
                 anchors.centerIn: parent; spacing: 8
 
-                // Pulsing dot
                 Rectangle {
-                    id: pulseCircle
+                    id: pulseDot
                     width: 14; height: 14; radius: 7
                     color: behaviourObject && behaviourObject.running ? "#00C853" : "#666"
                     Behavior on color { ColorAnimation { duration: 200 } }
@@ -52,27 +51,32 @@ Item {
                 Text {
                     text: "ticks"
                     font.pixelSize: 10; color: ThemeManager.textSecondaryColor
-                    anchors.baseline: parent.children[1].baseline
+                    anchors.baseline: parent.children[1] ? parent.children[1].baseline : undefined
                 }
             }
         }
 
-        // ── Interval slider ───────────────────────────────────────────────
+        // ── Interval input ─────────────────────────────────────────────────
         RowLayout {
-            Layout.fillWidth: true; spacing: 4
-            Text { text: "⏱"; font.pixelSize: 10; Layout.preferredWidth: 20 }
-            CustomSlider {
-                Layout.fillWidth: true; Layout.preferredHeight: 32
-                from: 10; to: 5000
+            Layout.fillWidth: true; spacing: 6
+            Text {
+                text: "⏱"
+                font.pixelSize: 14
+                Layout.alignment: Qt.AlignVCenter
+            }
+            NumericInputField {
+                Layout.fillWidth: true; implicitHeight: 36
                 value: behaviourObject ? behaviourObject.interval : 1000
-                textColor: ThemeManager.textColor
-                color: ThemeManager.primaryColor
-                prefix: "ms"
-                onMoved: if (behaviourObject) behaviourObject.setInterval(Math.round(value))
+                from: 1; to: 60000
+                stepSize: 50; decimals: 0
+                suffix: "ms"
+                showBar: true
+                accentColor: ThemeManager.primaryColor
+                onValueModified: if (behaviourObject) behaviourObject.setInterval(Math.round(newValue))
             }
         }
 
-        // ── Control buttons ───────────────────────────────────────────────
+        // ── Control buttons ────────────────────────────────────────────────
         RowLayout {
             Layout.fillWidth: true; spacing: 4
 
@@ -81,7 +85,8 @@ Item {
                 Layout.preferredHeight: 32
                 variant: "filled"
                 text: behaviourObject && behaviourObject.running ? "■ Stop" : "▶ Start"
-                backgroundColor: behaviourObject && behaviourObject.running ? ThemeManager.dangerColor : ThemeManager.primaryColor
+                backgroundColor: behaviourObject && behaviourObject.running
+                                 ? ThemeManager.dangerColor : ThemeManager.primaryColor
                 onClicked: {
                     if (behaviourObject.running) behaviourObject.stopTimer()
                     else behaviourObject.startTimer()

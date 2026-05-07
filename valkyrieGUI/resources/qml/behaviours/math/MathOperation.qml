@@ -11,15 +11,15 @@ Item {
     anchors.fill: parent
     property var behaviourObject
 
-    readonly property var opNames:   ["+", "−", "×", "÷", "%", "xⁿ"]
-    readonly property var opColors:  ["#2ecc71","#e74c3c","#3498db","#f39c12","#9b59b6","#1abc9c"]
+    readonly property var opNames:  ["+", "−", "×", "÷", "%", "xⁿ"]
+    readonly property var opColors: ["#2ecc71","#e74c3c","#3498db","#f39c12","#9b59b6","#1abc9c"]
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 6
         spacing: 4
 
-        // ── Operation selector ────────────────────────────────────────────
+        // ── Operation selector ─────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true; height: 30; radius: 4
             color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.04)
@@ -50,7 +50,7 @@ Item {
             }
         }
 
-        // ── Result display ────────────────────────────────────────────────
+        // ── Result display ─────────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true; Layout.preferredHeight: 50; radius: 6
             color: Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.08)
@@ -69,8 +69,8 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: {
                         if (!behaviourObject) return ""
-                        var a = behaviourObject.valueA.toFixed(2)
-                        var b = behaviourObject.valueB.toFixed(2)
+                        var a  = behaviourObject.valueA.toFixed(2)
+                        var b  = behaviourObject.valueB.toFixed(2)
                         var op = root.opNames[behaviourObject.operation]
                         return a + " " + op + " " + b
                     }
@@ -79,29 +79,28 @@ Item {
             }
         }
 
-        // ── A / B inputs ──────────────────────────────────────────────────
-        RowLayout {
-            Layout.fillWidth: true; spacing: 4
-            Text { text: "A"; font.pixelSize: 9; color: ThemeManager.textSecondaryColor; Layout.preferredWidth: 16 }
-            CustomSlider {
-                Layout.fillWidth: true; Layout.preferredHeight: 32
-                from: -1000; to: 1000
-                value: behaviourObject ? behaviourObject.valueA : 0
-                textColor: ThemeManager.textColor; color: "#2ecc71"
-                onMoved: if(behaviourObject) behaviourObject.setA(value)
-            }
+        // ── A input ────────────────────────────────────────────────────────
+        NumericInputField {
+            Layout.fillWidth: true; implicitHeight: 36
+            label: "A"
+            value: behaviourObject ? behaviourObject.valueA : 0
+            from: -1e6; to: 1e6
+            stepSize: 1.0; decimals: 2
+            showBar: false
+            accentColor: "#2ecc71"
+            onValueModified: if (behaviourObject) behaviourObject.setA(newValue)
         }
 
-        RowLayout {
-            Layout.fillWidth: true; spacing: 4
-            Text { text: "B"; font.pixelSize: 9; color: ThemeManager.textSecondaryColor; Layout.preferredWidth: 16 }
-            CustomSlider {
-                Layout.fillWidth: true; Layout.preferredHeight: 32
-                from: -1000; to: 1000
-                value: behaviourObject ? behaviourObject.valueB : 0
-                textColor: ThemeManager.textColor; color: "#3498db"
-                onMoved: if(behaviourObject) behaviourObject.setB(value)
-            }
+        // ── B input ────────────────────────────────────────────────────────
+        NumericInputField {
+            Layout.fillWidth: true; implicitHeight: 36
+            label: "B"
+            value: behaviourObject ? behaviourObject.valueB : 0
+            from: -1e6; to: 1e6
+            stepSize: 1.0; decimals: 2
+            showBar: false
+            accentColor: "#3498db"
+            onValueModified: if (behaviourObject) behaviourObject.setB(newValue)
         }
     }
 }

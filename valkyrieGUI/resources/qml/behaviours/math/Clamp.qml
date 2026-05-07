@@ -16,7 +16,7 @@ Item {
         anchors.margins: 6
         spacing: 4
 
-        // ── Result display ────────────────────────────────────────────────
+        // ── Result display ─────────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true; Layout.preferredHeight: 52; radius: 6
             color: Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.08)
@@ -49,7 +49,7 @@ Item {
             }
         }
 
-        // ── Progress bar visualization ────────────────────────────────────
+        // ── Progress bar ───────────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true; height: 8; radius: 4
             color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.1)
@@ -61,30 +61,28 @@ Item {
             }
         }
 
-        // ── Min slider ────────────────────────────────────────────────────
-        RowLayout {
-            Layout.fillWidth: true; spacing: 4
-            Text { text: "Min"; font.pixelSize: 9; color: ThemeManager.textSecondaryColor; Layout.preferredWidth: 24 }
-            CustomSlider {
-                Layout.fillWidth: true; Layout.preferredHeight: 32
-                from: -1000; to: 1000
-                value: behaviourObject ? behaviourObject.rangeMin : 0
-                textColor: ThemeManager.textColor; color: "#e74c3c"
-                onMoved: if(behaviourObject) behaviourObject.setMin(value)
-            }
+        // ── Min input ──────────────────────────────────────────────────────
+        NumericInputField {
+            Layout.fillWidth: true; implicitHeight: 36
+            label: "Min"
+            value: behaviourObject ? behaviourObject.rangeMin : 0
+            from: -1e6; to: 1e6
+            stepSize: 1.0; decimals: 2
+            showBar: false
+            accentColor: "#e74c3c"
+            onValueModified: if (behaviourObject) behaviourObject.setMin(newValue)
         }
 
-        // ── Max slider ────────────────────────────────────────────────────
-        RowLayout {
-            Layout.fillWidth: true; spacing: 4
-            Text { text: "Max"; font.pixelSize: 9; color: ThemeManager.textSecondaryColor; Layout.preferredWidth: 24 }
-            CustomSlider {
-                Layout.fillWidth: true; Layout.preferredHeight: 32
-                from: -1000; to: 1000
-                value: behaviourObject ? behaviourObject.rangeMax : 1
-                textColor: ThemeManager.textColor; color: "#2ecc71"
-                onMoved: if(behaviourObject) behaviourObject.setMax(value)
-            }
+        // ── Max input ──────────────────────────────────────────────────────
+        NumericInputField {
+            Layout.fillWidth: true; implicitHeight: 36
+            label: "Max"
+            value: behaviourObject ? behaviourObject.rangeMax : 1
+            from: -1e6; to: 1e6
+            stepSize: 1.0; decimals: 2
+            showBar: false
+            accentColor: "#2ecc71"
+            onValueModified: if (behaviourObject) behaviourObject.setMax(newValue)
         }
     }
 }

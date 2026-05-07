@@ -18,7 +18,7 @@ Item {
         anchors.margins: 6
         spacing: 4
 
-        // ── Operator selector ─────────────────────────────────────────────
+        // ── Operator selector ──────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true; height: 32; radius: 4
             color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.04)
@@ -49,20 +49,20 @@ Item {
             }
         }
 
-        // ── Result indicator ──────────────────────────────────────────────
+        // ── Result indicator ───────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true; Layout.preferredHeight: 52; radius: 6
             color: {
                 if (!behaviourObject) return "transparent"
-                return behaviourObject.result
-                    ? Qt.rgba(0, 0.78, 0.33, 0.1)
-                    : Qt.rgba(1, 0.09, 0.27, 0.1)
+                return behaviourObject.result ? Qt.rgba(0, 0.78, 0.33, 0.1) : Qt.rgba(1, 0.09, 0.27, 0.1)
             }
             border.width: 1
             border.color: {
                 if (!behaviourObject) return "transparent"
                 return behaviourObject.result ? "#00C853" : "#FF1744"
             }
+            Behavior on border.color { ColorAnimation { duration: 200 } }
+            Behavior on color        { ColorAnimation { duration: 200 } }
 
             RowLayout {
                 anchors.centerIn: parent; spacing: 8
@@ -75,46 +75,46 @@ Item {
                     text: behaviourObject && behaviourObject.result ? "TRUE" : "FALSE"
                     font.pixelSize: 18; font.bold: true
                     color: behaviourObject && behaviourObject.result ? "#00C853" : "#FF1744"
+                    Behavior on color { ColorAnimation { duration: 200 } }
                 }
             }
         }
 
-        // ── Formula display ───────────────────────────────────────────────
+        // ── Formula display ────────────────────────────────────────────────
         Text {
             Layout.alignment: Qt.AlignHCenter
             text: {
                 if (!behaviourObject) return ""
-                return behaviourObject.valueA.toFixed(2) + " " +
+                return behaviourObject.valueA.toFixed(4) + " " +
                        root.opSymbols[behaviourObject.operation] + " " +
-                       behaviourObject.valueB.toFixed(2)
+                       behaviourObject.valueB.toFixed(4)
             }
             font.pixelSize: 11; font.family: "Consolas"
             color: ThemeManager.textSecondaryColor
         }
 
-        // ── A / B sliders ─────────────────────────────────────────────────
-        RowLayout {
-            Layout.fillWidth: true; spacing: 4
-            Text { text: "A"; font.pixelSize: 9; color: ThemeManager.textSecondaryColor; Layout.preferredWidth: 16 }
-            CustomSlider {
-                Layout.fillWidth: true; Layout.preferredHeight: 32
-                from: -1000; to: 1000
-                value: behaviourObject ? behaviourObject.valueA : 0
-                textColor: ThemeManager.textColor; color: "#2ecc71"
-                onMoved: if(behaviourObject) behaviourObject.setA(value)
-            }
+        // ── A input ────────────────────────────────────────────────────────
+        NumericInputField {
+            Layout.fillWidth: true; implicitHeight: 36
+            label: "A"
+            value: behaviourObject ? behaviourObject.valueA : 0
+            from: -1e6; to: 1e6
+            stepSize: 1.0; decimals: 4
+            showBar: false
+            accentColor: "#2ecc71"
+            onValueModified: if (behaviourObject) behaviourObject.setA(newValue)
         }
 
-        RowLayout {
-            Layout.fillWidth: true; spacing: 4
-            Text { text: "B"; font.pixelSize: 9; color: ThemeManager.textSecondaryColor; Layout.preferredWidth: 16 }
-            CustomSlider {
-                Layout.fillWidth: true; Layout.preferredHeight: 32
-                from: -1000; to: 1000
-                value: behaviourObject ? behaviourObject.valueB : 0
-                textColor: ThemeManager.textColor; color: "#3498db"
-                onMoved: if(behaviourObject) behaviourObject.setB(value)
-            }
+        // ── B input ────────────────────────────────────────────────────────
+        NumericInputField {
+            Layout.fillWidth: true; implicitHeight: 36
+            label: "B"
+            value: behaviourObject ? behaviourObject.valueB : 0
+            from: -1e6; to: 1e6
+            stepSize: 1.0; decimals: 4
+            showBar: false
+            accentColor: "#3498db"
+            onValueModified: if (behaviourObject) behaviourObject.setB(newValue)
         }
     }
 }

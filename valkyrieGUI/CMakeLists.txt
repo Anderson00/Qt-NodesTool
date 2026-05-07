@@ -45,6 +45,13 @@ set(PROJECT_SOURCES
     src/include/behaviours/math/mathoperation.h src/include/behaviours/math/mathoperation.cpp
     src/include/behaviours/math/mathfunction.h src/include/behaviours/math/mathfunction.cpp
     src/include/behaviours/math/clamp.h src/include/behaviours/math/clamp.cpp
+    src/include/behaviours/math/maprange.h src/include/behaviours/math/maprange.cpp
+    src/include/behaviours/math/filter.h src/include/behaviours/math/filter.cpp
+    src/include/behaviours/common/piechartviewer.h src/include/behaviours/common/piechartviewer.cpp
+    src/include/behaviours/common/barchartviewer.h src/include/behaviours/common/barchartviewer.cpp
+    src/include/behaviours/common/gaugeviewer.h src/include/behaviours/common/gaugeviewer.cpp
+    src/include/behaviours/common/signalgenerator.h src/include/behaviours/common/signalgenerator.cpp
+    src/include/behaviours/common/serialmonitor.h src/include/behaviours/common/serialmonitor.cpp
     src/include/behaviours/behaviourregistry.h src/include/behaviours/behaviourregistry.cpp
     src/include/behaviours/connections.h src/include/behaviours/connections.cpp
     src/include/model/tablemodel.h src/include/model/tablemodel.cpp

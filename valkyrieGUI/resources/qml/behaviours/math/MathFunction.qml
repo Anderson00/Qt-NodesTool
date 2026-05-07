@@ -18,7 +18,7 @@ Item {
         anchors.margins: 6
         spacing: 4
 
-        // ── Function selector ─────────────────────────────────────────────
+        // ── Function selector ──────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true; implicitHeight: funcGrid.height + 8; radius: 4
             color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.04)
@@ -52,7 +52,7 @@ Item {
             }
         }
 
-        // ── Result display ────────────────────────────────────────────────
+        // ── Result display ─────────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true; Layout.preferredHeight: 46; radius: 6
             color: Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.08)
@@ -71,24 +71,23 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: {
                         if (!behaviourObject) return ""
-                        return root.funcNames[behaviourObject.function] + "(" + behaviourObject.inputValue.toFixed(2) + ")"
+                        return root.funcNames[behaviourObject.function] + "(" + behaviourObject.inputValue.toFixed(4) + ")"
                     }
                     font.pixelSize: 9; color: ThemeManager.textSecondaryColor
                 }
             }
         }
 
-        // ── Input slider ──────────────────────────────────────────────────
-        RowLayout {
-            Layout.fillWidth: true; spacing: 4
-            Text { text: "x"; font.pixelSize: 10; color: ThemeManager.textSecondaryColor; Layout.preferredWidth: 16 }
-            CustomSlider {
-                Layout.fillWidth: true; Layout.preferredHeight: 32
-                from: -100; to: 100
-                value: behaviourObject ? behaviourObject.inputValue : 0
-                textColor: ThemeManager.textColor; color: ThemeManager.primaryColor
-                onMoved: if(behaviourObject) behaviourObject.setInput(value)
-            }
+        // ── X input ────────────────────────────────────────────────────────
+        NumericInputField {
+            Layout.fillWidth: true; implicitHeight: 36
+            label: "x"
+            value: behaviourObject ? behaviourObject.inputValue : 0
+            from: -1e6; to: 1e6
+            stepSize: 0.1; decimals: 4
+            showBar: false
+            accentColor: ThemeManager.primaryColor
+            onValueModified: if (behaviourObject) behaviourObject.setInput(newValue)
         }
     }
 }

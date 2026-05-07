@@ -16,7 +16,7 @@ Item {
         anchors.margins: 6
         spacing: 6
 
-        // ── Big counter display ───────────────────────────────────────────
+        // ── Big counter display ────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 56
@@ -26,6 +26,7 @@ Item {
             border.color: Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.2)
 
             Text {
+                id: countLabel
                 anchors.centerIn: parent
                 text: behaviourObject ? behaviourObject.count : "0"
                 font.pixelSize: 28; font.family: "Consolas"; font.bold: true
@@ -33,21 +34,23 @@ Item {
             }
         }
 
-        // ── Step control ──────────────────────────────────────────────────
+        // ── Step control ───────────────────────────────────────────────────
         RowLayout {
-            Layout.fillWidth: true; spacing: 4
-            Text { text: "Step"; font.pixelSize: 9; color: ThemeManager.textSecondaryColor; Layout.preferredWidth: 30 }
-            CustomSlider {
-                Layout.fillWidth: true; Layout.preferredHeight: 32
-                from: 1; to: 100
-                value: behaviourObject ? behaviourObject.step : 1
-                textColor: ThemeManager.textColor
-                color: ThemeManager.primaryColor
-                onMoved: if(behaviourObject) behaviourObject.setStep(Math.round(value))
+            Layout.fillWidth: true; spacing: 6
+            Text {
+                text: "Step"
+                font.pixelSize: 9; color: ThemeManager.textSecondaryColor
+                Layout.alignment: Qt.AlignVCenter
+            }
+            NumberSpinBox {
+                Layout.fillWidth: true
+                from: 1; to: 100000; stepSize: 1; value: behaviourObject ? behaviourObject.step : 1
+                accentColor: ThemeManager.primaryColor
+                onValueChanged: if (behaviourObject) behaviourObject.setStep(value)
             }
         }
 
-        // ── Control buttons ───────────────────────────────────────────────
+        // ── Control buttons ────────────────────────────────────────────────
         RowLayout {
             Layout.fillWidth: true; spacing: 4
 
