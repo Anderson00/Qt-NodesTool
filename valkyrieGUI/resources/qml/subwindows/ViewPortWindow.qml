@@ -2045,6 +2045,7 @@ Rectangle {
         modal: false
         interactive: false
         z: 199
+        onClosed: root.selectedPanel = ""
 
         background: Rectangle {
             color: Qt.darker(ThemeManager.backgroundColor, 1.2)
@@ -2146,6 +2147,26 @@ Rectangle {
                     visible: selectedPanel === "variables"
                 }
             }
+        }
+    }
+
+    // ─── Left panel light-dismiss ────────────────────────────────────────────────
+    // Transparent overlay over the canvas area (right of the drawer).
+    // Closes the drawer when the user clicks outside it.
+    // mouse.accepted = false lets the click propagate to nodes/canvas underneath.
+    MouseArea {
+        anchors.top:    topBar.bottom
+        anchors.bottom: parent.bottom
+        anchors.right:  parent.right
+        anchors.left:   parent.left
+        anchors.leftMargin: leftPanelDrawer.position * leftPanelDrawer.width
+        z: 50
+        enabled:             leftPanelDrawer.position > 0
+        visible:             enabled
+        propagateComposedEvents: true
+        onPressed: function(mouse) {
+            leftPanelDrawer.close()
+            mouse.accepted = false
         }
     }
 
