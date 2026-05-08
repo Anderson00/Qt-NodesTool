@@ -318,7 +318,7 @@ Rectangle {
         anchors.leftMargin: root.border.width
         anchors.topMargin: root.border.width
         anchors.rightMargin: root.border.width
-        height: 25
+        height: 34
         radius: root.radius - 1
         antialiasing: true
         clip: true
@@ -336,9 +336,9 @@ Rectangle {
         RowLayout {
             id: topHeader
             anchors.fill: parent
-            anchors.leftMargin: 6
-            anchors.rightMargin: 6
-            spacing: 4
+            anchors.leftMargin: 8
+            anchors.rightMargin: 4
+            spacing: 2
 
             Text {
                 id: titleView
@@ -352,31 +352,31 @@ Rectangle {
             }
 
             NewButton {
-                Layout.preferredHeight: 25
-                Layout.preferredWidth: 22
+                Layout.preferredHeight: 34
+                Layout.preferredWidth: 28
                 textColor: titleView.color
                 iconSource: Qaterial.Icons.dotsVertical
-                iconSize: 12
+                iconSize: 14
                 variant: "text"
                 onClicked: contextMenu.popup()
             }
 
             NewButton {
-                Layout.preferredHeight: 25
-                Layout.preferredWidth: 22
+                Layout.preferredHeight: 34
+                Layout.preferredWidth: 28
                 textColor: titleView.color
                 iconSource: Qaterial.Icons.windowMaximize
-                iconSize: 12
+                iconSize: 14
                 variant: "text"
                 onClicked: console.log("Maximize clicked")
             }
 
             NewButton {
-                Layout.preferredHeight: 25
-                Layout.preferredWidth: 22
+                Layout.preferredHeight: 34
+                Layout.preferredWidth: 30
                 textColor: titleView.color
                 iconSource: Qaterial.Icons.close
-                iconSize: 12
+                iconSize: 14
                 variant: "text"
                 onClicked: root._emitMenuAction("close")
             }
