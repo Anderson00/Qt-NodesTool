@@ -374,59 +374,89 @@ QSGNode *FastLineChart::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
     }
 
     // ── Series ────────────────────────────────────────────────────────────────
-    // Each series is rendered as a DrawTriangleStrip ribbon (2 vertices per point).
-    // This is portable across all RHI backends: Direct3D, Metal, Vulkan, OpenGL.
-    // N points → 2N vertices → (2N-2) triangles. One updatePaintNode() per frame
-    // transforms all N points in one pass — no per-insertion geometry recalculation.
+    // Rendered as a DrawTriangleStrip ribbon: 2 vertices (top/bottom) per point.
+    // Portable across all Qt RHI backends (D3D, Metal, Vulkan, OpenGL) — line
+    // width is controlled in software, not via the deprecated GL_LINE_WIDTH.
     for (int si = 0; si < m_series.size(); ++si) {
-        auto *node      = root->seriesNodes[si];
-        const auto &s   = m_series[si];
-        const int   n   = s.points.size();
+        auto *node     = root->seriesNodes[si];
+        const auto &s  = m_series[si];
 
         static_cast<QSGFlatColorMaterial *>(node->material())->setColor(s.color);
-
         auto *geo = node->geometry();
-        if (!validRange || n < 2) {
+
+        if (!validRange || s.points.size() < 2) {
             geo->allocate(0);
             node->markDirty(QSGNode::DirtyGeometry | QSGNode::DirtyMaterial);
             continue;
         }
 
+        // ── Pass 1: map to screen space + sub-pixel deduplication ─────────────
+        // When many data points compress into the same pixel (zoom-out or very
+        // dense data), consecutive direction vectors become near-zero, collapsing
+        // both ribbon vertices to the same point → zero-area triangles → holes.
+        // Filtering out points closer than 0.5 px eliminates the degenerate case
+        // and also reduces vertex count for dense views.
+        QVector<float> scx, scy;
+        scx.reserve(s.points.size());
+        scy.reserve(s.points.size());
+        {
+            const float cx0 = mapX(s.points[0].x());
+            const float cy0 = mapY(s.points[0].y());
+            scx.append(cx0); scy.append(cy0);
+            for (int i = 1; i < s.points.size(); ++i) {
+                const float cx = mapX(s.points[i].x());
+                const float cy = mapY(s.points[i].y());
+                const float ddx = cx - scx.last(), ddy = cy - scy.last();
+                if (ddx * ddx + ddy * ddy >= 0.25f) {   // ≥ 0.5 px distance
+                    scx.append(cx); scy.append(cy);
+                }
+            }
+        }
+
+        const int n = scx.size();
+        if (n < 2) {
+            geo->allocate(0);
+            node->markDirty(QSGNode::DirtyGeometry | QSGNode::DirtyMaterial);
+            continue;
+        }
+
+        // ── Pass 2: build triangle-strip vertices ─────────────────────────────
         geo->setDrawingMode(QSGGeometry::DrawTriangleStrip);
         geo->allocate(2 * n);
         auto *v = geo->vertexDataAsPoint2D();
 
-        // Pre-compute screen-space coordinates to avoid repeated mapping in the
-        // direction calculation loop
-        QVector<float> sx(n), sy(n);
-        for (int i = 0; i < n; ++i) {
-            sx[i] = mapX(s.points[i].x());
-            sy[i] = mapY(s.points[i].y());
-        }
-
         const float halfW = static_cast<float>(m_lineWidth) * 0.5f;
 
+        // lastDx/lastDy: stable fallback direction when consecutive deduplicated
+        // points are still sub-pixel (direction length ≤ threshold). Without this
+        // fallback, px/py stay near-zero and the ribbon collapses to a dot.
+        float lastDx = 1.0f, lastDy = 0.0f;
+
         for (int i = 0; i < n; ++i) {
-            // Tangent direction: average of the two adjacent segments (miter join).
-            // End-points fall back to the single adjacent segment.
+            // Tangent: average of the two adjacent segments (smooth miter join).
+            // Endpoints fall back to their single adjacent segment.
             float dx, dy;
             if (i == 0) {
-                dx = sx[1] - sx[0]; dy = sy[1] - sy[0];
+                dx = scx[1] - scx[0]; dy = scy[1] - scy[0];
             } else if (i == n - 1) {
-                dx = sx[n-1] - sx[n-2]; dy = sy[n-1] - sy[n-2];
+                dx = scx[n-1] - scx[n-2]; dy = scy[n-1] - scy[n-2];
             } else {
-                dx = sx[i+1] - sx[i-1]; dy = sy[i+1] - sy[i-1];
+                dx = scx[i+1] - scx[i-1]; dy = scy[i+1] - scy[i-1];
             }
 
             const float len = std::sqrt(dx * dx + dy * dy);
-            if (len > 1e-6f) { dx /= len; dy /= len; }
+            if (len > 1e-4f) {
+                lastDx = dx / len;
+                lastDy = dy / len;
+            }
+            // else: reuse lastDx/lastDy — keeps ribbon stable when direction
+            // is ambiguous (remaining sub-pixel cluster after deduplication)
 
-            // Perpendicular vector scaled to half line width
-            const float px = -dy * halfW;
-            const float py =  dx * halfW;
+            const float px = -lastDy * halfW;
+            const float py =  lastDx * halfW;
 
-            v[2*i  ].set(sx[i] + px, sy[i] + py);
-            v[2*i+1].set(sx[i] - px, sy[i] - py);
+            v[2*i  ].set(scx[i] + px, scy[i] + py);
+            v[2*i+1].set(scx[i] - px, scy[i] - py);
         }
 
         node->markDirty(QSGNode::DirtyGeometry | QSGNode::DirtyMaterial);
