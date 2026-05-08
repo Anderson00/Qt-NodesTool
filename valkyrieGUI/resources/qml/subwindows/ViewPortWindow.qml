@@ -1020,6 +1020,13 @@ Rectangle {
                                 oldX, oldY, newX, newY)
                         }
 
+                        onNodeResizeEnded: function(oldW, oldH, newW, newH) {
+                            root._clearSnapGuides()
+                            viewPort.recordNodeResize(
+                                viewPort.getUUIDFromBehaviour(model.object),
+                                oldW, oldH, newW, newH)
+                        }
+
                         onCloseButtonClicked: {
                             viewPort.removeNodeWithUndo(viewPort.getUUIDFromBehaviour(model.object))
                         }

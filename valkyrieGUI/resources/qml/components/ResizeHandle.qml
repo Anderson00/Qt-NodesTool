@@ -49,8 +49,12 @@ Rectangle {
 
     readonly property bool active: dragArea.pressed
 
+    // Final width/height last written to target during this drag session
+    property real _endW: 0
+    property real _endH: 0
+
     signal resizeStarted()
-    signal resizeFinished()
+    signal resizeFinished(real oldW, real oldH, real newW, real newH)
 
     z: 20
     color: (GlobalProperties.debugMode && (dragArea.containsMouse || active))
@@ -168,6 +172,8 @@ Rectangle {
             startGlobalX = g.x;  startGlobalY = g.y
             startTargetX = handle.target.x;    startTargetY = handle.target.y
             startTargetW = handle.target.width; startTargetH = handle.target.height
+            handle._endW = handle.target.width
+            handle._endH = handle.target.height
             handle.resizeStarted()
         }
 
@@ -227,9 +233,13 @@ Rectangle {
                 if (newHb >= handle.minHeight)
                     handle.target.height = newHb
             }
+
+            // Record final dimensions after every move (last value wins at release)
+            handle._endW = handle.target.width
+            handle._endH = handle.target.height
         }
 
-        onReleased: handle.resizeFinished()
-        onCanceled: handle.resizeFinished()
+        onReleased: handle.resizeFinished(dragArea.startTargetW, dragArea.startTargetH, handle._endW, handle._endH)
+        onCanceled: handle.resizeFinished(dragArea.startTargetW, dragArea.startTargetH, dragArea.startTargetW, dragArea.startTargetH)
     }
 }

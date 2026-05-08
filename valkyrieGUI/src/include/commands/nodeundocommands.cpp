@@ -76,6 +76,25 @@ bool MoveNodeCommand::mergeWith(const QUndoCommand* other) {
     return true;
 }
 
+// ── ResizeNodeCommand ─────────────────────────────────────────────────────────
+
+ResizeNodeCommand::ResizeNodeCommand(ViewPortWindow* vp, QString uuid,
+                                     double oldW, double oldH, double newW, double newH,
+                                     QUndoCommand* parent)
+    : QUndoCommand(QObject::tr("Resize Node"), parent),
+      m_vp(vp), m_uuid(std::move(uuid)),
+      m_oldW(oldW), m_oldH(oldH), m_newW(newW), m_newH(newH) {}
+
+void ResizeNodeCommand::undo() {
+    auto* beh = m_vp->searchBehaviourFromUUID(m_uuid);
+    if (beh) { beh->setWidth(m_oldW); beh->setHeight(m_oldH); }
+}
+
+void ResizeNodeCommand::redo() {
+    auto* beh = m_vp->searchBehaviourFromUUID(m_uuid);
+    if (beh) { beh->setWidth(m_newW); beh->setHeight(m_newH); }
+}
+
 // ── AddConnectionCommand ──────────────────────────────────────────────────────
 
 AddConnectionCommand::AddConnectionCommand(ViewPortWindow* vp, ConnState data, QUndoCommand* parent)

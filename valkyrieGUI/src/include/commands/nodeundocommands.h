@@ -54,6 +54,19 @@ private:
     double m_oldX, m_oldY, m_newX, m_newY;
 };
 
+class ResizeNodeCommand : public QUndoCommand {
+public:
+    ResizeNodeCommand(ViewPortWindow* vp, QString uuid,
+                      double oldW, double oldH, double newW, double newH,
+                      QUndoCommand* parent = nullptr);
+    void undo() override;
+    void redo() override;
+private:
+    ViewPortWindow* m_vp;
+    QString m_uuid;
+    double m_oldW, m_oldH, m_newW, m_newH;
+};
+
 class AddConnectionCommand : public QUndoCommand {
 public:
     AddConnectionCommand(ViewPortWindow* vp, ConnState data, QUndoCommand* parent = nullptr);

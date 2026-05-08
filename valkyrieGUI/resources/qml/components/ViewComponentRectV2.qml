@@ -34,7 +34,14 @@ Rectangle {
     property var  viewportEdgeSnap: null
 
     signal resizeEnded()
+    signal nodeResizeEnded(real oldW, real oldH, real newW, real newH)
+
     onIsResizingChanged: { if (!isResizing) resizeEnded() }
+
+    function _recordResize(oldW, oldH, newW, newH) {
+        if (Math.abs(newW - oldW) > 0.5 || Math.abs(newH - oldH) > 0.5)
+            nodeResizeEnded(oldW, oldH, newW, newH)
+    }
 
     property bool isDragging: false   // managed by manual drag handler
 
@@ -131,13 +138,13 @@ Rectangle {
 
     function setMinimized(minimized) {
         if (root.isConnectionsMinimized === minimized) return
-        
         if (minimized) {
             root.height -= connectionsBody.targetHeight
         } else {
             root.height += connectionsBody.targetHeight
         }
         root.isConnectionsMinimized = minimized
+        if (behaviourObject) behaviourObject.height = root.height
     }
 
     function _emitMenuAction(action) {
@@ -171,8 +178,8 @@ Rectangle {
 
     onXChanged:      if (behaviourObject) behaviourObject.x = x
     onYChanged:      if (behaviourObject) behaviourObject.y = y
-    onWidthChanged:  if (behaviourObject) { behaviourObject.width = width; behaviourObject.contentWidth = width }
-    onHeightChanged: if (behaviourObject) behaviourObject.height = root.height
+    onWidthChanged:  if ((isResizing || isDragging) && behaviourObject) { behaviourObject.width = width; behaviourObject.contentWidth = width }
+    onHeightChanged: if ((isResizing || isDragging) && behaviourObject) behaviourObject.height = root.height
 
     // Sync C++ → visual (e.g. undo moves node back); disabled during user drag to avoid fighting
     Binding {
@@ -188,6 +195,21 @@ Rectangle {
         value: behaviourObject ? behaviourObject.y : 0
         when: behaviourObject !== null && !root.isDragging && !isResizing
         restoreMode: Binding.RestoreNone
+    }
+    // Sync width/height from C++ → visual (undo/redo, workspace load).
+    // One-directional: behaviourObject → root only. The reverse path (root → behaviourObject)
+    // is handled in onWidthChanged/onHeightChanged, guarded to run only during user gestures.
+    // This breaks the feedback loop that the Behavior animation would otherwise create.
+    Connections {
+        target: behaviourObject
+        function onWidthChanged() {
+            if (!root.isDragging && !root.isResizing)
+                root.width = behaviourObject.width
+        }
+        function onHeightChanged() {
+            if (!root.isDragging && !root.isResizing)
+                root.height = behaviourObject.height
+        }
     }
 
     Connections {
@@ -279,14 +301,14 @@ Rectangle {
     }
 
     // ============== Resize handles (extracted to ResizeHandle.qml) ==============
-    ResizeHandle { id: tlH; direction: "top-left";     handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap }
-    ResizeHandle { id: trH; direction: "top-right";    handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap }
-    ResizeHandle { id: blH; direction: "bottom-left";  handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap }
-    ResizeHandle { id: brH; direction: "bottom-right"; handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap }
-    ResizeHandle { id: tH;  direction: "top";          handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap }
-    ResizeHandle { id: bH;  direction: "bottom";       handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap }
-    ResizeHandle { id: lH;  direction: "left";         handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap }
-    ResizeHandle { id: rH;  direction: "right";        handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap }
+    ResizeHandle { id: tlH; direction: "top-left";     handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ow,oh,nw,nh) => root._recordResize(ow,oh,nw,nh) }
+    ResizeHandle { id: trH; direction: "top-right";    handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ow,oh,nw,nh) => root._recordResize(ow,oh,nw,nh) }
+    ResizeHandle { id: blH; direction: "bottom-left";  handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ow,oh,nw,nh) => root._recordResize(ow,oh,nw,nh) }
+    ResizeHandle { id: brH; direction: "bottom-right"; handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ow,oh,nw,nh) => root._recordResize(ow,oh,nw,nh) }
+    ResizeHandle { id: tH;  direction: "top";          handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ow,oh,nw,nh) => root._recordResize(ow,oh,nw,nh) }
+    ResizeHandle { id: bH;  direction: "bottom";       handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ow,oh,nw,nh) => root._recordResize(ow,oh,nw,nh) }
+    ResizeHandle { id: lH;  direction: "left";         handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ow,oh,nw,nh) => root._recordResize(ow,oh,nw,nh) }
+    ResizeHandle { id: rH;  direction: "right";        handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ow,oh,nw,nh) => root._recordResize(ow,oh,nw,nh) }
 
     // ============== Header ==============
     Rectangle {

@@ -282,6 +282,13 @@ void ViewPortWindow::recordNodeMove(const QString& uuid,
     m_undoStack->push(new MoveNodeCommand(this, uuid, oldX, oldY, newX, newY));
 }
 
+void ViewPortWindow::recordNodeResize(const QString& uuid,
+                                      double oldW, double oldH, double newW, double newH)
+{
+    if (qFuzzyCompare(oldW, newW) && qFuzzyCompare(oldH, newH)) return;
+    m_undoStack->push(new ResizeNodeCommand(this, uuid, oldW, oldH, newW, newH));
+}
+
 // ── Workspace ─────────────────────────────────────────────────────────────────
 
 void ViewPortWindow::restoreViewport(qreal x, qreal y, qreal scale) {
