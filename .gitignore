@@ -76,6 +76,9 @@ qmlcache_*.js
 # =========================
 # IDEs and Editors
 # =========================
+# Claude Code
+.claude/
+
 # VS Code
 .vscode/
 *.code-workspace
