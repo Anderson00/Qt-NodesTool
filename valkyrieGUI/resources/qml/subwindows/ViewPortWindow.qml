@@ -387,24 +387,6 @@ Rectangle {
     Keys.onPressed: {
         if (event.key === Qt.Key_Shift) {
             event.accepted = true
-        } else if (event.key === Qt.Key_S && (event.modifiers & Qt.ControlModifier)) {
-            if (WorkspaceManager.currentWorkspace !== "") {
-                const ok = viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
-                ToastManager.show(ok ? "Project saved" : "Failed to save project",
-                                  ok ? "success" : "error")
-            } else {
-                saveWorkspaceDialog.open()
-            }
-            event.accepted = true
-        } else if (event.key === Qt.Key_Z && (event.modifiers & Qt.ControlModifier)) {
-            viewPort.undo()
-            event.accepted = true
-        } else if (event.key === Qt.Key_Y && (event.modifiers & Qt.ControlModifier)) {
-            viewPort.redo()
-            event.accepted = true
-        } else if (event.key === Qt.Key_G && !event.modifiers) {
-            GlobalProperties.snapEnabled = !GlobalProperties.snapEnabled
-            event.accepted = true
         }
     }
 
@@ -412,9 +394,14 @@ Rectangle {
         id: fabRightMenu
         visible: nodeOnFocus !== null && nodeOnFocus !== undefined
         anchors.right: parent.right
+        anchors.rightMargin: 8
         anchors.top: topBar.bottom
-        anchors.margins: 8
+        anchors.topMargin: historyPanel.visible ? historyPanel.height + 16 : 8
         z: 100
+
+        Behavior on anchors.topMargin {
+            NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
+        }
 
         icon.source: Qaterial.Icons.tune
         icon.color: ThemeManager.primaryColor
@@ -1203,14 +1190,76 @@ Rectangle {
         anchors.top:   topBar.bottom
         anchors.right: parent.right
         anchors.topMargin:   8
-        anchors.rightMargin: 8
+        // drawer.position: 0.0 = closed/invisible, 1.0 = fully open.
+        // Works correctly even before the drawer has ever been shown (position=0).
+        anchors.rightMargin: 8 + drawer.width * drawer.position
 
         onCloseRequested: topBar.historyPanelOpen = false
     }
 
     Shortcut {
+        sequence: "Ctrl+Z"
+        context:  Qt.ApplicationShortcut
+        onActivated: viewPort.undo()
+    }
+    Shortcut {
+        sequence: "Ctrl+Y"
+        context:  Qt.ApplicationShortcut
+        onActivated: viewPort.redo()
+    }
+    Shortcut {
+        sequence: "Ctrl+S"
+        context:  Qt.ApplicationShortcut
+        onActivated: {
+            if (WorkspaceManager.currentWorkspace !== "") {
+                const ok = viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
+                ToastManager.show(ok ? "Project saved" : "Failed to save project",
+                                  ok ? "success" : "error")
+            } else {
+                saveWorkspaceDialog.open()
+            }
+        }
+    }
+    Shortcut {
+        sequence: "G"
+        context:  Qt.ApplicationShortcut
+        onActivated: GlobalProperties.snapEnabled = !GlobalProperties.snapEnabled
+    }
+    Shortcut {
         sequence: "Ctrl+H"
+        context:  Qt.ApplicationShortcut
         onActivated: topBar.historyPanelOpen = !topBar.historyPanelOpen
+    }
+    Shortcut {
+        sequence: "F"
+        context:  Qt.ApplicationShortcut
+        onActivated: root._focusFrame()
+    }
+
+    // Smooth pan+zoom animation used by the F shortcut.
+    ParallelAnimation {
+        id: focusAnim
+        property real toX: 0
+        property real toY: 0
+        NumberAnimation { target: mycanvas; property: "x"; to: focusAnim.toX; duration: 380; easing.type: Easing.OutQuart }
+        NumberAnimation { target: mycanvas; property: "y"; to: focusAnim.toY; duration: 380; easing.type: Easing.OutQuart }
+        NumberAnimation { target: root;    property: "zoomScale"; to: 1.0;    duration: 380; easing.type: Easing.OutQuart }
+    }
+
+    function _focusFrame() {
+        var wx, wy
+        if (root.nodeOnFocus) {
+            wx = root.nodeOnFocus.x + root.nodeOnFocus.width  / 2
+            wy = root.nodeOnFocus.y + root.nodeOnFocus.height / 2
+        } else {
+            // Canvas center ("home") is the world point (5000, 5000)
+            wx = 5000
+            wy = 5000
+        }
+        focusAnim.stop()
+        focusAnim.toX = containerCanvas.width  / 2 - wx
+        focusAnim.toY = containerCanvas.height / 2 - wy
+        focusAnim.start()
     }
 
     // ─── Splash Screen ──────────────────────────────────────────────────────────
