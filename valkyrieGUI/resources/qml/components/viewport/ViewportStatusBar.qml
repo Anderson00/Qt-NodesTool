@@ -1,6 +1,7 @@
 import QtQuick 2.12
 import QtQuick.Layouts 1.0
 import App.Theme 1.0
+import App.Log 1.0
 
 // Slim status bar showing view center, mouse world position, zoom,
 // selected node name and total node count.
@@ -159,7 +160,63 @@ Rectangle {
             elide: Text.ElideRight
         }
 
-        Item { Layout.fillWidth: true }
+        // ── Log output (fills center) ────────────────────────────────────────
+        Item { Layout.preferredWidth: 8 }
+
+        Rectangle {
+            Layout.preferredWidth: 1; Layout.preferredHeight: 12
+            Layout.alignment: Qt.AlignVCenter
+            color: ThemeManager.textColor; opacity: 0.18
+            visible: LogManager.lastMessage !== ""
+        }
+
+        Item { Layout.preferredWidth: 6; visible: LogManager.lastMessage !== "" }
+
+        Text {
+            text: {
+                if (LogManager.lastType === "warning") return "⚠"
+                if (LogManager.lastType === "error" || LogManager.lastType === "fatal") return "✕"
+                return "ℹ"
+            }
+            font.pixelSize: 9
+            color: {
+                if (LogManager.lastType === "warning") return ThemeManager.warningColor
+                if (LogManager.lastType === "error" || LogManager.lastType === "fatal") return ThemeManager.dangerColor
+                return ThemeManager.primaryColor
+            }
+            opacity: 0.85
+            Layout.alignment: Qt.AlignVCenter
+            visible: LogManager.lastMessage !== ""
+        }
+
+        Item { Layout.preferredWidth: 4; visible: LogManager.lastMessage !== "" }
+
+        Text {
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignVCenter
+            font.pixelSize: 10
+            color: {
+                if (LogManager.lastType === "warning") return ThemeManager.warningColor
+                if (LogManager.lastType === "error" || LogManager.lastType === "fatal") return ThemeManager.dangerColor
+                return ThemeManager.textColor
+            }
+            opacity: 0.72
+            text: LogManager.lastMessage
+            elide: Text.ElideRight
+        }
+
+        Item { Layout.preferredWidth: 8; visible: LogManager.lastMessage !== "" }
+
+        Text {
+            text: LogManager.lastTime
+            font.pixelSize: 9
+            color: ThemeManager.textColor
+            opacity: 0.30
+            Layout.alignment: Qt.AlignVCenter
+            visible: LogManager.lastMessage !== ""
+        }
+
+        Item { Layout.preferredWidth: 8 }
 
         // ── Node count ───────────────────────────────────────────────────────
         Text {
