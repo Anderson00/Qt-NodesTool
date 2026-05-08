@@ -103,6 +103,15 @@ void ResizeNodeCommand::redo() {
     }
 }
 
+bool ResizeNodeCommand::mergeWith(const QUndoCommand* other) {
+    if (other->id() != id()) return false;
+    const auto* o = static_cast<const ResizeNodeCommand*>(other);
+    if (o->m_uuid != m_uuid) return false;
+    m_newX = o->m_newX; m_newY = o->m_newY;
+    m_newW = o->m_newW; m_newH = o->m_newH;
+    return true;
+}
+
 // ── AddConnectionCommand ──────────────────────────────────────────────────────
 
 AddConnectionCommand::AddConnectionCommand(ViewPortWindow* vp, ConnState data, QUndoCommand* parent)

@@ -62,6 +62,8 @@ public:
                       QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
+    bool mergeWith(const QUndoCommand* other) override;
+    int id() const override { return 1002; }
 private:
     ViewPortWindow* m_vp;
     QString m_uuid;
