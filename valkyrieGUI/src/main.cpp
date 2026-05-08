@@ -8,6 +8,7 @@
 #include <model/globalproperties.h>
 #include <utils/toastmanager.h>
 #include <utils/logmanager.h>
+#include <utils/fastlinechart.h>
 #include <behaviours/behaviourregistry.h>
 
 static QFile log_file(QDateTime::currentDateTime().toString().replace(":","-").append(".log"));
@@ -94,6 +95,9 @@ int main(int argc, char **argv)
     // Register BehaviourRegistry (node discovery + factory) as singleton in QML
     qmlRegisterSingletonType<BehaviourRegistry>("App.NodeRegistry", 1, 0, "NodeRegistry",
                                                  &BehaviourRegistry::qmlSingletonProvider);
+
+    // Register FastLineChart — direct SGG renderer, replaces QtCharts in LineChartViewer
+    qmlRegisterType<FastLineChart>("App.Widgets", 1, 0, "FastLineChart");
 
     MainWindow w;
     w.show();

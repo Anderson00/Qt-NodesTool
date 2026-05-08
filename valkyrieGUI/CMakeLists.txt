@@ -25,6 +25,7 @@ set(PROJECT_SOURCES
     src/include/utils/workspacemanager.h src/include/utils/workspacemanager.cpp
     src/include/utils/toastmanager.h src/include/utils/toastmanager.cpp
     src/include/utils/logmanager.h src/include/utils/logmanager.cpp
+    src/include/utils/fastlinechart.h src/include/utils/fastlinechart.cpp
     src/include/mainwindow.cpp
     src/include/mainwindow.ui
     src/include/qmlwindow.h src/include/qmlwindow.cpp

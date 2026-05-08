@@ -1,9 +1,9 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
-import QtCharts 2.15
 
 import App.Theme 1.0
+import App.Widgets 1.0
 
 import '../../components'
 
@@ -13,54 +13,30 @@ Item {
 
     property var behaviourObject
 
-    // ── Series state ─────────────────────────────────────────────────────────
-    // JS arrays; use seriesCount / statsRevision as binding triggers
-    property var seriesRefs:    []
+    // ── Stats state (for stats bar — updated on main thread alongside FastLineChart) ──
     property var seriesStats:   []   // [{min, max, sum, count, last}, …]
-    property int seriesCount:   0    // length mirror — drives Repeater
-    property int statsRevision: 0    // incremented on each data point
+    property int seriesCount:   2    // Channel 1 + Channel 2
+    property int statsRevision: 0
 
     // ── UI toggles ───────────────────────────────────────────────────────────
-    property bool showLegend:  false
     property bool showGrid:    true
-    property bool showPoints:  false
-    property bool animEnabled: false
     property bool isAutoScale: true
 
-    // ── Colour palette for auto-assigned series colours ───────────────────────
-    readonly property var palette: [
-        "#e74c3c", "#f39c12", "#2ecc71", "#3498db",
-        "#9b59b6", "#1abc9c", "#e67e22", "#ec407a"
-    ]
+    // ── Series names ─────────────────────────────────────────────────────────
+    readonly property var seriesNames: ["Channel 1", "Channel 2"]
 
     // ════════════════════════════════════════════════════════════════════════
-    // JS helpers
+    // Stats helpers (keep stats bar in sync with FastLineChart data)
     // ════════════════════════════════════════════════════════════════════════
 
-    function initDefaultSeries() {
-        addSeriesInternal("Channel 1", palette[0])
-        addSeriesInternal("Channel 2", palette[1])
+    function initStats() {
+        seriesStats = []
+        for (var i = 0; i < seriesCount; ++i)
+            seriesStats.push({ min: Infinity, max: -Infinity, sum: 0, count: 0, last: 0 })
     }
 
-    function addSeriesInternal(name, color) {
-        var s = chart.createSeries(ChartView.SeriesTypeLine, name, axisX, axisY)
-        s.color         = color
-        s.width         = 2
-        s.pointsVisible = showPoints
-        seriesRefs.push(s)
-        seriesStats.push({ min: Infinity, max: -Infinity, sum: 0, count: 0, last: 0 })
-        seriesCount = seriesRefs.length
-    }
-
-    function appendToSeries(idx, x, y) {
-        if (idx < 0 || idx >= seriesRefs.length) return
-        var s      = seriesRefs[idx]
-        var maxPts = behaviourObject ? behaviourObject.maxPoints : 500
-        while (s.count >= maxPts && s.count > 0)
-            s.remove(0)
-
-        s.append(x, y)
-
+    function recordStat(idx, y) {
+        if (idx < 0 || idx >= seriesStats.length) return
         var st = seriesStats[idx]
         if (y < st.min) st.min = y
         if (y > st.max) st.max = y
@@ -69,56 +45,44 @@ Item {
         st.last = y
         seriesStats[idx] = st
         statsRevision++
-
-        if (isAutoScale) autoScaleAxes()
     }
 
-    function appendYAuto(idx, y) {
-        if (idx < 0 || idx >= seriesRefs.length) return
-        var s     = seriesRefs[idx]
-        var nextX = (s.count > 0) ? s.at(s.count - 1).x + 1 : 0
-        appendToSeries(idx, nextX, y)
-    }
-
-    function autoScaleAxes() {
-        var yMin = Infinity, yMax = -Infinity
-        var xMin = Infinity, xMax = -Infinity
-        for (var i = 0; i < seriesRefs.length; i++) {
-            var s = seriesRefs[i]
-            if (s.count === 0) continue
-            var st = seriesStats[i]
-            if (st.min < yMin) yMin = st.min
-            if (st.max > yMax) yMax = st.max
-            var f = s.at(0);           if (f.x < xMin) xMin = f.x
-            var l = s.at(s.count - 1); if (l.x > xMax) xMax = l.x
-        }
-        if (yMin !== Infinity) {
-            var yPad   = Math.max(Math.abs(yMax - yMin) * 0.12, 0.5)
-            axisY.min  = yMin - yPad
-            axisY.max  = yMax + yPad
-        }
-        if (xMin !== Infinity) {
-            var xPad   = Math.max(Math.abs(xMax - xMin) * 0.05, 1)
-            axisX.min  = xMin
-            axisX.max  = xMax + xPad
-        }
-    }
-
-    function clearAll() {
-        for (var i = 0; i < seriesRefs.length; i++) {
-            seriesRefs[i].clear()
-            seriesStats[i] = { min: Infinity, max: -Infinity, sum: 0, count: 0, last: 0 }
-        }
-        statsRevision++
-        axisX.min = 0;  axisX.max = 10
-        axisY.min = -1; axisY.max = 1
-    }
-
-    function clearOneSeries(idx) {
-        if (idx < 0 || idx >= seriesRefs.length) return
-        seriesRefs[idx].clear()
+    function resetStats(idx) {
+        if (idx < 0 || idx >= seriesStats.length) return
         seriesStats[idx] = { min: Infinity, max: -Infinity, sum: 0, count: 0, last: 0 }
         statsRevision++
+    }
+
+    function resetAllStats() {
+        for (var i = 0; i < seriesStats.length; ++i)
+            seriesStats[i] = { min: Infinity, max: -Infinity, sum: 0, count: 0, last: 0 }
+        statsRevision++
+    }
+
+    // ── Pan / zoom ────────────────────────────────────────────────────────────
+
+    function panChart(dx, dy) {
+        if (fastChart.width <= 0 || fastChart.height <= 0) return
+        var xpp = (fastChart.xMax - fastChart.xMin) / fastChart.width
+        var ypp = (fastChart.yMax - fastChart.yMin) / fastChart.height
+        fastChart.setXRange(fastChart.xMin - dx * xpp, fastChart.xMax - dx * xpp)
+        fastChart.setYRange(fastChart.yMin + dy * ypp, fastChart.yMax + dy * ypp)
+        isAutoScale = false
+    }
+
+    function zoomChart(factor) {
+        var cx    = (fastChart.xMin + fastChart.xMax) * 0.5
+        var cy    = (fastChart.yMin + fastChart.yMax) * 0.5
+        var xHalf = (fastChart.xMax - fastChart.xMin) * 0.5 / factor
+        var yHalf = (fastChart.yMax - fastChart.yMin) * 0.5 / factor
+        fastChart.setXRange(cx - xHalf, cx + xHalf)
+        fastChart.setYRange(cy - yHalf, cy + yHalf)
+        isAutoScale = false
+    }
+
+    function resetZoom() {
+        isAutoScale = true
+        fastChart.autoScale = true
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -128,24 +92,25 @@ Item {
     Connections {
         target: behaviourObject
 
-        function onInternalAppendXY(x, y)                    { appendToSeries(0, x, y) }
-        function onInternalappendYAutoIncrementX(y)                    { appendYAuto(0, y) }
-        function onInternalAppendYAutoIncrementXChannel2(y)              { appendYAuto(1, y) }
-        function onInternalAppendXYToSeries(idx, x, y)        { appendToSeries(idx, x, y) }
-        function onInternalAppendYToSeries(idx, y)            { appendYAuto(idx, y) }
-        function onInternalClearChart()                       { clearAll() }
-        function onInternalClearSeries(idx)                   { clearOneSeries(idx) }
-        function onInternalSetXRange(mn, mx)  { isAutoScale = false; axisX.min = mn; axisX.max = mx }
-        function onInternalSetYRange(mn, mx)  { isAutoScale = false; axisY.min = mn; axisY.max = mx }
-        function onInternalResetZoom()        { chart.zoomReset(); if (isAutoScale) autoScaleAxes() }
-        function onAutoScaleChanged()         { isAutoScale = behaviourObject.autoScale }
-        function onChartTitleChanged()        { chart.title = behaviourObject.chartTitle || "" }
+        function onInternalAppendXY(x, y)                       { fastChart.appendPoint(0, x, y);       recordStat(0, y) }
+        function onInternalappendYAutoIncrementX(y)              { fastChart.appendPointAutoX(0, y);     recordStat(0, y) }
+        function onInternalAppendYAutoIncrementXChannel2(y)      { fastChart.appendPointAutoX(1, y);     recordStat(1, y) }
+        function onInternalAppendXYToSeries(idx, x, y)           { fastChart.appendPoint(idx, x, y);    recordStat(idx, y) }
+        function onInternalAppendYToSeries(idx, y)               { fastChart.appendPointAutoX(idx, y);  recordStat(idx, y) }
+        function onInternalClearChart()                          { fastChart.clearAll();  resetAllStats() }
+        function onInternalClearSeries(idx)                      { fastChart.clearSeries(idx); resetStats(idx) }
+        function onInternalSetXRange(mn, mx)                     { isAutoScale = false; fastChart.autoScale = false; fastChart.setXRange(mn, mx) }
+        function onInternalSetYRange(mn, mx)                     { isAutoScale = false; fastChart.autoScale = false; fastChart.setYRange(mn, mx) }
+        function onInternalResetZoom()                           { resetZoom() }
+        function onAutoScaleChanged()                            { isAutoScale = behaviourObject.autoScale; fastChart.autoScale = isAutoScale }
+        function onMaxPointsChanged()                            { fastChart.maxPoints = behaviourObject.maxPoints }
     }
 
     Component.onCompleted: {
-        chart.legend.visible   = showLegend
-        chart.legend.alignment = Qt.AlignBottom
-        initDefaultSeries()
+        initStats()
+        fastChart.setSeriesColor(0, "#e74c3c")
+        fastChart.setSeriesColor(1, "#f39c12")
+        if (behaviourObject) fastChart.maxPoints = behaviourObject.maxPoints
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -166,7 +131,6 @@ Item {
                 anchors { fill: parent; leftMargin: 6; rightMargin: 6 }
                 spacing: 2
 
-                // Chart label
                 Text {
                     text: (behaviourObject && behaviourObject.chartTitle !== "")
                           ? behaviourObject.chartTitle : "Line Chart"
@@ -179,78 +143,43 @@ Item {
 
                 ToolSep {}
 
-                // Toggle: legend
-                TBBtn {
-                    tipText: "Toggle Legend"
-                    label: "☰"
-                    isActive: showLegend
-                    onBtnClicked: { showLegend = !showLegend; chart.legend.visible = showLegend }
-                }
-
-                // Toggle: grid
                 TBBtn {
                     tipText: "Toggle Grid"
                     label: "⊞"
                     isActive: showGrid
                     onBtnClicked: {
                         showGrid = !showGrid
-                        axisX.gridVisible = showGrid
-                        axisY.gridVisible = showGrid
+                        fastChart.gridCountX = showGrid ? 5 : 0
+                        fastChart.gridCountY = showGrid ? 5 : 0
                     }
                 }
 
-                // Toggle: data points
-                TBBtn {
-                    tipText: "Show Data Points"
-                    label: "◉"
-                    isActive: showPoints
-                    onBtnClicked: {
-                        showPoints = !showPoints
-                        for (var i = 0; i < seriesRefs.length; i++)
-                            seriesRefs[i].pointsVisible = showPoints
-                    }
-                }
-
-                // Toggle: animation
-                TBBtn {
-                    tipText: "Toggle Animation"
-                    label: "⚡"
-                    isActive: animEnabled
-                    onBtnClicked: {
-                        animEnabled = !animEnabled
-                        chart.animationOptions = animEnabled
-                            ? ChartView.SeriesAnimations : ChartView.NoAnimation
-                    }
-                }
-
-                // Toggle: auto-scale
                 TBBtn {
                     tipText: "Auto Scale Axes"
                     label: "⤢"
                     isActive: isAutoScale
-                    onBtnClicked: { isAutoScale = !isAutoScale; if (isAutoScale) autoScaleAxes() }
+                    onBtnClicked: {
+                        isAutoScale = !isAutoScale
+                        fastChart.autoScale = isAutoScale
+                    }
                 }
 
                 ToolSep {}
 
-                // Zoom in / out / reset
-                TBBtn { tipText: "Zoom In";    label: "+"; onBtnClicked: chart.zoom(1.25) }
-                TBBtn { tipText: "Zoom Out";   label: "−"; onBtnClicked: chart.zoom(0.80) }
-                TBBtn {
-                    tipText: "Reset View"; label: "⟳"
-                    onBtnClicked: { chart.zoomReset(); if (isAutoScale) autoScaleAxes() }
-                }
+                TBBtn { tipText: "Zoom In";  label: "+"; onBtnClicked: zoomChart(1.25) }
+                TBBtn { tipText: "Zoom Out"; label: "−"; onBtnClicked: zoomChart(0.80) }
+                TBBtn { tipText: "Reset View"; label: "⟳"; onBtnClicked: resetZoom() }
 
                 ToolSep {}
 
                 Item { Layout.fillWidth: true }
 
-                // Live point counter
+                // Live point counter (calls fastChart.pointCount — re-evaluates via statsRevision)
                 Text {
                     text: {
                         statsRevision
                         var n = 0
-                        for (var i = 0; i < seriesRefs.length; i++) n += seriesRefs[i].count
+                        for (var i = 0; i < seriesCount; ++i) n += fastChart.pointCount(i)
                         return n + " pts"
                     }
                     color: ThemeManager.textSecondaryColor
@@ -261,97 +190,104 @@ Item {
 
                 ToolSep {}
 
-                // Clear all
                 TBBtn {
                     tipText: "Clear All"
                     label: "✕ Clear"
                     isDanger: true
                     Layout.preferredWidth: 56
-                    onBtnClicked: clearAll()
+                    onBtnClicked: { fastChart.clearAll(); resetAllStats() }
                 }
             }
         }
 
-        // ── CHART ─────────────────────────────────────────────────────────────
+        // ── CHART AREA ────────────────────────────────────────────────────────
         Item {
             Layout.fillWidth:  true
             Layout.fillHeight: true
 
-            ChartView {
-                id: chart
-                anchors.fill:     parent
-                antialiasing:     true
-                backgroundColor:  ThemeManager.backgroundColor
-                plotAreaColor:    "transparent"
-                animationOptions: ChartView.NoAnimation
-                legend.visible:   false
-                legend.alignment: Qt.AlignBottom
-                margins.left:     0
-                margins.right:    6
-                margins.top:      6
-                margins.bottom:   0
+            // Y-axis label width + X-axis label height define the margins
+            readonly property int yLabelW: 40
+            readonly property int xLabelH: 16
 
-                ValueAxis {
-                    id: axisX
-                    min: 0;  max: 10
-                    tickCount: 6
-                    labelFormat: "%.2f"
-                    labelsColor: ThemeManager.textSecondaryColor
-                    labelsFont.pixelSize: 10
-                    color: Qt.rgba(ThemeManager.borderColor.r,
-                                   ThemeManager.borderColor.g,
-                                   ThemeManager.borderColor.b, 0.7)
-                    gridLineColor: Qt.rgba(ThemeManager.borderColor.r,
-                                           ThemeManager.borderColor.g,
-                                           ThemeManager.borderColor.b, 0.3)
-                    minorGridVisible: false
-                }
+            // Direct scene graph chart — zero QtCharts layers
+            FastLineChart {
+                id: fastChart
+                x:      parent.yLabelW
+                y:      4
+                width:  parent.width  - parent.yLabelW - 6
+                height: parent.height - 4 - parent.xLabelH
 
-                ValueAxis {
-                    id: axisY
-                    min: -1; max: 1
-                    tickCount: 6
-                    labelFormat: "%.2f"
-                    labelsColor: ThemeManager.textSecondaryColor
-                    labelsFont.pixelSize: 10
-                    color: Qt.rgba(ThemeManager.borderColor.r,
-                                   ThemeManager.borderColor.g,
-                                   ThemeManager.borderColor.b, 0.7)
-                    gridLineColor: Qt.rgba(ThemeManager.borderColor.r,
-                                           ThemeManager.borderColor.g,
-                                           ThemeManager.borderColor.b, 0.3)
-                    minorGridVisible: false
+                autoScale:   isAutoScale
+                maxPoints:   behaviourObject ? behaviourObject.maxPoints : 500
+                gridColor:   Qt.rgba(ThemeManager.borderColor.r,
+                                     ThemeManager.borderColor.g,
+                                     ThemeManager.borderColor.b, 0.25)
+                gridCountX:  showGrid ? 5 : 0
+                gridCountY:  showGrid ? 5 : 0
+                lineWidth:   2
+
+                onAutoScaleChanged: isAutoScale = fastChart.autoScale
+            }
+
+            // Plot-area border
+            Rectangle {
+                x:      fastChart.x;      y:      fastChart.y
+                width:  fastChart.width;  height: fastChart.height
+                color:  "transparent"
+                border.color: Qt.rgba(ThemeManager.borderColor.r,
+                                      ThemeManager.borderColor.g,
+                                      ThemeManager.borderColor.b, 0.4)
+                border.width: 1
+            }
+
+            // Y-axis tick labels
+            Repeater {
+                model: fastChart.yTicks
+                Text {
+                    x: 0
+                    y: fastChart.y + fastChart.height * (1.0 - modelData.pos) - height / 2
+                    width: parent.yLabelW - 4
+                    horizontalAlignment: Text.AlignRight
+                    text:  modelData.label
+                    color: ThemeManager.textSecondaryColor
+                    font.pixelSize: 9
+                    font.family: "Consolas"
                 }
             }
 
-            // Pan & zoom mouse overlay (sits on top of ChartView)
+            // X-axis tick labels
+            Repeater {
+                model: fastChart.xTicks
+                Text {
+                    x: fastChart.x + fastChart.width * modelData.pos - width / 2
+                    y: fastChart.y + fastChart.height + 2
+                    text:  modelData.label
+                    color: ThemeManager.textSecondaryColor
+                    font.pixelSize: 9
+                    font.family: "Consolas"
+                }
+            }
+
+            // Pan & zoom mouse overlay
             MouseArea {
-                anchors.fill: parent
+                x: fastChart.x; y: fastChart.y
+                width: fastChart.width; height: fastChart.height
                 acceptedButtons: Qt.LeftButton
 
                 property real lastX: 0
                 property real lastY: 0
 
                 onPressed: function(mouse) {
-                    lastX = mouse.x
-                    lastY = mouse.y
+                    lastX = mouse.x; lastY = mouse.y
                     cursorShape = Qt.ClosedHandCursor
                 }
-                onReleased:  { cursorShape = Qt.ArrowCursor }
-
+                onReleased: { cursorShape = Qt.ArrowCursor }
                 onPositionChanged: function(mouse) {
-                    var dx = mouse.x - lastX
-                    var dy = mouse.y - lastY
-                    chart.scrollLeft(dx)
-                    chart.scrollUp(dy)
-                    lastX = mouse.x
-                    lastY = mouse.y
-                    if (isAutoScale) isAutoScale = false
+                    panChart(mouse.x - lastX, mouse.y - lastY)
+                    lastX = mouse.x; lastY = mouse.y
                 }
-
                 onWheel: function(wheel) {
-                    chart.zoom(wheel.angleDelta.y > 0 ? 1.15 : 0.87)
-                    if (isAutoScale) isAutoScale = false
+                    zoomChart(wheel.angleDelta.y > 0 ? 1.15 : 0.87)
                 }
             }
         }
@@ -379,20 +315,18 @@ Item {
                             anchors { fill: parent; leftMargin: 8; rightMargin: 8 }
                             spacing: 6
 
-                            // Series colour swatch
+                            // Colour swatch
                             Rectangle {
                                 width: 10; height: 10; radius: 2
-                                color: index < seriesRefs.length
-                                       ? seriesRefs[index].color : "transparent"
+                                color: index === 0 ? "#e74c3c" : "#f39c12"
                                 Layout.alignment: Qt.AlignVCenter
                             }
 
                             // Series name
                             Text {
-                                text: index < seriesRefs.length ? seriesRefs[index].name : ""
+                                text: index < seriesNames.length ? seriesNames[index] : "Ch " + (index + 1)
                                 color: ThemeManager.textColor
-                                font.pixelSize: 10
-                                font.bold: true
+                                font.pixelSize: 10; font.bold: true
                                 Layout.preferredWidth: 70
                                 elide: Text.ElideRight
                                 Layout.alignment: Qt.AlignVCenter
@@ -402,8 +336,7 @@ Item {
 
                             StatItem {
                                 lbl: "last"
-                                val: statsRevision >= 0 && index < seriesStats.length
-                                     ? seriesStats[index].last : 0
+                                val: statsRevision >= 0 && index < seriesStats.length ? seriesStats[index].last : 0
                             }
                             StatItem {
                                 lbl: "min"
@@ -438,8 +371,7 @@ Item {
                             Text {
                                 text: {
                                     statsRevision
-                                    return (index < seriesRefs.length
-                                            ? seriesRefs[index].count : 0) + " pts"
+                                    return fastChart.pointCount(index) + " pts"
                                 }
                                 color: ThemeManager.textSecondaryColor
                                 font.pixelSize: 10
@@ -448,7 +380,6 @@ Item {
 
                             Item { Layout.fillWidth: true }
 
-                            // Per-series clear button
                             Text {
                                 id: clrLbl
                                 text: "✕"
@@ -466,7 +397,7 @@ Item {
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
-                                    onClicked: clearOneSeries(index)
+                                    onClicked: { fastChart.clearSeries(index); resetStats(index) }
                                 }
                             }
                         }
@@ -474,13 +405,12 @@ Item {
                 }
             }
         }
-    } // ColumnLayout
+    }
 
     // ════════════════════════════════════════════════════════════════════════
     // Inline components
     // ════════════════════════════════════════════════════════════════════════
 
-    // Toolbar button
     component TBBtn: Rectangle {
         id: tbbtn
         property string tipText:  ""
@@ -510,7 +440,7 @@ Item {
 
         Text {
             anchors.centerIn: parent
-            text:  tbbtn.label
+            text: tbbtn.label
             font.pixelSize: 12
             color: tbbtn.isDanger  ? ThemeManager.dangerColor
                  : tbbtn.isActive  ? ThemeManager.primaryColor
@@ -530,7 +460,6 @@ Item {
         }
     }
 
-    // Toolbar separator
     component ToolSep: Rectangle {
         Layout.preferredWidth:  1
         Layout.preferredHeight: 22
@@ -540,7 +469,6 @@ Item {
         opacity: 0.5
     }
 
-    // Stat label + value pair
     component StatItem: RowLayout {
         property string lbl: ""
         property real   val: 0
@@ -562,4 +490,3 @@ Item {
         }
     }
 }
-

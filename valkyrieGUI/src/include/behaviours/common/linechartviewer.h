@@ -2,6 +2,8 @@
 #define LINECHARTVIEWER_H
 
 #include <QObject>
+#include <QTimer>
+#include <QVector>
 #include <behaviours/behaviours.h>
 
 class LineChartViewer : public Behaviours
@@ -49,6 +51,12 @@ public slots:
     void setAutoScale(bool enabled);
     void setChartTitle(const QString &title);
 
+    // ── QML batch helper ──────────────────────────────────────────────────
+    // QML's LineSeries only exposes single-point replace overloads.
+    // This invokable calls QXYSeries::replace(QList<QPointF>) directly,
+    // which emits pointsReplaced once → one updateGeometry() instead of N.
+    Q_INVOKABLE void replaceSeriesPoints(QObject *series, const QVariantList &points);
+
 signals:
     // Internal — forwarded to QML; excluded from node I/O
     void internalAppendXY(double x, double y);
@@ -67,7 +75,21 @@ signals:
     void autoScaleChanged();
     void chartTitleChanged();
 
+private slots:
+    void flushPending();
+
 private:
+    enum PendingOp { AppendXY, AppendYAuto };
+    struct PendingPoint {
+        PendingOp op;
+        int       series;
+        double    x;
+        double    y;
+    };
+
+    QTimer               m_flushTimer;
+    QVector<PendingPoint> m_pending;
+
     int     m_maxPoints  = 500;
     bool    m_autoScale  = true;
     QString m_chartTitle;
