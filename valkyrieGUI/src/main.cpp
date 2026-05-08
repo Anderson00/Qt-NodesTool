@@ -9,6 +9,7 @@
 #include <utils/toastmanager.h>
 #include <utils/logmanager.h>
 #include <utils/fastlinechart.h>
+#include <utils/viewportgriditem.h>
 #include <behaviours/behaviourregistry.h>
 
 static QFile log_file(QDateTime::currentDateTime().toString().replace(":","-").append(".log"));
@@ -98,6 +99,9 @@ int main(int argc, char **argv)
 
     // Register FastLineChart — direct SGG renderer, replaces QtCharts in LineChartViewer
     qmlRegisterType<FastLineChart>("App.Widgets", 1, 0, "FastLineChart");
+
+    // Register ViewportGridItem — direct SGG replacement for ViewportGridCanvas
+    qmlRegisterType<ViewportGridItem>("App.Widgets", 1, 0, "ViewportGridItem");
 
     MainWindow w;
     w.show();

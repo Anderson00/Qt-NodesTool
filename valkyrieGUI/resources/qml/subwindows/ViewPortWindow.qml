@@ -648,21 +648,30 @@ Rectangle {
         }
         clip: true
 
-        // ── Workspace item ───────────────────────────────────────────────────────
-        // ── Infinite grid (viewport-fixed canvas) ────────────────────────────────
-        // Viewport-sized only — no large texture allocation.
-        // Infinite illusion via panOffset % cellSize.
-        // LOD: at low zoom only major dots (~190) are drawn, avoiding the
-        //      ~5 184 arc calls that caused drag lag at zoom=1.
-        ViewportGridCanvas {
+        // ── Infinite grid (viewport-fixed) ───────────────────────────────────────
+        // NEW: ViewportGridSGG — direct QSG renderer. Vertex buffer filled in C++
+        // on the render thread; no JS, no QPainter, no texture upload per frame.
+        // To revert: comment this block and uncomment ViewportGridCanvas below.
+        ViewportGridSGG {
             id: gridCanvas
             anchors.fill: parent
-            panX:     mycanvas.x
-            panY:     mycanvas.y
-            zoom:     zoomScale
-            minWgrid: root.minWgrid
-            pattern:  GlobalProperties.gridPattern
+            panX:        mycanvas.x
+            panY:        mycanvas.y
+            zoom:        zoomScale
+            minWgrid:    root.minWgrid
+            pattern:     GlobalProperties.gridPattern
         }
+
+        // ── OLD: Canvas-based grid (kept for easy rollback) ───────────────────────
+        // ViewportGridCanvas {
+        //     id: gridCanvas
+        //     anchors.fill: parent
+        //     panX:     mycanvas.x
+        //     panY:     mycanvas.y
+        //     zoom:     zoomScale
+        //     minWgrid: root.minWgrid
+        //     pattern:  GlobalProperties.gridPattern
+        // }
         Item {
             id: mycanvas
             width:  10000

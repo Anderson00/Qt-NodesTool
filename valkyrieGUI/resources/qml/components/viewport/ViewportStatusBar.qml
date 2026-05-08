@@ -186,6 +186,8 @@ Rectangle {
             }
             opacity: 0.85
             Layout.alignment: Qt.AlignVCenter
+            Layout.fillWidth: true
+            elide: Text.ElideLeft
             visible: LogManager.lastMessage !== ""
         }
 

@@ -75,6 +75,7 @@
         <file alias="ViewportTopBar.qml">qml/components/viewport/ViewportTopBar.qml</file>
         <file alias="ViewportStatusBar.qml">qml/components/viewport/ViewportStatusBar.qml</file>
         <file alias="ViewportGridCanvas.qml">qml/components/viewport/ViewportGridCanvas.qml</file>
+        <file alias="ViewportGridSGG.qml">qml/components/viewport/ViewportGridSGG.qml</file>
         <file alias="ViewportOriginMarker.qml">qml/components/viewport/ViewportOriginMarker.qml</file>
         <file alias="ViewportBottomToolBar.qml">qml/components/viewport/ViewportBottomToolBar.qml</file>
         <file alias="ConnectionRadialMenu.qml">qml/components/viewport/ConnectionRadialMenu.qml</file>
