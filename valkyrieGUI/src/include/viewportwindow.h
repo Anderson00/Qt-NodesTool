@@ -85,7 +85,8 @@ public slots:
     Q_INVOKABLE void recordNodeMove(const QString& uuid,
                                     double oldX, double oldY, double newX, double newY);
     Q_INVOKABLE void recordNodeResize(const QString& uuid,
-                                      double oldW, double oldH, double newW, double newH);
+                                      double oldX, double oldY, double oldW, double oldH,
+                                      double newX, double newY, double newW, double newH);
 
     // Workspace
     Q_INVOKABLE bool saveWorkspace(const QString& name);

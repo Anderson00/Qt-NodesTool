@@ -49,12 +49,15 @@ Rectangle {
 
     readonly property bool active: dragArea.pressed
 
-    // Final width/height last written to target during this drag session
+    // Final geometry last written to target during this drag session
+    property real _endX: 0
+    property real _endY: 0
     property real _endW: 0
     property real _endH: 0
 
     signal resizeStarted()
-    signal resizeFinished(real oldW, real oldH, real newW, real newH)
+    signal resizeFinished(real oldX, real oldY, real oldW, real oldH,
+                          real newX, real newY, real newW, real newH)
 
     z: 20
     color: (GlobalProperties.debugMode && (dragArea.containsMouse || active))
@@ -172,8 +175,8 @@ Rectangle {
             startGlobalX = g.x;  startGlobalY = g.y
             startTargetX = handle.target.x;    startTargetY = handle.target.y
             startTargetW = handle.target.width; startTargetH = handle.target.height
-            handle._endW = handle.target.width
-            handle._endH = handle.target.height
+            handle._endX = handle.target.x;    handle._endY = handle.target.y
+            handle._endW = handle.target.width; handle._endH = handle.target.height
             handle.resizeStarted()
         }
 
@@ -234,12 +237,20 @@ Rectangle {
                     handle.target.height = newHb
             }
 
-            // Record final dimensions after every move (last value wins at release)
-            handle._endW = handle.target.width
-            handle._endH = handle.target.height
+            // Record final geometry after every move (last value wins at release)
+            handle._endX = handle.target.x;    handle._endY = handle.target.y
+            handle._endW = handle.target.width; handle._endH = handle.target.height
         }
 
-        onReleased: handle.resizeFinished(dragArea.startTargetW, dragArea.startTargetH, handle._endW, handle._endH)
-        onCanceled: handle.resizeFinished(dragArea.startTargetW, dragArea.startTargetH, dragArea.startTargetW, dragArea.startTargetH)
+        onReleased: handle.resizeFinished(
+            dragArea.startTargetX, dragArea.startTargetY,
+            dragArea.startTargetW, dragArea.startTargetH,
+            handle._endX, handle._endY,
+            handle._endW, handle._endH)
+        onCanceled: handle.resizeFinished(
+            dragArea.startTargetX, dragArea.startTargetY,
+            dragArea.startTargetW, dragArea.startTargetH,
+            dragArea.startTargetX, dragArea.startTargetY,
+            dragArea.startTargetW, dragArea.startTargetH)
     }
 }

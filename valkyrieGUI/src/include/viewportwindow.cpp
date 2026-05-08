@@ -283,10 +283,14 @@ void ViewPortWindow::recordNodeMove(const QString& uuid,
 }
 
 void ViewPortWindow::recordNodeResize(const QString& uuid,
-                                      double oldW, double oldH, double newW, double newH)
+                                      double oldX, double oldY, double oldW, double oldH,
+                                      double newX, double newY, double newW, double newH)
 {
-    if (qFuzzyCompare(oldW, newW) && qFuzzyCompare(oldH, newH)) return;
-    m_undoStack->push(new ResizeNodeCommand(this, uuid, oldW, oldH, newW, newH));
+    if (qFuzzyCompare(oldX, newX) && qFuzzyCompare(oldY, newY) &&
+        qFuzzyCompare(oldW, newW) && qFuzzyCompare(oldH, newH)) return;
+    m_undoStack->push(new ResizeNodeCommand(this, uuid,
+                                            oldX, oldY, oldW, oldH,
+                                            newX, newY, newW, newH));
 }
 
 // ── Workspace ─────────────────────────────────────────────────────────────────
