@@ -1,4 +1,4 @@
-﻿#ifndef BEHAVIOURS_H
+#ifndef BEHAVIOURS_H
 #define BEHAVIOURS_H
 
 #include <QMetaMethod>
@@ -11,13 +11,12 @@
 #include <QJsonObject>
 #include <QtQuick/QQuickItem>
 #include "connections.h"
-#include "utils/nodeserialize.h"
 #include "model/nodetheme.h"
 
 class ConnectionModel;
 class Connections;
 
-class Behaviours : public QObject, Presets::NodeSerialize
+class Behaviours : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged)
@@ -33,6 +32,7 @@ class Behaviours : public QObject, Presets::NodeSerialize
     Q_PROPERTY(NodeTheme   *nodeTheme      READ nodeTheme      CONSTANT)
     Q_PROPERTY(QString      behaviourPath  READ behaviourPath  CONSTANT)
     Q_PROPERTY(QJsonObject  behaviourInfos READ behaviourInfos CONSTANT)
+    Q_PROPERTY(QString      uuid           READ uuid           CONSTANT)
 public:
     enum Type{
         CPP = 0, DLL, PYTHON
@@ -45,6 +45,13 @@ public:
 
     virtual QMap<QString, QVariant> loadInfos() = 0;
     virtual void loadConnections();
+
+    // ── State serialization ──────────────────────────────────────────────
+    // Override in subclasses to persist internal state to JSON.
+    // Called by WorkspaceManager on save and by UndoCommands on node removal.
+    virtual QJsonObject saveState() const;
+    virtual void loadState(const QJsonObject& state);
+
     const QString &qmlBodyUrl();
     const QString &title();
     double width();
@@ -61,7 +68,8 @@ public:
     int qtdInputs();
     int qtdOutputs();
 
-    static const QString &getUuid();
+    const QString &uuid() const;
+    void setUuid(const QString &uuid);
 
     void setQmlBodyUrl(const QString &newQmlBodyUrl);
     void setTitle(QString title);
@@ -79,9 +87,6 @@ public:
     void setBehaviourPath(const QString& path);
     void setBehaviourInfos(const QJsonObject& infos);
 
-    void save() override;
-    void load() override;
-
 public slots:
     void setViewRectangle(QQuickItem *view);
     Connections* getConnectionFromMethodSignature(const QString& signature);
@@ -94,6 +99,8 @@ public slots:
     QList<Behaviours*> getAllBehavioursConnected();
 
     void start();
+
+    bool isConnectionCompatible(const QString &sender, Behaviours *target, const QString &receiver);
 
 signals:
     void titleChanged(QString newText);
@@ -132,6 +139,7 @@ private:
     QJsonObject  m_behaviourInfos;
 
     QList<QString> m_listOfExclusions;
+    QString m_uuid;
 };
 
 #endif // BEHAVIOURS_H

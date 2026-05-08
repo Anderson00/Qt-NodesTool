@@ -931,6 +931,244 @@ Popup {
                     Item { width: 1; height: 20 }
                     Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
 
+                    // ── SNAP & SNAPPING ─────────────────────────────────────────────
+                    SectionLabel { text: "SNAP & SNAPPING" }
+
+                    // Enable snap
+                    RowLayout {
+                        width: parent.width; height: 44
+                        Column {
+                            Layout.fillWidth: true; spacing: 2
+                            Text { text: "Enable Grid Snap"; font.pixelSize: 12; color: ThemeManager.textColor }
+                            Text { text: "Applies to drag and resize  ·  Shortcut: G"; font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.45 }
+                        }
+                        CustomSwitch {
+                            checked: GlobalProperties.snapEnabled
+                            onToggled: GlobalProperties.snapEnabled = checked
+                        }
+                    }
+
+                    // Snap mode: Hard | Soft
+                    RowLayout {
+                        width: parent.width; height: 44; spacing: 8
+                        Text {
+                            Layout.fillWidth: true
+                            text: "Snap Mode"
+                            font.pixelSize: 12; color: ThemeManager.textColor
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        readonly property var _modes: [
+                            { id: "hard", label: "Hard", desc: "Always snaps" },
+                            { id: "soft", label: "Soft", desc: "Magnetic pull" }
+                        ]
+
+                        Repeater {
+                            model: parent._modes
+                            delegate: Rectangle {
+                                readonly property bool active: GlobalProperties.snapMode === modelData.id
+                                width: 82; height: 34; radius: 6
+                                color: active
+                                    ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.18)
+                                    : ThemeManager.foregroundColor
+                                border.width: active ? 2 : 1
+                                border.color: active ? ThemeManager.primaryColor : ThemeManager.borderColor
+                                Behavior on color { ColorAnimation { duration: 110 } }
+
+                                Column {
+                                    anchors.centerIn: parent; spacing: 2
+                                    Text {
+                                        text: modelData.label; font.pixelSize: 11; font.bold: active
+                                        color: active ? ThemeManager.primaryColor : ThemeManager.textColor
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        Behavior on color { ColorAnimation { duration: 110 } }
+                                    }
+                                    Text {
+                                        text: modelData.desc; font.pixelSize: 9
+                                        color: ThemeManager.textSecondaryColor
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent; hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: GlobalProperties.snapMode = modelData.id
+                                }
+                            }
+                        }
+                    }
+
+                    // Soft snap radius (only when mode=soft)
+                    RowLayout {
+                        width: parent.width; height: 44
+                        visible: GlobalProperties.snapMode === "soft"
+                        Column {
+                            Layout.fillWidth: true; spacing: 2
+                            Text { text: "Magnetic Radius"; font.pixelSize: 12; color: ThemeManager.textColor }
+                            Text {
+                                text: GlobalProperties.snapRadius + " px from grid line"
+                                font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.45
+                            }
+                        }
+                        Row {
+                            spacing: 8
+                            Text {
+                                text: "4"
+                                font.pixelSize: 10; color: ThemeManager.textSecondaryColor
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            Slider {
+                                from: 4; to: 30; stepSize: 1
+                                value: GlobalProperties.snapRadius
+                                onMoved: GlobalProperties.snapRadius = Math.round(value)
+                                width: 120
+                                Material.accent: ThemeManager.primaryColor
+                            }
+                            Text {
+                                text: "30"
+                                font.pixelSize: 10; color: ThemeManager.textSecondaryColor
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                        }
+                    }
+
+                    // Snap grid size — sync or custom
+                    RowLayout {
+                        width: parent.width; height: 44; spacing: 8
+                        Column {
+                            Layout.fillWidth: true; spacing: 2
+                            Text { text: "Snap Grid Size"; font.pixelSize: 12; color: ThemeManager.textColor }
+                            Text {
+                                text: GlobalProperties.snapSyncToGrid
+                                    ? "Following visual grid (" + GlobalProperties.minWgrid + " u)"
+                                    : "Custom: " + GlobalProperties.snapGridSize + " u"
+                                font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.45
+                            }
+                        }
+
+                        // Sync toggle
+                        Rectangle {
+                            width: 68; height: 30; radius: 6
+                            color: GlobalProperties.snapSyncToGrid
+                                ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.18)
+                                : ThemeManager.foregroundColor
+                            border.width: GlobalProperties.snapSyncToGrid ? 2 : 1
+                            border.color: GlobalProperties.snapSyncToGrid ? ThemeManager.primaryColor : ThemeManager.borderColor
+                            Behavior on color { ColorAnimation { duration: 110 } }
+                            Text {
+                                anchors.centerIn: parent
+                                text: "Auto"
+                                font.pixelSize: 11
+                                font.bold: GlobalProperties.snapSyncToGrid
+                                color: GlobalProperties.snapSyncToGrid ? ThemeManager.primaryColor : ThemeManager.textSecondaryColor
+                                Behavior on color { ColorAnimation { duration: 110 } }
+                            }
+                            MouseArea {
+                                anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                onClicked: GlobalProperties.snapSyncToGrid = true
+                            }
+                        }
+
+                        // Custom snap size buttons
+                        Row {
+                            spacing: 4
+                            visible: !GlobalProperties.snapSyncToGrid
+
+                            Repeater {
+                                model: [10, 20, 40, 80]
+                                delegate: Rectangle {
+                                    readonly property bool active: !GlobalProperties.snapSyncToGrid && GlobalProperties.snapGridSize === modelData
+                                    width: 38; height: 30; radius: 6
+                                    color: active
+                                        ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.18)
+                                        : ThemeManager.foregroundColor
+                                    border.width: active ? 2 : 1
+                                    border.color: active ? ThemeManager.primaryColor : ThemeManager.borderColor
+                                    Behavior on color { ColorAnimation { duration: 110 } }
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: modelData
+                                        font.pixelSize: 10; font.bold: active
+                                        color: active ? ThemeManager.primaryColor : ThemeManager.textSecondaryColor
+                                        Behavior on color { ColorAnimation { duration: 110 } }
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            GlobalProperties.snapSyncToGrid = false
+                                            GlobalProperties.snapGridSize = modelData
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // "Custom" button when sync is on — switches to manual
+                        Rectangle {
+                            visible: GlobalProperties.snapSyncToGrid
+                            width: 68; height: 30; radius: 6
+                            color: ThemeManager.foregroundColor
+                            border.width: 1
+                            border.color: ThemeManager.borderColor
+                            Text {
+                                anchors.centerIn: parent; text: "Custom"
+                                font.pixelSize: 11; color: ThemeManager.textSecondaryColor
+                            }
+                            MouseArea {
+                                anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                onClicked: GlobalProperties.snapSyncToGrid = false
+                            }
+                        }
+                    }
+
+                    // Snap to nodes
+                    RowLayout {
+                        width: parent.width; height: 44
+                        Column {
+                            Layout.fillWidth: true; spacing: 2
+                            Text { text: "Snap to Node Edges"; font.pixelSize: 12; color: ThemeManager.textColor }
+                            Text { text: "Align dragged nodes to others' edges and centers"; font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.45 }
+                        }
+                        CustomSwitch {
+                            checked: GlobalProperties.snapToNodes
+                            onToggled: GlobalProperties.snapToNodes = checked
+                        }
+                    }
+
+                    // Show coordinates badge
+                    RowLayout {
+                        width: parent.width; height: 44
+                        Column {
+                            Layout.fillWidth: true; spacing: 2
+                            Text { text: "Show Snap Coordinates"; font.pixelSize: 12; color: ThemeManager.textColor }
+                            Text { text: "Display world-space position label on snap crosshair"; font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.45 }
+                        }
+                        CustomSwitch {
+                            checked: GlobalProperties.snapShowCoords
+                            onToggled: GlobalProperties.snapShowCoords = checked
+                        }
+                    }
+
+                    // Guide color picker
+                    RowLayout {
+                        width: parent.width; height: 44
+                        Text {
+                            Layout.fillWidth: true; text: "Guide Line Color"
+                            font.pixelSize: 12; color: ThemeManager.textColor
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        // Color swatch + inline ColorPicker
+                        ColorPicker {
+                            value: GlobalProperties.snapGuideColor
+                            showHex: true
+                            onAccepted: function(c) { GlobalProperties.snapGuideColor = c }
+                        }
+                    }
+
+                    Item { width: 1; height: 16 }
+                    Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
+
                     // ── NODES LIST ──────────────────────────────────────────────────
                     SectionLabel { text: "NODES LIST" }
 
@@ -1023,6 +1261,65 @@ Popup {
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: GlobalProperties.nodesListPosition = modelData.id
+                                }
+                            }
+                        }
+                    }
+
+                    Item { width: 1; height: 20 }
+                    Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
+
+                    // ── NODES CONNECTIONS ───────────────────────────────────────────
+                    SectionLabel { text: "NODE CONNECTIONS STYLE" }
+
+                    readonly property var _connectionStyles: [
+                        { id: "pills", label: "Pills", desc: "Modern wrapped tags" },
+                        { id: "list",  label: "List",  desc: "Classic vertical list" }
+                    ]
+
+                    Flow {
+                        width: parent.width
+                        spacing: 8
+
+                        Repeater {
+                            model: viewportColumn._connectionStyles
+
+                            delegate: Rectangle {
+                                readonly property bool active: GlobalProperties.connectionStyle === modelData.id
+                                width: (parent.width - 8) / 2; height: 60; radius: 7
+                                color: active
+                                    ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.15)
+                                    : ThemeManager.foregroundColor
+                                border.width: active ? 2 : 1
+                                border.color: active ? ThemeManager.primaryColor : ThemeManager.borderColor
+                                Behavior on color { ColorAnimation { duration: 120 } }
+
+                                Column {
+                                    anchors.centerIn: parent
+                                    spacing: 4
+
+                                    Text {
+                                        text: modelData.label
+                                        font.pixelSize: 12
+                                        font.bold: active
+                                        color: active ? ThemeManager.primaryColor : ThemeManager.textColor
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        Behavior on color { ColorAnimation { duration: 120 } }
+                                    }
+
+                                    Text {
+                                        text: modelData.desc
+                                        font.pixelSize: 9
+                                        color: ThemeManager.textSecondaryColor
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: GlobalProperties.connectionStyle = modelData.id
                                 }
                             }
                         }

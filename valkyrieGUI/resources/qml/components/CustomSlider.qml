@@ -16,6 +16,8 @@ Item {
     property alias value: slider.value
     property alias from: slider.from
     property alias to: slider.to
+    
+    signal moved()
 
     width: 200
     height: layout.height
@@ -62,11 +64,7 @@ Item {
 
         Slider {
             id: slider
-            from: 5
-            to: 100
             Layout.fillWidth: true
-
-            value: 5
 
             background: Rectangle {
                 x: slider.leftPadding
@@ -93,6 +91,8 @@ Item {
                 color: slider.pressed ? Qt.darker(root.color !== "" ? root.color : ThemeManager.primaryColor, 1.2)
                                       : (root.color !== "" ? root.color : ThemeManager.primaryColor)
             }
+
+            onMoved: root.moved()
 
             onValueChanged: {
                 if(animateOpacity.running === false && labelFloatingBody.opacity !== 1.0){

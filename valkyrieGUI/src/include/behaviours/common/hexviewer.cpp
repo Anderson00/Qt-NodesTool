@@ -1,5 +1,8 @@
 #include "hexviewer.h"
 #include <QJsonArray>
+#include "behaviours/behaviourregistry.h"
+
+REGISTER_BEHAVIOUR(HexViewer, "Hex Viewer", "Hex viewer", "common", 1, 0)
 
 HexViewer::HexViewer(QObject *parent)
 {
@@ -66,4 +69,13 @@ void HexViewer::input(QByteArray bytes)
     }
 
     emit viewOutput(lines);
+}
+
+QJsonObject HexViewer::saveState() const {
+    return { {"hexColumns", m_hexColumns} };
+}
+
+void HexViewer::loadState(const QJsonObject& state) {
+    if (state.contains("hexColumns"))
+        setHexColumns(state["hexColumns"].toInt(16));
 }

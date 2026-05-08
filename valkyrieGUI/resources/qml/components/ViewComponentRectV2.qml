@@ -23,6 +23,30 @@ Rectangle {
     property alias bodySourceQML: rootBodyLoader.source
     property bool animEnabled: false
 
+    // Snap — bound from ViewPortWindow delegate
+    property bool snapEnabled:  false
+    property int  snapGridSize: 20
+    // Drag snap:   viewportSnap(rawX, rawY, node)       → Qt.point  (updates guides)
+    // Resize snap: viewportEdgeSnap(rawX, rawY, node)   → Qt.point  (updates guides)
+    //   rawX / rawY accept null when that axis is not moving.
+    // Both are null when not provided — fallback to simple grid snap.
+    property var  viewportSnap:     null
+    property var  viewportEdgeSnap: null
+
+    signal resizeEnded()
+    signal nodeResizeEnded(real oldX, real oldY, real oldW, real oldH,
+                           real newX, real newY, real newW, real newH)
+
+    onIsResizingChanged: { if (!isResizing) resizeEnded() }
+
+    function _recordResize(oldX, oldY, oldW, oldH, newX, newY, newW, newH) {
+        if (Math.abs(newX - oldX) > 0.5 || Math.abs(newY - oldY) > 0.5 ||
+            Math.abs(newW - oldW) > 0.5 || Math.abs(newH - oldH) > 0.5)
+            nodeResizeEnded(oldX, oldY, oldW, oldH, newX, newY, newW, newH)
+    }
+
+    property bool isDragging: false   // managed by manual drag handler
+
     property double minWidth: 150
     property double minHeight: 100
 
@@ -53,6 +77,9 @@ Rectangle {
 
     property real _pressX: 0
     property real _pressY: 0
+
+    property bool isConnectionsMinimized: false
+
     signal backTotalClicked()
 
     color: Qt.rgba(ThemeManager.backgroundColor.r,
@@ -111,6 +138,17 @@ Rectangle {
         root.connectionsOutput = connObj
     }
 
+    function setMinimized(minimized) {
+        if (root.isConnectionsMinimized === minimized) return
+        if (minimized) {
+            root.height -= connectionsBody.targetHeight
+        } else {
+            root.height += connectionsBody.targetHeight
+        }
+        root.isConnectionsMinimized = minimized
+        if (behaviourObject) behaviourObject.height = root.height
+    }
+
     function _emitMenuAction(action) {
         menuActionTriggered(action)
         switch (action) {
@@ -140,25 +178,29 @@ Rectangle {
         Qt.callLater(() => animEnabled = true)
     }
 
-    onXChanged:      if (behaviourObject) behaviourObject.x = x
-    onYChanged:      if (behaviourObject) behaviourObject.y = y
-    onWidthChanged:  if (behaviourObject) { behaviourObject.width = width; behaviourObject.contentWidth = width }
-    onHeightChanged: if (behaviourObject) behaviourObject.height = root.height
+    onXChanged:      if ((isResizing || isDragging) && behaviourObject) behaviourObject.x = x
+    onYChanged:      if ((isResizing || isDragging) && behaviourObject) behaviourObject.y = y
+    onWidthChanged:  if ((isResizing || isDragging) && behaviourObject) { behaviourObject.width = width; behaviourObject.contentWidth = width }
+    onHeightChanged: if ((isResizing || isDragging) && behaviourObject) behaviourObject.height = root.height
 
-    // Sync C++ → visual (e.g. undo moves node back); disabled during user drag to avoid fighting
-    Binding {
-        target: root
-        property: "x"
-        value: behaviourObject ? behaviourObject.x : 0
-        when: behaviourObject !== null && !area.drag.active && !isResizing
-        restoreMode: Binding.RestoreNone
-    }
-    Binding {
-        target: root
-        property: "y"
-        value: behaviourObject ? behaviourObject.y : 0
-        when: behaviourObject !== null && !area.drag.active && !isResizing
-        restoreMode: Binding.RestoreNone
+    // Sync all geometry from C++ → visual (undo/redo, workspace load).
+    // One-directional only: behaviourObject → root. The reverse (root → behaviourObject)
+    // runs in onXChanged/onYChanged/onWidthChanged/onHeightChanged, guarded to fire
+    // only during user gestures. This prevents feedback loops with the Behavior animations.
+    Connections {
+        target: behaviourObject
+        function onXChanged() {
+            if (!root.isDragging && !root.isResizing) root.x = behaviourObject.x
+        }
+        function onYChanged() {
+            if (!root.isDragging && !root.isResizing) root.y = behaviourObject.y
+        }
+        function onWidthChanged() {
+            if (!root.isDragging && !root.isResizing) root.width = behaviourObject.width
+        }
+        function onHeightChanged() {
+            if (!root.isDragging && !root.isResizing) root.height = behaviourObject.height
+        }
     }
 
     Connections {
@@ -168,39 +210,88 @@ Rectangle {
         }
     }
 
-    Behavior on height {
-        enabled: animEnabled && !isResizing
+    Behavior on x {
+        enabled: animEnabled && !isResizing && !isDragging
+        NumberAnimation { duration: 250; easing.type: Easing.OutQuad }
+    }
+    Behavior on y {
+        enabled: animEnabled && !isResizing && !isDragging
         NumberAnimation { duration: 250; easing.type: Easing.OutQuad }
     }
     Behavior on width {
         enabled: animEnabled && !isResizing
         NumberAnimation { duration: 250; easing.type: Easing.OutQuad }
     }
+    Behavior on height {
+        enabled: animEnabled && !isResizing
+        NumberAnimation { duration: 250; easing.type: Easing.OutQuad }
+    }
 
     // ============== Drag area ==============
+    // Manual drag: track press origin via mapToItem so snap can be applied
+    // BEFORE setting the position (avoids fighting the Qt drag system).
     MouseArea {
         id: area
         z: 1
         anchors.fill: root
         hoverEnabled: true
-        cursorShape: (area.containsMouse && !isResizing) ? Qt.OpenHandCursor : Qt.ArrowCursor
-        drag.smoothed: true
-        drag.target: root
-
-        drag.minimumX: 0
-        drag.minimumY: 0
-        drag.maximumX: parent && parent.parent ? parent.parent.width  - width  : Number.MAX_VALUE
-        drag.maximumY: parent && parent.parent ? parent.parent.height - height : Number.MAX_VALUE
+        cursorShape: (area.containsMouse && !isResizing)
+                     ? (area.pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor)
+                     : Qt.ArrowCursor
         acceptedButtons: Qt.AllButtons
 
-        onPressed: {
-            root._pressX = root.x
-            root._pressY = root.y
+        property real _pressParentX: 0   // mouse position in parent (canvas) space at press
+        property real _pressParentY: 0
+        property real _pressNodeX:   0   // root.x at press
+        property real _pressNodeY:   0
+
+        onPressed: function(mouse) {
+            var pt        = mapToItem(root.parent, mouse.x, mouse.y)
+            _pressParentX = pt.x
+            _pressParentY = pt.y
+            _pressNodeX   = root.x
+            _pressNodeY   = root.y
+            root._pressX  = root.x
+            root._pressY  = root.y
+            root.isDragging = true
         }
-        onReleased: {
+
+        onPositionChanged: function(mouse) {
+            if (!root.isDragging) return
+
+            var pt   = mapToItem(root.parent, mouse.x, mouse.y)
+            var newX = _pressNodeX + (pt.x - _pressParentX)
+            var newY = _pressNodeY + (pt.y - _pressParentY)
+
+            // Constrain within parent bounds
+            if (root.parent) {
+                newX = Math.max(0, Math.min(root.parent.width  - root.width,  newX))
+                newY = Math.max(0, Math.min(root.parent.height - root.height, newY))
+            }
+
+            // Apply snap — delegate to viewport function (handles grid + alignment + soft modes)
+            // Falls back to simple grid snap when no function is provided.
+            if (root.snapEnabled) {
+                if (root.viewportSnap) {
+                    var snapped = root.viewportSnap(newX, newY, root)
+                    newX = snapped.x
+                    newY = snapped.y
+                } else {
+                    newX = Math.round(newX / root.snapGridSize) * root.snapGridSize
+                    newY = Math.round(newY / root.snapGridSize) * root.snapGridSize
+                }
+            }
+
+            root.x = newX
+            root.y = newY
+        }
+
+        onReleased: function(mouse) {
+            root.isDragging = false
             if (Math.abs(root.x - root._pressX) > 0.5 || Math.abs(root.y - root._pressY) > 0.5)
                 root.nodeDragEnded(root._pressX, root._pressY, root.x, root.y)
         }
+
         onClicked: function(mouse) {
             root.focus = true
             if (mouse.button === Qt.RightButton)
@@ -209,14 +300,14 @@ Rectangle {
     }
 
     // ============== Resize handles (extracted to ResizeHandle.qml) ==============
-    ResizeHandle { id: tlH; direction: "top-left";     handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
-    ResizeHandle { id: trH; direction: "top-right";    handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
-    ResizeHandle { id: blH; direction: "bottom-left";  handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
-    ResizeHandle { id: brH; direction: "bottom-right"; handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
-    ResizeHandle { id: tH;  direction: "top";          handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
-    ResizeHandle { id: bH;  direction: "bottom";       handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
-    ResizeHandle { id: lH;  direction: "left";         handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
-    ResizeHandle { id: rH;  direction: "right";        handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor }
+    ResizeHandle { id: tlH; direction: "top-left";     handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
+    ResizeHandle { id: trH; direction: "top-right";    handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
+    ResizeHandle { id: blH; direction: "bottom-left";  handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
+    ResizeHandle { id: brH; direction: "bottom-right"; handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
+    ResizeHandle { id: tH;  direction: "top";          handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
+    ResizeHandle { id: bH;  direction: "bottom";       handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
+    ResizeHandle { id: lH;  direction: "left";         handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
+    ResizeHandle { id: rH;  direction: "right";        handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
 
     // ============== Header ==============
     Rectangle {
@@ -227,7 +318,7 @@ Rectangle {
         anchors.leftMargin: root.border.width
         anchors.topMargin: root.border.width
         anchors.rightMargin: root.border.width
-        height: 25
+        height: 34
         radius: root.radius - 1
         antialiasing: true
         clip: true
@@ -245,9 +336,9 @@ Rectangle {
         RowLayout {
             id: topHeader
             anchors.fill: parent
-            anchors.leftMargin: 6
-            anchors.rightMargin: 6
-            spacing: 4
+            anchors.leftMargin: 8
+            anchors.rightMargin: 4
+            spacing: 2
 
             Text {
                 id: titleView
@@ -261,31 +352,31 @@ Rectangle {
             }
 
             NewButton {
-                Layout.preferredHeight: 25
-                Layout.preferredWidth: 22
+                Layout.preferredHeight: 34
+                Layout.preferredWidth: 28
                 textColor: titleView.color
                 iconSource: Qaterial.Icons.dotsVertical
-                iconSize: 12
+                iconSize: 14
                 variant: "text"
                 onClicked: contextMenu.popup()
             }
 
             NewButton {
-                Layout.preferredHeight: 25
-                Layout.preferredWidth: 22
+                Layout.preferredHeight: 34
+                Layout.preferredWidth: 28
                 textColor: titleView.color
                 iconSource: Qaterial.Icons.windowMaximize
-                iconSize: 12
+                iconSize: 14
                 variant: "text"
                 onClicked: console.log("Maximize clicked")
             }
 
             NewButton {
-                Layout.preferredHeight: 25
-                Layout.preferredWidth: 22
+                Layout.preferredHeight: 34
+                Layout.preferredWidth: 30
                 textColor: titleView.color
                 iconSource: Qaterial.Icons.close
-                iconSize: 12
+                iconSize: 14
                 variant: "text"
                 onClicked: root._emitMenuAction("close")
             }
@@ -336,7 +427,7 @@ Rectangle {
         }
     }
 
-    // ============== Divider ==============
+    // ============== Divider & Collapse Handle ==============
     Rectangle {
         id: divider
         color: root.border.color
@@ -346,6 +437,38 @@ Rectangle {
         anchors.right: parent.right
         anchors.leftMargin: 1
         anchors.rightMargin: 1
+        z: 4
+
+        Rectangle {
+            id: collapseHandle
+            width: 40
+            height: 10
+            radius: 5
+            anchors.centerIn: parent
+            color: collapseMouse.containsMouse ? ThemeManager.primaryColor : root.border.color
+            Behavior on color { ColorAnimation { duration: 150 } }
+            Behavior on width { NumberAnimation { duration: 150 } }
+
+            Text {
+                anchors.centerIn: parent
+                text: root.isConnectionsMinimized ? "▾" : "▴"
+                font.pixelSize: 14
+                color: ThemeManager.backgroundColor
+                rotation: root.isConnectionsMinimized ? 0 : 0
+                Behavior on rotation { NumberAnimation { duration: 200 } }
+                anchors.verticalCenterOffset: root.isConnectionsMinimized ? -1 : 1
+            }
+
+            MouseArea {
+                id: collapseMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    root.setMinimized(!root.isConnectionsMinimized)
+                }
+            }
+        }
     }
 
     // ============== Body ==============
@@ -362,46 +485,60 @@ Rectangle {
         spacing: 0
         z: 2
 
-        RowLayout {
+        Item {
             id: connectionsBody
             Layout.fillWidth: true
-            spacing: 0
+            property real targetHeight: splitConns.implicitHeight
+            Layout.preferredHeight: root.isConnectionsMinimized ? 0 : targetHeight
+            Behavior on Layout.preferredHeight {
+                NumberAnimation { duration: 250; easing.type: Easing.InOutQuad }
+            }
+            opacity: root.isConnectionsMinimized ? 0 : 1
+            Behavior on opacity {
+                NumberAnimation { duration: 200 }
+            }
             z: 3
+            clip: true
             visible: connectionsInput.length > 0 || connectionsOutput.length > 0
 
             SplitView {
                 id: splitConns
                 orientation: Qt.Horizontal
-                Layout.fillWidth: true
-                Layout.preferredHeight:
-                    Math.max(columnLayoutInputConns.height,
-                             columnLayoutOutputConns.height) + 8
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: parent.targetHeight
+                implicitHeight: Math.max(columnLayoutInputConns.height, columnLayoutOutputConns.height) + 8
 
                 Rectangle {
                     id: connectionsInputBody
+                    clip: true
                     Layout.preferredHeight:
                         Math.max(columnLayoutInputConns.height,
                                  columnLayoutOutputConns.height) + 4
-                    Layout.fillWidth: true
                     SplitView.minimumWidth: 10
                     SplitView.preferredWidth: parent.width / 2
                     color: Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.08)
 
-                    ColumnLayout {
+                    Flow {
                         id: columnLayoutInputConns
-                        width: parent.width
+                        width: GlobalProperties.connectionStyle === "list" ? parent.width : parent.width - 8
                         anchors.left: parent.left
                         anchors.top: parent.top
-                        anchors.leftMargin: 4
-                        anchors.topMargin: 2
+                        anchors.leftMargin: GlobalProperties.connectionStyle === "list" ? 4 : 4
+                        anchors.topMargin: 4
+                        spacing: 4
 
                         Repeater {
                             model: connectionsInput
                             Rectangle {
                                 id: inputArea
-                                width: connInName.width + connInConnCircle.width
-                                height: rowInput.height
-                                color: 'transparent'
+                                readonly property string style: GlobalProperties.connectionStyle
+                                width: style === "list" ? columnLayoutInputConns.width : rowInput.implicitWidth + 16
+                                height: style === "list" ? 14 : 20
+                                radius: style === "list" ? 0 : 10
+                                color: style === "list" ? "transparent" : (inputMouse.containsMouse ? Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.25) : "transparent")
+                                border.width: style === "list" ? 0 : 1
+                                border.color: style === "list" ? "transparent" : Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.4)
 
                                 Component.onCompleted: {
                                     connectionsInput[index].connArea = inputArea
@@ -409,28 +546,37 @@ Rectangle {
                                 }
 
                                 MouseArea {
+                                    id: inputMouse
                                     anchors.fill: parent
+                                    hoverEnabled: true
                                     preventStealing: true
+                                    cursorShape: Qt.PointingHandCursor
                                     onClicked: root.connectionSocketClicked(connectionsInput[index])
                                 }
 
                                 Row {
                                     id: rowInput
-                                    spacing: 2
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.left: style === "list" ? parent.left : undefined
+                                    anchors.horizontalCenter: style !== "list" ? parent.horizontalCenter : undefined
+                                    spacing: 4
 
                                     Rectangle {
                                         id: connInConnCircle
-                                        width: 4
+                                        width: style === "list" ? 6 : 8
                                         height: width
-                                        radius: width
-                                        color: stringToColour(extractParams(connInName.text))
-                                        anchors.verticalCenter: connInName.verticalCenter
+                                        radius: width / 2
+                                        color: stringToColour(extractParams(modelData.name))
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        border.width: style === "list" ? 0 : 1
+                                        border.color: Qt.rgba(0,0,0,0.2)
                                     }
                                     Text {
                                         id: connInName
-                                        font.pixelSize: 8
+                                        font.pixelSize: style === "list" ? 8 : 9
                                         color: ThemeManager.textColor
                                         text: modelData.name
+                                        anchors.verticalCenter: parent.verticalCenter
                                     }
                                 }
                             }
@@ -439,31 +585,37 @@ Rectangle {
                 }
 
                 Rectangle {
-                    clip: true
                     id: connectionsOutputBody
+                    clip: true
                     Layout.preferredHeight:
                         Math.max(columnLayoutInputConns.height,
                                  columnLayoutOutputConns.height) + 4
-                    Layout.fillWidth: true
                     SplitView.minimumWidth: 10
                     SplitView.preferredWidth: parent.width / 2
+                    SplitView.fillWidth: true
                     color: Qt.rgba(ThemeManager.successColor.r, ThemeManager.successColor.g, ThemeManager.successColor.b, 0.08)
 
-                    ColumnLayout {
+                    Flow {
                         id: columnLayoutOutputConns
+                        width: GlobalProperties.connectionStyle === "list" ? parent.width : parent.width - 8
                         anchors.right: parent.right
                         anchors.top: parent.top
-                        anchors.rightMargin: 4
-                        anchors.topMargin: 2
+                        anchors.rightMargin: GlobalProperties.connectionStyle === "list" ? 4 : 4
+                        anchors.topMargin: 4
+                        spacing: 4
+                        layoutDirection: Qt.RightToLeft
 
                         Repeater {
                             model: connectionsOutput
                             Rectangle {
                                 id: outputArea
-                                width: connOutName.width + 8
-                                Layout.alignment: Qt.AlignRight
-                                height: connOutName.height
-                                color: 'transparent'
+                                readonly property string style: GlobalProperties.connectionStyle
+                                width: style === "list" ? columnLayoutOutputConns.width : rowOutput.implicitWidth + 16
+                                height: style === "list" ? 14 : 20
+                                radius: style === "list" ? 0 : 10
+                                color: style === "list" ? "transparent" : (outputMouse.containsMouse ? Qt.rgba(ThemeManager.successColor.r, ThemeManager.successColor.g, ThemeManager.successColor.b, 0.25) : "transparent")
+                                border.width: style === "list" ? 0 : 1
+                                border.color: style === "list" ? "transparent" : Qt.rgba(ThemeManager.successColor.r, ThemeManager.successColor.g, ThemeManager.successColor.b, 0.4)
 
                                 Component.onCompleted: {
                                     connectionsOutput[index].connArea = outputArea
@@ -471,28 +623,37 @@ Rectangle {
                                 }
 
                                 MouseArea {
+                                    id: outputMouse
                                     anchors.fill: parent
+                                    hoverEnabled: true
+                                    preventStealing: true
+                                    cursorShape: Qt.PointingHandCursor
                                     onClicked: root.connectionSocketClicked(connectionsOutput[index])
                                 }
 
                                 Row {
                                     id: rowOutput
-                                    anchors.right: parent.right
-                                    spacing: 2
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.right: style === "list" ? parent.right : undefined
+                                    anchors.horizontalCenter: style !== "list" ? parent.horizontalCenter : undefined
+                                    spacing: 4
 
                                     Text {
                                         id: connOutName
-                                        font.pixelSize: 8
+                                        font.pixelSize: style === "list" ? 8 : 9
                                         color: ThemeManager.textColor
                                         text: modelData.name
+                                        anchors.verticalCenter: parent.verticalCenter
                                     }
                                     Rectangle {
                                         id: connOutConnCircle
-                                        width: 4
+                                        width: style === "list" ? 6 : 8
                                         height: width
-                                        radius: width
-                                        color: stringToColour(extractParams(connOutName.text))
-                                        anchors.verticalCenter: connOutName.verticalCenter
+                                        radius: width / 2
+                                        color: stringToColour(extractParams(modelData.name))
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        border.width: style === "list" ? 0 : 1
+                                        border.color: Qt.rgba(0,0,0,0.2)
                                     }
                                 }
                             }

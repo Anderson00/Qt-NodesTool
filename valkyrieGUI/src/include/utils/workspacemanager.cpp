@@ -14,6 +14,8 @@
 #include <QtQml/QQmlEngine>
 #include <QDebug>
 
+static constexpr int WORKSPACE_VERSION = 2;
+
 WorkspaceManager::WorkspaceManager(QObject* parent) : QObject(parent)
 {
     refreshWorkspaceList();
@@ -92,6 +94,7 @@ bool WorkspaceManager::saveWorkspace(const QString& name)
         node["width"]  = beh->width();
         node["height"] = beh->height();
         node["title"]  = beh->title();
+        node["state"]  = beh->saveState();
         nodes.append(node);
     }
 
@@ -110,6 +113,12 @@ bool WorkspaceManager::saveWorkspace(const QString& name)
                 c["outputMethod"] = conn->methodSignature();
                 c["inputUuid"]    = inputUuid;
                 c["inputMethod"]  = QString::fromLatin1(model->slot().methodSignature());
+                
+                QString comment = m_viewPort->getConnectionComment(outputUuid, c["outputMethod"].toString(), inputUuid, c["inputMethod"].toString());
+                if (!comment.isEmpty()) {
+                    c["comment"] = comment;
+                }
+                
                 connections.append(c);
             }
         }
@@ -122,7 +131,7 @@ bool WorkspaceManager::saveWorkspace(const QString& name)
     viewport["scale"] = m_viewPort->viewportScale();
 
     QJsonObject root;
-    root["version"]     = 1;
+    root["version"]     = WORKSPACE_VERSION;
     root["nodes"]       = nodes;
     root["connections"] = connections;
     root["viewport"]    = viewport;
@@ -182,7 +191,8 @@ bool WorkspaceManager::loadWorkspace(const QString& name)
             n["y"].toDouble(),
             n["width"].toDouble(),
             n["height"].toDouble(),
-            n["title"].toString()
+            n["title"].toString(),
+            n.contains("state") ? n["state"].toObject() : QJsonObject()
         );
     }
 
@@ -194,6 +204,16 @@ bool WorkspaceManager::loadWorkspace(const QString& name)
             c["inputUuid"].toString(),
             c["inputMethod"].toString()
         );
+        
+        if (c.contains("comment")) {
+            m_viewPort->setConnectionComment(
+                c["outputUuid"].toString(),
+                c["outputMethod"].toString(),
+                c["inputUuid"].toString(),
+                c["inputMethod"].toString(),
+                c["comment"].toString()
+            );
+        }
     }
 
     const QJsonObject vp = root["viewport"].toObject();

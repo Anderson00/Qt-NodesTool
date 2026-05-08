@@ -16,11 +16,12 @@ import Qaterial as Qaterial
 
 Rectangle {
     id: root
-    property var tt: ""
     property var count: 0
     property int minWgrid: GlobalProperties.minWgrid
-    property int minZoom: 1
-    property int maxZoom: 6
+    property real minZoom: 0.2
+    property real maxZoom: 5.0
+    property real zoomScale: 1.0
+    onZoomScaleChanged: viewPort.viewportScale = zoomScale
 
     // mouse properties
     property var mouseXX
@@ -28,10 +29,8 @@ Rectangle {
     property bool isConnecting: false
     property var shapeConn
     property bool m_suppressConnectionDraw: false
-    property var finalPoint
 
     //Behaviours properties
-    property var behavioursZ: []
     property var nodeOnFocus
 
     // World-space point kept at the center of the view.
@@ -41,6 +40,215 @@ Rectangle {
     property real viewCenterY: 5000
 
     property var rectsArray: ListModel {}
+    property bool allConnectionsMinimized: false
+
+    // ── Grid snap ──────────────────────────────────────────────────────────
+    // Read-only mirror of GlobalProperties — all mutations go through GlobalProperties
+    // directly (G key, toolbar toggle, settings) to avoid binding-break issues.
+    readonly property bool snapEnabled: GlobalProperties.snapEnabled
+    onSnapEnabledChanged: { if (!snapEnabled) _clearSnapGuides() }
+
+    // Effective snap grid size: follow visual grid when syncToGrid is on.
+    readonly property int effectiveSnapGridSize: GlobalProperties.snapSyncToGrid
+                                                 ? GlobalProperties.minWgrid
+                                                 : GlobalProperties.snapGridSize
+
+    property real snapGuideX:      -1   // canvas-space X of grid snap guide
+    property real snapGuideY:      -1   // canvas-space Y of grid snap guide
+    property var  alignGuidesX:    []   // canvas-space X positions of node-alignment guides
+    property var  alignGuidesY:    []   // canvas-space Y positions of node-alignment guides
+    property bool anyNodeSnapping: false
+
+    // Guide visibility opacity — fades out after drag ends
+    property real guideOpacity: 0
+
+    onAnyNodeSnappingChanged: {
+        if (anyNodeSnapping) {
+            guideFadeTimer.stop()
+            guideFade.stop()
+            guideOpacity = 0.82
+        } else {
+            guideFadeTimer.restart()
+        }
+    }
+
+    Timer {
+        id: guideFadeTimer
+        interval: 160
+        onTriggered: guideFade.start()
+    }
+    NumberAnimation {
+        id: guideFade
+        target: root; property: "guideOpacity"
+        to: 0; duration: 380; easing.type: Easing.InQuad
+        onStopped: { if (!root.anyNodeSnapping) root.guideOpacity = 0 }
+    }
+
+    function _clearSnapGuides() {
+        snapGuideX     = -1;   snapGuideY     = -1
+        alignGuidesX   = [];   alignGuidesY   = []
+        anyNodeSnapping = false
+    }
+
+    // ── Centralized snap computation ────────────────────────────────────────
+    // Called by each node's drag handler. Returns snapped Qt.point and updates
+    // all guide state as a side-effect.
+    function computeSnap(rawX, rawY, draggedItem) {
+        if (!root.snapEnabled) return Qt.point(rawX, rawY)
+
+        var sg        = root.effectiveSnapGridSize
+        var zm        = root.zoomScale
+        // Convert screen-pixel radius to canvas units
+        var threshold = GlobalProperties.snapRadius / zm
+        var mode      = GlobalProperties.snapMode
+
+        var snapX = rawX,  snapY = rawY
+        var gx    = -1,    gy    = -1
+        var axList = [],   ayList = []
+
+        // ── Grid snap ───────────────────────────────────────────────────────
+        if (sg > 0) {
+            var gridX = Math.round(rawX / sg) * sg
+            var gridY = Math.round(rawY / sg) * sg
+
+            if (mode === "soft") {
+                if (Math.abs(gridX - rawX) <= threshold) { snapX = gridX; gx = snapX }
+                if (Math.abs(gridY - rawY) <= threshold) { snapY = gridY; gy = snapY }
+            } else {
+                snapX = gridX; snapY = gridY; gx = snapX; gy = snapY
+            }
+        }
+
+        // ── Node alignment snap ─────────────────────────────────────────────
+        if (GlobalProperties.snapToNodes && draggedItem) {
+            var alignThr = Math.max(threshold * 1.5, 12 / zm)
+            var nodeW    = draggedItem.width
+            var nodeH    = draggedItem.height
+
+            var bestDx   = alignThr + 1
+            var bestDy   = alignThr + 1
+            var bestSX   = snapX
+            var bestSY   = snapY
+            var newAxList = [], newAyList = []
+
+            // Dragged node snap points: left, center, right / top, center, bottom
+            var myXPts = [rawX, rawX + nodeW * 0.5, rawX + nodeW]
+            var myYPts = [rawY, rawY + nodeH * 0.5, rawY + nodeH]
+
+            for (var i = 0; i < nodes.model.count; i++) {
+                var other = nodes.itemAt(i)
+                if (!other || other === draggedItem) continue
+
+                var oXPts = [other.x, other.x + other.width * 0.5, other.x + other.width]
+                var oYPts = [other.y, other.y + other.height * 0.5, other.y + other.height]
+
+                for (var oi = 0; oi < oXPts.length; oi++) {
+                    for (var mi = 0; mi < myXPts.length; mi++) {
+                        var d = Math.abs(myXPts[mi] - oXPts[oi])
+                        if (d < bestDx) {
+                            bestDx    = d
+                            bestSX    = rawX + (oXPts[oi] - myXPts[mi])
+                            newAxList = [oXPts[oi]]
+                        }
+                    }
+                }
+                for (var oj = 0; oj < oYPts.length; oj++) {
+                    for (var mj = 0; mj < myYPts.length; mj++) {
+                        var dy2 = Math.abs(myYPts[mj] - oYPts[oj])
+                        if (dy2 < bestDy) {
+                            bestDy    = dy2
+                            bestSY    = rawY + (oYPts[oj] - myYPts[mj])
+                            newAyList = [oYPts[oj]]
+                        }
+                    }
+                }
+            }
+
+            if (bestDx <= alignThr) { snapX = bestSX; gx = snapX; axList = newAxList }
+            if (bestDy <= alignThr) { snapY = bestSY; gy = snapY; ayList = newAyList }
+        }
+
+        root.snapGuideX    = gx
+        root.snapGuideY    = gy
+        root.alignGuidesX  = axList
+        root.alignGuidesY  = ayList
+        root.anyNodeSnapping = (gx >= 0 || gy >= 0 || axList.length > 0 || ayList.length > 0)
+
+        return Qt.point(snapX, snapY)
+    }
+
+    // ── Edge snap for resize handles ────────────────────────────────────────
+    // Called by ResizeHandle during drag. rawEdgeX/rawEdgeY are the absolute
+    // canvas positions of the edge being moved; pass null when that axis is fixed.
+    // Updates the same guide overlays used by drag snap.
+    function computeEdgeSnap(rawEdgeX, rawEdgeY, draggedItem) {
+        if (!root.snapEnabled) {
+            _clearSnapGuides()
+            return Qt.point(rawEdgeX !== null ? rawEdgeX : 0,
+                            rawEdgeY !== null ? rawEdgeY : 0)
+        }
+
+        var sg        = root.effectiveSnapGridSize
+        var zm        = root.zoomScale
+        var threshold = GlobalProperties.snapRadius / zm
+        var mode      = GlobalProperties.snapMode
+
+        var snapX = rawEdgeX !== null ? rawEdgeX : 0
+        var snapY = rawEdgeY !== null ? rawEdgeY : 0
+        var gx = -1, gy = -1
+        var axList = [], ayList = []
+
+        // ── Grid snap ───────────────────────────────────────────────────────
+        if (rawEdgeX !== null && sg > 0) {
+            var gridX = Math.round(rawEdgeX / sg) * sg
+            if (mode === "soft") {
+                if (Math.abs(gridX - rawEdgeX) <= threshold) { snapX = gridX; gx = snapX }
+            } else { snapX = gridX; gx = snapX }
+        }
+        if (rawEdgeY !== null && sg > 0) {
+            var gridY = Math.round(rawEdgeY / sg) * sg
+            if (mode === "soft") {
+                if (Math.abs(gridY - rawEdgeY) <= threshold) { snapY = gridY; gy = snapY }
+            } else { snapY = gridY; gy = snapY }
+        }
+
+        // ── Node alignment snap ─────────────────────────────────────────────
+        if (GlobalProperties.snapToNodes && draggedItem) {
+            var alignThr  = Math.max(threshold * 1.5, 12 / zm)
+            var bestDx    = alignThr + 1
+            var bestDy    = alignThr + 1
+
+            for (var i = 0; i < nodes.model.count; i++) {
+                var other = nodes.itemAt(i)
+                if (!other || other === draggedItem) continue
+
+                if (rawEdgeX !== null) {
+                    var oXPts = [other.x, other.x + other.width * 0.5, other.x + other.width]
+                    for (var oi = 0; oi < oXPts.length; oi++) {
+                        var d = Math.abs(rawEdgeX - oXPts[oi])
+                        if (d < bestDx) { bestDx = d; snapX = oXPts[oi]; axList = [oXPts[oi]] }
+                    }
+                }
+                if (rawEdgeY !== null) {
+                    var oYPts = [other.y, other.y + other.height * 0.5, other.y + other.height]
+                    for (var oj = 0; oj < oYPts.length; oj++) {
+                        var dy2 = Math.abs(rawEdgeY - oYPts[oj])
+                        if (dy2 < bestDy) { bestDy = dy2; snapY = oYPts[oj]; ayList = [oYPts[oj]] }
+                    }
+                }
+            }
+            if (axList.length > 0) gx = snapX
+            if (ayList.length > 0) gy = snapY
+        }
+
+        root.snapGuideX     = gx
+        root.snapGuideY     = gy
+        root.alignGuidesX   = axList
+        root.alignGuidesY   = ayList
+        root.anyNodeSnapping = (gx >= 0 || gy >= 0 || axList.length > 0 || ayList.length > 0)
+
+        return Qt.point(snapX, snapY)
+    }
 
     signal nodeConnected(var node1, var node2)
 
@@ -96,7 +304,7 @@ Rectangle {
         }
 
         function onViewportRestoreRequested(x, y, scale) {
-            sliderZoom.value = scale
+            zoomScale = scale
             mycanvas.x = x
             mycanvas.y = y
         }
@@ -145,25 +353,71 @@ Rectangle {
     function viewSubWindowsWidthHeightArea() {
         // Re-anchor the canvas so the same world point stays centered after resize.
         if (!mycanvas.initialized) return
-        mycanvas.x = containerCanvas.width  / 2 - viewCenterX * sliderZoom.value
-        mycanvas.y = containerCanvas.height / 2 - viewCenterY * sliderZoom.value
+        mycanvas.x = containerCanvas.width  / 2 - viewCenterX * zoomScale
+        mycanvas.y = containerCanvas.height / 2 - viewCenterY * zoomScale
     }
 
-    function addWindow(){
 
+    // ── Z-order management ────────────────────────────────────────────────────
+    // Returns all node rects sorted by z ascending.
+    function _zSortedRects() {
+        var all = []
+        for (var i = 0; i < rectsArray.count; i++)
+            all.push(rectsArray.get(i).rectObjTarget)
+        all.sort(function(a, b) { return a.z - b.z })
+        return all
     }
 
-    function getBehaviourGreaterZ(){
-        let aux = []
-        aux = aux.concat(behavioursZ);
-        return aux.sort()[aux.length - 1];
+    // Reassign z as 1..N in current order — keeps relative stack intact, no gaps.
+    function _compactZ() {
+        var sorted = _zSortedRects()
+        for (var i = 0; i < sorted.length; i++)
+            sorted[i].z = i + 1
+    }
+
+    // Swap target with the node immediately above it.
+    function _bringForward(target) {
+        var sorted = _zSortedRects()
+        var idx = sorted.indexOf(target)
+        if (idx < 0 || idx === sorted.length - 1) return
+        var tmp = sorted[idx + 1].z
+        sorted[idx + 1].z = target.z
+        target.z = tmp
+        _compactZ()
+    }
+
+    // Swap target with the node immediately below it.
+    function _sendBackward(target) {
+        var sorted = _zSortedRects()
+        var idx = sorted.indexOf(target)
+        if (idx <= 0) return
+        var tmp = sorted[idx - 1].z
+        sorted[idx - 1].z = target.z
+        target.z = tmp
+        _compactZ()
+    }
+
+    // Place target above every other node.
+    function _bringToFront(target) {
+        var sorted = _zSortedRects()
+        if (sorted.length === 0 || sorted.indexOf(target) === sorted.length - 1) return
+        target.z = sorted[sorted.length - 1].z + 1
+        _compactZ()
+    }
+
+    // Place target below every other node.
+    function _sendToBack(target) {
+        var sorted = _zSortedRects()
+        if (sorted.length === 0 || sorted.indexOf(target) === 0) return
+        target.z = sorted[0].z - 1
+        _compactZ()
     }
 
     // Converts viewport coordinates to mycanvas local coordinates.
     function toLocal(vx, vy) {
         return Qt.point(
-            (vx - mycanvas.x) / sliderZoom.value,
-            (vy - mycanvas.y) / sliderZoom.value
+            (vx - mycanvas.x) / zoomScale,
+            (vy - mycanvas.y) / zoomScale
         )
     }
 
@@ -181,21 +435,6 @@ Rectangle {
     Keys.onPressed: {
         if (event.key === Qt.Key_Shift) {
             event.accepted = true
-        } else if (event.key === Qt.Key_S && (event.modifiers & Qt.ControlModifier)) {
-            if (WorkspaceManager.currentWorkspace !== "") {
-                const ok = viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
-                ToastManager.show(ok ? "Project saved" : "Failed to save project",
-                                  ok ? "success" : "error")
-            } else {
-                saveWorkspaceDialog.open()
-            }
-            event.accepted = true
-        } else if (event.key === Qt.Key_Z && (event.modifiers & Qt.ControlModifier)) {
-            viewPort.undo()
-            event.accepted = true
-        } else if (event.key === Qt.Key_Y && (event.modifiers & Qt.ControlModifier)) {
-            viewPort.redo()
-            event.accepted = true
         }
     }
 
@@ -203,9 +442,14 @@ Rectangle {
         id: fabRightMenu
         visible: nodeOnFocus !== null && nodeOnFocus !== undefined
         anchors.right: parent.right
+        anchors.rightMargin: 8
         anchors.top: topBar.bottom
-        anchors.margins: 8
+        anchors.topMargin: historyPanel.visible ? historyPanel.height + 16 : 8
         z: 100
+
+        Behavior on anchors.topMargin {
+            NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
+        }
 
         icon.source: Qaterial.Icons.tune
         icon.color: ThemeManager.primaryColor
@@ -227,7 +471,7 @@ Rectangle {
         topMargin: topBar.height
         height: parent.height - topBar.height - statusBar.height
 
-        viewPortWindow: root
+        viewPortWindow: viewPort
         selectedObjectView: root.nodeOnFocus
 
         onOpened: {
@@ -283,15 +527,19 @@ Rectangle {
                             outputUuid: outUuid, inputUuid: inUuid,
                             methodSignature2: inMethod, node2: node
                         })
-                        // Draw visually using the original approach (direct circleConn2 set)
-                        // This is reliable because the Shape item is already in the scene.
-                        shapeConn.circleConn2   = conn.circleConn
-                        shapeConn.viewRectConn2 = node
-                        shapeConn = undefined
-                        // Record undo; suppress visual redraw since line is already drawn
+                        // Record undo; suppress visual redraw since we manually snap the line if valid
                         m_suppressConnectionDraw = true
-                        viewPort.addConnectionWithUndo(outUuid, outMethod, inUuid, inMethod)
+                        let ok = viewPort.addConnectionWithUndo(outUuid, outMethod, inUuid, inMethod)
                         m_suppressConnectionDraw = false
+                        
+                        if (ok) {
+                            shapeConn.circleConn2   = conn.circleConn
+                            shapeConn.viewRectConn2 = node
+                            shapeConn = undefined
+                        } else {
+                            shapeConn = undefined
+                            nodeConnections.model.remove(lastConnection)
+                        }
                     } else {
                         nodeConnections.model.remove(lastConnection)
                     }
@@ -343,9 +591,9 @@ Rectangle {
             if (isConnecting)
                 return
 
-            var oldZoom = sliderZoom.value
+            var oldZoom = zoomScale
             var newZoom = oldZoom + (wheel.angleDelta.y > 0 ? 0.1 : -0.1)
-            newZoom = Math.max(sliderZoom.from, Math.min(sliderZoom.to, newZoom))
+            newZoom = clamp(newZoom, minZoom, maxZoom)
 
             // Keep the content point under the mouse stationary during zoom.
             // Visual position of workspace origin: mycanvas.x + localX * zoom
@@ -357,140 +605,32 @@ Rectangle {
 
             canvasScale.origin.x = 0
             canvasScale.origin.y = 0
-            sliderZoom.value = newZoom
+            zoomScale = newZoom
         }
     }
 
-    Column {
-        id: fullscreenFab
-        anchors.top: topBar.bottom
-        anchors.left: root.left
-        anchors.margins: 8
-        spacing: 2
-        z: 100
-
-        Qaterial.MiniFabButton {
-            id: fullscreenButton
-            icon.source: Qaterial.Icons.fullscreen
-            icon.color: ThemeManager.accentColor
-            flat: false
-
-            onClicked: {
-                if(icon.source === Qaterial.Icons.fullscreen)
-                    icon.source = Qaterial.Icons.fullscreenExit
-                else
-                    icon.source = Qaterial.Icons.fullscreen
-
-                viewPort.setFullScreen(true);
-            }
-        }
-
-        Qaterial.MiniFabButton {
-            id: centerButton
-            icon.source: Qaterial.Icons.setCenter
-            icon.color: ThemeManager.accentColor
-            flat: false
-
-            readonly property real homeX: (containerCanvas.width  - mycanvas.width)  / 2
-            readonly property real homeY: (containerCanvas.height - mycanvas.height) / 2
-
-            opacity: (Math.abs(mycanvas.x - homeX) < 1 &&
-                      Math.abs(mycanvas.y - homeY) < 1 &&
-                      sliderZoom.value === 1) ? 0.3 : 1
-
-            onClicked: {
-                if (opacity < 1) return
-                root.isAnimatingCenter = true
-                mycanvas.x = homeX
-                mycanvas.y = homeY
-                zoomAnim.to = 1
-                zoomAnim.start()
-            }
-        }
+    ParallelAnimation {
+        id: zoomGroupAnim
+        NumberAnimation { id: zoomAnim; target: root; property: "zoomScale"; duration: 400; easing.type: Easing.InOutCubic }
+        NumberAnimation { id: zoomAnimX; target: mycanvas; property: "x"; duration: 400; easing.type: Easing.InOutCubic }
+        NumberAnimation { id: zoomAnimY; target: mycanvas; property: "y"; duration: 400; easing.type: Easing.InOutCubic }
     }
 
-    CustomSlider {
-        id: sliderZoom
-        from: minZoom
-        to: maxZoom
-        value: minZoom
-        z: 100
-        enabled: !isConnecting
-        color: ThemeManager.primaryColor
-        textColor: ThemeManager.textColor
-        anchors.left: fullscreenFab.right
-        anchors.top: topBar.bottom
-        anchors.topMargin: 22
-        prefix: "x"
-
-        onValueChanged: viewPort.viewportScale = value
+    function animateZoomToCenter(newZoom) {
+        var targetScreenX = containerCanvas.width / 2
+        var targetScreenY = containerCanvas.height / 2
+        
+        var oldZoom = zoomScale
+        var targetX = targetScreenX - (targetScreenX - mycanvas.x) * newZoom / oldZoom
+        var targetY = targetScreenY - (targetScreenY - mycanvas.y) * newZoom / oldZoom
+        
+        zoomAnim.to = newZoom
+        zoomAnimX.to = targetX
+        zoomAnimY.to = targetY
+        zoomGroupAnim.start()
     }
 
-    NumberAnimation {
-        id: zoomAnim
-        target: sliderZoom
-        property: "value"
-        duration: 400
-        easing.type: Easing.InOutCubic
-    }
 
-    CustomSliderVertical {
-        id: slider2
-        visible: false
-        from: 1
-        to: 100
-        value: 1
-        z: 100
-        anchors.top: fullscreenFab.bottom
-        anchors.topMargin: -8
-        anchors.left: fullscreenFab.left
-        state: "left"
-
-        onValueChanged: {
-
-        }
-    }
-
-    Rectangle {
-        id: fpsCounterContainer
-        visible: viewPort.showFps
-        color: "transparent"
-        width: 100
-        height: 50
-        anchors.top: topBar.bottom
-        anchors.topMargin: 8
-        anchors.horizontalCenter: parent.horizontalCenter
-        radius: 8
-
-        Rectangle {
-            anchors.fill: parent
-            color: ThemeManager.primaryColor
-            opacity: 0.5
-            radius: fpsCounterContainer.radius
-        }
-
-        ColumnLayout {
-            anchors.fill: parent
-            Layout.alignment: Qt.AlignCenter
-            spacing: 0
-
-            Label {
-                id: fpsCounter
-                color: ThemeManager.textColor
-                font.pixelSize: 14
-                text: `${viewPort.fpsCount} FPS`
-                Layout.alignment: Qt.AlignCenter
-            }
-
-            Label {
-                id: fpsTime
-                color: ThemeManager.textColor
-                font.pixelSize: 14
-                text: `${viewPort.fpsCount > 0? (1000/viewPort.fpsCount).toFixed(2) : 0} ms`
-                Layout.alignment: Qt.AlignCenter
-            }
-        }
-    }
 
     Rectangle {
         id: containerCanvas
@@ -519,7 +659,7 @@ Rectangle {
             anchors.fill: parent
             panX:     mycanvas.x
             panY:     mycanvas.y
-            zoom:     sliderZoom.value
+            zoom:     zoomScale
             minWgrid: root.minWgrid
             pattern:  GlobalProperties.gridPattern
         }
@@ -532,11 +672,11 @@ Rectangle {
 
             // Keep viewCenterX/Y and C++ viewport state in sync when panning.
             onXChanged: if (initialized) {
-                root.viewCenterX  = (containerCanvas.width  / 2 - x) / sliderZoom.value
+                root.viewCenterX  = (containerCanvas.width  / 2 - x) / zoomScale
                 viewPort.viewportX = x
             }
             onYChanged: if (initialized) {
-                root.viewCenterY  = (containerCanvas.height / 2 - y) / sliderZoom.value
+                root.viewCenterY  = (containerCanvas.height / 2 - y) / zoomScale
                 viewPort.viewportY = y
             }
 
@@ -560,8 +700,8 @@ Rectangle {
                 // Qt.callLater defers until after the first layout pass,
                 // guaranteeing containerCanvas.width/height are final.
                 Qt.callLater(function() {
-                    mycanvas.x = containerCanvas.width  / 2 - 5000 * sliderZoom.value
-                    mycanvas.y = containerCanvas.height / 2 - 5000 * sliderZoom.value
+                    mycanvas.x = containerCanvas.width  / 2 - 5000 * zoomScale
+                    mycanvas.y = containerCanvas.height / 2 - 5000 * zoomScale
                     mycanvas.initialized = true
                 })
             }
@@ -570,8 +710,8 @@ Rectangle {
                 id: canvasScale
                 origin.x: 0
                 origin.y: 0
-                xScale: sliderZoom.value
-                yScale: sliderZoom.value
+                xScale: zoomScale
+                yScale: zoomScale
             }
 
             MouseArea {
@@ -581,11 +721,128 @@ Rectangle {
                 drag.smoothed: true
                 drag.target: isConnecting ? undefined : mycanvas
 
-                cursorShape: dragArea.drag.active ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                hoverEnabled: true
+                property bool isHoveringConnection: false
+
+                cursorShape: dragArea.drag.active ? Qt.ClosedHandCursor : (isHoveringConnection ? Qt.PointingHandCursor : Qt.OpenHandCursor)
+
+                onPositionChanged: {
+                    if (isConnecting || dragArea.drag.active) {
+                        isHoveringConnection = false;
+                        return;
+                    }
+                    
+                    var px = mouse.x;
+                    var py = mouse.y;
+                    var bestDist = 15;
+                    var hitFound = false;
+                    
+                    function getBezierPoint(t, p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y) {
+                        var u = 1 - t;
+                        var tt = t * t, uu = u * u;
+                        var uuu = uu * u, ttt = tt * t;
+                        var x = uuu * p0x + 3 * uu * t * p1x + 3 * u * tt * p2x + ttt * p3x;
+                        var y = uuu * p0y + 3 * uu * t * p1y + 3 * u * tt * p2y + ttt * p3y;
+                        return {x: x, y: y};
+                    }
+
+                    for (var i = 0; i < nodeConnections.model.count; i++) {
+                        var shapeItem = nodeConnections.itemAt(i);
+                        if (!shapeItem) continue;
+
+                        var minD = Number.MAX_VALUE;
+                        // Use 10 segments for faster hover evaluation
+                        for (var s = 0; s <= 10; s++) {
+                            var pt = getBezierPoint(s / 10, 
+                                shapeItem.startXPos, shapeItem.startYPos,
+                                shapeItem.ctrl1XPos, shapeItem.ctrl1YPos,
+                                shapeItem.ctrl2XPos, shapeItem.ctrl2YPos,
+                                shapeItem.endXPos, shapeItem.endYPos);
+                            
+                            var dx = px - pt.x;
+                            var dy = py - pt.y;
+                            var d = Math.sqrt(dx*dx + dy*dy);
+                            if (d < minD) minD = d;
+                        }
+                        
+                        if ((minD * zoomScale) < bestDist) {
+                            hitFound = true;
+                            break;
+                        }
+                    }
+                    
+                    isHoveringConnection = hitFound;
+                }
 
                 onClicked: {
                     root.focus = true
                     nodeOnFocus = null
+
+                    if (isConnecting) return;
+
+                    // ── Hit Test Connections ──
+                    var px = mouse.x;
+                    var py = mouse.y;
+                    
+                    var bestDist = 15; // 15 pixels tolerance
+                    var hitIndex = -1;
+                    
+                    // Simple bezier evaluation function
+                    function getBezierPoint(t, p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y) {
+                        var u = 1 - t;
+                        var tt = t * t, uu = u * u;
+                        var uuu = uu * u, ttt = tt * t;
+                        var x = uuu * p0x + 3 * uu * t * p1x + 3 * u * tt * p2x + ttt * p3x;
+                        var y = uuu * p0y + 3 * uu * t * p1y + 3 * u * tt * p2y + ttt * p3y;
+                        return {x: x, y: y};
+                    }
+
+                    for (var i = 0; i < nodeConnections.model.count; i++) {
+                        var shapeItem = nodeConnections.itemAt(i);
+                        if (!shapeItem) continue;
+
+                        var minD = Number.MAX_VALUE;
+                        // Approximate bezier with 20 segments
+                        for (var s = 0; s <= 20; s++) {
+                            var pt = getBezierPoint(s / 20, 
+                                shapeItem.startXPos, shapeItem.startYPos,
+                                shapeItem.ctrl1XPos, shapeItem.ctrl1YPos,
+                                shapeItem.ctrl2XPos, shapeItem.ctrl2YPos,
+                                shapeItem.endXPos, shapeItem.endYPos);
+                            
+                            var dx = px - pt.x;
+                            var dy = py - pt.y;
+                            var d = Math.sqrt(dx*dx + dy*dy);
+                            if (d < minD) minD = d;
+                        }
+                        
+                        // Because distance is calculated in canvas unscaled coordinates,
+                        // we must scale the tolerance relative to the zoom.
+                        var scaledDist = minD * zoomScale;
+                        if (scaledDist < bestDist) {
+                            bestDist = scaledDist;
+                            hitIndex = i;
+                        }
+                    }
+
+                    if (hitIndex !== -1) {
+                        var connData = nodeConnections.model.get(hitIndex);
+                        // Open radial menu
+                        var globalPos = dragArea.mapToItem(root, mouse.x, mouse.y);
+                        connMenu.originX = globalPos.x;
+                        connMenu.originY = globalPos.y;
+                        connMenu.connectionIndex = hitIndex;
+                        connMenu.outUuid = connData.outputUuid;
+                        connMenu.inUuid = connData.inputUuid;
+                        connMenu.outMethod = connData.methodSignature1;
+                        connMenu.inMethod = connData.methodSignature2;
+                        
+                        // Extract names if available
+                        connMenu.outNodeName = connData.node ? connData.node.title : "Nó Origem";
+                        connMenu.inNodeName = connData.node2 ? connData.node2.title : "Nó Destino";
+                        
+                        connMenu.open();
+                    }
                 }
             }
 
@@ -618,6 +875,16 @@ Rectangle {
                         property var viewRectConn2
 
                         property real dashOffset: 0
+
+                        // Exposed for hit testing
+                        property real startXPos: shapepath.startX
+                        property real startYPos: shapepath.startY
+                        property real endXPos: cubicPath.x
+                        property real endYPos: cubicPath.y
+                        property real ctrl1XPos: cubicPath.control1X
+                        property real ctrl1YPos: cubicPath.control1Y
+                        property real ctrl2XPos: cubicPath.control2X
+                        property real ctrl2YPos: cubicPath.control2Y
 
                         Component.onCompleted: {
                             circleConnPoint = model.circleConn.mapToItem(parent, 0, 0)
@@ -685,12 +952,13 @@ Rectangle {
                             startY: circleConnPoint.y + model.circleConn.height / 2
 
                             PathCubic {
+                                id: cubicPath
                                 readonly property real ex: circleConn2
                                     ? circleConnPoint2.x + circleConn2.width  / 2
-                                    : (mouseAreaGlobal.mouseX - mycanvas.x) / sliderZoom.value
+                                    : (mouseAreaGlobal.mouseX - mycanvas.x) / zoomScale
                                 readonly property real ey: circleConn2
                                     ? circleConnPoint2.y + circleConn2.height / 2
-                                    : (mouseAreaGlobal.mouseY - mycanvas.y) / sliderZoom.value
+                                    : (mouseAreaGlobal.mouseY - mycanvas.y) / zoomScale
 
                                 // Control points: horizontal tangents from each endpoint.
                                 // Offset proportional to horizontal distance for a natural S-curve.
@@ -724,13 +992,16 @@ Rectangle {
                     delegate: ViewComponentRectV2 {
                         id: viewComponentRectV2
 
-                        onXChanged: {
-                            if (nodeOnFocus !== this) nodeOnFocus = this
-                        }
+                        // Snap — centralized functions in ViewPortWindow
+                        snapEnabled:       root.snapEnabled
+                        snapGridSize:      root.effectiveSnapGridSize
+                        viewportSnap:      root.computeSnap
+                        viewportEdgeSnap:  root.computeEdgeSnap
 
-                        onYChanged: {
-                            if (nodeOnFocus !== this) nodeOnFocus = this
-                        }
+                        onXChanged: { if (isDragging && nodeOnFocus !== this) nodeOnFocus = this }
+                        onYChanged: { if (isDragging && nodeOnFocus !== this) nodeOnFocus = this }
+
+                        onResizeEnded: root._clearSnapGuides()
 
                         onFocusChanged: {
                             if (focus) nodeOnFocus = this
@@ -753,7 +1024,14 @@ Rectangle {
                         behaviourObject: model.object
 
                         Component.onCompleted: {
-                            behavioursZ[index] = 0
+                            // New nodes appear on top of all existing ones.
+                            var maxZ = 0
+                            for (var i = 0; i < rectsArray.count; i++) {
+                                var r = rectsArray.get(i).rectObjTarget
+                                if (r && r.z > maxZ) maxZ = r.z
+                            }
+                            z = maxZ + 1
+
                             model.object.setViewRectangle(this)
                             rectsArray.append({
                                 uuid:          viewPort.getUUIDFromBehaviour(model.object),
@@ -763,54 +1041,149 @@ Rectangle {
                             if (model.object.x !== 0 || model.object.y !== 0) {
                                 // ViewComponentRectV2.Component.onCompleted already set x/y from behaviourObject
                             } else {
-                                var cx = (containerCanvas.width  / 2 - mycanvas.x) / sliderZoom.value
-                                var cy = (containerCanvas.height / 2 - mycanvas.y) / sliderZoom.value
+                                var cx = (containerCanvas.width  / 2 - mycanvas.x) / zoomScale
+                                var cy = (containerCanvas.height / 2 - mycanvas.y) / zoomScale
                                 viewComponentRectV2.x = cx - viewComponentRectV2.width  / 2
                                 viewComponentRectV2.y = cy - viewComponentRectV2.height / 2
                             }
                         }
 
-                        onZChanged: { behavioursZ[index] = z }
-
-                        Component.onDestruction: {
-                            behavioursZ = behavioursZ.slice(0, index)
-                                          .concat(behavioursZ.slice(index + 1, behavioursZ.length))
+                        // Bring to front automatically when the user starts dragging.
+                        onIsDraggingChanged: {
+                            if (isDragging) root._bringToFront(viewComponentRectV2)
                         }
 
                         onNodeDragEnded: function(oldX, oldY, newX, newY) {
+                            root._clearSnapGuides()
                             viewPort.recordNodeMove(
                                 viewPort.getUUIDFromBehaviour(model.object),
                                 oldX, oldY, newX, newY)
+                        }
+
+                        onNodeResizeEnded: function(oldX, oldY, oldW, oldH, newX, newY, newW, newH) {
+                            root._clearSnapGuides()
+                            viewPort.recordNodeResize(
+                                viewPort.getUUIDFromBehaviour(model.object),
+                                oldX, oldY, oldW, oldH,
+                                newX, newY, newW, newH)
                         }
 
                         onCloseButtonClicked: {
                             viewPort.removeNodeWithUndo(viewPort.getUUIDFromBehaviour(model.object))
                         }
 
-                        onFrontOneStepClicked: { z += 1 }
-                        onBackOneStepClicked:  { z = (z - 1 < 1) ? 0 : z - 1 }
-                        onFrontTotalClicked:   { z = getBehaviourGreaterZ() + 1 }
-                        onBackTotalClicked:    { z = 0 }
+                        onFrontOneStepClicked: root._bringForward(viewComponentRectV2)
+                        onBackOneStepClicked:  root._sendBackward(viewComponentRectV2)
+                        onFrontTotalClicked:   root._bringToFront(viewComponentRectV2)
+                        onBackTotalClicked:    root._sendToBack(viewComponentRectV2)
                     }
                 }
             }
         }
     }
 
-    CustomToolbar {
-        id: toolbar
-        anchors.bottom: parent.bottom
-        visible: false
 
-        width: 350
-        height: 50
-        actions : [
-            {text: "OK", icon: "play", onClicked: ()=>{console.log(3232)} },
-            {text: "OK", icon: "stop", onClicked: ()=>{console.log(3232)} },
-            {text: "OK", icon: "debug-step-into", onClicked: ()=>{console.log(3232)} },
-            {text: "OK", onClicked: ()=>{console.log(3232)} }
-        ]
+    // ── Snap guide overlays ────────────────────────────────────────────────────
+    // All guide elements use root.guideOpacity which fades out after drag ends.
 
+    // Grid snap — vertical guide
+    Rectangle {
+        visible: root.snapEnabled && root.snapGuideX >= 0 && root.guideOpacity > 0
+        anchors.top:       parent.top
+        anchors.bottom:    parent.bottom
+        anchors.topMargin: root.topBarHeight
+        x:       root.snapGuideX * root.zoomScale + mycanvas.x
+        width:   1
+        color:   GlobalProperties.snapGuideColor
+        opacity: root.guideOpacity
+        z: 290
+    }
+
+    // Grid snap — horizontal guide
+    Rectangle {
+        visible: root.snapEnabled && root.snapGuideY >= 0 && root.guideOpacity > 0
+        anchors.left:  parent.left
+        anchors.right: parent.right
+        y:      root.topBarHeight + mycanvas.y + root.snapGuideY * root.zoomScale
+        height: 1
+        color:   GlobalProperties.snapGuideColor
+        opacity: root.guideOpacity
+        z: 290
+    }
+
+    // Grid snap — crosshair dot
+    Rectangle {
+        visible: root.snapEnabled && root.snapGuideX >= 0 && root.snapGuideY >= 0
+                 && root.guideOpacity > 0
+        x: root.snapGuideX * root.zoomScale + mycanvas.x - 5
+        y: root.topBarHeight + mycanvas.y + root.snapGuideY * root.zoomScale - 5
+        width: 10; height: 10; radius: 5
+        color:   GlobalProperties.snapGuideColor
+        opacity: root.guideOpacity
+        z: 291
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: 18; height: 18; radius: 9
+            color: "transparent"
+            border.width: 1
+            border.color: parent.color
+            opacity: 0.50
+        }
+    }
+
+    // Coordinate badge — world-space label next to the crosshair
+    Rectangle {
+        visible: root.snapEnabled && GlobalProperties.snapShowCoords
+                 && root.snapGuideX >= 0 && root.snapGuideY >= 0
+                 && root.guideOpacity > 0
+        x: root.snapGuideX * root.zoomScale + mycanvas.x + 10
+        y: root.topBarHeight + mycanvas.y + root.snapGuideY * root.zoomScale - 22
+        width:  coordBadgeText.implicitWidth + 14
+        height: 18
+        radius: 4
+        color:  Qt.rgba(0, 0, 0, 0.68)
+        opacity: root.guideOpacity
+        z: 292
+
+        Text {
+            id: coordBadgeText
+            anchors.centerIn: parent
+            // World origin is at canvas (5000, 5000); display as integer world coords
+            text: (root.snapGuideX - 5000) + ", " + (root.snapGuideY - 5000)
+            font.pixelSize: 10
+            font.family: "monospace"
+            color: GlobalProperties.snapGuideColor
+        }
+    }
+
+    // Node alignment guides — vertical lines (blue-tinted)
+    Repeater {
+        model: root.snapEnabled ? root.alignGuidesX : []
+        delegate: Rectangle {
+            anchors.top:       parent.top
+            anchors.bottom:    parent.bottom
+            anchors.topMargin: root.topBarHeight
+            x:       modelData * root.zoomScale + mycanvas.x
+            width:   1
+            color:   "#448aff"
+            opacity: root.guideOpacity * 0.85
+            z: 290
+        }
+    }
+
+    // Node alignment guides — horizontal lines (blue-tinted)
+    Repeater {
+        model: root.snapEnabled ? root.alignGuidesY : []
+        delegate: Rectangle {
+            anchors.left:  parent.left
+            anchors.right: parent.right
+            y:      root.topBarHeight + mycanvas.y + modelData * root.zoomScale
+            height: 1
+            color:  "#448aff"
+            opacity: root.guideOpacity * 0.85
+            z: 290
+        }
     }
 
     // ─── Top Bar ────────────────────────────────────────────────────────────────
@@ -860,6 +1233,88 @@ Rectangle {
         }
     }
 
+    // ─── History Panel ──────────────────────────────────────────────────────────
+    HistoryPanel {
+        id: historyPanel
+        vp:      viewPort
+        visible: topBar.historyPanelOpen
+        z: 190
+
+        anchors.top:   topBar.bottom
+        anchors.right: parent.right
+        anchors.topMargin:   8
+        // drawer.position: 0.0 = closed/invisible, 1.0 = fully open.
+        // Works correctly even before the drawer has ever been shown (position=0).
+        anchors.rightMargin: 8 + drawer.width * drawer.position
+
+        onCloseRequested: topBar.historyPanelOpen = false
+    }
+
+    Shortcut {
+        sequence: "Ctrl+Z"
+        context:  Qt.ApplicationShortcut
+        onActivated: viewPort.undo()
+    }
+    Shortcut {
+        sequence: "Ctrl+Y"
+        context:  Qt.ApplicationShortcut
+        onActivated: viewPort.redo()
+    }
+    Shortcut {
+        sequence: "Ctrl+S"
+        context:  Qt.ApplicationShortcut
+        onActivated: {
+            if (WorkspaceManager.currentWorkspace !== "") {
+                const ok = viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
+                ToastManager.show(ok ? "Project saved" : "Failed to save project",
+                                  ok ? "success" : "error")
+            } else {
+                saveWorkspaceDialog.open()
+            }
+        }
+    }
+    Shortcut {
+        sequence: "G"
+        context:  Qt.ApplicationShortcut
+        onActivated: GlobalProperties.snapEnabled = !GlobalProperties.snapEnabled
+    }
+    Shortcut {
+        sequence: "Ctrl+H"
+        context:  Qt.ApplicationShortcut
+        onActivated: topBar.historyPanelOpen = !topBar.historyPanelOpen
+    }
+    Shortcut {
+        sequence: "F"
+        context:  Qt.ApplicationShortcut
+        onActivated: root._focusFrame()
+    }
+
+    // Smooth pan+zoom animation used by the F shortcut.
+    ParallelAnimation {
+        id: focusAnim
+        property real toX: 0
+        property real toY: 0
+        NumberAnimation { target: mycanvas; property: "x"; to: focusAnim.toX; duration: 380; easing.type: Easing.OutQuart }
+        NumberAnimation { target: mycanvas; property: "y"; to: focusAnim.toY; duration: 380; easing.type: Easing.OutQuart }
+        NumberAnimation { target: root;    property: "zoomScale"; to: 1.0;    duration: 380; easing.type: Easing.OutQuart }
+    }
+
+    function _focusFrame() {
+        var wx, wy
+        if (root.nodeOnFocus) {
+            wx = root.nodeOnFocus.x + root.nodeOnFocus.width  / 2
+            wy = root.nodeOnFocus.y + root.nodeOnFocus.height / 2
+        } else {
+            // Canvas center ("home") is the world point (5000, 5000)
+            wx = 5000
+            wy = 5000
+        }
+        focusAnim.stop()
+        focusAnim.toX = containerCanvas.width  / 2 - wx
+        focusAnim.toY = containerCanvas.height / 2 - wy
+        focusAnim.start()
+    }
+
     // ─── Splash Screen ──────────────────────────────────────────────────────────
     SplashScreen {
         id: splashScreen
@@ -880,16 +1335,22 @@ Rectangle {
         z: 9900
     }
 
+    // ─── Connection Radial Menu ─────────────────────────────────────────────────
+    ConnectionRadialMenu {
+        id: connMenu
+        z: 9950
+    }
+
     // ─── Nodes List ─────────────────────────────────────────────────────────────
     NodesList {
         id: nodesList
         nodesModel: nodes.model
         containerCanvas: containerCanvas
         mycanvas: mycanvas
-        sliderZoom: sliderZoom
+        zoomScale: root.zoomScale
         statusBar: statusBar
         topBar: topBar
-        topLeftAnchor: fullscreenFab
+        topLeftAnchor: topBar
         focusedNode: root.nodeOnFocus
         nodes: nodes
         onNodeSelected: function(nodeItem) {
@@ -1584,6 +2045,7 @@ Rectangle {
         modal: false
         interactive: false
         z: 199
+        onClosed: root.selectedPanel = ""
 
         background: Rectangle {
             color: Qt.darker(ThemeManager.backgroundColor, 1.2)
@@ -1688,6 +2150,26 @@ Rectangle {
         }
     }
 
+    // ─── Left panel light-dismiss ────────────────────────────────────────────────
+    // Transparent overlay over the canvas area (right of the drawer).
+    // Closes the drawer when the user clicks outside it.
+    // mouse.accepted = false lets the click propagate to nodes/canvas underneath.
+    MouseArea {
+        anchors.top:    topBar.bottom
+        anchors.bottom: parent.bottom
+        anchors.right:  parent.right
+        anchors.left:   parent.left
+        anchors.leftMargin: leftPanelDrawer.position * leftPanelDrawer.width
+        z: 50
+        enabled:             leftPanelDrawer.position > 0
+        visible:             enabled
+        propagateComposedEvents: true
+        onPressed: function(mouse) {
+            leftPanelDrawer.close()
+            mouse.accepted = false
+        }
+    }
+
     // ─── Node drag ghost (Popup → renders in Overlay above Drawer) ─────────────
     Popup {
         id: nodeDragGhost
@@ -1763,11 +2245,72 @@ Rectangle {
             border.color: "#ccc"
             radius: 4
 
-            width: viewRect.width / sliderZoom.value
-            height: viewRect.height / sliderZoom.value
+            width: viewRect.width / zoomScale
+            height: viewRect.height / zoomScale
 
-            x: -(mycanvas.x * viewRect.width) / (containerCanvas.width * sliderZoom.value)
-            y: -(mycanvas.y * viewRect.height) / (containerCanvas.height * sliderZoom.value)
+            x: -(mycanvas.x * viewRect.width) / (containerCanvas.width * zoomScale)
+            y: -(mycanvas.y * viewRect.height) / (containerCanvas.height * zoomScale)
+        }
+    }
+
+    // ─── Bottom Floating Toolbar ────────────────────────────────────────────────
+    ViewportBottomToolBar {
+        id: bottomToolBar
+        visible: !splashScreen.visible
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 48 // Above status bar
+        anchors.horizontalCenter: parent.horizontalCenter
+        z: 900
+        
+        zoomScale: root.zoomScale
+        minZoom: root.minZoom
+        maxZoom: root.maxZoom
+        showGrid: GlobalProperties.gridPattern !== "none"
+        connectionsMinimized: root.allConnectionsMinimized
+        snapEnabled: root.snapEnabled
+
+        onZoomIn: {
+            var newZoom = clamp(zoomScale + 0.5, minZoom, maxZoom)
+            animateZoomToCenter(newZoom)
+        }
+        onZoomOut: {
+            var newZoom = clamp(zoomScale - 0.5, minZoom, maxZoom)
+            animateZoomToCenter(newZoom)
+        }
+        onResetZoom: {
+            animateZoomToCenter(1.0)
+        }
+        onCenterView: {
+            root.isAnimatingCenter = true
+            zoomAnim.to = 1.0
+            zoomAnimX.to = (containerCanvas.width  - mycanvas.width)  / 2
+            zoomAnimY.to = (containerCanvas.height - mycanvas.height) / 2
+            zoomGroupAnim.start()
+        }
+        onToggleGrid: {
+            if (GlobalProperties.gridPattern === "none") {
+                GlobalProperties.gridPattern = "dots" // Default grid pattern
+            } else {
+                GlobalProperties.gridPattern = "none"
+            }
+        }
+        onToggleFps: {
+            GlobalProperties.showFps = !GlobalProperties.showFps
+        }
+        onToggleFullscreen: {
+            viewPort.setFullScreen(true)
+        }
+        onToggleConnectionsMinimized: {
+            root.allConnectionsMinimized = !root.allConnectionsMinimized
+            for (var i = 0; i < nodes.model.count; i++) {
+                var nodeItem = nodes.itemAt(i)
+                if (nodeItem) {
+                    nodeItem.setMinimized(root.allConnectionsMinimized)
+                }
+            }
+        }
+        onToggleSnap: {
+            GlobalProperties.snapEnabled = !GlobalProperties.snapEnabled
         }
     }
 
@@ -1782,10 +2325,12 @@ Rectangle {
         canvasPosY:      mycanvas.y
         containerWidth:  containerCanvas.width
         containerHeight: containerCanvas.height
-        zoom:            sliderZoom.value
+        zoom:            zoomScale
         hoverX:          globalHover.point.position.x
         hoverY:          globalHover.point.position.y
         nodeOnFocus:     root.nodeOnFocus
         nodeCount:       nodes.model.count
+        fpsCount:        viewPort.fpsCount
+        showFps:         GlobalProperties.showFps
     }
 }

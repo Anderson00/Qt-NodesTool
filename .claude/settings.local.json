@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(xargs ls *)",
-      "Bash(powershell -Command \"Get-ChildItem -Recurse -Filter '*.h' -o -Filter '*.cpp' | Select-Object -First 50 FullName\")"
-    ]
-  }
-}

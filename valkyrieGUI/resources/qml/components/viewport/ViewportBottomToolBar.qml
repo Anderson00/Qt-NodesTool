@@ -1,0 +1,191 @@
+import QtQuick 2.15
+import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
+import Qaterial 1.0 as Qaterial
+import App.Theme 1.0
+
+Rectangle {
+    id: root
+    width: layout.implicitWidth + 32
+    height: 56
+    radius: height / 2
+    
+    // Glassmorphism effect base
+    color: Qt.rgba(ThemeManager.backgroundColor.r,
+                   ThemeManager.backgroundColor.g,
+                   ThemeManager.backgroundColor.b, 0.85)
+    border.color: ThemeManager.borderColor
+    border.width: 1
+
+    property real zoomScale: 1.0
+    property real minZoom: 0.1
+    property real maxZoom: 5.0
+    property bool showGrid: true
+    property bool connectionsMinimized: false
+    property bool snapEnabled: false
+
+    signal zoomIn()
+    signal zoomOut()
+    signal resetZoom()
+    signal centerView()
+    signal toggleGrid()
+    signal toggleFps()
+    signal toggleFullscreen()
+    signal toggleConnectionsMinimized()
+    signal toggleSnap()
+
+    RowLayout {
+        id: layout
+        anchors.centerIn: parent
+        spacing: 8
+
+        // Tool Mode: Select
+        Qaterial.ToolButton {
+            checkable: false
+            icon.source: Qaterial.Icons.cursorDefault
+            icon.color: ThemeManager.accentColor
+            ToolTip.text: "Select Tool"
+            ToolTip.visible: hovered
+        }
+
+        // Tool Mode: Pan
+        Qaterial.ToolButton {
+            checkable: false
+            icon.source: Qaterial.Icons.handBackRight
+            icon.color: ThemeManager.textColor
+            ToolTip.text: "Pan Tool"
+            ToolTip.visible: hovered
+        }
+
+        Rectangle { width: 1; height: 32; color: ThemeManager.borderColor; Layout.alignment: Qt.AlignVCenter }
+
+        // Zoom Out
+        Qaterial.ToolButton {
+            checkable: false
+            icon.source: Qaterial.Icons.minus
+            icon.color: ThemeManager.textColor
+            ToolTip.text: "Zoom Out"
+            ToolTip.visible: hovered
+            onClicked: root.zoomOut()
+        }
+
+        // Zoom Label
+        Label {
+            text: Math.round(root.zoomScale * 100) + "%"
+            color: ThemeManager.textColor
+            font.bold: true
+            font.pixelSize: 14
+            Layout.minimumWidth: 45
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            MouseArea {
+                anchors.fill: parent
+                onClicked: root.resetZoom()
+                cursorShape: Qt.PointingHandCursor
+                ToolTip.text: "Reset Zoom"
+                ToolTip.visible: containsMouse
+            }
+        }
+
+        // Zoom In
+        Qaterial.ToolButton {
+            checkable: false
+            icon.source: Qaterial.Icons.plus
+            icon.color: ThemeManager.textColor
+            ToolTip.text: "Zoom In"
+            ToolTip.visible: hovered
+            onClicked: root.zoomIn()
+        }
+
+        Rectangle { width: 1; height: 32; color: ThemeManager.borderColor; Layout.alignment: Qt.AlignVCenter }
+
+        // Toggle Connections Minimize
+        Qaterial.ToolButton {
+            id: toggleConnsBtn
+            checkable: false
+            display: AbstractButton.IconOnly
+            icon.source: root.connectionsMinimized
+                ? Qaterial.Icons.chevronUp
+                : Qaterial.Icons.chevronDown
+            icon.color: root.connectionsMinimized
+                ? ThemeManager.accentColor
+                : ThemeManager.textColor
+            ToolTip.text: root.connectionsMinimized ? "Expandir todas as conexões" : "Recolher todas as conexões"
+            ToolTip.visible: hovered
+            onClicked: root.toggleConnectionsMinimized()
+        }
+
+        Rectangle { width: 1; height: 32; color: ThemeManager.borderColor; Layout.alignment: Qt.AlignVCenter }
+
+        // Center View
+        Qaterial.ToolButton {
+            checkable: false
+            icon.source: Qaterial.Icons.imageFilterCenterFocus
+            icon.color: ThemeManager.textColor
+            ToolTip.text: "Center View"
+            ToolTip.visible: hovered
+            onClicked: root.centerView()
+        }
+
+        Rectangle { width: 1; height: 32; color: ThemeManager.borderColor; Layout.alignment: Qt.AlignVCenter }
+
+        // Grid Snap toggle
+        Qaterial.ToolButton {
+            id: snapBtn
+            checkable: true
+            checked: root.snapEnabled
+            icon.source: Qaterial.Icons.magnetOn
+            icon.color: root.snapEnabled ? "#00e676" : ThemeManager.textColor
+            ToolTip.text: "Grid Snap  [G]"
+            ToolTip.visible: hovered
+            ToolTip.delay: 600
+            onClicked: root.toggleSnap()
+
+            // Subtle green glow ring when active
+            Rectangle {
+                anchors.centerIn: parent
+                width:  parent.width  + 6
+                height: parent.height + 6
+                radius: width / 2
+                color: "transparent"
+                border.width: root.snapEnabled ? 1.5 : 0
+                border.color: "#00e676"
+                opacity: root.snapEnabled ? 0.55 : 0
+                Behavior on opacity  { NumberAnimation { duration: 150 } }
+                Behavior on border.width { NumberAnimation { duration: 150 } }
+            }
+        }
+
+        // View Menu
+        Qaterial.ToolButton {
+            id: viewMenuBtn
+            icon.source: Qaterial.Icons.eyeOutline
+            icon.color: ThemeManager.textColor
+            ToolTip.text: "View Options"
+            ToolTip.visible: hovered
+            onClicked: viewMenu.open()
+
+            Qaterial.Menu {
+                id: viewMenu
+                y: -height - 12
+                x: -width / 2 + viewMenuBtn.width / 2
+
+                Qaterial.MenuItem {
+                    text: root.showGrid ? "Hide Grid" : "Show Grid"
+                    icon.source: Qaterial.Icons.grid
+                    onTriggered: root.toggleGrid()
+                }
+                Qaterial.MenuItem {
+                    text: "Toggle FPS"
+                    icon.source: Qaterial.Icons.monitorHeart
+                    onTriggered: root.toggleFps()
+                }
+                Qaterial.MenuItem {
+                    text: "Toggle Fullscreen"
+                    icon.source: Qaterial.Icons.fullscreen
+                    onTriggered: root.toggleFullscreen()
+                }
+            }
+        }
+    }
+}

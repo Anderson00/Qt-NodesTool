@@ -28,6 +28,9 @@ class ViewPortWindow : public QMLWindow
     Q_PROPERTY(bool canRedo  READ canRedo  NOTIFY undoStateChanged)
     Q_PROPERTY(bool isClean  READ isClean  NOTIFY undoStateChanged)
 
+    Q_PROPERTY(int historyCount READ historyCount NOTIFY historyChanged)
+    Q_PROPERTY(int historyIndex READ historyIndex NOTIFY historyChanged)
+
 public:
     explicit ViewPortWindow(QWidget* parent = nullptr);
     ~ViewPortWindow();
@@ -41,6 +44,8 @@ public:
     bool  canUndo()       const;
     bool  canRedo()       const;
     bool  isClean()       const;
+    int   historyCount()  const;
+    int   historyIndex()  const;
 
     QUndoStack* undoStack() const;
 
@@ -58,7 +63,8 @@ public slots:
     bool addBehaviourWithUuid(const QString& path, const QJsonObject& infos,
                                const QString& uuid,
                                double x, double y, double w, double h,
-                               const QString& title);
+                               const QString& title,
+                               const QJsonObject& state = QJsonObject());
 
     bool removeBehaviourFromUUID(const QString& uuid);
     bool removeBehaviourObject(Behaviours* object);
@@ -81,13 +87,27 @@ public slots:
                                             const QString& inputUuid,  const QString& inputMethod);
     Q_INVOKABLE bool removeConnectionWithUndo(const QString& outputUuid, const QString& outputMethod,
                                                const QString& inputUuid,  const QString& inputMethod);
+    Q_INVOKABLE QString historyText(int index) const;
+    Q_INVOKABLE void    jumpToHistory(int index);
+
     Q_INVOKABLE void recordNodeMove(const QString& uuid,
                                     double oldX, double oldY, double newX, double newY);
+    Q_INVOKABLE void recordNodeResize(const QString& uuid,
+                                      double oldX, double oldY, double oldW, double oldH,
+                                      double newX, double newY, double newW, double newH);
 
     // Workspace
     Q_INVOKABLE bool saveWorkspace(const QString& name);
     Q_INVOKABLE bool loadWorkspace(const QString& name);
     Q_INVOKABLE QVariantList getAllConnections() const;
+    Q_INVOKABLE QVariantList getNodeConnections(const QString& nodeUuid) const;
+
+    // Comments
+    Q_INVOKABLE void setConnectionComment(const QString& outputUuid, const QString& outputMethod,
+                                          const QString& inputUuid,  const QString& inputMethod,
+                                          const QString& comment);
+    Q_INVOKABLE QString getConnectionComment(const QString& outputUuid, const QString& outputMethod,
+                                             const QString& inputUuid,  const QString& inputMethod) const;
 
     // Screenshot
     Q_INVOKABLE void takeScreenshot(const QString& filePath);
@@ -100,6 +120,7 @@ signals:
     void fpsCountChanged();
     void viewportStateChanged();
     void undoStateChanged();
+    void historyChanged();
     void viewportRestoreRequested(qreal x, qreal y, qreal scale);
     void behaviourAdded(Behaviours* behaviour);
     void behaviourRemoved(Behaviours* obj, const QString& uuid);
@@ -115,6 +136,7 @@ private:
 
     QHash<QString, Behaviours*> m_behaviours;
     QUndoStack* m_undoStack = nullptr;
+    QHash<QString, QString> m_connectionComments;
 
     QTimer*  m_frameTimer = nullptr;
     QMetaObject::Connection m_timerTriggerConn;

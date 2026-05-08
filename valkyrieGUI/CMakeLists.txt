@@ -24,6 +24,7 @@ set(PROJECT_SOURCES
     src/include/utils/nodeserialize.h src/include/utils/nodeserialize.cpp
     src/include/utils/workspacemanager.h src/include/utils/workspacemanager.cpp
     src/include/utils/toastmanager.h src/include/utils/toastmanager.cpp
+    src/include/utils/logmanager.h src/include/utils/logmanager.cpp
     src/include/mainwindow.cpp
     src/include/mainwindow.ui
     src/include/qmlwindow.h src/include/qmlwindow.cpp
@@ -33,9 +34,26 @@ set(PROJECT_SOURCES
     src/include/behaviours/common/processesviewer.h src/include/behaviours/common/processesviewer.cpp
     src/include/behaviours/common/hexviewer.h src/include/behaviours/common/hexviewer.cpp
     src/include/behaviours/common/linechartviewer.h src/include/behaviours/common/linechartviewer.cpp
-    src/include/behaviours/common/randomgeneratorviwer.h src/include/behaviours/common/randomgeneratorviwer.cpp
+    src/include/behaviours/common/randomgeneratorviewer.h src/include/behaviours/common/randomgeneratorviewer.cpp
     src/include/behaviours/logic/hub.h src/include/behaviours/logic/hub.cpp
-    src/include/behaviours/behaviourloader.h src/include/behaviours/behaviourloader.cpp
+    src/include/behaviours/logic/comparison.h src/include/behaviours/logic/comparison.cpp
+    src/include/behaviours/logic/gate.h src/include/behaviours/logic/gate.cpp
+    src/include/behaviours/logic/stringformat.h src/include/behaviours/logic/stringformat.cpp
+    src/include/behaviours/common/constantvalue.h src/include/behaviours/common/constantvalue.cpp
+    src/include/behaviours/common/textdisplay.h src/include/behaviours/common/textdisplay.cpp
+    src/include/behaviours/common/timernode.h src/include/behaviours/common/timernode.cpp
+    src/include/behaviours/common/counter.h src/include/behaviours/common/counter.cpp
+    src/include/behaviours/math/mathoperation.h src/include/behaviours/math/mathoperation.cpp
+    src/include/behaviours/math/mathfunction.h src/include/behaviours/math/mathfunction.cpp
+    src/include/behaviours/math/clamp.h src/include/behaviours/math/clamp.cpp
+    src/include/behaviours/math/maprange.h src/include/behaviours/math/maprange.cpp
+    src/include/behaviours/math/filter.h src/include/behaviours/math/filter.cpp
+    src/include/behaviours/common/piechartviewer.h src/include/behaviours/common/piechartviewer.cpp
+    src/include/behaviours/common/barchartviewer.h src/include/behaviours/common/barchartviewer.cpp
+    src/include/behaviours/common/gaugeviewer.h src/include/behaviours/common/gaugeviewer.cpp
+    src/include/behaviours/common/signalgenerator.h src/include/behaviours/common/signalgenerator.cpp
+    src/include/behaviours/common/serialmonitor.h src/include/behaviours/common/serialmonitor.cpp
+    src/include/behaviours/behaviourregistry.h src/include/behaviours/behaviourregistry.cpp
     src/include/behaviours/connections.h src/include/behaviours/connections.cpp
     src/include/model/tablemodel.h src/include/model/tablemodel.cpp
     src/include/model/connectionmodel.h src/include/model/connectionmodel.cpp
@@ -67,7 +85,7 @@ qt_add_executable(Debugger
 
 target_link_libraries(Debugger PRIVATE Qt6::Widgets Qt6::Core Qt6::Quick Qt6::Xml Qt6::Charts Qt6::Qml cxxopts Qaterial QOlm::QOlm)
 
-#add_executable(Main main.cpp ${SOURCE_FILES_CURSES})
+
 set_target_properties(Debugger PROPERTIES
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
@@ -75,11 +93,7 @@ set_target_properties(Debugger PROPERTIES
     WIN32_EXECUTABLE TRUE
     AUTOMOC TRUE)
 
-#target_link_libraries (Main PUBLIC cxxopts unicorn capstone-shared)
 target_include_directories(Debugger PUBLIC
-                          #"${PROJECT_SOURCE_DIR}/extern/unicorn/include"
-                          #"${PROJECT_SOURCE_DIR}/extern/retdec/include"
-                          #"${PROJECT_SOURCE_DIR}/extern/capstone/include"
                           "${CMAKE_SOURCE_DIR}/middleware/include"
                           "src/"
                           "src/include"

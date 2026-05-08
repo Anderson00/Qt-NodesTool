@@ -44,7 +44,7 @@ ConnectionModel* Connections::addConnection(Behaviours *output, QMetaMethod meta
         }else{
             return nullptr;
         }
-        QObject::connect(connectionModel, &QObject::destroyed, [this, connectionModel](){
+        QObject::connect(connectionModel, &QObject::destroyed, this, [this, connectionModel](){
             this->m_connections.removeOne(connectionModel);
             qDebug() << "removed" << connectionModel;
         });
@@ -55,7 +55,7 @@ ConnectionModel* Connections::addConnection(Behaviours *output, QMetaMethod meta
 ConnectionModel *Connections::addConnection(ConnectionModel *conn)
 {
     this->m_connections.push_back(conn);
-    QObject::connect(conn, &QObject::destroyed, [this, conn](){
+    QObject::connect(conn, &QObject::destroyed, this, [this, conn](){
         this->m_connections.removeOne(conn);
     });
     return conn;

@@ -3,13 +3,12 @@
 #include <iostream>
 
 #include "include/mainwindow.h"
-//#include <unicorn/unicorn.h>
-//#include <capstone/capstone.h>
-//#include <retdec/fileformat/fileformat.h>
 #include <Qaterial/Qaterial.hpp>
 #include <model/tablemodel.h>
 #include <model/globalproperties.h>
 #include <utils/toastmanager.h>
+#include <utils/logmanager.h>
+#include <behaviours/behaviourregistry.h>
 
 static QFile log_file(QDateTime::currentDateTime().toString().replace(":","-").append(".log"));
 
@@ -33,18 +32,23 @@ static void messageLogOutput(QtMsgType type, const QMessageLogContext &context, 
     switch (type) {
     case QtDebugMsg:
         buffer.append("[Debug][").append(QDateTime::currentDateTime().toString(dateFormat)).append("] ").append(localMsg.constData()).append(" (").append(fileDirCompacted).append(":").append(QString::number(context.line)).append(", ").append(function).append(")\n");
+        // Debug messages are not shown in the status bar (too noisy)
         break;
     case QtInfoMsg:
         buffer.append("[Info][").append(QDateTime::currentDateTime().toString(dateFormat)).append("] ").append(localMsg.constData()).append(" (").append(fileDirCompacted).append(":").append(QString::number(context.line)).append(", ").append(function).append(")\n");
+        LogManager::instance()->addEntry(msg, "info");
         break;
     case QtWarningMsg:
         buffer.append("[Warning][").append(QDateTime::currentDateTime().toString(dateFormat)).append("] ").append(localMsg.constData()).append(" (").append(fileDirCompacted).append(":").append(QString::number(context.line)).append(", ").append(function).append(")\n");
+        LogManager::instance()->addEntry(msg, "warning");
         break;
     case QtCriticalMsg:
         buffer.append("[Critical][").append(QDateTime::currentDateTime().toString(dateFormat)).append("] ").append(localMsg.constData()).append(" (").append(fileDirCompacted).append(":").append(QString::number(context.line)).append(", ").append(function).append(")\n");
+        LogManager::instance()->addEntry(msg, "error");
         break;
     case QtFatalMsg:
         buffer.append("[Fatal][").append(QDateTime::currentDateTime().toString(dateFormat)).append("] ").append(localMsg.constData()).append(" (").append(fileDirCompacted).append(":").append(QString::number(context.line)).append(", ").append(function).append(")\n");
+        LogManager::instance()->addEntry(msg, "fatal");
         break;
     }
 
@@ -83,6 +87,13 @@ int main(int argc, char **argv)
 
     // Register ToastManager as singleton in QML
     qmlRegisterSingletonInstance("App.Toast", 1, 0, "ToastManager", ToastManager::instance());
+
+    // Register LogManager as singleton in QML
+    qmlRegisterSingletonInstance("App.Log", 1, 0, "LogManager", LogManager::instance());
+
+    // Register BehaviourRegistry (node discovery + factory) as singleton in QML
+    qmlRegisterSingletonType<BehaviourRegistry>("App.NodeRegistry", 1, 0, "NodeRegistry",
+                                                 &BehaviourRegistry::qmlSingletonProvider);
 
     MainWindow w;
     w.show();

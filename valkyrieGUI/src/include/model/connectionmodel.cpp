@@ -16,6 +16,10 @@ ConnectionModel::ConnectionModel(Behaviours *output, QMetaMethod signal, Behavio
         this->m_connection = QObject::connect(m_output, m_signal, m_input, m_slot);
     }
 
+    // Auto-destroy this connection model if either endpoint node is deleted
+    QObject::connect(m_output, &QObject::destroyed, this, &QObject::deleteLater);
+    QObject::connect(m_input, &QObject::destroyed, this, &QObject::deleteLater);
+
 }
 
 Behaviours *ConnectionModel::output() const

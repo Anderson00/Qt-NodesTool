@@ -1,5 +1,8 @@
 #include "hub.h"
 #include <behaviours/connections.h>
+#include "behaviours/behaviourregistry.h"
+
+REGISTER_BEHAVIOUR(Hub, "Hub", "Send information and broadcasts all data across each connection", "logic", 1, 0)
 
 Hub::Hub(QObject *parent) : Behaviours(parent)
 {

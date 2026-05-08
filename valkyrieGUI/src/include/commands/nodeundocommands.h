@@ -11,6 +11,7 @@ struct NodeState {
     QString uuid, path, title;
     QJsonObject infos;
     double x = 0, y = 0, w = 0, h = 0;
+    QJsonObject state;  // Internal node state (saveState/loadState)
 };
 
 struct ConnState {
@@ -51,6 +52,23 @@ private:
     ViewPortWindow* m_vp;
     QString m_uuid;
     double m_oldX, m_oldY, m_newX, m_newY;
+};
+
+class ResizeNodeCommand : public QUndoCommand {
+public:
+    ResizeNodeCommand(ViewPortWindow* vp, QString uuid,
+                      double oldX, double oldY, double oldW, double oldH,
+                      double newX, double newY, double newW, double newH,
+                      QUndoCommand* parent = nullptr);
+    void undo() override;
+    void redo() override;
+    bool mergeWith(const QUndoCommand* other) override;
+    int id() const override { return 1002; }
+private:
+    ViewPortWindow* m_vp;
+    QString m_uuid;
+    double m_oldX, m_oldY, m_oldW, m_oldH;
+    double m_newX, m_newY, m_newW, m_newH;
 };
 
 class AddConnectionCommand : public QUndoCommand {
