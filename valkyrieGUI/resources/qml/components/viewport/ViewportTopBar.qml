@@ -3,6 +3,7 @@ import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.0
 import App.Theme 1.0
 import Qaterial as Qaterial
+import ".."
 
 // Top application bar for the ViewPort window.
 // Displays app name, project name, panel navigation buttons and action buttons.
@@ -259,44 +260,36 @@ Rectangle {
             Qaterial.AppBarButton {
                 icon.source: Qaterial.Icons.history
                 icon.color:  root.historyPanelOpen ? ThemeManager.primaryColor : ThemeManager.textColor
-                ToolTip.text: "Histórico (Ctrl+H)"
-                ToolTip.visible: hovered
-                ToolTip.delay: 500
                 width: 40; height: 40
                 onClicked: root.historyPanelOpen = !root.historyPanelOpen
                 Behavior on icon.color { ColorAnimation { duration: 150 } }
+                AppToolTip { text: "Histórico (Ctrl+H)"; visible: parent.hovered }
             }
 
             Qaterial.AppBarButton {
                 icon.source: Qaterial.Icons.undo
                 icon.color:  root.canUndo ? ThemeManager.textColor : Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.3)
                 enabled:     root.canUndo
-                ToolTip.text: "Undo (Ctrl+Z)"
-                ToolTip.visible: hovered
-                ToolTip.delay: 500
                 width: 40; height: 40
                 onClicked: root.undoRequested()
+                AppToolTip { text: "Undo (Ctrl+Z)"; visible: parent.hovered }
             }
 
             Qaterial.AppBarButton {
                 icon.source: Qaterial.Icons.redo
                 icon.color:  root.canRedo ? ThemeManager.textColor : Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.3)
                 enabled:     root.canRedo
-                ToolTip.text: "Redo (Ctrl+Y)"
-                ToolTip.visible: hovered
-                ToolTip.delay: 500
                 width: 40; height: 40
                 onClicked: root.redoRequested()
+                AppToolTip { text: "Redo (Ctrl+Y)"; visible: parent.hovered }
             }
 
             Qaterial.AppBarButton {
                 icon.source: Qaterial.Icons.filePlusOutline
                 icon.color:  ThemeManager.textColor
-                ToolTip.text: "New Project"
-                ToolTip.visible: hovered
-                ToolTip.delay:   500
                 width: 40; height: 40
                 onClicked: root.newProjectRequested()
+                AppToolTip { text: "New Project"; visible: parent.hovered }
             }
 
             Qaterial.AppBarButton {
@@ -307,42 +300,34 @@ Rectangle {
                                            ThemeManager.textColor.g,
                                            ThemeManager.textColor.b, 0.3)
                 enabled:     root.isDirty
-                ToolTip.text: "Save  (Ctrl+S)"
-                ToolTip.visible: hovered
-                ToolTip.delay:   500
                 width: 40; height: 40
                 onClicked: root.saveRequested()
                 Behavior on icon.color { ColorAnimation { duration: 150 } }
+                AppToolTip { text: "Save  (Ctrl+S)"; visible: parent.hovered }
             }
 
             Qaterial.AppBarButton {
                 icon.source: Qaterial.Icons.folderOpenOutline
                 icon.color:  ThemeManager.textColor
-                ToolTip.text: "Open Project"
-                ToolTip.visible: hovered
-                ToolTip.delay:   500
                 width: 40; height: 40
                 onClicked: root.openRequested()
+                AppToolTip { text: "Open Project"; visible: parent.hovered }
             }
 
             Qaterial.AppBarButton {
                 width: 40; height: 40
                 icon.source: Qaterial.Icons.cameraOutline
                 icon.color:  ThemeManager.textColor
-                ToolTip.text: "Screenshot"
-                ToolTip.visible: hovered
-                ToolTip.delay: 500
                 onClicked: root.screenshotRequested()
+                AppToolTip { text: "Screenshot"; visible: parent.hovered }
             }
 
             Qaterial.AppBarButton {
                 width: 40; height: 40
                 icon.source: Qaterial.Icons.cogOutline
                 icon.color:  ThemeManager.textColor
-                ToolTip.text: "Settings"
-                ToolTip.visible: hovered
-                ToolTip.delay: 500
                 onClicked: root.settingsRequested()
+                AppToolTip { text: "Settings"; visible: parent.hovered }
             }
         }
     }

@@ -4,6 +4,7 @@ import Qt5Compat.GraphicalEffects
 import QtQuick.Layouts 1.12
 import App.Theme 1.0
 import App.Toast 1.0
+import ".."
 
 Popup {
     id: root
@@ -249,6 +250,7 @@ Popup {
         }
 
         MouseArea {
+            id: radialMA
             anchors.fill: parent
             hoverEnabled: true
             onClicked: parent.clicked()
@@ -262,8 +264,7 @@ Popup {
             }
         }
 
-        ToolTip.visible: parent.children[2].containsMouse
-        ToolTip.text: parent.toolTipText
+        AppToolTip { text: toolTipText; visible: radialMA.containsMouse }
         
         Behavior on scale { NumberAnimation { duration: 150 } }
         Behavior on color { ColorAnimation { duration: 150 } }

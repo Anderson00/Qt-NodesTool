@@ -565,7 +565,7 @@ Item {
                             Text {
                                 text:"✕"; color:ThemeManager.dangerColor; font.pixelSize:12
                                 opacity: clrH.containsMouse?1.0:0.4; Layout.alignment:Qt.AlignVCenter
-                                ToolTip.visible:clrH.containsMouse; ToolTip.text:"Clear series"; ToolTip.delay:600
+                                AppToolTip { text:"Clear series"; visible: clrH.containsMouse; delay: 600 }
                                 MouseArea { id:clrH; anchors.fill:parent; hoverEnabled:true; cursorShape:Qt.PointingHandCursor
                                     onClicked:{ fastChart.clearSeries(index); resetStats(index) } }
                             }
@@ -604,7 +604,7 @@ Item {
         border.color: isActive?ThemeManager.primaryColor:"transparent"; border.width:1
         Text { anchors.centerIn:parent; text:tbbtn.label; font.pixelSize:11
             color: tbbtn.isDanger?ThemeManager.dangerColor:tbbtn.isActive?ThemeManager.primaryColor:ThemeManager.textSecondaryColor }
-        ToolTip.visible: tbMouse.containsMouse&&tipText!==""; ToolTip.text:tipText; ToolTip.delay:700
+        AppToolTip { text: tipText; visible: tbMouse.containsMouse && tipText !== ""; delay: 700 }
         MouseArea { id:tbMouse; anchors.fill:parent; hoverEnabled:true; cursorShape:Qt.PointingHandCursor; onClicked:tbbtn.btnClicked() }
     }
 

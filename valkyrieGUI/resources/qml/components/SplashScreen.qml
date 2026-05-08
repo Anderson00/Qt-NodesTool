@@ -4,6 +4,7 @@ import App.Theme 1.0
 import App.Workspace 1.0
 import App.Properties 1.0
 import Qaterial as Qaterial
+import "."
 
 // Startup screen shown when no workspace is active.
 // Mirrors the VSCode welcome experience: branding on the left,
@@ -317,10 +318,8 @@ Rectangle {
         icon.color:  ThemeManager.foregroundColor
         width: 36; height: 36
         opacity: dismissHover.containsMouse ? 0.7 : 0.3
-        ToolTip.text: "Continue without opening"
-        ToolTip.visible: hovered
-        ToolTip.delay:   600
         onClicked: root.dismissed = true
+        AppToolTip { text: "Continue without opening"; visible: parent.hovered; delay: 600 }
 
         MouseArea {
             id: dismissHover

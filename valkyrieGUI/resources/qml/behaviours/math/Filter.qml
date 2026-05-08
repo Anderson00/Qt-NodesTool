@@ -101,7 +101,7 @@ Item {
                             color: root.filterMode === index ? ThemeManager.backgroundColor : ThemeManager.textColor
                             opacity: root.filterMode === index ? 1.0 : 0.5
                         }
-                        ToolTip.visible: ma_.containsMouse; ToolTip.text: root.modeTips[index]; ToolTip.delay: 600
+                        AppToolTip { text: root.modeTips[index]; visible: ma_.containsMouse; delay: 600 }
                         MouseArea { id: ma_; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                             onClicked: { root.filterMode = index; root.buffer = [] } }
                     }
