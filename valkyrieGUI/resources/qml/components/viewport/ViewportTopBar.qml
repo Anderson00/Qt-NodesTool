@@ -27,9 +27,10 @@ Rectangle {
     signal undoRequested()
     signal redoRequested()
 
-    property bool canUndo:  false
-    property bool canRedo:  false
-    property bool isDirty:  false
+    property bool canUndo:         false
+    property bool canRedo:         false
+    property bool isDirty:         false
+    property bool historyPanelOpen: false
 
     height: barHeight
     color: Qt.darker(ThemeManager.backgroundColor, 1.35)
@@ -254,6 +255,17 @@ Rectangle {
         Row {
             spacing: 0
             Layout.alignment: Qt.AlignVCenter
+
+            Qaterial.AppBarButton {
+                icon.source: Qaterial.Icons.history
+                icon.color:  root.historyPanelOpen ? ThemeManager.primaryColor : ThemeManager.textColor
+                ToolTip.text: "Histórico (Ctrl+H)"
+                ToolTip.visible: hovered
+                ToolTip.delay: 500
+                width: 40; height: 40
+                onClicked: root.historyPanelOpen = !root.historyPanelOpen
+                Behavior on icon.color { ColorAnimation { duration: 150 } }
+            }
 
             Qaterial.AppBarButton {
                 icon.source: Qaterial.Icons.undo

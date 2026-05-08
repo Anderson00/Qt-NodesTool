@@ -28,6 +28,9 @@ class ViewPortWindow : public QMLWindow
     Q_PROPERTY(bool canRedo  READ canRedo  NOTIFY undoStateChanged)
     Q_PROPERTY(bool isClean  READ isClean  NOTIFY undoStateChanged)
 
+    Q_PROPERTY(int historyCount READ historyCount NOTIFY historyChanged)
+    Q_PROPERTY(int historyIndex READ historyIndex NOTIFY historyChanged)
+
 public:
     explicit ViewPortWindow(QWidget* parent = nullptr);
     ~ViewPortWindow();
@@ -41,6 +44,8 @@ public:
     bool  canUndo()       const;
     bool  canRedo()       const;
     bool  isClean()       const;
+    int   historyCount()  const;
+    int   historyIndex()  const;
 
     QUndoStack* undoStack() const;
 
@@ -82,6 +87,9 @@ public slots:
                                             const QString& inputUuid,  const QString& inputMethod);
     Q_INVOKABLE bool removeConnectionWithUndo(const QString& outputUuid, const QString& outputMethod,
                                                const QString& inputUuid,  const QString& inputMethod);
+    Q_INVOKABLE QString historyText(int index) const;
+    Q_INVOKABLE void    jumpToHistory(int index);
+
     Q_INVOKABLE void recordNodeMove(const QString& uuid,
                                     double oldX, double oldY, double newX, double newY);
     Q_INVOKABLE void recordNodeResize(const QString& uuid,
@@ -112,6 +120,7 @@ signals:
     void fpsCountChanged();
     void viewportStateChanged();
     void undoStateChanged();
+    void historyChanged();
     void viewportRestoreRequested(qreal x, qreal y, qreal scale);
     void behaviourAdded(Behaviours* behaviour);
     void behaviourRemoved(Behaviours* obj, const QString& uuid);

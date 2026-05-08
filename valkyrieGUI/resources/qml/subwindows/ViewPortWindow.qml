@@ -1193,6 +1193,26 @@ Rectangle {
         }
     }
 
+    // ─── History Panel ──────────────────────────────────────────────────────────
+    HistoryPanel {
+        id: historyPanel
+        vp:      viewPort
+        visible: topBar.historyPanelOpen
+        z: 190
+
+        anchors.top:   topBar.bottom
+        anchors.right: parent.right
+        anchors.topMargin:   8
+        anchors.rightMargin: 8
+
+        onCloseRequested: topBar.historyPanelOpen = false
+    }
+
+    Shortcut {
+        sequence: "Ctrl+H"
+        onActivated: topBar.historyPanelOpen = !topBar.historyPanelOpen
+    }
+
     // ─── Splash Screen ──────────────────────────────────────────────────────────
     SplashScreen {
         id: splashScreen

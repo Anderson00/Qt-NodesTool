@@ -21,6 +21,7 @@ ViewPortWindow::ViewPortWindow(QWidget* parent)
     connect(m_undoStack, &QUndoStack::canUndoChanged, this, &ViewPortWindow::undoStateChanged);
     connect(m_undoStack, &QUndoStack::canRedoChanged, this, &ViewPortWindow::undoStateChanged);
     connect(m_undoStack, &QUndoStack::cleanChanged,   this, &ViewPortWindow::undoStateChanged);
+    connect(m_undoStack, &QUndoStack::indexChanged,   this, [this](int) { emit historyChanged(); });
 
     m_frameTimer = new QTimer(this);
     m_frameTimer->setTimerType(Qt::PreciseTimer);
@@ -60,6 +61,17 @@ qreal ViewPortWindow::viewportScale() const { return m_viewportScale; }
 bool  ViewPortWindow::canUndo()       const { return m_undoStack->canUndo(); }
 bool  ViewPortWindow::canRedo()       const { return m_undoStack->canRedo(); }
 bool  ViewPortWindow::isClean()       const { return m_undoStack->isClean(); }
+int   ViewPortWindow::historyCount()  const { return m_undoStack->count() + 1; }
+int   ViewPortWindow::historyIndex()  const { return m_undoStack->index(); }
+
+QString ViewPortWindow::historyText(int index) const {
+    if (index <= 0 || index > m_undoStack->count()) return tr("Initial state");
+    return m_undoStack->command(index - 1)->text();
+}
+
+void ViewPortWindow::jumpToHistory(int index) {
+    m_undoStack->setIndex(index);
+}
 
 QUndoStack* ViewPortWindow::undoStack() const { return m_undoStack; }
 
