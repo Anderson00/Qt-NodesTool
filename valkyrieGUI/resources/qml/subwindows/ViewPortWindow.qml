@@ -31,7 +31,6 @@ Rectangle {
     property bool m_suppressConnectionDraw: false
 
     //Behaviours properties
-    property var behavioursZ: []
     property var nodeOnFocus
 
     // World-space point kept at the center of the view.
@@ -359,10 +358,59 @@ Rectangle {
     }
 
 
-    function getBehaviourGreaterZ(){
-        let aux = []
-        aux = aux.concat(behavioursZ);
-        return aux.sort()[aux.length - 1];
+    // ── Z-order management ────────────────────────────────────────────────────
+    // Returns all node rects sorted by z ascending.
+    function _zSortedRects() {
+        var all = []
+        for (var i = 0; i < rectsArray.count; i++)
+            all.push(rectsArray.get(i).rectObjTarget)
+        all.sort(function(a, b) { return a.z - b.z })
+        return all
+    }
+
+    // Reassign z as 1..N in current order — keeps relative stack intact, no gaps.
+    function _compactZ() {
+        var sorted = _zSortedRects()
+        for (var i = 0; i < sorted.length; i++)
+            sorted[i].z = i + 1
+    }
+
+    // Swap target with the node immediately above it.
+    function _bringForward(target) {
+        var sorted = _zSortedRects()
+        var idx = sorted.indexOf(target)
+        if (idx < 0 || idx === sorted.length - 1) return
+        var tmp = sorted[idx + 1].z
+        sorted[idx + 1].z = target.z
+        target.z = tmp
+        _compactZ()
+    }
+
+    // Swap target with the node immediately below it.
+    function _sendBackward(target) {
+        var sorted = _zSortedRects()
+        var idx = sorted.indexOf(target)
+        if (idx <= 0) return
+        var tmp = sorted[idx - 1].z
+        sorted[idx - 1].z = target.z
+        target.z = tmp
+        _compactZ()
+    }
+
+    // Place target above every other node.
+    function _bringToFront(target) {
+        var sorted = _zSortedRects()
+        if (sorted.length === 0 || sorted.indexOf(target) === sorted.length - 1) return
+        target.z = sorted[sorted.length - 1].z + 1
+        _compactZ()
+    }
+
+    // Place target below every other node.
+    function _sendToBack(target) {
+        var sorted = _zSortedRects()
+        if (sorted.length === 0 || sorted.indexOf(target) === 0) return
+        target.z = sorted[0].z - 1
+        _compactZ()
     }
 
     // Converts viewport coordinates to mycanvas local coordinates.
@@ -976,7 +1024,14 @@ Rectangle {
                         behaviourObject: model.object
 
                         Component.onCompleted: {
-                            behavioursZ[index] = 0
+                            // New nodes appear on top of all existing ones.
+                            var maxZ = 0
+                            for (var i = 0; i < rectsArray.count; i++) {
+                                var r = rectsArray.get(i).rectObjTarget
+                                if (r && r.z > maxZ) maxZ = r.z
+                            }
+                            z = maxZ + 1
+
                             model.object.setViewRectangle(this)
                             rectsArray.append({
                                 uuid:          viewPort.getUUIDFromBehaviour(model.object),
@@ -993,11 +1048,9 @@ Rectangle {
                             }
                         }
 
-                        onZChanged: { behavioursZ[index] = z }
-
-                        Component.onDestruction: {
-                            behavioursZ = behavioursZ.slice(0, index)
-                                          .concat(behavioursZ.slice(index + 1, behavioursZ.length))
+                        // Bring to front automatically when the user starts dragging.
+                        onIsDraggingChanged: {
+                            if (isDragging) root._bringToFront(viewComponentRectV2)
                         }
 
                         onNodeDragEnded: function(oldX, oldY, newX, newY) {
@@ -1019,10 +1072,10 @@ Rectangle {
                             viewPort.removeNodeWithUndo(viewPort.getUUIDFromBehaviour(model.object))
                         }
 
-                        onFrontOneStepClicked: { z += 1 }
-                        onBackOneStepClicked:  { z = (z - 1 < 1) ? 0 : z - 1 }
-                        onFrontTotalClicked:   { z = getBehaviourGreaterZ() + 1 }
-                        onBackTotalClicked:    { z = 0 }
+                        onFrontOneStepClicked: root._bringForward(viewComponentRectV2)
+                        onBackOneStepClicked:  root._sendBackward(viewComponentRectV2)
+                        onFrontTotalClicked:   root._bringToFront(viewComponentRectV2)
+                        onBackTotalClicked:    root._sendToBack(viewComponentRectV2)
                     }
                 }
             }
