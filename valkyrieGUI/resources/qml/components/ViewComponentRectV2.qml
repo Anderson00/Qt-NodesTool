@@ -178,39 +178,28 @@ Rectangle {
         Qt.callLater(() => animEnabled = true)
     }
 
-    onXChanged:      if (behaviourObject) behaviourObject.x = x
-    onYChanged:      if (behaviourObject) behaviourObject.y = y
+    onXChanged:      if ((isResizing || isDragging) && behaviourObject) behaviourObject.x = x
+    onYChanged:      if ((isResizing || isDragging) && behaviourObject) behaviourObject.y = y
     onWidthChanged:  if ((isResizing || isDragging) && behaviourObject) { behaviourObject.width = width; behaviourObject.contentWidth = width }
     onHeightChanged: if ((isResizing || isDragging) && behaviourObject) behaviourObject.height = root.height
 
-    // Sync C++ → visual (e.g. undo moves node back); disabled during user drag to avoid fighting
-    Binding {
-        target: root
-        property: "x"
-        value: behaviourObject ? behaviourObject.x : 0
-        when: behaviourObject !== null && !root.isDragging && !isResizing
-        restoreMode: Binding.RestoreNone
-    }
-    Binding {
-        target: root
-        property: "y"
-        value: behaviourObject ? behaviourObject.y : 0
-        when: behaviourObject !== null && !root.isDragging && !isResizing
-        restoreMode: Binding.RestoreNone
-    }
-    // Sync width/height from C++ → visual (undo/redo, workspace load).
-    // One-directional: behaviourObject → root only. The reverse path (root → behaviourObject)
-    // is handled in onWidthChanged/onHeightChanged, guarded to run only during user gestures.
-    // This breaks the feedback loop that the Behavior animation would otherwise create.
+    // Sync all geometry from C++ → visual (undo/redo, workspace load).
+    // One-directional only: behaviourObject → root. The reverse (root → behaviourObject)
+    // runs in onXChanged/onYChanged/onWidthChanged/onHeightChanged, guarded to fire
+    // only during user gestures. This prevents feedback loops with the Behavior animations.
     Connections {
         target: behaviourObject
+        function onXChanged() {
+            if (!root.isDragging && !root.isResizing) root.x = behaviourObject.x
+        }
+        function onYChanged() {
+            if (!root.isDragging && !root.isResizing) root.y = behaviourObject.y
+        }
         function onWidthChanged() {
-            if (!root.isDragging && !root.isResizing)
-                root.width = behaviourObject.width
+            if (!root.isDragging && !root.isResizing) root.width = behaviourObject.width
         }
         function onHeightChanged() {
-            if (!root.isDragging && !root.isResizing)
-                root.height = behaviourObject.height
+            if (!root.isDragging && !root.isResizing) root.height = behaviourObject.height
         }
     }
 
@@ -221,11 +210,19 @@ Rectangle {
         }
     }
 
-    Behavior on height {
-        enabled: animEnabled && !isResizing
+    Behavior on x {
+        enabled: animEnabled && !isResizing && !isDragging
+        NumberAnimation { duration: 250; easing.type: Easing.OutQuad }
+    }
+    Behavior on y {
+        enabled: animEnabled && !isResizing && !isDragging
         NumberAnimation { duration: 250; easing.type: Easing.OutQuad }
     }
     Behavior on width {
+        enabled: animEnabled && !isResizing
+        NumberAnimation { duration: 250; easing.type: Easing.OutQuad }
+    }
+    Behavior on height {
         enabled: animEnabled && !isResizing
         NumberAnimation { duration: 250; easing.type: Easing.OutQuad }
     }
