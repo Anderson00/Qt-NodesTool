@@ -1562,6 +1562,30 @@ Rectangle {
     }
 
 
+    // ── Fullscreen visualization overlay ─────────────────────────────────────────
+    // Must live here (same QQuickWindow as mycanvasBody) so ShaderEffectSource works.
+    FullscreenVisualization {
+        id: fullscreenOverlay
+        anchors.fill: parent
+        z: 9999
+        visible: root.showVisualization && vizWindow.isPlaying
+
+        cameraX:     root.cameraWorldX
+        cameraY:     root.cameraWorldY
+        cameraWidth: root.cameraWorldW
+        cameraHeight: root.cameraWorldH
+        canvasBody:  mycanvasBody
+
+        onCloseRequested: vizWindow.isPlaying = false
+    }
+
+    Shortcut {
+        sequence: "Escape"
+        context:  Qt.ApplicationShortcut
+        enabled:  fullscreenOverlay.visible
+        onActivated: vizWindow.isPlaying = false
+    }
+
     // ── Visualization window overlay ──────────────────────────────────────────────
     VisualizationWindow {
         id: vizWindow

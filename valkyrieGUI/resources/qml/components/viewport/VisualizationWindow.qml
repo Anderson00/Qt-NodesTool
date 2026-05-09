@@ -26,17 +26,6 @@ Rectangle {
     signal closeRequested()
     signal playToggled(bool playing)
 
-    // ── Fullscreen window (created once, shown/hidden by play/stop) ───────────
-    FullscreenVisualization {
-        id: fullscreenWin
-        cameraX:     root.cameraX
-        cameraY:     root.cameraY
-        cameraWidth: root.cameraWidth
-        cameraHeight: root.cameraHeight
-        canvasBody:  root.canvasBody
-        onClosing:   root.isPlaying = false
-    }
-
     // Window defaults: appears at top-right of the canvas area
     width:  460
     height: 300
@@ -95,8 +84,6 @@ Rectangle {
                 icon.width: 14; icon.height: 14
                 onClicked: {
                     root.isPlaying = !root.isPlaying
-                    if (root.isPlaying) fullscreenWin.showFullScreen()
-                    else                fullscreenWin.close()
                     root.playToggled(root.isPlaying)
                 }
                 AppToolTip { text: root.isPlaying ? "Stop (fechar fullscreen)" : "Play (abrir fullscreen)"; visible: parent.hovered }
