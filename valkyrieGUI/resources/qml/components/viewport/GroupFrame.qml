@@ -66,6 +66,7 @@ Rectangle {
 
         Row {
             id: btnRow
+            z: 2
             anchors { right: parent.right; verticalCenter: parent.verticalCenter; rightMargin: 4 }
             spacing: 0
 
@@ -87,10 +88,14 @@ Rectangle {
             }
         }
 
-        // Drag handle — covers the header (buttons sit above via z)
+        // Drag handle — sits above the TextInput (z:1) so drags register even over the label.
+        // Disabled while the label is being edited so TextInput can handle its own events.
+        // Buttons sit at z:2 and remain clickable regardless.
         MouseArea {
             anchors.fill: parent
-            z: -1
+            z: 1
+            enabled: labelInput.readOnly
+            preventStealing: true
             cursorShape: pressed ? Qt.ClosedHandCursor : Qt.SizeAllCursor
 
             onPressed: function(mouse) {
