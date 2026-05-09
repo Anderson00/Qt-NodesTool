@@ -1,4 +1,4 @@
-import QtQuick 2.15
+﻿import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import Qaterial 1.0 as Qaterial
@@ -72,7 +72,7 @@ Item {
                 suffix: "ms"
                 showBar: true
                 accentColor: ThemeManager.primaryColor
-                onValueModified: if (behaviourObject) behaviourObject.setInterval(Math.round(newValue))
+                onValueModified: function(newValue) { if (behaviourObject) behaviourObject.setInterval(Math.round(newValue)) }
             }
         }
 

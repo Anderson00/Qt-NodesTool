@@ -4,29 +4,24 @@ import App.Theme 1.0
 import Qaterial 1.0 as Qaterial
 import ".."
 
-// Floating visualization window — renders only the qmlBodyUrl of nodes that
-// fall inside the camera rect, scaled and translated to fill the preview area.
-// Lives inside ViewPortWindow as a z:300 overlay (not a separate OS window).
+// Floating visualization panel — loads each node's qmlBodyUrl body as a clean
+// independent instance. No node chrome (no header, sockets, handles, connections).
+// The shared behaviourObject keeps C++ signals/slots live; buttons are interactive.
 Rectangle {
     id: root
 
-    // Camera rect in world (canvas) coordinates — bind to CameraFrameItem's x/y/w/h
     property real cameraX:      5000
     property real cameraY:      5000
     property real cameraWidth:  800
     property real cameraHeight: 450
+    property var  nodesModel:   null
 
-    // Reference to mycanvasBody in ViewPortWindow — ShaderEffectSource captures it directly.
-    // This gives true 1:1 sync: same rendered pixels, same state, no QML recreation.
-    property var canvasBody: null
-
-    // Play/Stop: Play opens the fullscreen window, Stop closes it
+    // Play toggles the fullscreen overlay (managed by ViewPortWindow)
     property bool isPlaying: false
 
     signal closeRequested()
     signal playToggled(bool playing)
 
-    // Window defaults: appears at top-right of the canvas area
     width:  460
     height: 300
 
@@ -34,7 +29,6 @@ Rectangle {
     border.color: isPlaying ? "#4caf50" : "#FF9800"
     border.width: 1.5
     radius: 6
-
     Behavior on border.color { ColorAnimation { duration: 250 } }
 
     // ── Drag state ────────────────────────────────────────────────────────────
@@ -82,10 +76,7 @@ Rectangle {
                 icon.source: root.isPlaying ? Qaterial.Icons.stop : Qaterial.Icons.play
                 icon.color:  root.isPlaying ? "#f44336" : "#4caf50"
                 icon.width: 14; icon.height: 14
-                onClicked: {
-                    root.isPlaying = !root.isPlaying
-                    root.playToggled(root.isPlaying)
-                }
+                onClicked: { root.isPlaying = !root.isPlaying; root.playToggled(root.isPlaying) }
                 AppToolTip { text: root.isPlaying ? "Stop (fechar fullscreen)" : "Play (abrir fullscreen)"; visible: parent.hovered }
             }
 
@@ -116,11 +107,6 @@ Rectangle {
     }
 
     // ── Preview area ──────────────────────────────────────────────────────────
-    // ShaderEffectSource captures the actual rendered pixels of mycanvasBody.
-    // sourceRect is in mycanvasBody's world coordinate space (0–10000).
-    // Scaling to fill previewArea is handled automatically by Qt's scene graph.
-    // Result: true 1:1 mirror — any state change in the editor (clear, chart
-    // updates, button presses) is immediately reflected here.
     Item {
         id: previewArea
         anchors {
@@ -130,35 +116,61 @@ Rectangle {
         }
         clip: true
 
-        Rectangle { anchors.fill: parent; color: "#0d0d0d" }
+        Rectangle { anchors.fill: parent; color: "#111111" }
 
-        ShaderEffectSource {
-            id: canvasCapture
-            anchors.fill: parent
-            // sourceItem is null when this panel is hidden OR when fullscreen is
-            // playing (fullscreen has its own ShaderEffectSource). Two simultaneous
-            // ShaderEffectSources on the same item suppress its direct-to-screen render.
-            sourceItem: (root.visible && !root.isPlaying && root.canvasBody !== null)
-                        ? root.canvasBody : null
-            sourceRect: Qt.rect(root.cameraX, root.cameraY,
-                                root.cameraWidth, root.cameraHeight)
-            live: true
-            hideSource: false
+        readonly property real s: root.cameraWidth > 0 ? width / root.cameraWidth : 1.0
+
+        Item {
+            id: worldContainer
+            width:  10000
+            height: 10000
+            x: -root.cameraX * previewArea.s
+            y: -root.cameraY * previewArea.s
+
+            transform: Scale {
+                xScale: previewArea.s; yScale: previewArea.s
+                origin.x: 0; origin.y: 0
+            }
+
+            Repeater {
+                model: root.nodesModel
+
+                delegate: Loader {
+                    property var obj: model ? model.object : null
+                    source:  (obj && obj.qmlBodyUrl !== "") ? obj.qmlBodyUrl : ""
+                    x:       obj ? obj.x      : 0
+                    y:       obj ? obj.y      : 0
+                    width:   obj ? obj.width  : 0
+                    height:  obj ? obj.height : 0
+                    visible: source !== ""
+                    onLoaded: {
+                        if (item && item.hasOwnProperty("behaviourObject"))
+                            item.behaviourObject = obj
+                    }
+                }
+            }
         }
 
         Text {
             anchors.centerIn: parent
-            text: "Camera não definida"
+            text: "Camera não definida\nou nenhum nó tem corpo visual"
+            horizontalAlignment: Text.AlignHCenter
             color: "#444444"; font.pixelSize: 10
-            visible: root.canvasBody === null
+            visible: {
+                if (!root.nodesModel) return true
+                for (var i = 0; i < root.nodesModel.count; i++) {
+                    var o = root.nodesModel.get(i).object
+                    if (o && o.qmlBodyUrl !== "") return false
+                }
+                return true
+            }
         }
     }
 
-    // ── Resize state ──────────────────────────────────────────────────────────
+    // ── Resize handle (BR) ────────────────────────────────────────────────────
     property real _rsPX: 0; property real _rsPY: 0
     property real _rsW:  0; property real _rsH:  0
 
-    // ── Bottom-right resize handle ────────────────────────────────────────────
     Rectangle {
         width: 10; height: 10; radius: 2
         anchors { right: parent.right; bottom: parent.bottom; margins: 2 }

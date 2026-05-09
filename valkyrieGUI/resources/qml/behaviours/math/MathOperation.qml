@@ -1,4 +1,4 @@
-import QtQuick 2.15
+﻿import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import Qaterial 1.0 as Qaterial
@@ -88,7 +88,7 @@ Item {
             stepSize: 1.0; decimals: 2
             showBar: false
             accentColor: "#2ecc71"
-            onValueModified: if (behaviourObject) behaviourObject.setA(newValue)
+            onValueModified: function(newValue) { if (behaviourObject) behaviourObject.setA(newValue) }
         }
 
         // ── B input ────────────────────────────────────────────────────────
@@ -100,7 +100,7 @@ Item {
             stepSize: 1.0; decimals: 2
             showBar: false
             accentColor: "#3498db"
-            onValueModified: if (behaviourObject) behaviourObject.setB(newValue)
+            onValueModified: function(newValue) { if (behaviourObject) behaviourObject.setB(newValue) }
         }
     }
 }

@@ -1563,18 +1563,17 @@ Rectangle {
 
 
     // ── Fullscreen visualization overlay ─────────────────────────────────────────
-    // Must live here (same QQuickWindow as mycanvasBody) so ShaderEffectSource works.
     FullscreenVisualization {
         id: fullscreenOverlay
         anchors.fill: parent
         z: 9999
         visible: root.showVisualization && vizWindow.isPlaying
 
-        cameraX:     root.cameraWorldX
-        cameraY:     root.cameraWorldY
-        cameraWidth: root.cameraWorldW
+        cameraX:      root.cameraWorldX
+        cameraY:      root.cameraWorldY
+        cameraWidth:  root.cameraWorldW
         cameraHeight: root.cameraWorldH
-        canvasBody:  mycanvasBody
+        nodesModel:   nodes.model
 
         onCloseRequested: vizWindow.isPlaying = false
     }
@@ -1592,8 +1591,6 @@ Rectangle {
         visible: root.showVisualization
         z: 300
 
-        // Initial position: top-right corner under the top bar.
-        // The window's own title bar MouseArea handles repositioning via x/y assignment.
         x: root.width  - width  - 12
         y: topBarHeight + 12
 
@@ -1601,7 +1598,7 @@ Rectangle {
         cameraY:      root.cameraWorldY
         cameraWidth:  root.cameraWorldW
         cameraHeight: root.cameraWorldH
-        canvasBody:   mycanvasBody
+        nodesModel:   nodes.model
 
         onCloseRequested: root.showVisualization = false
     }

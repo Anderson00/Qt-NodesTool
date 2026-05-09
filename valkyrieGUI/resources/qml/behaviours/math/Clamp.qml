@@ -1,4 +1,4 @@
-import QtQuick 2.15
+﻿import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import Qaterial 1.0 as Qaterial
@@ -70,7 +70,7 @@ Item {
             stepSize: 1.0; decimals: 2
             showBar: false
             accentColor: "#e74c3c"
-            onValueModified: if (behaviourObject) behaviourObject.setMin(newValue)
+            onValueModified: function(newValue) { if (behaviourObject) behaviourObject.setMin(newValue) }
         }
 
         // ── Max input ──────────────────────────────────────────────────────
@@ -82,7 +82,7 @@ Item {
             stepSize: 1.0; decimals: 2
             showBar: false
             accentColor: "#2ecc71"
-            onValueModified: if (behaviourObject) behaviourObject.setMax(newValue)
+            onValueModified: function(newValue) { if (behaviourObject) behaviourObject.setMax(newValue) }
         }
     }
 }
