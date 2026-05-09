@@ -58,6 +58,15 @@ Rectangle {
     readonly property var _frameColors: ["#4CAF50","#2196F3","#FF9800","#9C27B0","#F44336","#00BCD4","#FF5722","#607D8B"]
     property int _frameColorIdx: 0
 
+    // ── Camera / Visualization state ─────────────────────────────────────────
+    property bool showCamera:        false
+    property bool showVisualization: false
+    // Camera rect in world (canvas) coordinates — owned by CameraFrameItem
+    property real cameraWorldX: 4600
+    property real cameraWorldY: 4775
+    property real cameraWorldW: 800
+    property real cameraWorldH: 450
+
     // World-space point kept at the center of the view.
     // Updated whenever the canvas is panned or zoomed.
     // Initial value = (5000, 5000) = canvas center = "home" = display (0, 0).
@@ -1191,6 +1200,30 @@ Rectangle {
                     y: 5000
                 }
 
+                // ── Camera frame (above grid, below group frames) ─────────────
+                CameraFrameItem {
+                    id: cameraFrame
+                    visible: root.showCamera
+                    z: 0.3
+
+                    // All geometry set imperatively to avoid binding conflicts with drag/resize.
+                    Component.onCompleted: {
+                        x      = root.cameraWorldX
+                        y      = root.cameraWorldY
+                        width  = root.cameraWorldW
+                        height = root.cameraWorldH
+                    }
+
+                    onCameraRectChanged: function(wx, wy, ww, wh) {
+                        root.cameraWorldX = wx
+                        root.cameraWorldY = wy
+                        root.cameraWorldW = ww
+                        root.cameraWorldH = wh
+                    }
+
+                    onCloseRequested: root.showCamera = false
+                }
+
                 // ── Group Frames (behind connections and nodes) ───────────────
                 ListModel { id: frameModel }
 
@@ -1280,10 +1313,10 @@ Rectangle {
                         smooth: true
                         z: Number.MAX_VALUE
 
-                        property var circleConnPoint
-                        property var circleConnPoint2
-                        property var circleConn2
-                        property var viewRectConn2
+                        property var circleConnPoint:  null
+                        property var circleConnPoint2: null
+                        property var circleConn2:      null
+                        property var viewRectConn2:    null
 
                         property real dashOffset: 0
 
@@ -1529,6 +1562,26 @@ Rectangle {
     }
 
 
+    // ── Visualization window overlay ──────────────────────────────────────────────
+    VisualizationWindow {
+        id: vizWindow
+        visible: root.showVisualization
+        z: 300
+
+        // Initial position: top-right corner under the top bar.
+        // The window's own title bar MouseArea handles repositioning via x/y assignment.
+        x: root.width  - width  - 12
+        y: topBarHeight + 12
+
+        cameraX:      root.cameraWorldX
+        cameraY:      root.cameraWorldY
+        cameraWidth:  root.cameraWorldW
+        cameraHeight: root.cameraWorldH
+        nodesModel:   nodes.model
+
+        onCloseRequested: root.showVisualization = false
+    }
+
     // ── Group frame node sync ─────────────────────────────────────────────────────
     // Same Connections pattern as multi-select group drag.
     // Uses absolute offsets (startX + totalDelta) — avoids floating-point drift.
@@ -1694,6 +1747,24 @@ Rectangle {
                 leftPanelDrawer.open()
             }
         }
+        showCamera:        root.showCamera
+        showVisualization: root.showVisualization
+        onCameraToggled: {
+            root.showCamera = !root.showCamera
+            if (root.showCamera) {
+                cameraFrame.x      = root.cameraWorldX
+                cameraFrame.y      = root.cameraWorldY
+                cameraFrame.width  = root.cameraWorldW
+                cameraFrame.height = root.cameraWorldH
+            }
+        }
+        onVisualizationToggled: {
+            root.showVisualization = !root.showVisualization
+            if (root.showVisualization) {
+                vizWindow.x = root.width  - vizWindow.width  - 12
+                vizWindow.y = topBarHeight + 12
+            }
+        }
         onSettingsRequested:    settingsPopup.open()
         onNewProjectRequested:  {
             if (!viewPort.isClean) confirmNewProjectDialog.open()
@@ -1805,6 +1876,30 @@ Rectangle {
         sequence: "Ctrl+G"
         context:  Qt.ApplicationShortcut
         onActivated: root._groupSelected()
+    }
+    Shortcut {
+        sequence: "Ctrl+Shift+C"
+        context:  Qt.ApplicationShortcut
+        onActivated: {
+            root.showCamera = !root.showCamera
+            if (root.showCamera) {
+                cameraFrame.x      = root.cameraWorldX
+                cameraFrame.y      = root.cameraWorldY
+                cameraFrame.width  = root.cameraWorldW
+                cameraFrame.height = root.cameraWorldH
+            }
+        }
+    }
+    Shortcut {
+        sequence: "Ctrl+Shift+V"
+        context:  Qt.ApplicationShortcut
+        onActivated: {
+            root.showVisualization = !root.showVisualization
+            if (root.showVisualization) {
+                vizWindow.x = root.width  - vizWindow.width  - 12
+                vizWindow.y = topBarHeight + 12
+            }
+        }
     }
     Shortcut {
         sequence: "Ctrl+Shift+G"

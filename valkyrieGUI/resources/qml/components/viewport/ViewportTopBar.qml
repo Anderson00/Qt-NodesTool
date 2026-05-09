@@ -23,15 +23,19 @@ Rectangle {
     signal settingsRequested()
     signal screenshotRequested()
     signal newProjectRequested()
+    signal cameraToggled()
+    signal visualizationToggled()
     signal saveRequested()
     signal openRequested()
     signal undoRequested()
     signal redoRequested()
 
-    property bool canUndo:         false
-    property bool canRedo:         false
-    property bool isDirty:         false
-    property bool historyPanelOpen: false
+    property bool canUndo:           false
+    property bool canRedo:           false
+    property bool isDirty:           false
+    property bool historyPanelOpen:  false
+    property bool showCamera:        false
+    property bool showVisualization: false
 
     height: barHeight
     color: Qt.darker(ThemeManager.backgroundColor, 1.35)
@@ -312,6 +316,41 @@ Rectangle {
                 width: 40; height: 40
                 onClicked: root.openRequested()
                 AppToolTip { text: "Open Project"; visible: parent.hovered }
+            }
+
+            // ── Camera / Visualization separator ──────────────────────────────
+            Rectangle {
+                width: 1; height: 18; color: ThemeManager.textColor; opacity: 0.2
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            Qaterial.AppBarButton {
+                width: 40; height: 40
+                icon.source: Qaterial.Icons.cropFree
+                icon.color:  root.showCamera ? "#FF9800"
+                                             : Qt.rgba(ThemeManager.textColor.r,
+                                                       ThemeManager.textColor.g,
+                                                       ThemeManager.textColor.b, 0.6)
+                onClicked: root.cameraToggled()
+                Behavior on icon.color { ColorAnimation { duration: 150 } }
+                AppToolTip { text: "Camera frame (Ctrl+Shift+C)"; visible: parent.hovered }
+            }
+
+            Qaterial.AppBarButton {
+                width: 40; height: 40
+                icon.source: Qaterial.Icons.television
+                icon.color:  root.showVisualization ? "#FF9800"
+                                                    : Qt.rgba(ThemeManager.textColor.r,
+                                                              ThemeManager.textColor.g,
+                                                              ThemeManager.textColor.b, 0.6)
+                onClicked: root.visualizationToggled()
+                Behavior on icon.color { ColorAnimation { duration: 150 } }
+                AppToolTip { text: "Visualization window (Ctrl+Shift+V)"; visible: parent.hovered }
+            }
+
+            Rectangle {
+                width: 1; height: 18; color: ThemeManager.textColor; opacity: 0.2
+                anchors.verticalCenter: parent.verticalCenter
             }
 
             Qaterial.AppBarButton {
