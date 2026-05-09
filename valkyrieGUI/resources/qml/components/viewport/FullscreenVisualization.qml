@@ -53,6 +53,7 @@ Rectangle {
                 delegate: Loader {
                     id: bodyLoader
                     property var obj: model ? model.object : null
+                    clip: true
 
                     source:  (obj && obj.qmlBodyUrl !== "") ? obj.qmlBodyUrl : ""
                     // Bind position/size from behaviourObject — reactive via NOTIFY
