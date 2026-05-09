@@ -45,7 +45,8 @@ Rectangle {
             nodeResizeEnded(oldX, oldY, oldW, oldH, newX, newY, newW, newH)
     }
 
-    property bool isDragging: false   // managed by manual drag handler
+    property bool isDragging:       false  // managed by manual drag handler
+    property bool isGroupFollowing: false  // true while this node is a group-drag follower
 
     property double minWidth: 150
     property double minHeight: 100
@@ -74,6 +75,9 @@ Rectangle {
     signal frontTotalClicked()
 
     signal nodeDragEnded(real oldX, real oldY, real newX, real newY)
+    signal dragPositionChanged(real newX, real newY)
+    signal nodePressed()   // fires on every mouse press
+    signal nodeClicked()   // fires only on a true click (no significant drag)
 
     property real _pressX: 0
     property real _pressY: 0
@@ -211,11 +215,11 @@ Rectangle {
     }
 
     Behavior on x {
-        enabled: animEnabled && !isResizing && !isDragging
+        enabled: animEnabled && !isResizing && !isDragging && !isGroupFollowing
         NumberAnimation { duration: 250; easing.type: Easing.OutQuad }
     }
     Behavior on y {
-        enabled: animEnabled && !isResizing && !isDragging
+        enabled: animEnabled && !isResizing && !isDragging && !isGroupFollowing
         NumberAnimation { duration: 250; easing.type: Easing.OutQuad }
     }
     Behavior on width {
@@ -254,6 +258,7 @@ Rectangle {
             root._pressX  = root.x
             root._pressY  = root.y
             root.isDragging = true
+            root.nodePressed()
         }
 
         onPositionChanged: function(mouse) {
@@ -284,6 +289,7 @@ Rectangle {
 
             root.x = newX
             root.y = newY
+            root.dragPositionChanged(newX, newY)
         }
 
         onReleased: function(mouse) {
@@ -294,8 +300,13 @@ Rectangle {
 
         onClicked: function(mouse) {
             root.focus = true
-            if (mouse.button === Qt.RightButton)
+            if (mouse.button === Qt.RightButton) {
                 contextMenu.popup()
+                return
+            }
+            // Only emit nodeClicked for a true click — not after a significant drag
+            if (Math.abs(root.x - root._pressX) <= 2 && Math.abs(root.y - root._pressY) <= 2)
+                root.nodeClicked()
         }
     }
 

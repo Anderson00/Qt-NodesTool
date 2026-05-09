@@ -95,6 +95,12 @@ public slots:
     Q_INVOKABLE void recordNodeResize(const QString& uuid,
                                       double oldX, double oldY, double oldW, double oldH,
                                       double newX, double newY, double newW, double newH);
+    Q_INVOKABLE void beginUndoMacro(const QString& text);
+    Q_INVOKABLE void endUndoMacro();
+
+    // Copy / paste
+    Q_INVOKABLE QVariantMap getNodeData(const QString& uuid) const;
+    Q_INVOKABLE QString     pasteNode(const QVariantMap& data, double offsetX, double offsetY);
 
     // Workspace
     Q_INVOKABLE bool saveWorkspace(const QString& name);

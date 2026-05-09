@@ -24,7 +24,9 @@ Rectangle {
     property bool showGrid: true
     property bool connectionsMinimized: false
     property bool snapEnabled: false
+    property string toolMode: "pan"
 
+    signal toolModeActivated(string mode)
     signal zoomIn()
     signal zoomOut()
     signal resetZoom()
@@ -42,18 +44,22 @@ Rectangle {
 
         // Tool Mode: Select
         Qaterial.ToolButton {
-            checkable: false
+            checkable: true
+            checked: root.toolMode === "select"
             icon.source: Qaterial.Icons.cursorDefault
-            icon.color: ThemeManager.accentColor
-            AppToolTip { text: "Select Tool"; visible: parent.hovered }
+            icon.color: root.toolMode === "select" ? ThemeManager.accentColor : ThemeManager.textColor
+            onClicked: root.toolModeActivated("select")
+            AppToolTip { text: "Select Tool  [S]"; visible: parent.hovered }
         }
 
         // Tool Mode: Pan
         Qaterial.ToolButton {
-            checkable: false
+            checkable: true
+            checked: root.toolMode === "pan"
             icon.source: Qaterial.Icons.handBackRight
-            icon.color: ThemeManager.textColor
-            AppToolTip { text: "Pan Tool"; visible: parent.hovered }
+            icon.color: root.toolMode === "pan" ? ThemeManager.accentColor : ThemeManager.textColor
+            onClicked: root.toolModeActivated("pan")
+            AppToolTip { text: "Pan Tool  [P]"; visible: parent.hovered }
         }
 
         Rectangle { width: 1; height: 32; color: ThemeManager.borderColor; Layout.alignment: Qt.AlignVCenter }

@@ -81,6 +81,7 @@
         <file alias="ViewportBottomToolBar.qml">qml/components/viewport/ViewportBottomToolBar.qml</file>
         <file alias="ConnectionRadialMenu.qml">qml/components/viewport/ConnectionRadialMenu.qml</file>
         <file alias="HistoryPanel.qml">qml/components/viewport/HistoryPanel.qml</file>
+        <file alias="GroupFrame.qml">qml/components/viewport/GroupFrame.qml</file>
     </qresource>
     <qresource prefix="/components/drawers">
         <file alias="NodesDrawer.qml">qml/components/drawers/NodesDrawer.qml</file>
