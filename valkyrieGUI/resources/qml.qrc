@@ -84,6 +84,7 @@
         <file alias="GroupFrame.qml">qml/components/viewport/GroupFrame.qml</file>
         <file alias="CameraFrameItem.qml">qml/components/viewport/CameraFrameItem.qml</file>
         <file alias="VisualizationWindow.qml">qml/components/viewport/VisualizationWindow.qml</file>
+        <file alias="FullscreenVisualization.qml">qml/components/viewport/FullscreenVisualization.qml</file>
     </qresource>
     <qresource prefix="/components/drawers">
         <file alias="NodesDrawer.qml">qml/components/drawers/NodesDrawer.qml</file>

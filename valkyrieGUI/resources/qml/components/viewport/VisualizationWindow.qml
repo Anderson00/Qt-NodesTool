@@ -19,11 +19,22 @@ Rectangle {
     // Pass nodes.model from the parent ViewPortWindow
     property var nodesModel: null
 
-    // Play/Stop state (visual only — C++ signals are always active)
+    // Play/Stop: Play opens the fullscreen window, Stop closes it
     property bool isPlaying: false
 
     signal closeRequested()
     signal playToggled(bool playing)
+
+    // ── Fullscreen window (created once, shown/hidden by play/stop) ───────────
+    FullscreenVisualization {
+        id: fullscreenWin
+        cameraX:      root.cameraX
+        cameraY:      root.cameraY
+        cameraWidth:  root.cameraWidth
+        cameraHeight: root.cameraHeight
+        nodesModel:   root.nodesModel
+        onClosing: root.isPlaying = false
+    }
 
     // Window defaults: appears at top-right of the canvas area
     width:  460
@@ -81,8 +92,13 @@ Rectangle {
                 icon.source: root.isPlaying ? Qaterial.Icons.stop : Qaterial.Icons.play
                 icon.color:  root.isPlaying ? "#f44336" : "#4caf50"
                 icon.width: 14; icon.height: 14
-                onClicked: { root.isPlaying = !root.isPlaying; root.playToggled(root.isPlaying) }
-                AppToolTip { text: root.isPlaying ? "Stop" : "Play"; visible: parent.hovered }
+                onClicked: {
+                    root.isPlaying = !root.isPlaying
+                    if (root.isPlaying) fullscreenWin.showFullScreen()
+                    else                fullscreenWin.close()
+                    root.playToggled(root.isPlaying)
+                }
+                AppToolTip { text: root.isPlaying ? "Stop (fechar fullscreen)" : "Play (abrir fullscreen)"; visible: parent.hovered }
             }
 
             Qaterial.ToolButton {

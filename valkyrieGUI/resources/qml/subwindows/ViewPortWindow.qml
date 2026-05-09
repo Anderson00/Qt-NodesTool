@@ -1200,11 +1200,11 @@ Rectangle {
                     y: 5000
                 }
 
-                // ── Camera frame (above grid, below group frames) ─────────────
+                // ── Camera frame — above all nodes; connections sit at MAX_VALUE ─
                 CameraFrameItem {
                     id: cameraFrame
                     visible: root.showCamera
-                    z: 0.3
+                    z: Number.MAX_VALUE - 1
 
                     // All geometry set imperatively to avoid binding conflicts with drag/resize.
                     Component.onCompleted: {
