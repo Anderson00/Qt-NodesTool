@@ -16,8 +16,9 @@ Rectangle {
     property real cameraWidth:  800
     property real cameraHeight: 450
 
-    // Pass nodes.model from the parent ViewPortWindow
-    property var nodesModel: null
+    // Reference to mycanvasBody in ViewPortWindow — ShaderEffectSource captures it directly.
+    // This gives true 1:1 sync: same rendered pixels, same state, no QML recreation.
+    property var canvasBody: null
 
     // Play/Stop: Play opens the fullscreen window, Stop closes it
     property bool isPlaying: false
@@ -28,12 +29,12 @@ Rectangle {
     // ── Fullscreen window (created once, shown/hidden by play/stop) ───────────
     FullscreenVisualization {
         id: fullscreenWin
-        cameraX:      root.cameraX
-        cameraY:      root.cameraY
-        cameraWidth:  root.cameraWidth
+        cameraX:     root.cameraX
+        cameraY:     root.cameraY
+        cameraWidth: root.cameraWidth
         cameraHeight: root.cameraHeight
-        nodesModel:   root.nodesModel
-        onClosing: root.isPlaying = false
+        canvasBody:  root.canvasBody
+        onClosing:   root.isPlaying = false
     }
 
     // Window defaults: appears at top-right of the canvas area
@@ -128,6 +129,11 @@ Rectangle {
     }
 
     // ── Preview area ──────────────────────────────────────────────────────────
+    // ShaderEffectSource captures the actual rendered pixels of mycanvasBody.
+    // sourceRect is in mycanvasBody's world coordinate space (0–10000).
+    // Scaling to fill previewArea is handled automatically by Qt's scene graph.
+    // Result: true 1:1 mirror — any state change in the editor (clear, chart
+    // updates, button presses) is immediately reflected here.
     Item {
         id: previewArea
         anchors {
@@ -139,62 +145,25 @@ Rectangle {
 
         Rectangle { anchors.fill: parent; color: "#0d0d0d" }
 
-        // Uniform scale factor: fit camera width into preview width.
-        // Aspect-ratio letterboxing handled by the camera frame's own ratio lock.
-        readonly property real s: root.cameraWidth > 0 ? width / root.cameraWidth : 1.0
-
-        // worldContainer: children are positioned in world coordinates.
-        // The Scale transform + x/y offset maps world → screen correctly:
-        //   screenX = worldX * s + worldContainer.x
-        //           = worldX * s - cameraX * s
-        //           = (worldX - cameraX) * s  ✓
-        Item {
-            id: worldContainer
-            x: -root.cameraX * previewArea.s
-            y: -root.cameraY * previewArea.s
-
-            transform: Scale {
-                xScale: previewArea.s
-                yScale: previewArea.s
-                origin.x: 0; origin.y: 0
-            }
-
-            Repeater {
-                model: root.nodesModel
-
-                delegate: Loader {
-                    id: bodyLoader
-                    property var obj: model ? model.object : null
-                    // Bindings on behaviourObject properties are reactive via NOTIFY signals —
-                    // no explicit Connections needed; the loader stays in sync automatically.
-                    source: (obj && obj.qmlBodyUrl !== "") ? obj.qmlBodyUrl : ""
-                    x:      obj ? obj.x      : 0
-                    y:      obj ? obj.y      : 0
-                    width:  obj ? obj.width  : 0
-                    height: obj ? obj.height : 0
-
-                    onLoaded: {
-                        if (item && item.hasOwnProperty("behaviourObject"))
-                            item.behaviourObject = obj
-                    }
-                }
-            }
+        ShaderEffectSource {
+            id: canvasCapture
+            anchors.fill: parent
+            // sourceItem is null when this panel is hidden OR when fullscreen is
+            // playing (fullscreen has its own ShaderEffectSource). Two simultaneous
+            // ShaderEffectSources on the same item suppress its direct-to-screen render.
+            sourceItem: (root.visible && !root.isPlaying && root.canvasBody !== null)
+                        ? root.canvasBody : null
+            sourceRect: Qt.rect(root.cameraX, root.cameraY,
+                                root.cameraWidth, root.cameraHeight)
+            live: true
+            hideSource: false
         }
 
-        // Placeholder when there is no visual content in the camera view
         Text {
             anchors.centerIn: parent
-            text: "No visual content in camera view\n(nodes need a qmlBodyUrl body)"
-            horizontalAlignment: Text.AlignHCenter
+            text: "Camera não definida"
             color: "#444444"; font.pixelSize: 10
-            visible: {
-                if (!root.nodesModel) return true
-                for (var i = 0; i < root.nodesModel.count; i++) {
-                    var o = root.nodesModel.get(i).object
-                    if (o && o.qmlBodyUrl !== "") return false
-                }
-                return true
-            }
+            visible: root.canvasBody === null
         }
     }
 

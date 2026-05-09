@@ -13,7 +13,7 @@ Window {
     property real cameraY:      0
     property real cameraWidth:  800
     property real cameraHeight: 450
-    property var  nodesModel:   null
+    property var  canvasBody:   null
 
     color: "#000000"
     title: "Visualization — Valkyrie"
@@ -32,39 +32,17 @@ Window {
         anchors.fill: parent
         clip: true
 
-        // Uniform scale: fit camera width into screen width.
-        // If aspect ratios differ, content is letterboxed horizontally (clipped by clip:true).
-        readonly property real s: root.cameraWidth > 0 ? width / root.cameraWidth : 1.0
-
-        // worldContainer maps world coords → screen:
-        //   screenX = (worldX - cameraX) * s
-        Item {
-            id: worldContainer
-            x: -root.cameraX * previewArea.s
-            y: -root.cameraY * previewArea.s
-
-            transform: Scale {
-                xScale: previewArea.s
-                yScale: previewArea.s
-                origin.x: 0; origin.y: 0
-            }
-
-            Repeater {
-                model: root.nodesModel
-
-                delegate: Loader {
-                    property var obj: model ? model.object : null
-                    source: (obj && obj.qmlBodyUrl !== "") ? obj.qmlBodyUrl : ""
-                    x:      obj ? obj.x      : 0
-                    y:      obj ? obj.y      : 0
-                    width:  obj ? obj.width  : 0
-                    height: obj ? obj.height : 0
-                    onLoaded: {
-                        if (item && item.hasOwnProperty("behaviourObject"))
-                            item.behaviourObject = obj
-                    }
-                }
-            }
+        // ShaderEffectSource — captures mycanvasBody's rendered pixels in the
+        // camera rect (world coords). True 1:1 mirror, zoom-independent.
+        ShaderEffectSource {
+            anchors.fill: parent
+            // null when window is hidden — prevents FBO from running on mycanvasBody
+            // when not needed, and avoids double-capture with VisualizationWindow.
+            sourceItem:  (root.visible && root.canvasBody !== null) ? root.canvasBody : null
+            sourceRect:  Qt.rect(root.cameraX, root.cameraY,
+                                 root.cameraWidth, root.cameraHeight)
+            live:        true
+            hideSource:  false
         }
 
         // ── HUD overlay ───────────────────────────────────────────────────────

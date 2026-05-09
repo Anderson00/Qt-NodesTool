@@ -678,7 +678,7 @@ Rectangle {
     }
 
     Keys.enabled: true
-    Keys.onPressed: {
+    Keys.onPressed: function(event) {
         switch (event.key) {
             case Qt.Key_Shift:
                 isShiftHeld = true
@@ -703,7 +703,7 @@ Rectangle {
                 break
         }
     }
-    Keys.onReleased: {
+    Keys.onReleased: function(event) {
         if (event.key === Qt.Key_Shift) isShiftHeld = false
     }
 
@@ -772,7 +772,7 @@ Rectangle {
         enabled: false
         visible: mouseAreaGlobal.enabled
 
-        onClicked: {
+        onClicked: function(mouse) {
             mouseAreaGlobal.enabled = false
             isConnecting = false
 
@@ -823,7 +823,7 @@ Rectangle {
             mouse.accepted = false
         }
 
-        onPositionChanged: {
+        onPositionChanged: function(mouse) {
             mouseXX = mouse.x
             mouseYY = mouse.y
             mouse.accepted = false
@@ -847,7 +847,7 @@ Rectangle {
         property real zoomMouseX: 0
         property real zoomMouseY: 0
 
-        onClicked: {
+        onClicked: function(mouse) {
             root.focus = true
             if (!isConnecting) {
                 var cL = mycanvas.x
@@ -859,12 +859,12 @@ Rectangle {
             }
         }
 
-        onPositionChanged: {
+        onPositionChanged: function(mouse) {
             zoomMouseX = mouse.x
             zoomMouseY = mouse.y
         }
 
-        onWheel: {
+        onWheel: function(wheel) {
             if (isConnecting)
                 return
 
@@ -1036,7 +1036,7 @@ Rectangle {
                                                 : (isHoveringConnection ? Qt.PointingHandCursor : Qt.OpenHandCursor)
                 }
 
-                onPressed: {
+                onPressed: function(mouse) {
                     _rubberWasMeaningful = false
                     if (root.toolMode === "select" && !isConnecting) {
                         root.rubberStartX    = mouse.x
@@ -1060,7 +1060,7 @@ Rectangle {
                     }
                 }
 
-                onPositionChanged: {
+                onPositionChanged: function(mouse) {
                     if (root.isRubberBanding && root.toolMode === "select") {
                         root.rubberEndX = mouse.x
                         root.rubberEndY = mouse.y
@@ -1116,7 +1116,7 @@ Rectangle {
                     isHoveringConnection = hitFound;
                 }
 
-                onClicked: {
+                onClicked: function(mouse) {
                     root.focus = true
                     if (_rubberWasMeaningful) { _rubberWasMeaningful = false; return }
                     root._clearSelection()
@@ -1577,7 +1577,7 @@ Rectangle {
         cameraY:      root.cameraWorldY
         cameraWidth:  root.cameraWorldW
         cameraHeight: root.cameraWorldH
-        nodesModel:   nodes.model
+        canvasBody:   mycanvasBody
 
         onCloseRequested: root.showVisualization = false
     }
