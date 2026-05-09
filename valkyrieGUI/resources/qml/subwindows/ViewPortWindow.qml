@@ -580,6 +580,14 @@ Rectangle {
 
         onClicked: {
             root.focus = true
+            if (!isConnecting) {
+                var cL = mycanvas.x
+                var cT = mycanvas.y
+                var cR = mycanvas.x + mycanvas.width  * zoomScale
+                var cB = mycanvas.y + mycanvas.height * zoomScale
+                if (mouse.x < cL || mouse.x > cR || mouse.y < cT || mouse.y > cB)
+                    ToastManager.show("Fora da área de trabalho", "warning")
+            }
         }
 
         onPositionChanged: {

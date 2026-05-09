@@ -2,14 +2,19 @@
 #include <QSGGeometryNode>
 #include <QSGFlatColorMaterial>
 #include <QSGGeometry>
+#include <QSGClipNode>
 #include <cmath>
+#include <vector>
 
 // ── SGG node container ────────────────────────────────────────────────────────
 struct GridRootNode : QSGNode {
-    QSGGeometryNode *minorNode    = nullptr;  // minor grid (low opacity)
-    QSGGeometryNode *majorNode    = nullptr;  // major grid (higher opacity)
-    QSGGeometryNode *axisNode     = nullptr;  // axis lines + tick marks
-    QSGGeometryNode *boundaryNode = nullptr;  // workspace boundary (dashed approx)
+    QSGGeometryNode *hazBlackNode  = nullptr; // hazard fill (behind grid)
+    QSGGeometryNode *hazYellowNode = nullptr; // hazard yellow stripes (behind grid)
+    QSGClipNode     *gridClipNode  = nullptr; // clips minor+major to boundary rect
+    QSGGeometryNode *minorNode     = nullptr; // minor grid (low opacity)
+    QSGGeometryNode *majorNode     = nullptr; // major grid (higher opacity)
+    QSGGeometryNode *axisNode      = nullptr; // axis lines + tick marks
+    QSGGeometryNode *boundaryNode  = nullptr; // workspace boundary (dashed approx)
 };
 
 // ── Vertex helpers ────────────────────────────────────────────────────────────
@@ -70,6 +75,67 @@ static void writeHexagon(QSGGeometry::Point2D *v, int &vi,
         float a1=((i+1)*60.f-30.f)*0.01745329f;
         writeLine(v,vi, cx+r*std::cos(a0), cy+r*std::sin(a0),
                         cx+r*std::cos(a1), cy+r*std::sin(a1));
+    }
+}
+
+// ── Hazard stripe helpers ─────────────────────────────────────────────────────
+
+// Sutherland-Hodgman clip of convex polygon against half-plane ax+by <= c.
+// Returns clipped vertex count (written into ox/oy, capacity >= n+1).
+static int clipHalfPlane(const float *px, const float *py, int n,
+                          float a, float b, float c,
+                          float *ox, float *oy)
+{
+    int on = 0;
+    for (int i = 0; i < n; ++i) {
+        float x0=px[i], y0=py[i];
+        float x1=px[(i+1)%n], y1=py[(i+1)%n];
+        bool in0 = (a*x0 + b*y0 <= c + 1e-5f);
+        bool in1 = (a*x1 + b*y1 <= c + 1e-5f);
+        if (in0) { ox[on]=x0; oy[on]=y0; ++on; }
+        if (in0 != in1) {
+            float denom = a*(x1-x0) + b*(y1-y0);
+            if (std::abs(denom) > 1e-9f) {
+                float t = (c - a*x0 - b*y0) / denom;
+                ox[on]=x0+t*(x1-x0); oy[on]=y0+t*(y1-y0); ++on;
+            }
+        }
+    }
+    return on;
+}
+
+// Append triangle-fan vertices for the diagonal (x+y) stripe bands of one
+// colour that fall inside the given screen rectangle.
+// evenBand=true → bands at [d, d+sw]; false → bands at [d+sw, d+2sw].
+static void appendHazardStripes(std::vector<QSGGeometry::Point2D> &buf,
+                                  float rx0, float ry0, float rx1, float ry1,
+                                  float stripeW, bool evenBand)
+{
+    if (rx1 <= rx0 + 0.5f || ry1 <= ry0 + 0.5f) return;
+    float dMin   = rx0 + ry0;
+    float dMax   = rx1 + ry1;
+    float period = stripeW * 2.f;
+    float firstD = std::floor(dMin / period) * period;
+
+    for (float d = firstD; d < dMax + period; d += period) {
+        float d1 = evenBand ? d            : d + stripeW;
+        float d2 = evenBand ? d + stripeW  : d + period;
+        if (d2 < dMin || d1 > dMax) continue;
+
+        float px[4]={rx0,rx1,rx1,rx0}, py[4]={ry0,ry0,ry1,ry1};
+        float tx[8], ty[8], ux[8], uy[8];
+        // clip against x+y >= d1  →  -(x+y) <= -d1
+        int n = clipHalfPlane(px, py, 4, -1.f, -1.f, -d1, tx, ty);
+        // clip against x+y <= d2
+        n = clipHalfPlane(tx, ty, n,  1.f,  1.f,  d2, ux, uy);
+        if (n < 3) continue;
+
+        QSGGeometry::Point2D v;
+        for (int i = 1; i < n-1; ++i) {
+            v.set(ux[0], uy[0]); buf.push_back(v);
+            v.set(ux[i], uy[i]); buf.push_back(v);
+            v.set(ux[i+1], uy[i+1]); buf.push_back(v);
+        }
     }
 }
 
@@ -166,10 +232,21 @@ QSGNode *ViewportGridItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
     GridRootNode *root=static_cast<GridRootNode*>(oldNode);
     if (!root) {
         root=new GridRootNode();
-        root->minorNode    = makeNode(); root->appendChildNode(root->minorNode);
-        root->majorNode    = makeNode(); root->appendChildNode(root->majorNode);
-        root->axisNode     = makeNode(); root->appendChildNode(root->axisNode);
-        root->boundaryNode = makeNode(); root->appendChildNode(root->boundaryNode);
+        root->hazBlackNode  = makeNode(); root->appendChildNode(root->hazBlackNode);
+        root->hazYellowNode = makeNode(); root->appendChildNode(root->hazYellowNode);
+        // Grid clipped to boundary: minor+major are children of the clip node
+        root->gridClipNode  = new QSGClipNode();
+        root->gridClipNode->setIsRectangular(true);
+        auto *clipGeo = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), 4);
+        clipGeo->setDrawingMode(QSGGeometry::DrawTriangleStrip);
+        root->gridClipNode->setGeometry(clipGeo);
+        root->gridClipNode->setFlag(QSGNode::OwnsGeometry, true);
+        root->appendChildNode(root->gridClipNode);
+        root->minorNode = makeNode(); root->gridClipNode->appendChildNode(root->minorNode);
+        root->majorNode = makeNode(); root->gridClipNode->appendChildNode(root->majorNode);
+        // Axis and boundary draw across the full viewport (unclipped)
+        root->axisNode      = makeNode(); root->appendChildNode(root->axisNode);
+        root->boundaryNode  = makeNode(); root->appendChildNode(root->boundaryNode);
     }
     if (W<=0||H<=0) return root;
 
@@ -177,6 +254,23 @@ QSGNode *ViewportGridItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
     const float major = cell * 5.f;
     const bool  doMinor = (cell >= 32.f);
     const bool  noGrid  = (m_pattern == "none");
+
+    // Boundary in screen coords (shared by clip, boundary, and hazard sections)
+    const float bL = static_cast<float>(m_panX);
+    const float bT = static_cast<float>(m_panY);
+    const float bR = static_cast<float>(m_panX + m_canvasWidth  * m_zoom);
+    const float bB = static_cast<float>(m_panY + m_canvasHeight * m_zoom);
+
+    // Update grid clip to the visible portion of the workspace boundary
+    {
+        const float cL = std::max(0.f, bL), cT = std::max(0.f, bT);
+        const float cR = std::min(W, bR),   cB = std::min(H, bB);
+        root->gridClipNode->setClipRect(QRectF(cL, cT, cR - cL, cB - cT));
+        auto *cv = root->gridClipNode->geometry()->vertexDataAsPoint2D();
+        cv[0].set(cL, cT); cv[1].set(cR, cT);
+        cv[2].set(cL, cB); cv[3].set(cR, cB);
+        root->gridClipNode->markDirty(QSGNode::DirtyGeometry);
+    }
 
     // Pan offsets: first minor grid line >= 0
     float ox  = std::fmod(std::fmod(static_cast<float>(m_panX), cell) +cell, cell);
@@ -394,11 +488,6 @@ QSGNode *ViewportGridItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
         auto *geo=node->geometry();
         geo->setDrawingMode(QSGGeometry::DrawLines);
 
-        const float bL=static_cast<float>(m_panX);
-        const float bT=static_cast<float>(m_panY);
-        const float bR=static_cast<float>(m_panX+m_canvasWidth*m_zoom);
-        const float bB=static_cast<float>(m_panY+m_canvasHeight*m_zoom);
-
         const float cT=std::max(0.f,bT), cB=std::min(H,bB);
         const float cL=std::max(0.f,bL), cR=std::min(W,bR);
 
@@ -422,6 +511,68 @@ QSGNode *ViewportGridItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
             setColor(node, 0.55f);
         }
         node->markDirty(QSGNode::DirtyGeometry|QSGNode::DirtyMaterial);
+    }
+
+    // ── Hazard stripes outside workspace boundary ─────────────────────────────
+    {
+        // Clamp boundary edges to screen rect
+        const float ibL = std::max(0.f, std::min(W, bL));
+        const float ibT = std::max(0.f, std::min(H, bT));
+        const float ibR = std::max(0.f, std::min(W, bR));
+        const float ibB = std::max(0.f, std::min(H, bB));
+
+        // Four screen strips that lie outside the boundary
+        struct Rect { float x0,y0,x1,y1; };
+        const Rect outside[4] = {
+            {0.f, 0.f, W,    ibT },   // top
+            {0.f, ibB, W,    H   },   // bottom
+            {0.f, ibT, ibL,  ibB },   // left
+            {ibR, ibT, W,    ibB }    // right
+        };
+
+        const float stripeW = 18.f;
+
+        std::vector<QSGGeometry::Point2D> blackVerts, yellowVerts;
+        for (const auto &r : outside) {
+            if (r.x1 <= r.x0 || r.y1 <= r.y0) continue;
+            // Solid black fill quad (2 triangles)
+            QSGGeometry::Point2D v;
+            v.set(r.x0,r.y0); blackVerts.push_back(v);
+            v.set(r.x1,r.y0); blackVerts.push_back(v);
+            v.set(r.x0,r.y1); blackVerts.push_back(v);
+            v.set(r.x1,r.y0); blackVerts.push_back(v);
+            v.set(r.x1,r.y1); blackVerts.push_back(v);
+            v.set(r.x0,r.y1); blackVerts.push_back(v);
+            // Yellow diagonal stripes over this rect
+            appendHazardStripes(yellowVerts, r.x0,r.y0,r.x1,r.y1, stripeW, true);
+        }
+
+        {
+            auto *node = root->hazBlackNode;
+            auto *geo  = node->geometry();
+            geo->setDrawingMode(QSGGeometry::DrawTriangles);
+            const int cnt = static_cast<int>(blackVerts.size());
+            geo->allocate(cnt > 0 ? cnt : 1);
+            if (cnt > 0)
+                std::memcpy(geo->vertexData(), blackVerts.data(),
+                            cnt * sizeof(QSGGeometry::Point2D));
+            static_cast<QSGFlatColorMaterial*>(node->material())
+                ->setColor(QColor::fromRgbF(0.05, 0.05, 0.05, 0.60));
+            node->markDirty(QSGNode::DirtyGeometry | QSGNode::DirtyMaterial);
+        }
+        {
+            auto *node = root->hazYellowNode;
+            auto *geo  = node->geometry();
+            geo->setDrawingMode(QSGGeometry::DrawTriangles);
+            const int cnt = static_cast<int>(yellowVerts.size());
+            geo->allocate(cnt > 0 ? cnt : 1);
+            if (cnt > 0)
+                std::memcpy(geo->vertexData(), yellowVerts.data(),
+                            cnt * sizeof(QSGGeometry::Point2D));
+            static_cast<QSGFlatColorMaterial*>(node->material())
+                ->setColor(QColor::fromRgbF(1.0, 0.82, 0.0, 0.55));
+            node->markDirty(QSGNode::DirtyGeometry | QSGNode::DirtyMaterial);
+        }
     }
 
     m_dirty=false;
