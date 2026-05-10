@@ -12,14 +12,20 @@ Item {
     property var behaviourObject
     property bool allOpened: true
 
-    // Skeleton loading — hides initial render stutter
-    property bool _ready: false
+    // Staggered async loading — one section activates every 80 ms so the UI
+    // never blocks. Each Section's Loader is asynchronous; it shows a skeleton
+    // shimmer while the component tree is being built.
+    property int _loadIndex: -1
     Timer {
-        id: _initTimer
-        interval: 50    // one event-loop tick – enough for the first frame to paint
-        onTriggered: root._ready = true
+        id: _stagger
+        interval: 80
+        repeat: true
+        running: true
+        onTriggered: {
+            root._loadIndex++
+            if (root._loadIndex >= 12) stop()
+        }
     }
-    Component.onCompleted: _initTimer.start()
 
     // ------- Tile container for a variant -------
     component Tile: Rectangle {
@@ -59,7 +65,9 @@ Item {
     component Section: Accordion {
         id: sec
         property int contentHeight: 200
+        property int sectionIndex:  0
         opened: root.allOpened
+        loaderActive: sectionIndex <= root._loadIndex
         loaderHeight: contentHeight
         width: parent ? parent.width : 0
 
@@ -124,6 +132,7 @@ Item {
 
             // ===================== BUTTONS =====================
             Section {
+                sectionIndex: 0
                 title: qsTr("Buttons")
                 contentHeight: 280
                 loader: Component {
@@ -193,6 +202,7 @@ Item {
 
             // ===================== SELECTION =====================
             Section {
+                sectionIndex: 1
                 title: qsTr("Selection controls")
                 contentHeight: 210
                 loader: Component {
@@ -237,6 +247,7 @@ Item {
 
             // ===================== TEXT INPUTS =====================
             Section {
+                sectionIndex: 2
                 title: qsTr("Text inputs")
                 contentHeight: 300
                 loader: Component {
@@ -284,6 +295,7 @@ Item {
 
             // ===================== SELECTORS =====================
             Section {
+                sectionIndex: 3
                 title: qsTr("Selectors")
                 contentHeight: 260
                 loader: Component {
@@ -333,6 +345,7 @@ Item {
 
             // ===================== SLIDERS =====================
             Section {
+                sectionIndex: 4
                 title: qsTr("Sliders")
                 contentHeight: 240
                 loader: Component {
@@ -366,6 +379,7 @@ Item {
 
             // ===================== FILE DROP =====================
             Section {
+                sectionIndex: 5
                 title: qsTr("File upload")
                 contentHeight: 160
                 loader: Component {
@@ -381,6 +395,7 @@ Item {
 
             // ===================== ICONS =====================
             Section {
+                sectionIndex: 6
                 title: qsTr("SvgIcon")
                 contentHeight: 120
                 loader: Component {
@@ -415,6 +430,7 @@ Item {
 
             // ===================== NEW INPUTS =====================
             Section {
+                sectionIndex: 7
                 title: qsTr("New Inputs")
                 contentHeight: 440
                 loader: Component {
@@ -479,6 +495,7 @@ Item {
 
             // ===================== DISPLAY & FEEDBACK =====================
             Section {
+                sectionIndex: 8
                 title: qsTr("Display & Feedback")
                 contentHeight: 520
                 loader: Component {
@@ -571,6 +588,7 @@ Item {
 
             // ===================== DATA & LISTS =====================
             Section {
+                sectionIndex: 9
                 title: qsTr("Data & Lists")
                 contentHeight: 500
                 loader: Component {
@@ -614,6 +632,7 @@ Item {
 
             // ===================== OVERLAYS & MODALS =====================
             Section {
+                sectionIndex: 10
                 title: qsTr("Overlays & Modals")
                 contentHeight: 200
                 loader: Component {
@@ -660,23 +679,33 @@ Item {
                             anchors.fill: parent; anchors.margins: 8; spacing: 12
 
                             NewButton {
-                                text: "AlertDialog"; variant: "outlined"
+                                text: "AlertDialog";
+                                variant: "outlined"
+                                Layout.preferredHeight: 140
                                 onClicked: alertRef.open()
                             }
                             NewButton {
-                                text: "Snackbar (success)"; variant: "outlined"
+                                text: "Snackbar (success)"
+                                variant: "outlined"
+                                Layout.preferredHeight: 140
                                 onClicked: snackRef.show("Workspace saved!", "Undo", "success")
                             }
                             NewButton {
-                                text: "Snackbar (danger)"; variant: "outlined"
+                                text: "Snackbar (danger)"
+                                variant: "outlined"
+                                Layout.preferredHeight: 140
                                 onClicked: snackRef.show("Build failed.", "", "danger")
                             }
                             NewButton {
-                                text: "CommandPalette"; variant: "outlined"
+                                text: "CommandPalette"
+                                variant: "outlined"
+                                Layout.preferredHeight: 140
                                 onClicked: paletteRef.open()
                             }
                             NewButton {
-                                text: "ContextMenu"; variant: "outlined"
+                                text: "ContextMenu"
+                                variant: "outlined"
+                                Layout.preferredHeight: 140
                                 onClicked: ctxRef.openAt(x, y + height + 4)
                             }
                         }
@@ -686,6 +715,7 @@ Item {
 
             // ===================== NAVIGATION =====================
             Section {
+                sectionIndex: 11
                 title: qsTr("Navigation")
                 contentHeight: 380
                 loader: Component {
@@ -728,6 +758,7 @@ Item {
 
             // ===================== UTILITIES =====================
             Section {
+                sectionIndex: 12
                 title: qsTr("Utilities")
                 contentHeight: 460
                 loader: Component {
@@ -819,54 +850,4 @@ Item {
         }
     }
 
-    // ── Skeleton loading overlay ──────────────────────────────────────────────
-    // Covers the initial render stutter with animated placeholders, then fades out.
-    Rectangle {
-        id: _skelOverlay
-        anchors.fill: parent
-        color: ThemeManager.backgroundColor
-        opacity: root._ready ? 0.0 : 1.0
-        visible: opacity > 0.0
-        z: 100
-
-        Behavior on opacity {
-            NumberAnimation { duration: 450; easing.type: Easing.InOutQuad }
-        }
-
-        Column {
-            anchors { top: parent.top; left: parent.left; right: parent.right; margins: 16 }
-            spacing: 20
-            topPadding: 24
-
-            // Title area
-            Skeleton { width: 240; height: 26 }
-            Skeleton { width: 320; height: 14; shape: "text" }
-
-            // Section card rows
-            Skeleton { width: 160; height: 18; shape: "text" }
-            Row { spacing: 10
-                Skeleton { width: 200; height: 90 }
-                Skeleton { width: 200; height: 90 }
-                Skeleton { width: 200; height: 90 }
-            }
-            Skeleton { width: 130; height: 18; shape: "text" }
-            Row { spacing: 10
-                Skeleton { width: 200; height: 90 }
-                Skeleton { width: 200; height: 90 }
-                Skeleton { width: 200; height: 90 }
-            }
-            Skeleton { width: 180; height: 18; shape: "text" }
-            Row { spacing: 10
-                Skeleton { width: 200; height: 90 }
-                Skeleton { width: 200; height: 90 }
-                Skeleton { width: 200; height: 90 }
-            }
-            Skeleton { width: 150; height: 18; shape: "text" }
-            Row { spacing: 10
-                Skeleton { width: 200; height: 90 }
-                Skeleton { width: 200; height: 90 }
-                Skeleton { width: 200; height: 90 }
-            }
-        }
-    }
 }
