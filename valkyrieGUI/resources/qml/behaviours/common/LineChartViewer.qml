@@ -250,7 +250,7 @@ Item {
                                      ThemeManager.borderColor.b, 0.25)
                 gridCountX:  showGrid ? 5 : 0
                 gridCountY:  showGrid ? 5 : 0
-                lineWidth:   2.2
+                lineWidth:   1.2
 
                 // Melhoria de suavização e resolução (Super Sampling local)
                 layer.enabled: antialiasOn
