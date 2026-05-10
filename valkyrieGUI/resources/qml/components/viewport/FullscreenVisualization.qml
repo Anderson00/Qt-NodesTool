@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import App.Theme 1.0
+import App.Properties 1.0
 import Qaterial 1.0 as Qaterial
 
 // Full-viewport overlay (same QQuickWindow as ViewPortWindow).
@@ -80,6 +81,15 @@ Rectangle {
                 cursorShape:  Qt.PointingHandCursor
                 onClicked: root.closeRequested()
             }
+        }
+
+        // FPS Counter — top-left
+        Text {
+            anchors { top: parent.top; left: parent.left; margins: 20 }
+            text: viewPort.fpsCount + " FPS"
+            color: "#4caf50"
+            font { pixelSize: 12; bold: true; family: "Consolas" }
+            visible: GlobalProperties.showFps
         }
 
         // ESC hint — bottom-center

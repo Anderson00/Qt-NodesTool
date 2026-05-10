@@ -13,11 +13,16 @@ Item {
     property bool isPlaying:    false
 
     // Super Sampling Factor: 1.0 = screen native, > 1.0 = extra sharp
+    // Limitado a 4.0 para segurança (evitar crash de GPU em valores extremos)
     property real superSampling: 1.0
+    readonly property real _safeSS: Math.min(superSampling, 4.0)
 
     readonly property real s: root.cameraWidth > 0 ? width / root.cameraWidth : 1.0
 
-    Rectangle { anchors.fill: parent; color: "#111111" }
+    Rectangle { 
+        anchors.fill: parent
+        color: Qt.darker(ThemeManager.backgroundColor, 1.15) 
+    }
 
     Item {
         id: worldContainer
@@ -42,24 +47,20 @@ Item {
                 width:  obj ? obj.width  : 0
                 height: obj ? obj.height : 0
                 
-                // Em modo "Playing" (Fullscreen/External), mostramos apenas nós marcados para visualização.
-                // Fora dele (no preview da janelinha), mostramos apenas os que NÃO são visualização.
                 visible: (obj && obj.qmlBodyUrl !== "") && (root.isPlaying ? (!!model.isVisualization) : (!model.isVisualization))
 
-                // Super Sampling: Força o nó a renderizar na resolução real da tela (escala aplicada)
-                // Multiplicamos pelo devicePixelRatio para garantir nitidez em telas High-DPI (4K/Retina)
-                layer.enabled: true
-                layer.smooth:  true
-                layer.textureSize: Qt.size(
-                    width  * root.s * Screen.devicePixelRatio * root.superSampling,
-                    height * root.s * Screen.devicePixelRatio * root.superSampling
-                )
+                // layer.enabled: true
+                // layer.smooth:  true
+                // layer.textureSize: Qt.size(
+                //     width  * root.s * Screen.devicePixelRatio * root._safeSS,
+                //     height * root.s * Screen.devicePixelRatio * root._safeSS
+                // )
 
-                // Moldura para o nó na visualização (substitui o crome do editor)
+                // Moldura para o nó na visualização
                 Rectangle {
                     anchors.fill: parent
-                    color: Qt.rgba(0.15, 0.15, 0.15, 0.4)
-                    border.color: Qt.rgba(1, 1, 1, 0.15)
+                    color: Qt.rgba(ThemeManager.surfaceColor.r, ThemeManager.surfaceColor.g, ThemeManager.surfaceColor.b, 0.4)
+                    border.color: Qt.rgba(ThemeManager.borderColor.r, ThemeManager.borderColor.g, ThemeManager.borderColor.b, 0.2)
                     border.width: 1 / root.s
                     radius: 4
                 }
