@@ -676,36 +676,42 @@ Item {
                         }
 
                         Flow {
-                            anchors.fill: parent; anchors.margins: 8; spacing: 12
+                            anchors.fill: parent; anchors.margins: 8; spacing: 10
 
                             NewButton {
-                                text: "AlertDialog";
+                                text: "AlertDialog"
                                 variant: "outlined"
-                                Layout.preferredHeight: 140
+                                Layout.preferredWidth: 200
+                                leftPadding: 18; rightPadding: 18
+
                                 onClicked: alertRef.open()
                             }
                             NewButton {
                                 text: "Snackbar (success)"
                                 variant: "outlined"
-                                Layout.preferredHeight: 140
+                                Layout.preferredWidth: 200
+                                leftPadding: 18; rightPadding: 18
                                 onClicked: snackRef.show("Workspace saved!", "Undo", "success")
                             }
                             NewButton {
                                 text: "Snackbar (danger)"
                                 variant: "outlined"
-                                Layout.preferredHeight: 140
+                                Layout.preferredWidth: 200
+                                leftPadding: 18; rightPadding: 18
                                 onClicked: snackRef.show("Build failed.", "", "danger")
                             }
                             NewButton {
                                 text: "CommandPalette"
                                 variant: "outlined"
-                                Layout.preferredHeight: 140
+                                Layout.preferredWidth: 200
+                                leftPadding: 18; rightPadding: 18
                                 onClicked: paletteRef.open()
                             }
                             NewButton {
                                 text: "ContextMenu"
                                 variant: "outlined"
-                                Layout.preferredHeight: 140
+                                Layout.preferredWidth: 200
+                                leftPadding: 18; rightPadding: 18
                                 onClicked: ctxRef.openAt(x, y + height + 4)
                             }
                         }

@@ -91,7 +91,7 @@ Button {
 
     background: Rectangle {
         id: bgRect
-        implicitWidth: 64
+        implicitWidth: Math.max(64, contentRow.implicitWidth + control.leftPadding + control.rightPadding)
         implicitHeight: 40
         radius: control.radius
         color: control.down ? control.__pressColor
