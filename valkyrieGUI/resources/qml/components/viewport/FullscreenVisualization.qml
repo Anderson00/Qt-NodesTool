@@ -22,75 +22,17 @@ Rectangle {
     visible: false
 
     // ── Content ───────────────────────────────────────────────────────────────
-    Item {
+    VisualizationPreview {
         id: previewArea
         anchors.fill: parent
         clip: true
 
-        // Uniform scale: camera width → preview width.
-        readonly property real s: root.cameraWidth > 0 ? width / root.cameraWidth : 1.0
-
-        // worldContainer maps world coords → screen:
-        //   screenX = (worldX - cameraX) * s
-        //   achieved by: x = -cameraX * s  +  Scale(s) applied to children
-        Item {
-            id: worldContainer
-            // Width/height large enough to contain all nodes (canvas is 10000×10000).
-            // Required so Qt's hit-test engine considers children for pointer events.
-            width:  10000
-            height: 10000
-            x: -root.cameraX * previewArea.s
-            y: -root.cameraY * previewArea.s
-
-            transform: Scale {
-                xScale: previewArea.s; yScale: previewArea.s
-                origin.x: 0; origin.y: 0
-            }
-
-            Repeater {
-                model: root.nodesModel
-
-                delegate: Item {
-                    property var obj: model ? model.object : null
-                    x:      obj ? obj.x      : 0
-                    y:      obj ? obj.y      : 0
-                    width:  obj ? obj.width  : 0
-                    height: obj ? obj.height : 0
-                    visible: !!model.isVisualization
-
-                    // Super Sampling: Força o nó a renderizar na resolução real da tela (escala aplicada)
-                    antialiasing: true
-                    // layer.enabled: true
-                    // layer.smooth:  true
-                    // layer.textureSize: Qt.size(width * previewArea.s, height * previewArea.s)
-
-                    // Moldura para o nó na visualização (substitui o crome do editor)
-                    Rectangle {
-                        anchors.fill: parent
-                        color: Qt.rgba(0.15, 0.15, 0.15, 0.4)
-                        border.color: Qt.rgba(1, 1, 1, 0.15)
-                        border.width: 1 / previewArea.s // Mantém a borda sempre fina na tela
-                        radius: 4
-                    }
-
-                    Loader {
-                        id: bodyLoader
-                        anchors.fill: parent
-                        property var behaviourObject: parent.obj
-                        clip: true
-                        // antialiasing: true
-                        // layer.enabled: true
-                        // layer.samples: 5
-                        source: (parent.obj && parent.obj.qmlBodyUrl !== "") ? parent.obj.qmlBodyUrl : ""
-                        
-                        onLoaded: {
-                            if (item && item.hasOwnProperty("behaviourObject"))
-                                item.behaviourObject = parent.obj
-                        }
-                    }
-                }
-            }
-        }
+        cameraX:      root.cameraX
+        cameraY:      root.cameraY
+        cameraWidth:  root.cameraWidth
+        cameraHeight: root.cameraHeight
+        nodesModel:   root.nodesModel
+        isPlaying:    true // No overlay sempre mostramos os nós de visualização
     }
 
     // ── HUD — fades after 2.5 s of mouse inactivity ───────────────────────────

@@ -1689,6 +1689,27 @@ Rectangle {
             if (isPlaying) root.startVisualization()
             else root.stopVisualization()
         }
+
+        onDetachRequested: {
+            externalVizWindow.show()
+            externalVizWindow.raise()
+        }
+    }
+
+    // ── External visualization window ───────────────────────────────────────────
+    ExternalVisualizationWindow {
+        id: externalVizWindow
+        
+        cameraX:      root.cameraWorldX
+        cameraY:      root.cameraWorldY
+        cameraWidth:  root.cameraWorldW
+        cameraHeight: root.cameraWorldH
+        nodesModel:   nodes.model
+        
+        onClosing: {
+            // Sincroniza o estado de 'playing' caso a janela seja fechada manualmente
+            vizWindow.isPlaying = false
+        }
     }
 
     // ── Group frame node sync ─────────────────────────────────────────────────────

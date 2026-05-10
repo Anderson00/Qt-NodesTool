@@ -67,6 +67,7 @@
         <file alias="TestConnectionWindow.qml">qml/subwindows/TestConnectionWindow.qml</file>
         <file alias="TaskManagerWindow.qml">qml/subwindows/TaskManagerWindow.qml</file>
         <file alias="ViewPortWindow.qml">qml/subwindows/ViewPortWindow.qml</file>
+        <file alias="ExternalVisualizationWindow.qml">qml/subwindows/ExternalVisualizationWindow.qml</file>
     </qresource>
     <qresource prefix="/components/bottomsheets">
         <file alias="FolderBottomSheet.qml">qml/components/bottomsheets/FolderBottomSheet.qml</file>
@@ -85,6 +86,7 @@
         <file alias="CameraFrameItem.qml">qml/components/viewport/CameraFrameItem.qml</file>
         <file alias="VisualizationWindow.qml">qml/components/viewport/VisualizationWindow.qml</file>
         <file alias="FullscreenVisualization.qml">qml/components/viewport/FullscreenVisualization.qml</file>
+        <file alias="VisualizationPreview.qml">qml/components/viewport/VisualizationPreview.qml</file>
     </qresource>
     <qresource prefix="/components/drawers">
         <file alias="NodesDrawer.qml">qml/components/drawers/NodesDrawer.qml</file>

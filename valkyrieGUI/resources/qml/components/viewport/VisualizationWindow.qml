@@ -21,6 +21,7 @@ Rectangle {
 
     signal closeRequested()
     signal playToggled(bool playing)
+    signal detachRequested()
 
     width:  460
     height: 300
@@ -82,6 +83,15 @@ Rectangle {
 
             Qaterial.ToolButton {
                 width: 26; height: 26; padding: 0
+                icon.source: Qaterial.Icons.openInNew
+                icon.color:  ThemeManager.textColor
+                icon.width: 13; icon.height: 13
+                onClicked: root.detachRequested()
+                AppToolTip { text: "Abrir em Janela Externa"; visible: parent.hovered }
+            }
+
+            Qaterial.ToolButton {
+                width: 26; height: 26; padding: 0
                 icon.source: Qaterial.Icons.close
                 icon.color:  ThemeManager.textColor; icon.width: 12; icon.height: 12
                 onClicked: root.closeRequested()
@@ -107,7 +117,7 @@ Rectangle {
     }
 
     // ── Preview area ──────────────────────────────────────────────────────────
-    Item {
+    VisualizationPreview {
         id: previewArea
         anchors {
             top:    titleBar.bottom; bottom: parent.bottom
@@ -116,77 +126,12 @@ Rectangle {
         }
         clip: true
 
-        Rectangle { anchors.fill: parent; color: "#111111" }
-
-        readonly property real s: root.cameraWidth > 0 ? width / root.cameraWidth : 1.0
-
-        Item {
-            id: worldContainer
-            width:  10000
-            height: 10000
-            x: -root.cameraX * previewArea.s
-            y: -root.cameraY * previewArea.s
-
-            transform: Scale {
-                xScale: previewArea.s; yScale: previewArea.s
-                origin.x: 0; origin.y: 0
-            }
-
-            Repeater {
-                model: root.nodesModel
-
-                delegate: Item {
-                    property var obj: model ? model.object : null
-                    x:      obj ? obj.x      : 0
-                    y:      obj ? obj.y      : 0
-                    width:  obj ? obj.width  : 0
-                    height: obj ? obj.height : 0
-                    visible: (obj && obj.qmlBodyUrl !== "") && (root.isPlaying ? (!!model.isVisualization) : (!model.isVisualization))
-
-                    // Super Sampling: Força o nó a renderizar na resolução real da tela (escala aplicada)
-                    // Isso remove o efeito de "escada" nos gráficos sem sobrecarregar a GPU com um layer global.
-                    layer.enabled: true
-                    layer.smooth:  true
-                    layer.textureSize: Qt.size(width * previewArea.s, height * previewArea.s)
-
-                    // Moldura para o nó na visualização (substitui o crome do editor)
-                    Rectangle {
-                        anchors.fill: parent
-                        color: Qt.rgba(0.15, 0.15, 0.15, 0.4)
-                        border.color: Qt.rgba(1, 1, 1, 0.15)
-                        border.width: 1 / previewArea.s
-                        radius: 4
-                    }
-
-                    Loader {
-                        id: bodyLoader
-                        anchors.fill: parent
-                        property var behaviourObject: parent.obj
-                        clip: true
-                        source: (parent.obj && parent.obj.qmlBodyUrl !== "") ? parent.obj.qmlBodyUrl : ""
-                        onLoaded: {
-                            if (item && item.hasOwnProperty("behaviourObject"))
-                                item.behaviourObject = parent.obj
-                        }
-                    }
-                }
-            }
-        }
-
-        Text {
-            anchors.centerIn: parent
-            text: "Camera não definida\nou nenhum nó tem corpo visual"
-            horizontalAlignment: Text.AlignHCenter
-            color: "#444444"; font.pixelSize: 10
-            visible: {
-                if (!root.nodesModel) return true
-                for (var i = 0; i < root.nodesModel.count; i++) {
-                    var o = root.nodesModel.get(i).object
-                    if (o && o.qmlBodyUrl !== "") return false
-                }
-                return true
-            }
-        }
+        cameraX:      root.cameraX
+        cameraY:      root.cameraY
+        cameraWidth:  root.cameraWidth
+        cameraHeight: root.cameraHeight
+        nodesModel:   root.nodesModel
+        isPlaying:    root.isPlaying
     }
 
     // ── Resize handle (BR) ────────────────────────────────────────────────────
