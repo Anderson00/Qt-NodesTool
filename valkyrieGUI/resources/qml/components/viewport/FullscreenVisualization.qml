@@ -61,7 +61,7 @@ Rectangle {
                     y:       obj ? obj.y      : 0
                     width:   obj ? obj.width  : 0
                     height:  obj ? obj.height : 0
-                    visible: source !== "" && model.isVisualization
+                    visible: source !== "" && (!!model.isVisualization)
 
                     onLoaded: {
                         if (item && item.hasOwnProperty("behaviourObject"))

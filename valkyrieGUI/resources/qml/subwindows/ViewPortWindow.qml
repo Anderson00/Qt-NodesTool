@@ -78,12 +78,16 @@ Rectangle {
 
     property bool isCloning: false
     property bool _isPastingVisualization: false
+    property bool _wasFullScreenBeforePlay: false
+
+    // Detecção robusta de Fullscreen (compara dimensões da janela com a tela)
+    readonly property bool isActuallyFullScreen: (root.width >= Screen.width - 5 && root.height >= Screen.height - 5)
 
     function startVisualization() {
         if (isCloning) return
         isCloning = true
+        root.showVisualization = true
         
-        // Use Qt.callLater to allow the LoadingSpinner to render before starting the loop
         Qt.callLater(function() {
             root._isPastingVisualization = true
             
@@ -112,8 +116,7 @@ Rectangle {
             nodesToClone.forEach(oldUuid => {
                 let conns = viewPort.getNodeConnections(oldUuid)
                 conns.forEach(c => {
-                    let outUuid = c.outputUuid
-                    let inUuid = c.inputUuid
+                    let outUuid = c.outputUuid; let inUuid = c.inputUuid
                     if (uuidMap[outUuid] && uuidMap[inUuid]) {
                         viewPort.addConnectionByUuids(uuidMap[outUuid], c.outputMethod,
                                                       uuidMap[inUuid], c.inputMethod)
@@ -123,10 +126,21 @@ Rectangle {
             
             root._isPastingVisualization = false
             isCloning = false
+            
+            // Armazena o estado atual e força o Fullscreen se necessário
+            root._wasFullScreenBeforePlay = root.isActuallyFullScreen
+            if (!root._wasFullScreenBeforePlay) {
+                viewPort.setFullScreen(true)
+            }
         })
     }
 
     function stopVisualization() {
+        // Se entramos em fullscreen apenas para o play, saímos ao dar stop
+        if (root.isActuallyFullScreen && !root._wasFullScreenBeforePlay) {
+            viewPort.setFullScreen(true)
+        }
+
         for (let i = nodes.model.count - 1; i >= 0; i--) {
             let item = nodes.model.get(i)
             if (item.isVisualization) {
@@ -399,6 +413,10 @@ Rectangle {
             zoomScale = scale
             mycanvas.x = x
             mycanvas.y = y
+        }
+
+        function onWindowFullScreen(full) {
+            root.isFullScreen = full
         }
 
         function onBehaviourRemoved(obj, uuid) {
