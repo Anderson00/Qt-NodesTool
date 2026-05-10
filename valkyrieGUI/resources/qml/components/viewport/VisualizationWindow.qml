@@ -135,17 +135,39 @@ Rectangle {
             Repeater {
                 model: root.nodesModel
 
-                delegate: Loader {
+                delegate: Item {
                     property var obj: model ? model.object : null
-                    source:  (obj && obj.qmlBodyUrl !== "") ? obj.qmlBodyUrl : ""
-                    x:       obj ? obj.x      : 0
-                    y:       obj ? obj.y      : 0
-                    width:   obj ? obj.width  : 0
-                    height:  obj ? obj.height : 0
-                    visible: source !== "" && (root.isPlaying ? (!!model.isVisualization) : (!model.isVisualization))
-                    onLoaded: {
-                        if (item && item.hasOwnProperty("behaviourObject"))
-                            item.behaviourObject = obj
+                    x:      obj ? obj.x      : 0
+                    y:      obj ? obj.y      : 0
+                    width:  obj ? obj.width  : 0
+                    height: obj ? obj.height : 0
+                    visible: (obj && obj.qmlBodyUrl !== "") && (root.isPlaying ? (!!model.isVisualization) : (!model.isVisualization))
+
+                    // Super Sampling: Força o nó a renderizar na resolução real da tela (escala aplicada)
+                    // Isso remove o efeito de "escada" nos gráficos sem sobrecarregar a GPU com um layer global.
+                    layer.enabled: true
+                    layer.smooth:  true
+                    layer.textureSize: Qt.size(width * previewArea.s, height * previewArea.s)
+
+                    // Moldura para o nó na visualização (substitui o crome do editor)
+                    Rectangle {
+                        anchors.fill: parent
+                        color: Qt.rgba(0.15, 0.15, 0.15, 0.4)
+                        border.color: Qt.rgba(1, 1, 1, 0.15)
+                        border.width: 1 / previewArea.s
+                        radius: 4
+                    }
+
+                    Loader {
+                        id: bodyLoader
+                        anchors.fill: parent
+                        property var behaviourObject: parent.obj
+                        clip: true
+                        source: (parent.obj && parent.obj.qmlBodyUrl !== "") ? parent.obj.qmlBodyUrl : ""
+                        onLoaded: {
+                            if (item && item.hasOwnProperty("behaviourObject"))
+                                item.behaviourObject = parent.obj
+                        }
                     }
                 }
             }

@@ -50,22 +50,39 @@ Rectangle {
             Repeater {
                 model: root.nodesModel
 
-                delegate: Loader {
-                    id: bodyLoader
+                delegate: Item {
                     property var obj: model ? model.object : null
-                    clip: true
+                    x:      obj ? obj.x      : 0
+                    y:      obj ? obj.y      : 0
+                    width:  obj ? obj.width  : 0
+                    height: obj ? obj.height : 0
+                    visible: !!model.isVisualization
 
-                    source:  (obj && obj.qmlBodyUrl !== "") ? obj.qmlBodyUrl : ""
-                    // Bind position/size from behaviourObject — reactive via NOTIFY
-                    x:       obj ? obj.x      : 0
-                    y:       obj ? obj.y      : 0
-                    width:   obj ? obj.width  : 0
-                    height:  obj ? obj.height : 0
-                    visible: source !== "" && (!!model.isVisualization)
+                    // Super Sampling: Força o nó a renderizar na resolução real da tela (escala aplicada)
+                    layer.enabled: true
+                    layer.smooth:  true
+                    layer.textureSize: Qt.size(width * previewArea.s, height * previewArea.s)
 
-                    onLoaded: {
-                        if (item && item.hasOwnProperty("behaviourObject"))
-                            item.behaviourObject = obj
+                    // Moldura para o nó na visualização (substitui o crome do editor)
+                    Rectangle {
+                        anchors.fill: parent
+                        color: Qt.rgba(0.15, 0.15, 0.15, 0.4)
+                        border.color: Qt.rgba(1, 1, 1, 0.15)
+                        border.width: 1 / previewArea.s // Mantém a borda sempre fina na tela
+                        radius: 4
+                    }
+
+                    Loader {
+                        id: bodyLoader
+                        anchors.fill: parent
+                        property var behaviourObject: parent.obj
+                        clip: true
+                        source: (parent.obj && parent.obj.qmlBodyUrl !== "") ? parent.obj.qmlBodyUrl : ""
+                        
+                        onLoaded: {
+                            if (item && item.hasOwnProperty("behaviourObject"))
+                                item.behaviourObject = parent.obj
+                        }
                     }
                 }
             }
