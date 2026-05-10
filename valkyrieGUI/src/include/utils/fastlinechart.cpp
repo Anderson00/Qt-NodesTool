@@ -69,42 +69,65 @@ static void screenDedup(QVector<float> &ox, QVector<float> &oy,
         return pts[idx];
     };
 
-    // 1. Pré-filtro de Passa-Baixa para eliminar ruído de quantização (degraus)
-    QVector<QPointF> smoothed = pts;
+    // 1. Pré-processamento: Filtro Passa-Baixa seletivo (apenas em áreas suaves)
+    const double yRange = yRng;
+    const double edgeThreshold = yRange * 0.12; 
+    QVector<QPointF> processed = pts;
     if (pts.size() > 2) {
         for (int i = 1; i < (int)pts.size() - 1; ++i) {
-            // Média ponderada 1-2-1 para suavizar a transição sem perder a forma
-            double sy = (pts[i - 1].y() + 2.0 * pts[i].y() + pts[i + 1].y()) / 4.0;
-            smoothed[i].setY(sy);
+            double dy1 = std::abs(pts[i].y() - pts[i - 1].y());
+            double dy2 = std::abs(pts[i + 1].y() - pts[i].y());
+            // Só suaviza se não houver um salto brusco adjacente
+            if (dy1 < edgeThreshold && dy2 < edgeThreshold) {
+                processed[i].setY((pts[i - 1].y() + 2.0 * pts[i].y() + pts[i + 1].y()) / 4.0);
+            }
         }
     }
 
-    // 2. Interpolação B-Spline sobre os dados já suavizados
-    for (int i = 0; i < (int)smoothed.size() - 3; ++i) {
-        QPointF p0 = smoothed[i];
-        QPointF p1 = smoothed[i + 1];
-        QPointF p2 = smoothed[i + 2];
-        QPointF p3 = smoothed[i + 3];
+    // 2. Renderização Híbrida
+    for (int i = 0; i < (int)processed.size() - 1; ++i) {
+        QPointF p1 = processed[i];
+        QPointF p2 = processed[i + 1];
+        double dy = std::abs(p2.y() - p1.y());
 
-        for (int step = 0; step < 6; ++step) {
-            double t = step / 6.0;
-            double t2 = t * t;
-            double t3 = t2 * t;
-
-            double b0 = (1.0 - 3.0*t + 3.0*t2 - t3) / 6.0;
-            double b1 = (4.0 - 6.0*t2 + 3.0*t3) / 6.0;
-            double b2 = (1.0 + 3.0*t + 3.0*t2 - 3.0*t3) / 6.0;
-            double b3 = t3 / 6.0;
-
-            double x = b0 * p0.x() + b1 * p1.x() + b2 * p2.x() + b3 * p3.x();
-            double y = b0 * p0.y() + b1 * p1.y() + b2 * p2.y() + b3 * p3.y();
-
-            float cx = static_cast<float>((x - xMn) / xRng * W);
-            float cy = H - static_cast<float>((y - yMn) / yRng * H);
-            
-            if (ox.isEmpty() || std::abs(cx - ox.last()) > 0.05f || std::abs(cy - oy.last()) > 0.05f) {
+        if (dy > edgeThreshold) {
+            // SALTO BRUSCO: Renderiza linha reta (onda quadrada)
+            for (int step = 0; step < 2; ++step) {
+                float t = (float)step;
+                float cx = static_cast<float>((p1.x() + t * (p2.x() - p1.x()) - xMn) / xRng * W);
+                float cy = H - static_cast<float>((p1.y() + t * (p2.y() - p1.y()) - yMn) / yRng * H);
                 ox.append(cx); oy.append(cy);
             }
+        } else if (i > 0 && i < (int)processed.size() - 2) {
+            // ÁREA SUAVE: Usa B-Spline para máxima fluidez
+            QPointF p0 = processed[i - 1];
+            QPointF p3 = processed[i + 2];
+            
+            // Garantimos que a janela de 4 pontos não cruze um salto brusco
+            if (std::abs(p1.y()-p0.y()) < edgeThreshold && std::abs(p3.y()-p2.y()) < edgeThreshold) {
+                for (int step = 0; step < 6; ++step) {
+                    double t = step / 6.0;
+                    double t2 = t * t; double t3 = t2 * t;
+                    double b0 = (1.0 - 3.0*t + 3.0*t2 - t3) / 6.0;
+                    double b1 = (4.0 - 6.0*t2 + 3.0*t3) / 6.0;
+                    double b2 = (1.0 + 3.0*t + 3.0*t2 - 3.0*t3) / 6.0;
+                    double b3 = t3 / 6.0;
+                    double x = b0*p0.x() + b1*p1.x() + b2*p2.x() + b3*p3.x();
+                    double y = b0*p0.y() + b1*p1.y() + b2*p2.y() + b3*p3.y();
+                    ox.append(static_cast<float>((x - xMn) / xRng * W));
+                    oy.append(H - static_cast<float>((y - yMn) / yRng * H));
+                }
+            } else {
+                // Transição: Linear simples para evitar overshooting perto de bordas
+                float cx = static_cast<float>((p1.x() - xMn) / xRng * W);
+                float cy = H - static_cast<float>((p1.y() - yMn) / yRng * H);
+                ox.append(cx); oy.append(cy);
+            }
+        } else {
+            // Pontas do gráfico: Linear simples
+            float cx = static_cast<float>((p1.x() - xMn) / xRng * W);
+            float cy = H - static_cast<float>((p1.y() - yMn) / yRng * H);
+            ox.append(cx); oy.append(cy);
         }
     }
     
