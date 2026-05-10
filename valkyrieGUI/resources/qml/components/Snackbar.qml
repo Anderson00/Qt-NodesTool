@@ -39,10 +39,10 @@ Popup {
         root.open()
     }
 
-    // Position: bottom center
-    anchors.centerIn: undefined
-    x: Overlay.overlay ? (Overlay.overlay.width  - root.width)  / 2 : 0
-    y: Overlay.overlay ? (Overlay.overlay.height - root.height) - 24 : 0
+    // Position: bottom centre of the window overlay
+    parent: Overlay.overlay           // makes x/y relative to full window overlay
+    x: parent ? Math.round((parent.width - root.width) / 2) : 0
+    y: parent ? parent.height - root.height - 24 : 0
 
     width:   Math.min(Math.max(contentRow.implicitWidth + 32, 260), root.maxWidth)
     height:  52
@@ -53,7 +53,7 @@ Popup {
 
     enter: Transition {
         NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 200; easing.type: Easing.OutCubic }
-        NumberAnimation { property: "y"; from: (Overlay.overlay ? Overlay.overlay.height : 600); to: root.y; duration: 200; easing.type: Easing.OutCubic }
+        NumberAnimation { property: "y"; from: root.y + 48; to: root.y; duration: 220; easing.type: Easing.OutCubic }
     }
     exit: Transition {
         NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 180 }

@@ -15,11 +15,10 @@ import App.Theme 1.0
 //       onConfirmed: doDelete()
 //   }
 //   // Open: dlg.open()  Close: dlg.close()
-Dialog {
+Popup {
     id: root
 
-    // Dialog.title is FINAL — set directly, do not redeclare
-    title:                "Alert"
+    property string title:        "Alert"
     property string message:      ""
     property string type:         "info"   // info | warning | danger | success
     property string confirmLabel: "OK"
@@ -48,8 +47,11 @@ Dialog {
     }
 
     modal: true
-    anchors.centerIn: Overlay.overlay
+    parent: Overlay.overlay           // coordinates relative to full window overlay
+    anchors.centerIn: parent
     padding: 0
+    implicitWidth:  380
+    implicitHeight: _dlgContent.implicitHeight
     closePolicy: Popup.CloseOnEscape
 
     Overlay.modal: Rectangle {
@@ -57,21 +59,20 @@ Dialog {
         Behavior on opacity { NumberAnimation { duration: 150 } }
     }
 
-    enter:  Transition { NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 160; easing.type: Easing.OutCubic } }
-    exit:   Transition { NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 120 } }
+    enter: Transition { NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 160; easing.type: Easing.OutCubic } }
+    exit:  Transition { NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 120 } }
 
     background: Rectangle {
-        radius: 10; color: ThemeManager.surfaceColor
-        border.color: root._accentColor; border.width: 1
-        layer.enabled: true
-        layer.effect: null   // shadow via drop shadow below
-        Rectangle { anchors.fill: parent; radius: parent.radius; color: "transparent"
-                    border.color: Qt.rgba(0,0,0,0.25); border.width: 1 }
+        radius: 10
+        color: ThemeManager.surfaceColor
+        border.color: ThemeManager.borderColor
+        border.width: 1
     }
 
     contentItem: ColumnLayout {
+        id: _dlgContent
         spacing: 0
-        width: 360
+        width: root.implicitWidth
 
         // ── Top accent strip ──────────────────────────────────────────────────
         Rectangle {
