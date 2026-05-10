@@ -11,6 +11,7 @@ Window {
     property real cameraWidth:  800
     property real cameraHeight: 450
     property var  nodesModel:   null
+    property bool isPlaying:    false
     
     title: "Valkyrie — External Visualization"
     width:  1280
@@ -27,7 +28,7 @@ Window {
         cameraWidth:  root.cameraWidth
         cameraHeight: root.cameraHeight
         nodesModel:   root.nodesModel
-        isPlaying:    true
+        isPlaying:    root.isPlaying
         
         // Em janela externa, aumentamos levemente o super-sampling para máxima nitidez
         superSampling: 1.2 

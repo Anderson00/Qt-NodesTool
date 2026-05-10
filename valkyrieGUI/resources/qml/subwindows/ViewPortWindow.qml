@@ -1705,6 +1705,7 @@ Rectangle {
         cameraWidth:  root.cameraWorldW
         cameraHeight: root.cameraWorldH
         nodesModel:   nodes.model
+        isPlaying:    vizWindow.isPlaying
         
         onClosing: {
             // Sincroniza o estado de 'playing' caso a janela seja fechada manualmente
