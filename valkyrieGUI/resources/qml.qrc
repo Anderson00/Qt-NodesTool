@@ -61,6 +61,38 @@
         <file alias="SplashScreen.qml">qml/components/SplashScreen.qml</file>
         <file alias="Toast.qml">qml/components/Toast.qml</file>
         <file alias="NodesList.qml">qml/components/NodesList.qml</file>
+        <!-- Session-added components (batch 1: Input/Display) -->
+        <file alias="RangeSlider.qml">qml/components/RangeSlider.qml</file>
+        <file alias="SegmentedControl.qml">qml/components/SegmentedControl.qml</file>
+        <file alias="MultiSelect.qml">qml/components/MultiSelect.qml</file>
+        <file alias="OTPInput.qml">qml/components/OTPInput.qml</file>
+        <file alias="TimePicker.qml">qml/components/TimePicker.qml</file>
+        <file alias="AutocompleteInput.qml">qml/components/AutocompleteInput.qml</file>
+        <file alias="Badge.qml">qml/components/Badge.qml</file>
+        <file alias="Chip.qml">qml/components/Chip.qml</file>
+        <file alias="Avatar.qml">qml/components/Avatar.qml</file>
+        <file alias="ProgressCircle.qml">qml/components/ProgressCircle.qml</file>
+        <file alias="Skeleton.qml">qml/components/Skeleton.qml</file>
+        <file alias="StatusDot.qml">qml/components/StatusDot.qml</file>
+        <file alias="Timeline.qml">qml/components/Timeline.qml</file>
+        <file alias="EmptyState.qml">qml/components/EmptyState.qml</file>
+        <!-- Session-added components (batch 2: Data/Overlay/Nav/Utility) -->
+        <file alias="DataTable.qml">qml/components/DataTable.qml</file>
+        <file alias="Pagination.qml">qml/components/Pagination.qml</file>
+        <file alias="VirtualList.qml">qml/components/VirtualList.qml</file>
+        <file alias="AlertDialog.qml">qml/components/AlertDialog.qml</file>
+        <file alias="ContextMenu.qml">qml/components/ContextMenu.qml</file>
+        <file alias="CommandPalette.qml">qml/components/CommandPalette.qml</file>
+        <file alias="Snackbar.qml">qml/components/Snackbar.qml</file>
+        <file alias="BottomSheet.qml">qml/components/BottomSheet.qml</file>
+        <file alias="TabBar.qml">qml/components/TabBar.qml</file>
+        <file alias="Stepper.qml">qml/components/Stepper.qml</file>
+        <file alias="BreadcrumbBar.qml">qml/components/BreadcrumbBar.qml</file>
+        <file alias="Divider.qml">qml/components/Divider.qml</file>
+        <file alias="LoadingSpinner.qml">qml/components/LoadingSpinner.qml</file>
+        <file alias="SplitPane.qml">qml/components/SplitPane.qml</file>
+        <file alias="CodeBlock.qml">qml/components/CodeBlock.qml</file>
+        <file alias="Kbd.qml">qml/components/Kbd.qml</file>
     </qresource>
     <qresource prefix="/subwindows">
         <file alias="DebuggerMain.qml">qml/subwindows/DebuggerMain.qml</file>
