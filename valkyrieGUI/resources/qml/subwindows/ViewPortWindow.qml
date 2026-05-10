@@ -127,19 +127,23 @@ Rectangle {
             root._isPastingVisualization = false
             isCloning = false
             
-            // Armazena o estado atual e força o Fullscreen se necessário
+            // Armazena o estado atual (não forçamos mais o fullscreen na janela principal)
             root._wasFullScreenBeforePlay = root.isActuallyFullScreen
+            /*
             if (!root._wasFullScreenBeforePlay) {
                 viewPort.setFullScreen(true)
             }
+            */
         })
     }
 
     function stopVisualization() {
         // Se entramos em fullscreen apenas para o play, saímos ao dar stop
+        /*
         if (root.isActuallyFullScreen && !root._wasFullScreenBeforePlay) {
             viewPort.setFullScreen(true)
         }
+        */
 
         for (let i = nodes.model.count - 1; i >= 0; i--) {
             let item = nodes.model.get(i)
@@ -1645,28 +1649,23 @@ Rectangle {
     }
 
 
-    // ── Fullscreen visualization overlay ─────────────────────────────────────────
-    FullscreenVisualization {
-        id: fullscreenOverlay
-        anchors.fill: parent
-        z: 9999
-        visible: root.showVisualization && vizWindow.isPlaying
-
-        cameraX:      root.cameraWorldX
-        cameraY:      root.cameraWorldY
-        cameraWidth:  root.cameraWorldW
-        cameraHeight: root.cameraWorldH
-        nodesModel:   nodes.model
-
-        onCloseRequested: vizWindow.isPlaying = false
+    // ── Fullscreen visualization window loader ──────────────────────────────────
+    Loader {
+        id: fullscreenLoader
+        active: root.showVisualization && vizWindow.isPlaying
+        sourceComponent: Component {
+            FullscreenVisualization {
+                cameraX:      root.cameraWorldX
+                cameraY:      root.cameraWorldY
+                cameraWidth:  root.cameraWorldW
+                cameraHeight: root.cameraWorldH
+                nodesModel:   nodes.model
+                visible:      true
+                onCloseRequested: vizWindow.isPlaying = false
+            }
+        }
     }
 
-    Shortcut {
-        sequence: "Escape"
-        context:  Qt.ApplicationShortcut
-        enabled:  fullscreenOverlay.visible
-        onActivated: vizWindow.isPlaying = false
-    }
 
     // ── Visualization window overlay ──────────────────────────────────────────────
     VisualizationWindow {

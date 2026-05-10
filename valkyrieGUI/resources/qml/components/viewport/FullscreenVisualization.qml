@@ -8,7 +8,7 @@ import Qaterial 1.0 as Qaterial
 // Loads only each node's qmlBodyUrl body — no header, no sockets, no handles,
 // no connection lines. The same behaviourObject is shared so C++ signals/slots
 // are always live and node buttons are fully interactive.
-Rectangle {
+Window {
     id: root
 
     property real cameraX:      0
@@ -19,8 +19,42 @@ Rectangle {
 
     signal closeRequested()
 
-    color:   "#111111"
-    visible: false
+    width:  Screen.width
+    height: Screen.height
+    color:  "#111111"
+    visible: true
+    title:  "Valkyrie — Fullscreen Visualization"
+    flags:  Qt.Window | Qt.FramelessWindowHint
+
+    onVisibleChanged: {
+        if (visible) {
+            root.visibility = Window.FullScreen
+        }
+    }
+
+    Component.onCompleted: {
+        root.visibility = Window.FullScreen
+    }
+
+    onClosing: function(close) {
+        close.accepted = false
+        root.closeRequested()
+    }
+
+    Shortcut {
+        sequence: "F11"
+        onActivated: {
+            if (root.visibility === Window.FullScreen)
+                root.visibility = Window.Windowed
+            else
+                root.visibility = Window.FullScreen
+        }
+    }
+
+    Shortcut {
+        sequence: "Escape"
+        onActivated: root.closeRequested()
+    }
 
     // ── Content ───────────────────────────────────────────────────────────────
     VisualizationPreview {
@@ -33,7 +67,7 @@ Rectangle {
         cameraWidth:  root.cameraWidth
         cameraHeight: root.cameraHeight
         nodesModel:   root.nodesModel
-        isPlaying:    true // No overlay sempre mostramos os nós de visualização
+        isPlaying:    root.visible
     }
 
     // ── HUD — fades after 2.5 s of mouse inactivity ───────────────────────────
