@@ -14,8 +14,9 @@ Rectangle {
     signal cameraRectChanged(real wx, real wy, real ww, real wh)
     signal closeRequested()
 
-    // Aspect ratio lock: "16:9" | "4:3" | "1:1" | "" (free)
-    property string aspectRatio: "16:9"
+    // Aspect ratio lock: "16:9" | "4:3" | "1:1" | "Screen" | "" (free)
+    property string aspectRatio: "Screen"
+    readonly property real screenRatioValue: Screen.width / Screen.height
 
     // Minimum dimensions in world units
     readonly property real minW: 200
@@ -85,10 +86,11 @@ Rectangle {
                     verticalAlignment:   Text.AlignVCenter
                 }
                 onClicked: {
-                    if      (root.aspectRatio === "16:9") root.aspectRatio = "4:3"
-                    else if (root.aspectRatio === "4:3")  root.aspectRatio = "1:1"
-                    else if (root.aspectRatio === "1:1")  root.aspectRatio = ""
-                    else                                  root.aspectRatio = "16:9"
+                    if      (root.aspectRatio === "Screen") root.aspectRatio = "16:9"
+                    else if (root.aspectRatio === "16:9")   root.aspectRatio = "4:3"
+                    else if (root.aspectRatio === "4:3")    root.aspectRatio = "1:1"
+                    else if (root.aspectRatio === "1:1")    root.aspectRatio = ""
+                    else                                    root.aspectRatio = "Screen"
                     _applyAspect()
                 }
                 AppToolTip { text: "Cycle aspect ratio"; visible: parent.hovered }
@@ -127,16 +129,18 @@ Rectangle {
     property real _rsW:  0; property real _rsH:  0
 
     function _applyAspect() {
-        if      (aspectRatio === "16:9") height = width * 9 / 16
-        else if (aspectRatio === "4:3")  height = width * 3 / 4
-        else if (aspectRatio === "1:1")  height = width
+        if      (aspectRatio === "Screen") height = width / screenRatioValue
+        else if (aspectRatio === "16:9")   height = width * 9 / 16
+        else if (aspectRatio === "4:3")    height = width * 3 / 4
+        else if (aspectRatio === "1:1")    height = width
         cameraRectChanged(x, y, width, height)
     }
 
     function _constrainHeight(newW, newH) {
-        if      (aspectRatio === "16:9") return newW * 9 / 16
-        else if (aspectRatio === "4:3")  return newW * 3 / 4
-        else if (aspectRatio === "1:1")  return newW
+        if      (aspectRatio === "Screen") return newW / screenRatioValue
+        else if (aspectRatio === "16:9")   return newW * 9 / 16
+        else if (aspectRatio === "4:3")    return newW * 3 / 4
+        else if (aspectRatio === "1:1")    return newW
         return newH
     }
 

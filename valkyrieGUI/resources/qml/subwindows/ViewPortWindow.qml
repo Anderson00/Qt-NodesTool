@@ -65,7 +65,7 @@ Rectangle {
     property real cameraWorldX: 4600
     property real cameraWorldY: 4775
     property real cameraWorldW: 800
-    property real cameraWorldH: 450
+    property real cameraWorldH: 800 / (Screen.width / Screen.height)
 
     // World-space point kept at the center of the view.
     // Updated whenever the canvas is panned or zoomed.
