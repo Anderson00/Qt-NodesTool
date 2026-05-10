@@ -34,7 +34,7 @@ Item {
     Column {
         id: eventsColumn
         anchors { left: parent.left; right: parent.right; top: parent.top }
-        spacing: root.itemSpacing
+        spacing: 0   // spacing is supplied by eventContent.bottomPadding instead
 
         Repeater {
             model: root.events

@@ -52,6 +52,13 @@ Item {
         Behavior on border.color { ColorAnimation { duration: 120 } }
         clip: true
 
+        // Field click (must be declared FIRST so chips render on top and receive clicks)
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: popup.visible ? popup.close() : popup.open()
+        }
+
         // Chips flow
         Flow {
             id: chipFlow
@@ -78,7 +85,7 @@ Item {
                 delegate: Rectangle {
                     height: 22; radius: 11
                     color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.2)
-                    width: chipLabel.width + chipClose.width + 14
+                    width: chipLabel.implicitWidth + 36  // 8 left + label + 4 gap + 18 btn + 6 right
 
                     Text {
                         id: chipLabel
@@ -88,16 +95,28 @@ Item {
                         color: ThemeManager.textColor
                     }
 
-                    Text {
-                        id: chipClose
-                        anchors.left: chipLabel.right; anchors.leftMargin: 4
+                    // Close button — fixed-size Item for reliable hit testing
+                    Item {
+                        anchors.right: parent.right; anchors.rightMargin: 4
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "×"; font.pixelSize: 13; font.bold: true
-                        color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.6)
+                        width: 16; height: 16
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "×"; font.pixelSize: 14; font.bold: true
+                            color: Qt.rgba(ThemeManager.textColor.r,
+                                           ThemeManager.textColor.g,
+                                           ThemeManager.textColor.b, 0.7)
+                        }
+
                         MouseArea {
                             anchors.fill: parent
+                            anchors.margins: -3   // slightly larger hit area
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: root._toggle(modelData)
+                            onClicked: function(mouse) {
+                                mouse.accepted = true   // stop propagation to field MouseArea
+                                root._toggle(modelData)
+                            }
                         }
                     }
                 }
@@ -122,11 +141,6 @@ Item {
             Behavior on rotation { NumberAnimation { duration: 150 } }
         }
 
-        MouseArea {
-            anchors.fill: parent
-            cursorShape: Qt.PointingHandCursor
-            onClicked: popup.visible ? popup.close() : popup.open()
-        }
     }
 
     // ── Dropdown ──────────────────────────────────────────────────────────────

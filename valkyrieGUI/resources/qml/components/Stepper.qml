@@ -43,22 +43,25 @@ Item {
             width:  root._horiz ? root.width / root.steps.length : root.width
             height: root._horiz ? root.height : root.dotSize + 20
 
-            // Connecting line (before this step)
+            // Connecting line — drawn forward from THIS step's dot centre to NEXT step's dot centre.
+            // Because Repeater creates items in order, later steps render on top → the next dot
+            // always covers the connector's end, so no z-fighting artefact.
             Rectangle {
-                visible: index > 0
+                visible: index < root.steps.length - 1
                 color: stepItem.done ? root.accentColor : Qt.rgba(root.lineColor.r, root.lineColor.g, root.lineColor.b, 0.4)
                 Behavior on color { ColorAnimation { duration: 200 } }
 
-                // Horizontal line
-                x:      root._horiz ? -parent.width / 2 : root.dotSize / 2 - width / 2
-                y:      root._horiz ? root.dotSize / 2 - height / 2 : -10
-                width:  root._horiz ? parent.width / 2 : 2
-                height: root._horiz ? 2 : 10
+                // Horizontal: from centre of current dot rightward to centre of next dot
+                x:      root._horiz ? parent.width / 2 : root.dotSize / 2 - 1
+                y:      root._horiz ? root.dotSize / 2 - 1 : root.dotSize / 2
+                width:  root._horiz ? parent.width : 2
+                height: root._horiz ? 2 : root.dotSize + 20
             }
 
             // Step dot
             Rectangle {
                 id: dot
+                z: 1   // always above connector line within this step item
                 anchors.horizontalCenter: root._horiz ? parent.horizontalCenter : undefined
                 anchors.left:             root._horiz ? undefined : parent.left
                 anchors.top:              parent.top

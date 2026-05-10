@@ -12,6 +12,15 @@ Item {
     property var behaviourObject
     property bool allOpened: true
 
+    // Skeleton loading — hides initial render stutter
+    property bool _ready: false
+    Timer {
+        id: _initTimer
+        interval: 50    // one event-loop tick – enough for the first frame to paint
+        onTriggered: root._ready = true
+    }
+    Component.onCompleted: _initTimer.start()
+
     // ------- Tile container for a variant -------
     component Tile: Rectangle {
         id: tile
@@ -807,6 +816,57 @@ Item {
 
             // bottom padding
             Item { width: parent.width; height: 12 }
+        }
+    }
+
+    // ── Skeleton loading overlay ──────────────────────────────────────────────
+    // Covers the initial render stutter with animated placeholders, then fades out.
+    Rectangle {
+        id: _skelOverlay
+        anchors.fill: parent
+        color: ThemeManager.backgroundColor
+        opacity: root._ready ? 0.0 : 1.0
+        visible: opacity > 0.0
+        z: 100
+
+        Behavior on opacity {
+            NumberAnimation { duration: 450; easing.type: Easing.InOutQuad }
+        }
+
+        Column {
+            anchors { top: parent.top; left: parent.left; right: parent.right; margins: 16 }
+            spacing: 20
+            topPadding: 24
+
+            // Title area
+            Skeleton { width: 240; height: 26 }
+            Skeleton { width: 320; height: 14; shape: "text" }
+
+            // Section card rows
+            Skeleton { width: 160; height: 18; shape: "text" }
+            Row { spacing: 10
+                Skeleton { width: 200; height: 90 }
+                Skeleton { width: 200; height: 90 }
+                Skeleton { width: 200; height: 90 }
+            }
+            Skeleton { width: 130; height: 18; shape: "text" }
+            Row { spacing: 10
+                Skeleton { width: 200; height: 90 }
+                Skeleton { width: 200; height: 90 }
+                Skeleton { width: 200; height: 90 }
+            }
+            Skeleton { width: 180; height: 18; shape: "text" }
+            Row { spacing: 10
+                Skeleton { width: 200; height: 90 }
+                Skeleton { width: 200; height: 90 }
+                Skeleton { width: 200; height: 90 }
+            }
+            Skeleton { width: 150; height: 18; shape: "text" }
+            Row { spacing: 10
+                Skeleton { width: 200; height: 90 }
+                Skeleton { width: 200; height: 90 }
+                Skeleton { width: 200; height: 90 }
+            }
         }
     }
 }

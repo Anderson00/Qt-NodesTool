@@ -116,22 +116,16 @@ Item {
                 anchors.margins: -6
                 cursorShape: Qt.SizeHorCursor
 
-                property real startX: 0
-                property real startVal: 0
-
-                onPressed: function(mouse) {
-                    startX   = mouse.x
-                    startVal = root.firstValue
-                }
                 onPositionChanged: function(mouse) {
-                    var dx   = mouse.x - startX
-                    var range = root.to - root.from
-                    var dv   = dx / trackBg.width * range
-                    var raw  = root._snap(root._clamp(startVal + dv))
-                    var nv   = Math.min(raw, root.secondValue - (root.stepSize > 0 ? root.stepSize : 0))
-                    if (root.stepSize <= 0) nv = Math.min(raw, root.secondValue)
-                    root.firstValue = root._clamp(nv)
-                    root.firstValueChanged(root.firstValue)
+                    // Map to trackContainer coords so the moving handle doesn't skew the delta
+                    var absX = drag1.mapToItem(trackContainer, mouse.x, 0).x
+                    var norm = Math.max(0.0, Math.min(1.0,
+                                   (absX - root.handleSize / 2) / Math.max(1, trackBg.width)))
+                    var raw = root._snap(root.from + norm * (root.to - root.from))
+                    var nv  = root.stepSize > 0
+                              ? Math.min(root._clamp(raw), root.secondValue - root.stepSize)
+                              : Math.min(root._clamp(raw), root.secondValue)
+                    root.firstValue = nv
                     root.rangeChanged(root.firstValue, root.secondValue)
                 }
             }
@@ -164,22 +158,15 @@ Item {
                 anchors.margins: -6
                 cursorShape: Qt.SizeHorCursor
 
-                property real startX: 0
-                property real startVal: 0
-
-                onPressed: function(mouse) {
-                    startX   = mouse.x
-                    startVal = root.secondValue
-                }
                 onPositionChanged: function(mouse) {
-                    var dx   = mouse.x - startX
-                    var range = root.to - root.from
-                    var dv   = dx / trackBg.width * range
-                    var raw  = root._snap(root._clamp(startVal + dv))
-                    var nv   = Math.max(raw, root.firstValue + (root.stepSize > 0 ? root.stepSize : 0))
-                    if (root.stepSize <= 0) nv = Math.max(raw, root.firstValue)
-                    root.secondValue = root._clamp(nv)
-                    root.secondValueChanged(root.secondValue)
+                    var absX = drag2.mapToItem(trackContainer, mouse.x, 0).x
+                    var norm = Math.max(0.0, Math.min(1.0,
+                                   (absX - root.handleSize / 2) / Math.max(1, trackBg.width)))
+                    var raw = root._snap(root.from + norm * (root.to - root.from))
+                    var nv  = root.stepSize > 0
+                              ? Math.max(root._clamp(raw), root.firstValue + root.stepSize)
+                              : Math.max(root._clamp(raw), root.firstValue)
+                    root.secondValue = nv
                     root.rangeChanged(root.firstValue, root.secondValue)
                 }
             }
