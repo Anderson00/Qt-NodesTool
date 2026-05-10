@@ -76,6 +76,65 @@ Rectangle {
     property var rectsArray: ListModel {}
     property bool allConnectionsMinimized: false
 
+    property bool isCloning: false
+    property bool _isPastingVisualization: false
+
+    function startVisualization() {
+        if (isCloning) return
+        isCloning = true
+        
+        // Use Qt.callLater to allow the LoadingSpinner to render before starting the loop
+        Qt.callLater(function() {
+            root._isPastingVisualization = true
+            
+            // 1. Identify nodes in camera area
+            let nodesToClone = []
+            for (let i = 0; i < nodes.model.count; i++) {
+                let item = nodes.model.get(i)
+                if (item.isVisualization) continue
+                
+                let obj = item.object
+                if (obj.x + obj.width >= root.cameraWorldX && obj.x <= root.cameraWorldX + root.cameraWorldW &&
+                    obj.y + obj.height >= root.cameraWorldY && obj.y <= root.cameraWorldY + root.cameraWorldH) {
+                    nodesToClone.push(item.uuid)
+                }
+            }
+            
+            // 2. Clone nodes and map UUIDs
+            let uuidMap = {}
+            nodesToClone.forEach(oldUuid => {
+                let data = viewPort.getNodeData(oldUuid)
+                let newUuid = viewPort.pasteNode(data, 0, 0)
+                if (newUuid) uuidMap[oldUuid] = newUuid
+            })
+            
+            // 3. Clone connections
+            nodesToClone.forEach(oldUuid => {
+                let conns = viewPort.getNodeConnections(oldUuid)
+                conns.forEach(c => {
+                    let outUuid = c.outputUuid
+                    let inUuid = c.inputUuid
+                    if (uuidMap[outUuid] && uuidMap[inUuid]) {
+                        viewPort.addConnectionByUuids(uuidMap[outUuid], c.outputMethod,
+                                                      uuidMap[inUuid], c.inputMethod)
+                    }
+                })
+            })
+            
+            root._isPastingVisualization = false
+            isCloning = false
+        })
+    }
+
+    function stopVisualization() {
+        for (let i = nodes.model.count - 1; i >= 0; i--) {
+            let item = nodes.model.get(i)
+            if (item.isVisualization) {
+                viewPort.removeBehaviourObject(item.object)
+            }
+        }
+    }
+
     // ── Grid snap ──────────────────────────────────────────────────────────
     // Read-only mirror of GlobalProperties — all mutations go through GlobalProperties
     // directly (G key, toolbar toggle, settings) to avoid binding-break issues.
@@ -316,7 +375,11 @@ Rectangle {
         target: viewPort
 
         function onBehaviourAdded(obj){
-            nodes.model.append({'object': obj, 'uuid': viewPort.getUUIDFromBehaviour(obj)})
+            nodes.model.append({
+                'object': obj, 
+                'uuid': viewPort.getUUIDFromBehaviour(obj),
+                'isVisualization': root._isPastingVisualization
+            })
         }
 
         function onBehavioursCleared() {
@@ -1442,6 +1505,8 @@ Rectangle {
                         viewportSnap:      root.computeSnap
                         viewportEdgeSnap:  root.computeEdgeSnap
 
+                        visible:           !model.isVisualization
+
                         // nodePressed fires on every mouse-down — select the node immediately
                         // unless it's already part of the current selection (preserves group).
                         onNodePressed: {
@@ -1601,6 +1666,11 @@ Rectangle {
         nodesModel:   nodes.model
 
         onCloseRequested: root.showVisualization = false
+
+        onIsPlayingChanged: {
+            if (isPlaying) root.startVisualization()
+            else root.stopVisualization()
+        }
     }
 
     // ── Group frame node sync ─────────────────────────────────────────────────────
@@ -2997,5 +3067,64 @@ Rectangle {
         nodeCount:       nodes.model.count
         fpsCount:        viewPort.fpsCount
         showFps:         GlobalProperties.showFps
+    }
+
+    // ── Loading Spinner Overlay ──────────────────────────────────────────────────
+    // Embedded directly to avoid qrc/import issues with new files.
+    Rectangle {
+        id: cloningOverlay
+        anchors.fill: parent
+        color: Qt.rgba(0, 0, 0, 0.4)
+        visible: root.isCloning
+        z: 20000 // On top of everything
+
+        // Block mouse events during cloning
+        MouseArea { anchors.fill: parent; preventStealing: true }
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: 140; height: 110; radius: 12
+            color: Qt.rgba(0.1, 0.1, 0.1, 0.9)
+            border.color: Qt.rgba(1, 1, 1, 0.1)
+
+            Column {
+                anchors.centerIn: parent
+                spacing: 12
+                
+                BusyIndicator {
+                    id: indicator
+                    running: cloningOverlay.visible
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    
+                    contentItem: Item {
+                        implicitWidth:  42; implicitHeight: 42
+                        Canvas {
+                            anchors.fill: parent
+                            onPaint: {
+                                var ctx = getContext("2d")
+                                ctx.reset()
+                                ctx.translate(width/2, height/2)
+                                ctx.rotate(rotation * Math.PI / 180)
+                                ctx.strokeStyle = "#FF9800" // Use a constant to be safe
+                                ctx.lineWidth = 3
+                                ctx.lineCap = "round"
+                                ctx.beginPath()
+                                ctx.arc(0, 0, width/2 - 4, 0, Math.PI * 1.5)
+                                ctx.stroke()
+                            }
+                            RotationAnimation on rotation {
+                                from: 0; to: 360; duration: 800; loops: Animation.Infinite
+                                running: indicator.running
+                            }
+                        }
+                    }
+                }
+                Text {
+                    text: "Clonando Nós..."
+                    color: "white"; font.pixelSize: 11; font.bold: true
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+            }
+        }
     }
 }
