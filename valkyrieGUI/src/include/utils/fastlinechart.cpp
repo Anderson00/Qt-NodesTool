@@ -59,17 +59,59 @@ static void screenDedup(QVector<float> &ox, QVector<float> &oy,
                         double xMn, double xRng, double yMn, double yRng)
 {
     ox.clear(); oy.clear();
-    ox.reserve(pts.size()); oy.reserve(pts.size());
-    for (const auto &p : pts) {
-        float cx = static_cast<float>((p.x() - xMn) / xRng) * W;
-        float cy = H - static_cast<float>((p.y() - yMn) / yRng) * H;
-        if (ox.isEmpty()) {
-            ox.append(cx); oy.append(cy);
-        } else {
-            float dx = cx - ox.last(), dy = cy - oy.last();
-            if (dx*dx + dy*dy >= 0.25f) { ox.append(cx); oy.append(cy); }
+    if (pts.isEmpty()) return;
+    ox.reserve(pts.size() * 3); oy.reserve(pts.size() * 3);
+    
+    // Para resolver o problema de "degraus" (quantização), implementamos
+    // uma interpolação Catmull-Rom que suaviza a transição entre pontos.
+    auto getPt = [&](int i) -> QPointF {
+        int idx = qBound(0, i, (int)pts.size() - 1);
+        return pts[idx];
+    };
+
+    // 1. Pré-filtro de Passa-Baixa para eliminar ruído de quantização (degraus)
+    QVector<QPointF> smoothed = pts;
+    if (pts.size() > 2) {
+        for (int i = 1; i < (int)pts.size() - 1; ++i) {
+            // Média ponderada 1-2-1 para suavizar a transição sem perder a forma
+            double sy = (pts[i - 1].y() + 2.0 * pts[i].y() + pts[i + 1].y()) / 4.0;
+            smoothed[i].setY(sy);
         }
     }
+
+    // 2. Interpolação B-Spline sobre os dados já suavizados
+    for (int i = 0; i < (int)smoothed.size() - 3; ++i) {
+        QPointF p0 = smoothed[i];
+        QPointF p1 = smoothed[i + 1];
+        QPointF p2 = smoothed[i + 2];
+        QPointF p3 = smoothed[i + 3];
+
+        for (int step = 0; step < 6; ++step) {
+            double t = step / 6.0;
+            double t2 = t * t;
+            double t3 = t2 * t;
+
+            double b0 = (1.0 - 3.0*t + 3.0*t2 - t3) / 6.0;
+            double b1 = (4.0 - 6.0*t2 + 3.0*t3) / 6.0;
+            double b2 = (1.0 + 3.0*t + 3.0*t2 - 3.0*t3) / 6.0;
+            double b3 = t3 / 6.0;
+
+            double x = b0 * p0.x() + b1 * p1.x() + b2 * p2.x() + b3 * p3.x();
+            double y = b0 * p0.y() + b1 * p1.y() + b2 * p2.y() + b3 * p3.y();
+
+            float cx = static_cast<float>((x - xMn) / xRng * W);
+            float cy = H - static_cast<float>((y - yMn) / yRng * H);
+            
+            if (ox.isEmpty() || std::abs(cx - ox.last()) > 0.05f || std::abs(cy - oy.last()) > 0.05f) {
+                ox.append(cx); oy.append(cy);
+            }
+        }
+    }
+    
+    // Adiciona o último ponto real
+    const auto &last = pts.last();
+    ox.append(static_cast<float>((last.x() - xMn) / xRng * W));
+    oy.append(H - static_cast<float>((last.y() - yMn) / yRng * H));
 }
 
 static void buildRibbon(QSGGeometry::Point2D *v,
@@ -77,17 +119,46 @@ static void buildRibbon(QSGGeometry::Point2D *v,
                         float halfW)
 {
     const int n = sx.size();
-    float ldx = 1.0f, ldy = 0.0f;
+    if (n < 2) return;
+
     for (int i = 0; i < n; ++i) {
         float dx, dy;
-        if      (i == 0)   { dx = sx[1]-sx[0];       dy = sy[1]-sy[0]; }
-        else if (i == n-1) { dx = sx[n-1]-sx[n-2];   dy = sy[n-1]-sy[n-2]; }
-        else               { dx = sx[i+1]-sx[i-1];   dy = sy[i+1]-sy[i-1]; }
-        const float len = std::sqrt(dx*dx + dy*dy);
-        if (len > 1e-4f) { ldx = dx/len; ldy = dy/len; }
-        const float px = -ldy * halfW, py = ldx * halfW;
-        v[2*i  ].set(sx[i]+px, sy[i]+py);
-        v[2*i+1].set(sx[i]-px, sy[i]-py);
+        
+        if (i == 0) {
+            dx = sx[1] - sx[0];
+            dy = sy[1] - sy[0];
+        } else if (i == n - 1) {
+            dx = sx[n - 1] - sx[n - 2];
+            dy = sy[n - 1] - sy[n - 2];
+        } else {
+            // Miter join: Usa a média das direções dos dois segmentos adjacentes
+            float dx1 = sx[i] - sx[i - 1];
+            float dy1 = sy[i] - sy[i - 1];
+            float dx2 = sx[i + 1] - sx[i];
+            float dy2 = sy[i + 1] - sy[i];
+            
+            float len1 = std::sqrt(dx1 * dx1 + dy1 * dy1);
+            float len2 = std::sqrt(dx2 * dx2 + dy2 * dy2);
+            
+            if (len1 > 0) { dx1 /= len1; dy1 /= len1; }
+            if (len2 > 0) { dx2 /= len2; dy2 /= len2; }
+            
+            dx = dx1 + dx2;
+            dy = dy1 + dy2;
+        }
+
+        float len = std::sqrt(dx * dx + dy * dy);
+        if (len < 1e-4f) {
+            // Fallback para o segmento anterior se a média falhar
+            dx = 1.0f; dy = 0.0f; len = 1.0f;
+        }
+        
+        // Normal unitária (perpendicular)
+        float nx = -dy / len;
+        float ny = dx / len;
+
+        v[2 * i].set(sx[i] + nx * halfW, sy[i] + ny * halfW);
+        v[2 * i + 1].set(sx[i] - nx * halfW, sy[i] - ny * halfW);
     }
 }
 

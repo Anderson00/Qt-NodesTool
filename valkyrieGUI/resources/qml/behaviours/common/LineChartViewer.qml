@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import QtQuick.Window 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import Qt.labs.platform 1.1 as Platform
@@ -249,7 +250,14 @@ Item {
                                      ThemeManager.borderColor.b, 0.25)
                 gridCountX:  showGrid ? 5 : 0
                 gridCountY:  showGrid ? 5 : 0
-                lineWidth:   2
+                lineWidth:   2.2
+
+                // Melhoria de suavização e resolução (Super Sampling local)
+                layer.enabled: antialiasOn
+                layer.smooth:  true
+                layer.samples: 8
+                layer.textureSize: Qt.size(width * Screen.devicePixelRatio * 1.5, 
+                                           height * Screen.devicePixelRatio * 1.5)
 
                 onAutoScaleChanged: isAutoScale = fastChart.autoScale
             }
