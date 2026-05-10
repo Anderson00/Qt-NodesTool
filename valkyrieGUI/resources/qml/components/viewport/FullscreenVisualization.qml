@@ -59,9 +59,10 @@ Rectangle {
                     visible: !!model.isVisualization
 
                     // Super Sampling: Força o nó a renderizar na resolução real da tela (escala aplicada)
-                    layer.enabled: true
-                    layer.smooth:  true
-                    layer.textureSize: Qt.size(width * previewArea.s, height * previewArea.s)
+                    antialiasing: true
+                    // layer.enabled: true
+                    // layer.smooth:  true
+                    // layer.textureSize: Qt.size(width * previewArea.s, height * previewArea.s)
 
                     // Moldura para o nó na visualização (substitui o crome do editor)
                     Rectangle {
@@ -77,6 +78,9 @@ Rectangle {
                         anchors.fill: parent
                         property var behaviourObject: parent.obj
                         clip: true
+                        // antialiasing: true
+                        // layer.enabled: true
+                        // layer.samples: 5
                         source: (parent.obj && parent.obj.qmlBodyUrl !== "") ? parent.obj.qmlBodyUrl : ""
                         
                         onLoaded: {
