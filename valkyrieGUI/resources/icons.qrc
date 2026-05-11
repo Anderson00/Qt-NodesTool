@@ -75,5 +75,19 @@
         <file>vector-square.svg</file>
         <file>view-dashboard.svg</file>
         <file>view-sequential.svg</file>
+        <file>magnify.svg</file>
+        <file>home.svg</file>
+        <file>view-list.svg</file>
+        <file>cursor-default.svg</file>
+        <file>hand-back-right.svg</file>
+        <file>minus.svg</file>
+        <file>chevron-up.svg</file>
+        <file>center-focus.svg</file>
+        <file>magnet.svg</file>
+        <file>eye.svg</file>
+        <file>speedometer.svg</file>
+        <file>bug.svg</file>
+        <file>code-braces.svg</file>
+        <file>folder.svg</file>
     </qresource>
 </RCC>
