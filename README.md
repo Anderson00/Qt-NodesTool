@@ -21,7 +21,7 @@ Qt-NodesTool ("Valkyrie") is a Qt 6.5.3 node-based debugger and visualization to
 
 | Platform | Status | Qt Version | Compiler |
 |----------|--------|-----------|----------|
-| ![Windows](https://img.shields.io/badge/Windows-✅%20Working-brightgreen) | ✅ Working | 6.5.3 | MSVC 2022 (x64) |
+| ![Windows](https://img.shields.io/badge/Windows-✅%20Working-brightgreen) | ✅ Working | 6.5.3 | MinGW 64-bit |
 | ![macOS](https://img.shields.io/badge/macOS-✅%20Working-brightgreen) | ✅ Working | 6.5.3 | Clang (Intel/Apple Silicon) |
 | ![Linux](https://img.shields.io/badge/Linux-✅%20Working-brightgreen) | ✅ Working | 6.5.3 | GCC/Clang |
 
@@ -42,7 +42,7 @@ Each push to `main` or `develop` branches triggers the workflow automatically.
 To build and run Qt-NodesTool, you need the following:
 
 - **Qt 6.5.3** development kit
-  - **Windows**: MSVC 2022 (64-bit)
+  - **Windows**: MinGW 64-bit
   - **macOS**: Clang (Intel/Apple Silicon)
   - **Linux**: GCC or Clang
 - **CMake** 3.16 or higher

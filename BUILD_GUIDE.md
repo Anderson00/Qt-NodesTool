@@ -12,8 +12,8 @@ Este guia explica como fazer build do Qt-NodesTool localmente em diferentes plat
 ## Windows
 
 ### Pré-requisitos
-- **Visual Studio 2022** (Community Edition é suficiente)
-- **Qt 6.5.3 for MSVC 2019 64-bit** (via Qt Online Installer)
+- **Qt 6.5.3 for MinGW 64-bit** (via Qt Online Installer — incluir o componente MinGW 64-bit)
+- O MinGW 64-bit bundlado com o Qt já é suficiente; não é necessário Visual Studio
 
 ### Build Steps
 
@@ -25,15 +25,16 @@ cd Qt-NodesTool
 # Configure
 mkdir build
 cd build
-cmake -G "Visual Studio 17 2022" -A x64 ..
+cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release `
+  -DCMAKE_PREFIX_PATH="C:/Qt/6.5.3/mingw_64" ..
 
 # Build
-cmake --build . --config Release
+cmake --build . -j8
 
 # Deploy Qt dependencies
-$qtPath = "C:\Qt\6.5.3\msvc2019_64"  # Ajustar para sua instalação
+$qtPath = "C:\Qt\6.5.3\mingw_64"  # Ajustar para sua instalação
 $env:PATH = "$qtPath\bin;$env:PATH"
-& "$qtPath\bin\windeployqt.exe" --release build\Release\valkyrieGUI.exe
+& "$qtPath\bin\windeployqt.exe" --release valkyrieGUI.exe
 ```
 
 ## macOS
@@ -117,7 +118,8 @@ linuxdeployqt build/valkyrieGUI -appimage
 
 ### Windows
 - **Qt not found**: Adicionar Qt bin ao PATH ou usar `-DCMAKE_PREFIX_PATH`
-- **MSVC compiler not found**: Verificar Visual Studio installation
+- **MinGW not found**: Adicionar `C:\Qt\Tools\mingw1120_64\bin` ao PATH antes de rodar cmake
+- **cmake generator error**: Garantir que `cmake -G "MinGW Makefiles"` seja usado, não o gerador Visual Studio
 
 ### macOS
 - **Cannot find Qt**: Verificar caminho em `CMAKE_PREFIX_PATH`
@@ -140,7 +142,7 @@ Veja `.github/workflows/build.yml` para detalhes.
 ## Output
 
 Os executáveis compilados estarão em:
-- Windows: `build\Release\*.exe`
+- Windows: `build\*.exe`
 - macOS: `build\*.app`
 - Linux: `build\*` (executáveis)
 
