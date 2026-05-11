@@ -138,7 +138,6 @@ Contrl.Drawer {
                         Layout.preferredWidth: 200
                         Layout.preferredHeight: 35
                         placeholderText: "Search"
-                        // trailingInline logic removed as it was Qaterial-specific
                     }
                 }
 

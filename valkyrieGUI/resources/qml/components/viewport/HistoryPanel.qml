@@ -43,7 +43,7 @@ Rectangle {
     }
 
     function _typeIcon(text) {
-        if (!text || text === "Initial state") return 'qrc:/icons/home.svg'
+        if (!text || text === "Initial state") return Icons.home
         if (text.indexOf("Move")              !== -1) return Icons.cursorMove
         if (text.indexOf("Resize")            !== -1) return Icons.resize
         if (text.indexOf("Add Node")          !== -1) return Icons.plusCircleOutline
@@ -87,7 +87,7 @@ Rectangle {
         }
 
         AppBarButton {
-            icon.source: 'qrc:/icons/close.svg'
+            icon.source: Icons.close
             icon.color:  ThemeManager.textColor
             opacity: 0.55
             width: 34; height: 34

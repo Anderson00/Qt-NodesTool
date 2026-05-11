@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import App.Theme 1.0
 import App.Properties 1.0
+import App.Icons 1.0
 
 import ".."
 
@@ -105,7 +106,7 @@ Window {
 
             ColorIcon {
                 anchors.centerIn: parent
-                source: 'qrc:/icons/close.svg'
+                source: Icons.close
                 color:  Qt.rgba(1, 1, 1, 0.75)
                 width: 16; height: 16
             }

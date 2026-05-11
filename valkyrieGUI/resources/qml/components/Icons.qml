@@ -1,7 +1,6 @@
 pragma Singleton
 import QtQuick 2.15
 
-// Drop-in replacement for Qaterial.Icons
 // Usage: import App.Icons 1.0  →  Icons.folderOpenOutline, Icons.history, etc.
 // All paths point to SVGs registered in icons.qrc under the /icons prefix.
 QtObject {
@@ -86,4 +85,6 @@ QtObject {
     readonly property url fileDocumentEditOutline:"qrc:/icons/file-document-edit-outline.svg"
     readonly property url viewWeek:               "qrc:/icons/view-week.svg"
     readonly property url viewGrid:               "qrc:/icons/view-grid.svg"
+    readonly property url fullscreen:             "qrc:/icons/fullscreen.svg"
+    readonly property url contentSaveCogOutline:  "qrc:/icons/content-save-cog-outline.svg"
 }

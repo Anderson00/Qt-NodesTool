@@ -5,6 +5,7 @@ import QtQuick.Controls.Material 2.12
 import Qt5Compat.GraphicalEffects
 import App.Theme 1.0
 import App.Properties 1.0
+import App.Icons 1.0
 
 
 Rectangle {
@@ -375,7 +376,7 @@ Rectangle {
                 Layout.preferredHeight: 34
                 Layout.preferredWidth: 28
                 textColor: titleView.color
-                iconSource: "qrc:/icons/view-grid.svg"
+                iconSource: Icons.viewGrid
                 iconSize: 14
                 variant: "text"
                 onClicked: console.log("Maximize clicked")

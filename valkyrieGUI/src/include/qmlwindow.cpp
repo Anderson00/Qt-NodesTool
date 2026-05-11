@@ -73,7 +73,6 @@ QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent),
             "NodeVariable is created by VariableManager"
             );
 
-        // Register Icons singleton — drop-in replacement for Qaterial.Icons
         qmlRegisterSingletonType(
             QUrl("qrc:/components/Icons.qml"),
             "App.Icons", 1, 0,

@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15 as Contrl
 import QtQuick.Layouts 1.14
 import App.Theme 1.0
 import App.NodeRegistry 1.0
+import App.Icons 1.0
 import ".."
 
 Item {
@@ -80,7 +81,7 @@ Item {
                     Behavior on opacity { NumberAnimation { duration: 120 } }
 
                     ColorIcon {
-                        source: "qrc:/icons/arrow-left.svg"
+                        source: Icons.arrowLeft
                         color: ThemeManager.textColor
                         width: 14; height: 14; anchors.centerIn: parent
                     }
@@ -93,7 +94,7 @@ Item {
                 }
 
                 ColorIcon {
-                    source: "qrc:/icons/magnify.svg"
+                    source: Icons.magnify
                     color: ThemeManager.textColor; opacity: 0.4
                     width: 14; height: 14
                 }
@@ -135,7 +136,7 @@ Item {
                                        ThemeManager.textColor.g,
                                        ThemeManager.textColor.b, 0.2)
                         ColorIcon {
-                            source: "qrc:/icons/close.svg"; color: ThemeManager.textColor
+                            source: Icons.close; color: ThemeManager.textColor
                             width: 9; height: 9; anchors.centerIn: parent
                         }
                         MouseArea {
@@ -176,7 +177,7 @@ Item {
                             ColorIcon {
                                 id: homeIco
                                 visible: index === 0
-                                source: "qrc:/icons/home.svg"
+                                source: Icons.home
                                 width: 12; height: 12; anchors.centerIn: parent
                                 color: index === root.breadcrumbArr.length - 1
                                        ? ThemeManager.textColor : ThemeManager.primaryColor
@@ -253,7 +254,7 @@ Item {
                     width: 24; height: 24
                     visible: root.navState === "category"
                     ColorIcon {
-                        source: root.gridMode ? "qrc:/icons/view-list.svg" : "qrc:/icons/view-grid.svg"
+                        source: root.gridMode ? Icons.viewList : Icons.viewGrid
                         color: ThemeManager.textColor; opacity: 0.55
                         width: 14; height: 14; anchors.centerIn: parent
                     }
@@ -337,7 +338,7 @@ Item {
                                            ThemeManager.primaryColor.b, 0.12)
                             ColorIcon {
                                 anchors.centerIn: parent
-                                source: root._icons[modelData] || "qrc:/icons/folder.svg"
+                                source: root._icons[modelData] || Icons.folder
                                 color: ThemeManager.primaryColor
                                 width: 14; height: 14
                             }
@@ -358,7 +359,7 @@ Item {
                         }
 
                         ColorIcon {
-                            source: "qrc:/icons/chevron-right.svg"
+                            source: Icons.chevronRight
                             color: ThemeManager.textColor; opacity: 0.3
                             width: 12; height: 12
                         }

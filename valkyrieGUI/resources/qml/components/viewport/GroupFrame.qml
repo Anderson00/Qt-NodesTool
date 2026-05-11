@@ -81,7 +81,7 @@ Rectangle {
             }
             AppBarButton {
                 width: 22; height: 22; padding: 0
-                icon.source: 'qrc:/icons/close.svg'
+                icon.source: Icons.close
                 icon.color:  root.frameColor
                 icon.width: 11; icon.height: 11
                 onClicked: root.dissolved()

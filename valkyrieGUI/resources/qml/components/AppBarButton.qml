@@ -3,7 +3,6 @@ import QtQuick.Controls 2.15
 import Qt5Compat.GraphicalEffects
 import App.Theme 1.0
 
-// Drop-in replacement for Qaterial.AppBarButton and Qaterial.ToolButton.
 // Supports the standard AbstractButton icon group (icon.source, icon.color,
 // icon.width, icon.height) with proper SVG ColorOverlay recoloring.
 ToolButton {

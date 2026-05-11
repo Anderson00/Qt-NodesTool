@@ -1,7 +1,7 @@
 // Themed tooltip that follows ThemeManager colors.
 //
 // Why a custom component instead of overriding qrc:/QtQuick/Controls.2/ToolTip.qml:
-// Qaterial/Material loads its ToolTip from the compiled plugin (DLL) internal
+// Material loads its ToolTip from the compiled plugin (DLL) internal
 // resources, not from the engine's import path. The only reliable override is
 // to set `background` and `contentItem` on an individual ToolTip instance —
 // which QQC2 always respects, regardless of the active style.

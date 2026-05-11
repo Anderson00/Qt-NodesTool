@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import App.Theme 1.0
+import App.Icons 1.0
 import ".."
 
 Rectangle {
@@ -45,7 +46,7 @@ Rectangle {
         AppToolButton {
             checkable: true
             checked: root.toolMode === "select"
-            iconSource: "qrc:/icons/cursor-default.svg"
+            iconSource: Icons.cursorDefault
             iconColor: root.toolMode === "select" ? ThemeManager.accentColor : ThemeManager.textColor
             onClicked: root.toolModeActivated("select")
             AppToolTip { text: "Select Tool  [S]"; visible: parent.hovered }
@@ -55,7 +56,7 @@ Rectangle {
         AppToolButton {
             checkable: true
             checked: root.toolMode === "pan"
-            iconSource: "qrc:/icons/hand-back-right.svg"
+            iconSource: Icons.handBackRight
             iconColor: root.toolMode === "pan" ? ThemeManager.accentColor : ThemeManager.textColor
             onClicked: root.toolModeActivated("pan")
             AppToolTip { text: "Pan Tool  [P]"; visible: parent.hovered }
@@ -66,7 +67,7 @@ Rectangle {
         // Zoom Out
         AppToolButton {
             checkable: false
-            iconSource: "qrc:/icons/minus.svg"
+            iconSource: Icons.minus
             iconColor: ThemeManager.textColor
             onClicked: root.zoomOut()
             AppToolTip { text: "Zoom Out"; visible: parent.hovered }
@@ -92,7 +93,7 @@ Rectangle {
         // Zoom In
         AppToolButton {
             checkable: false
-            iconSource: "qrc:/icons/plus.svg"
+            iconSource: Icons.plus
             iconColor: ThemeManager.textColor
             onClicked: root.zoomIn()
             AppToolTip { text: "Zoom In"; visible: parent.hovered }
@@ -105,8 +106,8 @@ Rectangle {
             id: toggleConnsBtn
             checkable: false
             iconSource: root.connectionsMinimized
-                ? "qrc:/icons/chevron-up.svg"
-                : "qrc:/icons/chevron-down.svg"
+                ? Icons.chevronUp
+                : Icons.chevronDown
             iconColor: root.connectionsMinimized
                 ? ThemeManager.accentColor
                 : ThemeManager.textColor
@@ -119,7 +120,7 @@ Rectangle {
         // Center View
         AppToolButton {
             checkable: false
-            iconSource: "qrc:/icons/center-focus.svg"
+            iconSource: Icons.centerFocus
             iconColor: ThemeManager.textColor
             onClicked: root.centerView()
             AppToolTip { text: "Center View"; visible: parent.hovered }
@@ -132,7 +133,7 @@ Rectangle {
             id: snapBtn
             checkable: true
             checked: root.snapEnabled
-            iconSource: "qrc:/icons/magnet.svg"
+            iconSource: Icons.magnet
             iconColor: root.snapEnabled ? "#00e676" : ThemeManager.textColor
             onClicked: root.toggleSnap()
             AppToolTip { text: "Grid Snap  [G]"; visible: parent.hovered; delay: 600 }
@@ -155,7 +156,7 @@ Rectangle {
         // View Options
         AppToolButton {
             id: viewMenuBtn
-            iconSource: "qrc:/icons/eye.svg"
+            iconSource: Icons.eye
             iconColor:  ThemeManager.textColor
             onClicked: viewMenu.open()
             AppToolTip { text: "View Options"; visible: parent.hovered }
@@ -231,17 +232,17 @@ Rectangle {
 
                 AppMenuItem {
                     label:      root.showGrid ? "Hide Grid" : "Show Grid"
-                    iconSource: "qrc:/icons/view-grid.svg"
+                    iconSource: Icons.viewGrid
                     onTriggered: root.toggleGrid()
                 }
                 AppMenuItem {
                     label:      "Toggle FPS"
-                    iconSource: "qrc:/icons/speedometer.svg"
+                    iconSource: Icons.speedometer
                     onTriggered: root.toggleFps()
                 }
                 AppMenuItem {
                     label:      "Toggle Fullscreen"
-                    iconSource: "qrc:/icons/fullscreen.svg"
+                    iconSource: Icons.fullscreen
                     onTriggered: root.toggleFullscreen()
                 }
 
