@@ -1,4 +1,4 @@
-import QtQuick 2.15
+﻿import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import Qaterial 1.0 as Qaterial
@@ -186,7 +186,7 @@ Item {
                 Layout.fillWidth: true; implicitHeight: 30
                 value: root.gaugeMin; from: -1e9; to: 1e9; stepSize: 1; decimals: root.decimals
                 accentColor: root.colorLow
-                onValueModified: root.gaugeMin = newValue
+                onValueModified: function(newValue) { root.gaugeMin = newValue }
             }
 
             Text { text: "Max";  font.pixelSize: 9; color: ThemeManager.textSecondaryColor }
@@ -194,7 +194,7 @@ Item {
                 Layout.fillWidth: true; implicitHeight: 30
                 value: root.gaugeMax; from: -1e9; to: 1e9; stepSize: 1; decimals: root.decimals
                 accentColor: root.colorCrit
-                onValueModified: root.gaugeMax = newValue
+                onValueModified: function(newValue) { root.gaugeMax = newValue }
             }
 
             Text { text: "Warn"; font.pixelSize: 9; color: root.colorWarn }
@@ -202,7 +202,7 @@ Item {
                 Layout.fillWidth: true; implicitHeight: 30
                 value: root.warnThresh; from: root.gaugeMin; to: root.gaugeMax; stepSize: 1; decimals: root.decimals
                 accentColor: root.colorWarn
-                onValueModified: root.warnThresh = newValue
+                onValueModified: function(newValue) { root.warnThresh = newValue }
             }
 
             Text { text: "Crit"; font.pixelSize: 9; color: root.colorCrit }
@@ -210,7 +210,7 @@ Item {
                 Layout.fillWidth: true; implicitHeight: 30
                 value: root.critThresh; from: root.gaugeMin; to: root.gaugeMax; stepSize: 1; decimals: root.decimals
                 accentColor: root.colorCrit
-                onValueModified: root.critThresh = newValue
+                onValueModified: function(newValue) { root.critThresh = newValue }
             }
         }
 
@@ -222,7 +222,7 @@ Item {
                 value: root.gaugeValue
                 from: root.gaugeMin; to: root.gaugeMax; stepSize: 1; decimals: root.decimals
                 showBar: true; accentColor: ThemeManager.primaryColor
-                onValueModified: root.gaugeValue = newValue
+                onValueModified: function(newValue) { root.gaugeValue = newValue }
             }
             Rectangle {
                 Layout.preferredWidth: 60; Layout.preferredHeight: 34; radius: 4

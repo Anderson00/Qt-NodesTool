@@ -137,14 +137,26 @@ void RandomGeneratorViewer::emitAll(double value) {
     if (value < m_minSeen) m_minSeen = value;
     if (value > m_maxSeen) m_maxSeen = value;
 
-    emit lastValueChanged();
-    emit genCountChanged();
-    emit statsChanged();
+    // Node-to-node output signals fire immediately — routing must be synchronous.
     emit currentNumber(value);
     emit outputValue(value);
     emit outputInt(static_cast<int>(std::round(value)));
     emit outputBool(value != 0.0);
     emit outputString(QString::number(value, 'f', m_precision));
+
+    // QML property notifiers are coalesced: at most one flush per event-loop cycle.
+    // At 1 kHz this reduces QML binding re-evaluations from 1000/s to ~60/s.
+    if (!m_statsDirty) {
+        m_statsDirty = true;
+        QTimer::singleShot(0, this, &RandomGeneratorViewer::flushStats);
+    }
+}
+
+void RandomGeneratorViewer::flushStats() {
+    m_statsDirty = false;
+    emit lastValueChanged();
+    emit genCountChanged();
+    emit statsChanged();
 }
 
 double RandomGeneratorViewer::generate() {

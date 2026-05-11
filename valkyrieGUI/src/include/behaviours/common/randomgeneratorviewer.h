@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QJsonObject>
+#include <QTimer>
 #include <behaviours/behaviours.h>
 
 class RandomGeneratorViewer : public Behaviours
@@ -114,8 +115,13 @@ signals:
     // Legacy compat
     void currentNumber(double value);
 
+private slots:
+    void flushStats();
+
 private:
     void emitAll(double value);
+
+    bool   m_statsDirty  = false;
 
     int    m_mode        = UniformFloat;
     double m_rangeMin    = 0.0;

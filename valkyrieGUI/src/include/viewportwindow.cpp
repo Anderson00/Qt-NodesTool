@@ -305,6 +305,38 @@ void ViewPortWindow::recordNodeResize(const QString& uuid,
                                             newX, newY, newW, newH));
 }
 
+void ViewPortWindow::beginUndoMacro(const QString& text) { m_undoStack->beginMacro(text); }
+void ViewPortWindow::endUndoMacro()                      { m_undoStack->endMacro(); }
+
+QVariantMap ViewPortWindow::getNodeData(const QString& uuid) const {
+    auto* b = m_behaviours.value(uuid);
+    if (!b) return {};
+    QVariantMap map;
+    map["path"]   = b->behaviourPath();
+    map["title"]  = b->title();
+    map["infos"]  = b->behaviourInfos().toVariantMap();
+    map["x"]      = b->x();
+    map["y"]      = b->y();
+    map["width"]  = b->width();
+    map["height"] = b->height();
+    map["state"]  = b->saveState().toVariantMap();
+    return map;
+}
+
+QString ViewPortWindow::pasteNode(const QVariantMap& data, double offsetX, double offsetY) {
+    const QString newUuid = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    const QString path    = data.value("path").toString();
+    const QString title   = data.value("title").toString();
+    const QJsonObject infos = QJsonObject::fromVariantMap(data.value("infos").toMap());
+    const QJsonObject state = QJsonObject::fromVariantMap(data.value("state").toMap());
+    const double x = data.value("x").toDouble() + offsetX;
+    const double y = data.value("y").toDouble() + offsetY;
+    const double w = data.value("width").toDouble();
+    const double h = data.value("height").toDouble();
+    const bool ok = addBehaviourWithUuid(path, infos, newUuid, x, y, w, h, title, state);
+    return ok ? newUuid : QString();
+}
+
 // ── Workspace ─────────────────────────────────────────────────────────────────
 
 void ViewPortWindow::restoreViewport(qreal x, qreal y, qreal scale) {

@@ -12,6 +12,21 @@ Item {
     property var behaviourObject
     property bool allOpened: true
 
+    // Staggered async loading — one section activates every 80 ms so the UI
+    // never blocks. Each Section's Loader is asynchronous; it shows a skeleton
+    // shimmer while the component tree is being built.
+    property int _loadIndex: -1
+    Timer {
+        id: _stagger
+        interval: 80
+        repeat: true
+        running: true
+        onTriggered: {
+            root._loadIndex++
+            if (root._loadIndex >= 12) stop()
+        }
+    }
+
     // ------- Tile container for a variant -------
     component Tile: Rectangle {
         id: tile
@@ -50,7 +65,9 @@ Item {
     component Section: Accordion {
         id: sec
         property int contentHeight: 200
+        property int sectionIndex:  0
         opened: root.allOpened
+        loaderActive: sectionIndex <= root._loadIndex
         loaderHeight: contentHeight
         width: parent ? parent.width : 0
 
@@ -107,7 +124,7 @@ Item {
                     text: root.allOpened ? qsTr("Collapse all") : qsTr("Expand all")
                     leftPadding: 24
                     rightPadding: 24
-                    implicitWidth: 140
+                    implicitWidth: 160
                     implicitHeight: 36
                     onClicked: root.allOpened = !root.allOpened
                 }
@@ -115,6 +132,7 @@ Item {
 
             // ===================== BUTTONS =====================
             Section {
+                sectionIndex: 0
                 title: qsTr("Buttons")
                 contentHeight: 280
                 loader: Component {
@@ -184,6 +202,7 @@ Item {
 
             // ===================== SELECTION =====================
             Section {
+                sectionIndex: 1
                 title: qsTr("Selection controls")
                 contentHeight: 210
                 loader: Component {
@@ -228,6 +247,7 @@ Item {
 
             // ===================== TEXT INPUTS =====================
             Section {
+                sectionIndex: 2
                 title: qsTr("Text inputs")
                 contentHeight: 300
                 loader: Component {
@@ -275,6 +295,7 @@ Item {
 
             // ===================== SELECTORS =====================
             Section {
+                sectionIndex: 3
                 title: qsTr("Selectors")
                 contentHeight: 260
                 loader: Component {
@@ -324,6 +345,7 @@ Item {
 
             // ===================== SLIDERS =====================
             Section {
+                sectionIndex: 4
                 title: qsTr("Sliders")
                 contentHeight: 240
                 loader: Component {
@@ -357,6 +379,7 @@ Item {
 
             // ===================== FILE DROP =====================
             Section {
+                sectionIndex: 5
                 title: qsTr("File upload")
                 contentHeight: 160
                 loader: Component {
@@ -372,6 +395,7 @@ Item {
 
             // ===================== ICONS =====================
             Section {
+                sectionIndex: 6
                 title: qsTr("SvgIcon")
                 contentHeight: 120
                 loader: Component {
@@ -404,8 +428,432 @@ Item {
                 }
             }
 
+            // ===================== NEW INPUTS =====================
+            Section {
+                sectionIndex: 7
+                title: qsTr("New Inputs")
+                contentHeight: 440
+                loader: Component {
+                    Item {
+                        Flow {
+                            anchors.fill: parent; anchors.margins: 8; spacing: 12
+
+                            Tile {
+                                label: "RangeSlider"; width: 280
+                                RangeSlider {
+                                    anchors.left: parent.left; anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    from: 0; to: 100; firstValue: 20; secondValue: 75
+                                    showLabels: true; showValues: true
+                                }
+                            }
+                            Tile {
+                                label: "SegmentedControl"; width: 300
+                                SegmentedControl {
+                                    anchors.left: parent.left; anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    model: ["Day", "Week", "Month", "Year"]
+                                }
+                            }
+                            Tile {
+                                label: "MultiSelect"; width: 280; height: 140
+                                MultiSelect {
+                                    anchors.left: parent.left; anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    model: ["Alpha", "Beta", "Gamma", "Delta", "Epsilon"]
+                                    selected: ["Alpha", "Gamma"]
+                                    placeholder: "Choose items…"
+                                }
+                            }
+                            Tile {
+                                label: "OTPInput"; width: 300
+                                OTPInput {
+                                    anchors.centerIn: parent
+                                    digits: 6; numbersOnly: true
+                                }
+                            }
+                            Tile {
+                                label: "TimePicker"; width: 260; height: 200
+                                TimePicker {
+                                    anchors.centerIn: parent
+                                    hours: 14; minutes: 30; seconds: 0; showSeconds: true
+                                }
+                            }
+                            Tile {
+                                label: "AutocompleteInput"; width: 280; height: 140
+                                AutocompleteInput {
+                                    anchors.left: parent.left; anchors.right: parent.right
+                                    anchors.top: parent.top
+                                    suggestions: ["Apple", "Banana", "Cherry", "Date", "Elderberry", "Fig", "Grape"]
+                                    placeholder: "Type a fruit…"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ===================== DISPLAY & FEEDBACK =====================
+            Section {
+                sectionIndex: 8
+                title: qsTr("Display & Feedback")
+                contentHeight: 520
+                loader: Component {
+                    Item {
+                        Flow {
+                            anchors.fill: parent; anchors.margins: 8; spacing: 12
+
+                            Tile {
+                                label: "Badge"; width: 200; height: 130
+                                Row {
+                                    anchors.centerIn: parent; spacing: 14
+                                    Badge { count: 3 }
+                                    Badge { count: 99; max: 50; badgeColor: ThemeManager.warningColor }
+                                    Badge { count: -1 }
+                                }
+                            }
+                            Tile {
+                                label: "Chip"; width: 260; height: 130
+                                Flow {
+                                    anchors.fill: parent; spacing: 8
+                                    Chip { label: "Debug"; closeable: true }
+                                    Chip { label: "Active"; selectable: true; selected: true }
+                                    Chip { label: "CPU"; chipColor: Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.18) }
+                                }
+                            }
+                            Tile {
+                                label: "Avatar"; width: 260; height: 130
+                                Row {
+                                    anchors.centerIn: parent; spacing: 12
+                                    Avatar { name: "Alice"; size: 44; showStatus: true; status: "online" }
+                                    Avatar { name: "Bob"; size: 44; showStatus: true; status: "away" }
+                                    Avatar { name: "Carol"; size: 44; showStatus: true; status: "busy" }
+                                    Avatar { size: 44; showStatus: true; status: "offline" }
+                                }
+                            }
+                            Tile {
+                                label: "ProgressCircle"; width: 200; height: 160
+                                Row {
+                                    anchors.centerIn: parent; spacing: 16
+                                    ProgressCircle { value: 0.72; size: 64; showLabel: true; label: "72%" }
+                                    ProgressCircle { value: 0.35; size: 48; strokeWidth: 4; progressColor: ThemeManager.warningColor; showLabel: true; label: "35%" }
+                                }
+                            }
+                            Tile {
+                                label: "Skeleton"; width: 240; height: 150
+                                Column {
+                                    anchors.fill: parent; spacing: 8
+                                    Skeleton { width: parent.width; height: 14; shape: "text" }
+                                    Skeleton { width: parent.width * 0.8; height: 14; shape: "text" }
+                                    Skeleton { width: parent.width; height: 14; shape: "text" }
+                                    Row { spacing: 10; Skeleton { width: 36; height: 36; shape: "circle" }
+                                    Skeleton { width: 140; height: 36 } }
+                                }
+                            }
+                            Tile {
+                                label: "StatusDot"; width: 200; height: 160
+                                Column {
+                                    anchors.fill: parent; spacing: 8
+                                    StatusDot { status: "online";  showLabel: true; showPulse: true }
+                                    StatusDot { status: "away";    showLabel: true }
+                                    StatusDot { status: "busy";    showLabel: true }
+                                    StatusDot { status: "offline"; showLabel: true }
+                                }
+                            }
+                            Tile {
+                                label: "Timeline"; width: 280; height: 220
+                                Timeline {
+                                    anchors.fill: parent
+                                    events: [
+                                        { title: "Build started",   subtitle: "10:02 AM", color: ThemeManager.primaryColor },
+                                        { title: "Tests passed",    subtitle: "10:04 AM", color: ThemeManager.successColor },
+                                        { title: "Deploy queued",   subtitle: "10:05 AM" }
+                                    ]
+                                }
+                            }
+                            Tile {
+                                label: "EmptyState"; width: 260; height: 200
+                                EmptyState {
+                                    anchors.fill: parent
+                                    icon: "📭"
+                                    title: "No results"
+                                    subtitle: "Try adjusting your search"
+                                    actionLabel: "Clear filters"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ===================== DATA & LISTS =====================
+            Section {
+                sectionIndex: 9
+                title: qsTr("Data & Lists")
+                contentHeight: 500
+                loader: Component {
+                    Item {
+                        Column {
+                            anchors.fill: parent; anchors.margins: 8; spacing: 16
+
+                            Text {
+                                text: "DataTable (sortable — click headers)"
+                                color: ThemeManager.textSecondaryColor; font.pixelSize: 11
+                            }
+                            DataTable {
+                                width: parent.width; height: 200
+                                columns: [
+                                    { key: "name",   label: "Name",   width: 140 },
+                                    { key: "type",   label: "Type",   width: 100 },
+                                    { key: "size",   label: "Size",   width: 80  },
+                                    { key: "status", label: "Status", width: 100 }
+                                ]
+                                rows: [
+                                    { name: "kernel32.dll",   type: "DLL",  size: "1.2 MB", status: "Loaded" },
+                                    { name: "ntdll.dll",      type: "DLL",  size: "2.4 MB", status: "Loaded" },
+                                    { name: "user32.dll",     type: "DLL",  size: "0.8 MB", status: "Loaded" },
+                                    { name: "debug_agent",    type: "EXE",  size: "4.1 MB", status: "Running" },
+                                    { name: "libssl.so",      type: "SO",   size: "0.5 MB", status: "Unloaded" }
+                                ]
+                            }
+
+                            Text {
+                                text: "Pagination"
+                                color: ThemeManager.textSecondaryColor; font.pixelSize: 11
+                            }
+                            Pagination {
+                                currentPage: 3; totalPages: 15
+                                onPageChanged: function(p) { console.log("Page:", p) }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ===================== OVERLAYS & MODALS =====================
+            Section {
+                sectionIndex: 10
+                title: qsTr("Overlays & Modals")
+                contentHeight: 200
+                loader: Component {
+                    Item {
+                        property var _snack: snackRef
+                        property var _alert: alertRef
+                        property var _palette: paletteRef
+                        property var _ctx: ctxRef
+
+                        AlertDialog {
+                            id: alertRef
+                            title: "Delete node?"
+                            message: "This action will remove the node and all its connections. This cannot be undone."
+                            type: "danger"; confirmLabel: "Delete"
+                            onConfirmed: console.log("Confirmed deletion")
+                        }
+
+                        Snackbar { id: snackRef }
+
+                        CommandPalette {
+                            id: paletteRef
+                            commands: [
+                                { label: "Add CPU Node",      shortcut: "Ctrl+1" },
+                                { label: "Toggle Dark Mode",  shortcut: "Ctrl+D" },
+                                { label: "Save Workspace",    shortcut: "Ctrl+S" },
+                                { label: "Open Settings",     shortcut: "Ctrl+," },
+                                { label: "Run All Nodes",     shortcut: "F5"     }
+                            ]
+                            onCommandSelected: function(cmd) { console.log("Cmd:", cmd.label) }
+                        }
+
+                        ContextMenu {
+                            id: ctxRef
+                            items: [
+                                { label: "Copy",       icon: "⎘", shortcut: "Ctrl+C" },
+                                { label: "Paste",      icon: "⌗", shortcut: "Ctrl+V" },
+                                { separator: true },
+                                { label: "Delete",     icon: "✕", danger: true }
+                            ]
+                            onItemSelected: function(i, item) { console.log("Ctx:", item.label) }
+                        }
+
+                        Flow {
+                            anchors.fill: parent; anchors.margins: 8; spacing: 10
+
+                            NewButton {
+                                text: "AlertDialog"
+                                variant: "outlined"
+                                Layout.preferredWidth: 200
+                                leftPadding: 18; rightPadding: 18
+
+                                onClicked: alertRef.open()
+                            }
+                            NewButton {
+                                text: "Snackbar (success)"
+                                variant: "outlined"
+                                Layout.preferredWidth: 200
+                                leftPadding: 18; rightPadding: 18
+                                onClicked: snackRef.show("Workspace saved!", "Undo", "success")
+                            }
+                            NewButton {
+                                text: "Snackbar (danger)"
+                                variant: "outlined"
+                                Layout.preferredWidth: 200
+                                leftPadding: 18; rightPadding: 18
+                                onClicked: snackRef.show("Build failed.", "", "danger")
+                            }
+                            NewButton {
+                                text: "CommandPalette"
+                                variant: "outlined"
+                                Layout.preferredWidth: 200
+                                leftPadding: 18; rightPadding: 18
+                                onClicked: paletteRef.open()
+                            }
+                            NewButton {
+                                text: "ContextMenu"
+                                variant: "outlined"
+                                Layout.preferredWidth: 200
+                                leftPadding: 18; rightPadding: 18
+                                onClicked: ctxRef.openAt(x, y + height + 4)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ===================== NAVIGATION =====================
+            Section {
+                sectionIndex: 11
+                title: qsTr("Navigation")
+                contentHeight: 380
+                loader: Component {
+                    Item {
+                        Column {
+                            anchors.fill: parent; anchors.margins: 8; spacing: 20
+
+                            Text { text: "TabBar"; color: ThemeManager.textSecondaryColor; font.pixelSize: 11 }
+                            TabBar {
+                                width: parent.width; tabHeight: 44
+                                tabs: [
+                                    { label: "Overview",  icon: "⬡" },
+                                    { label: "Nodes",     icon: "◈" },
+                                    { label: "Network",   icon: "⇄" },
+                                    { label: "Settings",  icon: "⚙" }
+                                ]
+                            }
+
+                            Text { text: "Stepper (horizontal)"; color: ThemeManager.textSecondaryColor; font.pixelSize: 11 }
+                            Stepper {
+                                width: parent.width; height: 60
+                                steps: ["Connect", "Configure", "Deploy", "Monitor"]
+                                currentStep: 2
+                            }
+
+                            Text { text: "BreadcrumbBar"; color: ThemeManager.textSecondaryColor; font.pixelSize: 11 }
+                            BreadcrumbBar {
+                                items: [
+                                    { label: "Workspace" },
+                                    { label: "Projects"  },
+                                    { label: "Valkyrie"  },
+                                    { label: "Nodes"     }
+                                ]
+                                onItemClicked: function(i, item) { console.log("Breadcrumb:", item.label) }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ===================== UTILITIES =====================
+            Section {
+                sectionIndex: 12
+                title: qsTr("Utilities")
+                contentHeight: 460
+                loader: Component {
+                    Item {
+                        Flow {
+                            anchors.fill: parent; anchors.margins: 8; spacing: 12
+
+                            Tile {
+                                label: "Divider — labeled"; width: 280
+                                Divider {
+                                    anchors.left: parent.left; anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    label: "OR"
+                                }
+                            }
+                            Tile {
+                                label: "Divider — plain"; width: 200
+                                Divider { anchors.left: parent.left; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter }
+                            }
+
+                            Tile {
+                                label: "LoadingSpinner"; width: 200; height: 130
+                                Row {
+                                    anchors.centerIn: parent; spacing: 20
+                                    LoadingSpinner { size: 20 }
+                                    LoadingSpinner { size: 32; color: ThemeManager.accentColor }
+                                    LoadingSpinner { size: 48; thickness: 5; color: ThemeManager.successColor }
+                                }
+                            }
+
+                            Tile {
+                                label: "SplitPane"; width: 340; height: 160
+                                SplitPane {
+                                    anchors.fill: parent
+                                    orientation: Qt.Horizontal
+                                    initialSplit: 0.4
+                                    firstPanel: Component {
+                                        Rectangle { color: Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.12)
+                                            Text { anchors.centerIn: parent; text: "Left"; color: ThemeManager.textColor; font.pixelSize: 12 }
+                                        }
+                                    }
+                                    secondPanel: Component {
+                                        Rectangle { color: Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.12)
+                                            Text { anchors.centerIn: parent; text: "Right"; color: ThemeManager.textColor; font.pixelSize: 12 }
+                                        }
+                                    }
+                                }
+                            }
+
+                            Tile {
+                                label: "CodeBlock"; width: 380; height: 200
+                                CodeBlock {
+                                    anchors.fill: parent
+                                    language: "cpp"
+                                    showCopyButton: true
+                                    code: '#include <QApplication>\n#include "MainWindow.h"\n\nint main(int argc, char *argv[]) {\n    QApplication app(argc, argv);\n    MainWindow w;\n    w.show();\n    return app.exec();\n}'
+                                }
+                            }
+
+                            Tile {
+                                label: "Kbd — shortcuts"; width: 300; height: 140
+                                Column {
+                                    anchors.fill: parent; spacing: 10
+                                    Row { spacing: 12
+                                        Text { text: "Save:";      color: ThemeManager.textSecondaryColor; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
+                                        Kbd { keys: "Ctrl+S" }
+                                    }
+                                    Row { spacing: 12
+                                        Text { text: "Palette:";   color: ThemeManager.textSecondaryColor; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
+                                        Kbd { keys: "Ctrl+P" }
+                                    }
+                                    Row { spacing: 12
+                                        Text { text: "Undo:";      color: ThemeManager.textSecondaryColor; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
+                                        Kbd { keys: "Ctrl+Z" }
+                                    }
+                                    Row { spacing: 12
+                                        Text { text: "Run all:";   color: ThemeManager.textSecondaryColor; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
+                                        Kbd { keys: ["F5"] }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             // bottom padding
             Item { width: parent.width; height: 12 }
         }
     }
+
 }

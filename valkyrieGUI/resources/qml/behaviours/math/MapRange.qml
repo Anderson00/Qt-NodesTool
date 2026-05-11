@@ -1,4 +1,4 @@
-import QtQuick 2.15
+﻿import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import Qaterial 1.0 as Qaterial
@@ -123,7 +123,7 @@ Item {
             label: "In"; value: root.previewInput
             from: -1e9; to: 1e9; stepSize: 1.0; decimals: 4
             showBar: true; accentColor: "#3498db"
-            onValueModified: {
+            onValueModified: function(newValue) {
                 root.previewInput = newValue
                 if (behaviourObject) behaviourObject.setInputValue(newValue)
             }
@@ -143,14 +143,14 @@ Item {
                 label: "Min"; value: root.previewInMin
                 from: -1e9; to: 1e9; stepSize: 1; decimals: 4
                 accentColor: "#3498db"
-                onValueModified: { root.previewInMin = newValue; if (behaviourObject) behaviourObject.setInMin(newValue) }
+                onValueModified: function(newValue) { root.previewInMin = newValue; if (behaviourObject) behaviourObject.setInMin(newValue) }
             }
             NumericInputField {
                 Layout.fillWidth: true; implicitHeight: 34
                 label: "Max"; value: root.previewInMax
                 from: -1e9; to: 1e9; stepSize: 1; decimals: 4
                 accentColor: "#3498db"
-                onValueModified: { root.previewInMax = newValue; if (behaviourObject) behaviourObject.setInMax(newValue) }
+                onValueModified: function(newValue) { root.previewInMax = newValue; if (behaviourObject) behaviourObject.setInMax(newValue) }
             }
         }
 
@@ -164,14 +164,14 @@ Item {
                 label: "Min"; value: root.previewOutMin
                 from: -1e9; to: 1e9; stepSize: 0.1; decimals: 4
                 accentColor: ThemeManager.primaryColor
-                onValueModified: { root.previewOutMin = newValue; if (behaviourObject) behaviourObject.setOutMin(newValue) }
+                onValueModified: function(newValue) { root.previewOutMin = newValue; if (behaviourObject) behaviourObject.setOutMin(newValue) }
             }
             NumericInputField {
                 Layout.fillWidth: true; implicitHeight: 34
                 label: "Max"; value: root.previewOutMax
                 from: -1e9; to: 1e9; stepSize: 0.1; decimals: 4
                 accentColor: ThemeManager.primaryColor
-                onValueModified: { root.previewOutMax = newValue; if (behaviourObject) behaviourObject.setOutMax(newValue) }
+                onValueModified: function(newValue) { root.previewOutMax = newValue; if (behaviourObject) behaviourObject.setOutMax(newValue) }
             }
         }
 

@@ -1,4 +1,4 @@
-import QtQuick 2.15
+﻿import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import Qaterial 1.0 as Qaterial
@@ -159,7 +159,7 @@ Item {
                 value: behaviourObject ? behaviourObject.rangeMin : 0
                 from: -1e9; to: 1e9; stepSize: 1.0; decimals: 2
                 accentColor: "#3498db"
-                onValueModified: if (behaviourObject) behaviourObject.setRangeMin(newValue)
+                onValueModified: function(newValue) { if (behaviourObject) behaviourObject.setRangeMin(newValue) }
             }
             NumericInputField {
                 Layout.fillWidth: true; implicitHeight: 34
@@ -167,7 +167,7 @@ Item {
                 value: behaviourObject ? behaviourObject.rangeMax : 100
                 from: -1e9; to: 1e9; stepSize: 1.0; decimals: 2
                 accentColor: "#2ecc71"
-                onValueModified: if (behaviourObject) behaviourObject.setRangeMax(newValue)
+                onValueModified: function(newValue) { if (behaviourObject) behaviourObject.setRangeMax(newValue) }
             }
         }
 
@@ -182,14 +182,14 @@ Item {
                 label: "μ"; value: behaviourObject ? behaviourObject.mean : 50
                 from: -1e6; to: 1e6; stepSize: 1.0; decimals: 2
                 accentColor: "#7C4DFF"
-                onValueModified: if (behaviourObject) behaviourObject.setMean(newValue)
+                onValueModified: function(newValue) { if (behaviourObject) behaviourObject.setMean(newValue) }
             }
             NumericInputField {
                 Layout.fillWidth: true; implicitHeight: 34
                 label: "σ"; value: behaviourObject ? behaviourObject.stddev : 15
                 from: 0.001; to: 1e6; stepSize: 1.0; decimals: 3
                 accentColor: "#7C4DFF"
-                onValueModified: if (behaviourObject) behaviourObject.setStddev(newValue)
+                onValueModified: function(newValue) { if (behaviourObject) behaviourObject.setStddev(newValue) }
             }
         }
 
@@ -240,7 +240,7 @@ Item {
                 value: behaviourObject ? behaviourObject.probability * 100 : 50
                 from: 0; to: 100; stepSize: 1; decimals: 1; suffix: "%"
                 showBar: true; accentColor: "#00C853"
-                onValueModified: if (behaviourObject) behaviourObject.setProbability(newValue / 100.0)
+                onValueModified: function(newValue) { if (behaviourObject) behaviourObject.setProbability(newValue / 100.0) }
             }
         }
 

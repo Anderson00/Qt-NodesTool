@@ -26,6 +26,9 @@ Rectangle {
     // Currently focused node (may be null)
     property var nodeOnFocus: null
 
+    // Number of selected nodes (0 or 1 = show name, >1 = show count)
+    property int selectedCount: 0
+
     // Total number of nodes on the canvas
     property int nodeCount: 0
 
@@ -156,7 +159,9 @@ Rectangle {
             Layout.alignment: Qt.AlignVCenter
             Layout.maximumWidth: 160
             visible: nodeOnFocus !== undefined && nodeOnFocus !== null
-            text: nodeOnFocus ? (nodeOnFocus.behaviourObject ? nodeOnFocus.behaviourObject.title : "Node") : ""
+            text: selectedCount > 1
+                  ? selectedCount + " selected"
+                  : (nodeOnFocus ? (nodeOnFocus.behaviourObject ? nodeOnFocus.behaviourObject.title : "Node") : "")
             elide: Text.ElideRight
         }
 
@@ -186,6 +191,8 @@ Rectangle {
             }
             opacity: 0.85
             Layout.alignment: Qt.AlignVCenter
+            Layout.fillWidth: true
+            elide: Text.ElideLeft
             visible: LogManager.lastMessage !== ""
         }
 

@@ -1,5 +1,6 @@
 #include "linechartviewer.h"
 #include "behaviours/behaviourregistry.h"
+#include <QtCharts/QXYSeries>
 
 REGISTER_BEHAVIOUR(LineChartViewer, "Line Chart", "Advanced XY line chart with multi-series, zoom/pan and live stats", "common", 13, 0)
 
@@ -21,6 +22,13 @@ LineChartViewer::LineChartViewer(QObject *parent)
         "internalSetYRange(double,double)",
         "internalResetZoom()"
     }));
+
+    // Flush buffered points to QML at ~60 fps instead of on every incoming data signal.
+    // This decouples a high-frequency data source (e.g. 1 kHz timer) from the render rate.
+    m_flushTimer.setInterval(16);
+    m_flushTimer.setTimerType(Qt::CoarseTimer);
+    connect(&m_flushTimer, &QTimer::timeout, this, &LineChartViewer::flushPending);
+    m_flushTimer.start();
 }
 
 QMap<QString, QVariant> LineChartViewer::loadInfos()
@@ -45,17 +53,45 @@ int     LineChartViewer::maxPoints()  const { return m_maxPoints; }
 bool    LineChartViewer::autoScale()  const { return m_autoScale; }
 QString LineChartViewer::chartTitle() const { return m_chartTitle; }
 
-// ── Public slots → emit internal signals consumed by QML ─────────────────────
-void LineChartViewer::appendXY(double x, double y)                        { emit internalAppendXY(x, y); }
-void LineChartViewer::appendYAutoIncrementX(double y)                     { emit internalappendYAutoIncrementX(y); }
-void LineChartViewer::appendYAutoIncrementXChannel2(double y)              { emit internalAppendYAutoIncrementXChannel2(y); }
-void LineChartViewer::appendXYToSeries(int seriesIdx, double x, double y) { emit internalAppendXYToSeries(seriesIdx, x, y); }
-void LineChartViewer::appendYToSeries(int seriesIdx, double y)            { emit internalAppendYToSeries(seriesIdx, y); }
-void LineChartViewer::clearChart()                                        { emit internalClearChart(); }
-void LineChartViewer::clearSeries(int seriesIdx)                          { emit internalClearSeries(seriesIdx); }
-void LineChartViewer::setXRange(double min, double max)                   { emit internalSetXRange(min, max); }
-void LineChartViewer::setYRange(double min, double max)                   { emit internalSetYRange(min, max); }
-void LineChartViewer::resetZoom()                                         { emit internalResetZoom(); }
+// ── Public slots → buffer data points; other ops emit immediately ─────────────
+
+// Data append slots: push into pending buffer; flushed to QML by m_flushTimer.
+void LineChartViewer::appendXY(double x, double y)
+    { m_pending.append({AppendXY,   0,         x,   y}); }
+void LineChartViewer::appendYAutoIncrementX(double y)
+    { m_pending.append({AppendYAuto, 0,        0.0, y}); }
+void LineChartViewer::appendYAutoIncrementXChannel2(double y)
+    { m_pending.append({AppendYAuto, 1,        0.0, y}); }
+void LineChartViewer::appendXYToSeries(int seriesIdx, double x, double y)
+    { m_pending.append({AppendXY,   seriesIdx,  x,   y}); }
+void LineChartViewer::appendYToSeries(int seriesIdx, double y)
+    { m_pending.append({AppendYAuto, seriesIdx, 0.0, y}); }
+
+// Non-data ops are immediate so that clear/range changes take effect right away.
+void LineChartViewer::clearChart() {
+    m_pending.clear();
+    emit internalClearChart();
+}
+void LineChartViewer::clearSeries(int seriesIdx) {
+    m_pending.removeIf([seriesIdx](const PendingPoint &p){ return p.series == seriesIdx; });
+    emit internalClearSeries(seriesIdx);
+}
+void LineChartViewer::setXRange(double min, double max) { emit internalSetXRange(min, max); }
+void LineChartViewer::setYRange(double min, double max) { emit internalSetYRange(min, max); }
+void LineChartViewer::resetZoom()                       { emit internalResetZoom(); }
+
+// ── Flush: emit all pending points to QML in one synchronous burst ────────────
+void LineChartViewer::flushPending() {
+    if (m_pending.isEmpty()) return;
+    QVector<PendingPoint> pts;
+    pts.swap(m_pending);
+    for (const auto &p : std::as_const(pts)) {
+        if (p.op == AppendXY)
+            emit internalAppendXYToSeries(p.series, p.x, p.y);
+        else
+            emit internalAppendYToSeries(p.series, p.y);
+    }
+}
 
 void LineChartViewer::setMaxPoints(int max)
 {
@@ -79,6 +115,17 @@ void LineChartViewer::setChartTitle(const QString &title)
         m_chartTitle = title;
         emit chartTitleChanged();
     }
+}
+
+void LineChartViewer::replaceSeriesPoints(QObject *series, const QVariantList &points)
+{
+    auto *xySeries = qobject_cast<QXYSeries *>(series);
+    if (!xySeries) return;
+    QList<QPointF> pts;
+    pts.reserve(points.size());
+    for (const QVariant &v : points)
+        pts.append(v.toPointF());
+    xySeries->replace(pts);
 }
 
 QJsonObject LineChartViewer::saveState() const {

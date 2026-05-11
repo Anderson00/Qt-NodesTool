@@ -1,4 +1,4 @@
-import QtQuick 2.15
+﻿import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import Qaterial 1.0 as Qaterial
@@ -87,7 +87,7 @@ Item {
             stepSize: 0.1; decimals: 4
             showBar: false
             accentColor: ThemeManager.primaryColor
-            onValueModified: if (behaviourObject) behaviourObject.setInput(newValue)
+            onValueModified: function(newValue) { if (behaviourObject) behaviourObject.setInput(newValue) }
         }
     }
 }

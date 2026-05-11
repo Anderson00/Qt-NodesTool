@@ -92,7 +92,7 @@ Item {
                                              : (active ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.14) : "transparent")
                     border.color: active ? ThemeManager.primaryColor : "transparent"; border.width: 1
                     Text { anchors.centerIn: parent; text: tb.lbl; font.pixelSize: 11; color: tb.active ? ThemeManager.primaryColor : ThemeManager.textSecondaryColor }
-                    ToolTip.visible: tbm.containsMouse && tip !== ""; ToolTip.text: tip; ToolTip.delay: 700
+                    AppToolTip { text: tip; visible: tbm.containsMouse && tip !== ""; delay: 700 }
                     MouseArea { id: tbm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: tb.clicked() }
                 }
 

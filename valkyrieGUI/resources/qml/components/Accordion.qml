@@ -13,8 +13,9 @@ ColumnLayout {
     // -- Public API --
     property alias title: titleLabel.text
     property alias loader: loaderBody.sourceComponent
-    property int loaderHeight: 0
-    property bool opened: false
+    property int  loaderHeight: 0
+    property bool opened:       false
+    property bool loaderActive: true   // set false to defer instantiation
 
     // -- Theming --
     property color headerColor: ThemeManager.foregroundColor
@@ -118,6 +119,31 @@ ColumnLayout {
             id: loaderBody
             anchors.fill: parent
             anchors.margins: 4
+            active: root.loaderActive
+            asynchronous: true
+        }
+
+        // Skeleton shown while the section content is loading / not yet active
+        Column {
+            visible: root.opened && loaderBody.status !== Loader.Ready
+            opacity: visible ? 1.0 : 0.0
+            Behavior on opacity { NumberAnimation { duration: 200 } }
+            anchors { top: parent.top; left: parent.left; right: parent.right; margins: 16 }
+            spacing: 10
+            topPadding: 8
+
+            Row {
+                spacing: 12
+                Skeleton { width: 180; height: 80 }
+                Skeleton { width: 180; height: 80 }
+                Skeleton { width: 180; height: 80 }
+            }
+            Row {
+                spacing: 8
+                Skeleton { width: 220; height: 14; shape: "text" }
+                Item { width: 20; height: 1 }
+                Skeleton { width: 140; height: 14; shape: "text" }
+            }
         }
     }
 }

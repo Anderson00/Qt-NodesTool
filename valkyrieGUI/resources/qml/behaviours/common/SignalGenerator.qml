@@ -1,4 +1,4 @@
-import QtQuick 2.15
+﻿import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import QtCharts 2.15
@@ -224,7 +224,7 @@ Item {
             label: "Hz"; value: root.frequency
             from: 0.001; to: 10000; stepSize: 0.1; decimals: 3
             accentColor: root._wc
-            onValueModified: { root.frequency = newValue; resetChart() }
+            onValueModified: function(newValue) { root.frequency = newValue; resetChart() }
         }
 
         NumericInputField {
@@ -232,7 +232,7 @@ Item {
             label: "A"; value: root.amplitude
             from: 0; to: 1e6; stepSize: 0.1; decimals: 3
             accentColor: root._wc
-            onValueModified: root.amplitude = newValue
+            onValueModified: function(newValue) { root.amplitude = newValue }
         }
 
         NumericInputField {
@@ -240,15 +240,15 @@ Item {
             label: "DC"; value: root.dcOffset
             from: -1e6; to: 1e6; stepSize: 0.1; decimals: 3
             accentColor: ThemeManager.textSecondaryColor
-            onValueModified: root.dcOffset = newValue
+            onValueModified: function(newValue) { root.dcOffset = newValue }
         }
 
         NumericInputField {
             Layout.fillWidth: true; implicitHeight: 34
-            label: "φ"; value: root.phase; suffix: "°"
+            label: "Ï†"; value: root.phase; suffix: "Â°"
             from: 0; to: 360; stepSize: 1; decimals: 1; showBar: true
             accentColor: root._wc
-            onValueModified: root.phase = newValue
+            onValueModified: function(newValue) { root.phase = newValue }
         }
 
         NumericInputField {
@@ -257,7 +257,7 @@ Item {
             label: "D"; value: root.dutyCycle; suffix: "%"
             from: 1; to: 99; stepSize: 1; decimals: 1; showBar: true
             accentColor: root._wc
-            onValueModified: root.dutyCycle = newValue
+            onValueModified: function(newValue) { root.dutyCycle = newValue }
         }
 
         // ── Controls ───────────────────────────────────────────────────────

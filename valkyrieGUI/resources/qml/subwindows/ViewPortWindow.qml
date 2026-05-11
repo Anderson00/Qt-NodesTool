@@ -33,6 +33,40 @@ Rectangle {
     //Behaviours properties
     property var nodeOnFocus
 
+    // Multi-select
+    property var    selectedNodes:   []      // all currently selected node items
+    property string toolMode:        "pan"   // "pan" | "select"
+    property bool   isShiftHeld:     false
+    property var    _groupLeader:    null
+    property var    _groupOffsets:   []
+    // Rubber-band (canvas-space coords, before zoom/scale transform)
+    property bool   isRubberBanding: false
+    property real   rubberStartX:    0
+    property real   rubberStartY:    0
+    property real   rubberEndX:      0
+    property real   rubberEndY:      0
+
+    // Group frame drag (mirrors the _groupLeader pattern for multi-select)
+    property var _activeFrame:   null   // GroupFrame item being dragged
+    property var _frameNodeRefs: []     // [{node, startX, startY}]
+
+    // Copy / paste clipboard
+    property var clipboard:    null  // { nodes: [...], conns: [...] }
+    property int pasteOffset:  0     // grows by 40 per paste so copies don't overlap
+
+    // Group frame colors (cycled on creation)
+    readonly property var _frameColors: ["#4CAF50","#2196F3","#FF9800","#9C27B0","#F44336","#00BCD4","#FF5722","#607D8B"]
+    property int _frameColorIdx: 0
+
+    // ── Camera / Visualization state ─────────────────────────────────────────
+    property bool showCamera:        false
+    property bool showVisualization: false
+    // Camera rect in world (canvas) coordinates — owned by CameraFrameItem
+    property real cameraWorldX: 4600
+    property real cameraWorldY: 4775
+    property real cameraWorldW: 800
+    property real cameraWorldH: 800 / (Screen.width / Screen.height)
+
     // World-space point kept at the center of the view.
     // Updated whenever the canvas is panned or zoomed.
     // Initial value = (5000, 5000) = canvas center = "home" = display (0, 0).
@@ -41,6 +75,83 @@ Rectangle {
 
     property var rectsArray: ListModel {}
     property bool allConnectionsMinimized: false
+
+    property bool isCloning: false
+    property bool _isPastingVisualization: false
+    property bool _wasFullScreenBeforePlay: false
+
+    // Detecção robusta de Fullscreen (compara dimensões da janela com a tela)
+    readonly property bool isActuallyFullScreen: (root.width >= Screen.width - 5 && root.height >= Screen.height - 5)
+
+    function startVisualization() {
+        if (isCloning) return
+        isCloning = true
+        root.showVisualization = true
+        
+        Qt.callLater(function() {
+            root._isPastingVisualization = true
+            
+            // 1. Identify nodes in camera area
+            let nodesToClone = []
+            for (let i = 0; i < nodes.model.count; i++) {
+                let item = nodes.model.get(i)
+                if (item.isVisualization) continue
+                
+                let obj = item.object
+                if (obj.x + obj.width >= root.cameraWorldX && obj.x <= root.cameraWorldX + root.cameraWorldW &&
+                    obj.y + obj.height >= root.cameraWorldY && obj.y <= root.cameraWorldY + root.cameraWorldH) {
+                    nodesToClone.push(item.uuid)
+                }
+            }
+            
+            // 2. Clone nodes and map UUIDs
+            let uuidMap = {}
+            nodesToClone.forEach(oldUuid => {
+                let data = viewPort.getNodeData(oldUuid)
+                let newUuid = viewPort.pasteNode(data, 0, 0)
+                if (newUuid) uuidMap[oldUuid] = newUuid
+            })
+            
+            // 3. Clone connections
+            nodesToClone.forEach(oldUuid => {
+                let conns = viewPort.getNodeConnections(oldUuid)
+                conns.forEach(c => {
+                    let outUuid = c.outputUuid; let inUuid = c.inputUuid
+                    if (uuidMap[outUuid] && uuidMap[inUuid]) {
+                        viewPort.addConnectionByUuids(uuidMap[outUuid], c.outputMethod,
+                                                      uuidMap[inUuid], c.inputMethod)
+                    }
+                })
+            })
+            
+            root._isPastingVisualization = false
+            isCloning = false
+            
+            // Armazena o estado atual (não forçamos mais o fullscreen na janela principal)
+            root._wasFullScreenBeforePlay = root.isActuallyFullScreen
+            /*
+            if (!root._wasFullScreenBeforePlay) {
+                viewPort.setFullScreen(true)
+            }
+            */
+        })
+    }
+
+    function stopVisualization() {
+        // Se entramos em fullscreen apenas para o play, saímos ao dar stop
+        /*
+        if (root.isActuallyFullScreen && !root._wasFullScreenBeforePlay) {
+            viewPort.setFullScreen(true)
+        }
+        */
+
+        for (let i = nodes.model.count - 1; i >= 0; i--) {
+            let item = nodes.model.get(i)
+            if (item.isVisualization) {
+                viewPort.removeBehaviourObject(item.object)
+            }
+        }
+    }
 
     // ── Grid snap ──────────────────────────────────────────────────────────
     // Read-only mirror of GlobalProperties — all mutations go through GlobalProperties
@@ -252,18 +363,6 @@ Rectangle {
 
     signal nodeConnected(var node1, var node2)
 
-    onNodeOnFocusChanged: {
-        // Deselect all nodes, then mark the new focused one
-        for (let i = 0; i < nodes.model.count; i++) {
-            let item = nodes.itemAt(i)
-            if (item) item.isSelected = false
-        }
-        if (nodeOnFocus) {
-            nodeOnFocus.isSelected = true
-            console.log('>>' + nodeOnFocus.behaviourObject.title)
-        }
-    }
-
     property bool rightDrawerOpened: false
     property bool bottomDrawerOpened: false
     property bool isAnimatingCenter: false
@@ -294,13 +393,24 @@ Rectangle {
         target: viewPort
 
         function onBehaviourAdded(obj){
-            nodes.model.append({'object': obj, 'uuid': viewPort.getUUIDFromBehaviour(obj)})
+            nodes.model.append({
+                'object': obj, 
+                'uuid': viewPort.getUUIDFromBehaviour(obj),
+                'isVisualization': root._isPastingVisualization
+            })
         }
 
         function onBehavioursCleared() {
+            root.selectedNodes = []
+            root.nodeOnFocus   = null
             nodeConnections.model.clear()
             nodes.model.clear()
             rectsArray.clear()
+            frameModel.clear()
+            root._activeFrame    = null
+            root._frameNodeRefs  = []
+            root.clipboard       = null
+            root.pasteOffset     = 0
         }
 
         function onViewportRestoreRequested(x, y, scale) {
@@ -309,9 +419,25 @@ Rectangle {
             mycanvas.y = y
         }
 
+        function onWindowFullScreen(full) {
+            root.isFullScreen = full
+        }
+
         function onBehaviourRemoved(obj, uuid) {
             for (var i = 0; i < nodes.model.count; i++) {
                 if (nodes.model.get(i).uuid === uuid) {
+                    // Clean selectedNodes before the item is destroyed
+                    var item = nodes.itemAt(i)
+                    if (item) {
+                        var si = root.selectedNodes.indexOf(item)
+                        if (si >= 0) {
+                            var arr = root.selectedNodes.slice()
+                            arr.splice(si, 1)
+                            root.selectedNodes = arr
+                            if (root.nodeOnFocus === item)
+                                root.nodeOnFocus = arr.length > 0 ? arr[arr.length - 1] : null
+                        }
+                    }
                     nodes.model.remove(i)
                     break
                 }
@@ -413,6 +539,211 @@ Rectangle {
         _compactZ()
     }
 
+    // ── Multi-select ──────────────────────────────────────────────────────────────
+
+    function _setSelection(items) {
+        for (var i = 0; i < nodes.model.count; i++) {
+            var it = nodes.itemAt(i)
+            if (it) it.isSelected = false
+        }
+        selectedNodes = items.slice()
+        for (var j = 0; j < selectedNodes.length; j++)
+            selectedNodes[j].isSelected = true
+        nodeOnFocus = selectedNodes.length > 0 ? selectedNodes[selectedNodes.length - 1] : null
+    }
+
+    function _addToSelection(item) {
+        var idx = selectedNodes.indexOf(item)
+        if (idx >= 0) {
+            item.isSelected = false
+            var arr = selectedNodes.slice()
+            arr.splice(idx, 1)
+            selectedNodes = arr
+            nodeOnFocus = arr.length > 0 ? arr[arr.length - 1] : null
+        } else {
+            item.isSelected = true
+            var arr2 = selectedNodes.slice()
+            arr2.push(item)
+            selectedNodes = arr2
+            nodeOnFocus = item
+        }
+    }
+
+    function _clearSelection() {
+        for (var i = 0; i < nodes.model.count; i++) {
+            var it = nodes.itemAt(i)
+            if (it) it.isSelected = false
+        }
+        selectedNodes = []
+        nodeOnFocus = null
+    }
+
+    function _selectNodesInRect(rx1, ry1, rx2, ry2) {
+        var toSelect = []
+        for (var i = 0; i < nodes.model.count; i++) {
+            var it = nodes.itemAt(i)
+            if (!it) continue
+            if ((it.x + it.width) > rx1 && it.x < rx2 &&
+                (it.y + it.height) > ry1 && it.y < ry2)
+                toSelect.push(it)
+        }
+        if (toSelect.length > 0) _setSelection(toSelect)
+        else                     _clearSelection()
+    }
+
+    function _deleteSelected() {
+        if (selectedNodes.length === 0) return
+        var uuids = []
+        for (var i = 0; i < selectedNodes.length; i++)
+            uuids.push(viewPort.getUUIDFromBehaviour(selectedNodes[i].behaviourObject))
+        _clearSelection()
+        if (uuids.length === 1) {
+            viewPort.removeNodeWithUndo(uuids[0])
+        } else {
+            viewPort.beginUndoMacro("Delete " + uuids.length + " nodes")
+            for (var j = 0; j < uuids.length; j++)
+                viewPort.removeNodeWithUndo(uuids[j])
+            viewPort.endUndoMacro()
+        }
+    }
+
+    function _setupGroupDrag(leader) {
+        // Always reset first so stale state never leaks into the next drag
+        _groupLeader  = null
+        _groupOffsets = []
+        if (selectedNodes.length <= 1 || selectedNodes.indexOf(leader) < 0) return
+        _groupLeader = leader
+        for (var i = 0; i < selectedNodes.length; i++) {
+            var n = selectedNodes[i]
+            if (n === leader) continue
+            _groupOffsets.push({
+                node:   n,
+                dx:     n.x - leader.x,
+                dy:     n.y - leader.y,
+                startX: n.x,
+                startY: n.y
+            })
+        }
+    }
+
+    // Called by the root-level Connections watcher whenever the drag leader moves.
+    function _syncGroupFollowers() {
+        if (!_groupLeader || _groupOffsets.length === 0) return
+        var lx = _groupLeader.x
+        var ly = _groupLeader.y
+        for (var i = 0; i < _groupOffsets.length; i++) {
+            var go = _groupOffsets[i]
+            // Disable the Behavior animation so the follower moves instantly with the leader.
+            // isGroupFollowing = true → Behavior.enabled = false (synchronous in QML).
+            go.node.isGroupFollowing = true
+            go.node.x = lx + go.dx
+            go.node.y = ly + go.dy
+            go.node.isGroupFollowing = false
+            if (go.node.behaviourObject) {
+                go.node.behaviourObject.x = go.node.x
+                go.node.behaviourObject.y = go.node.y
+            }
+        }
+    }
+
+    // ── Copy / Paste / Duplicate ──────────────────────────────────────────────────
+
+    function _copySelected() {
+        if (selectedNodes.length === 0) return
+        var cbUuids = [], cbNodes = []
+        for (var i = 0; i < selectedNodes.length; i++) {
+            var uuid = viewPort.getUUIDFromBehaviour(selectedNodes[i].behaviourObject)
+            cbUuids.push(uuid)
+            cbNodes.push(viewPort.getNodeData(uuid))
+        }
+        // Collect only connections whose both endpoints are inside the selection
+        var cbConns = [], seen = {}
+        for (var j = 0; j < cbUuids.length; j++) {
+            var conns = viewPort.getNodeConnections(cbUuids[j])
+            for (var k = 0; k < conns.length; k++) {
+                var c      = conns[k]
+                var outIdx = cbUuids.indexOf(c.outputUuid)
+                var inIdx  = cbUuids.indexOf(c.inputUuid)
+                if (outIdx < 0 || inIdx < 0) continue
+                var key = outIdx + "|" + c.outputMethod + "|" + inIdx + "|" + c.inputMethod
+                if (seen[key]) continue
+                seen[key] = true
+                cbConns.push({ outIdx: outIdx, outMethod: c.outputMethod,
+                               inIdx:  inIdx,  inMethod:  c.inputMethod })
+            }
+        }
+        clipboard   = { nodes: cbNodes, conns: cbConns }
+        pasteOffset = 0
+        var n = cbNodes.length
+        ToastManager.show("Copied " + n + " node" + (n > 1 ? "s" : ""), "success")
+    }
+
+    function _pasteClipboard() {
+        if (!clipboard || clipboard.nodes.length === 0) return
+        pasteOffset += 40
+        var ox = pasteOffset, oy = pasteOffset
+        var newUuids = []
+        var n = clipboard.nodes.length
+        viewPort.beginUndoMacro("Paste " + n + " node" + (n > 1 ? "s" : ""))
+        for (var i = 0; i < n; i++) {
+            var uuid = viewPort.pasteNode(clipboard.nodes[i], ox, oy)
+            newUuids.push(uuid)
+        }
+        for (var j = 0; j < clipboard.conns.length; j++) {
+            var c = clipboard.conns[j]
+            if (newUuids[c.outIdx] && newUuids[c.inIdx])
+                viewPort.addConnectionWithUndo(newUuids[c.outIdx], c.outMethod,
+                                              newUuids[c.inIdx],  c.inMethod)
+        }
+        viewPort.endUndoMacro()
+        // Select pasted nodes after the Repeater has a chance to create items
+        var _uuids = newUuids.slice()
+        Qt.callLater(function() {
+            var pasted = []
+            for (var k = 0; k < _uuids.length; k++) {
+                for (var ni = 0; ni < nodes.model.count; ni++) {
+                    if (nodes.model.get(ni).uuid === _uuids[k]) {
+                        var it = nodes.itemAt(ni)
+                        if (it) pasted.push(it)
+                        break
+                    }
+                }
+            }
+            if (pasted.length > 0) _setSelection(pasted)
+        })
+    }
+
+    // ── Group Frames ──────────────────────────────────────────────────────────────
+
+    function _groupSelected() {
+        if (selectedNodes.length < 2) {
+            ToastManager.show("Select at least 2 nodes to group", "warning")
+            return
+        }
+        var minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9
+        var uuids = []
+        for (var i = 0; i < selectedNodes.length; i++) {
+            var n = selectedNodes[i]
+            if (n.x            < minX) minX = n.x
+            if (n.y            < minY) minY = n.y
+            if (n.x + n.width  > maxX) maxX = n.x + n.width
+            if (n.y + n.height > maxY) maxY = n.y + n.height
+            uuids.push(viewPort.getUUIDFromBehaviour(n.behaviourObject))
+        }
+        var pad   = 24
+        var color = root._frameColors[root._frameColorIdx % root._frameColors.length]
+        root._frameColorIdx++
+        frameModel.append({
+            frameLabel:    "Group",
+            frameColorStr: color,
+            fx: minX - pad,
+            fy: minY - pad - 28,
+            fw: (maxX - minX) + pad * 2,
+            fh: (maxY - minY) + pad * 2 + 28,
+            nodeUuidsJson: JSON.stringify(uuids)
+        })
+    }
+
     // Converts viewport coordinates to mycanvas local coordinates.
     function toLocal(vx, vy) {
         return Qt.point(
@@ -432,10 +763,33 @@ Rectangle {
     }
 
     Keys.enabled: true
-    Keys.onPressed: {
-        if (event.key === Qt.Key_Shift) {
-            event.accepted = true
+    Keys.onPressed: function(event) {
+        switch (event.key) {
+            case Qt.Key_Shift:
+                isShiftHeld = true
+                event.accepted = true
+                break
+            case Qt.Key_Escape:
+                _clearSelection()
+                event.accepted = true
+                break
+            case Qt.Key_Delete:
+            case Qt.Key_Backspace:
+                _deleteSelected()
+                event.accepted = true
+                break
+            case Qt.Key_S:
+                toolMode = "select"
+                event.accepted = true
+                break
+            case Qt.Key_P:
+                toolMode = "pan"
+                event.accepted = true
+                break
         }
+    }
+    Keys.onReleased: function(event) {
+        if (event.key === Qt.Key_Shift) isShiftHeld = false
     }
 
     Qaterial.MiniFabButton {
@@ -503,7 +857,7 @@ Rectangle {
         enabled: false
         visible: mouseAreaGlobal.enabled
 
-        onClicked: {
+        onClicked: function(mouse) {
             mouseAreaGlobal.enabled = false
             isConnecting = false
 
@@ -554,7 +908,7 @@ Rectangle {
             mouse.accepted = false
         }
 
-        onPositionChanged: {
+        onPositionChanged: function(mouse) {
             mouseXX = mouse.x
             mouseYY = mouse.y
             mouse.accepted = false
@@ -578,16 +932,24 @@ Rectangle {
         property real zoomMouseX: 0
         property real zoomMouseY: 0
 
-        onClicked: {
+        onClicked: function(mouse) {
             root.focus = true
+            if (!isConnecting) {
+                var cL = mycanvas.x
+                var cT = mycanvas.y
+                var cR = mycanvas.x + mycanvas.width  * zoomScale
+                var cB = mycanvas.y + mycanvas.height * zoomScale
+                if (mouse.x < cL || mouse.x > cR || mouse.y < cT || mouse.y > cB)
+                    ToastManager.show("Fora da área de trabalho", "warning")
+            }
         }
 
-        onPositionChanged: {
+        onPositionChanged: function(mouse) {
             zoomMouseX = mouse.x
             zoomMouseY = mouse.y
         }
 
-        onWheel: {
+        onWheel: function(wheel) {
             if (isConnecting)
                 return
 
@@ -648,21 +1010,48 @@ Rectangle {
         }
         clip: true
 
-        // ── Workspace item ───────────────────────────────────────────────────────
-        // ── Infinite grid (viewport-fixed canvas) ────────────────────────────────
-        // Viewport-sized only — no large texture allocation.
-        // Infinite illusion via panOffset % cellSize.
-        // LOD: at low zoom only major dots (~190) are drawn, avoiding the
-        //      ~5 184 arc calls that caused drag lag at zoom=1.
-        ViewportGridCanvas {
+        // ── Infinite grid (viewport-fixed) ───────────────────────────────────────
+        // NEW: ViewportGridSGG — direct QSG renderer. Vertex buffer filled in C++
+        // on the render thread; no JS, no QPainter, no texture upload per frame.
+        // To revert: comment this block and uncomment ViewportGridCanvas below.
+        ViewportGridSGG {
             id: gridCanvas
             anchors.fill: parent
-            panX:     mycanvas.x
-            panY:     mycanvas.y
-            zoom:     zoomScale
-            minWgrid: root.minWgrid
-            pattern:  GlobalProperties.gridPattern
+            panX:        mycanvas.x
+            panY:        mycanvas.y
+            zoom:        zoomScale
+            minWgrid:    root.minWgrid
+            pattern:     GlobalProperties.gridPattern
         }
+
+        // ── OLD: Canvas-based grid (kept for easy rollback) ───────────────────────
+        // ViewportGridCanvas {
+        //     id: gridCanvas
+        //     anchors.fill: parent
+        //     panX:     mycanvas.x
+        //     panY:     mycanvas.y
+        //     zoom:     zoomScale
+        //     minWgrid: root.minWgrid
+        //     pattern:  GlobalProperties.gridPattern
+        // }
+
+        // ── Rubber-band selection overlay (screen-space, not scaled with canvas) ──
+        Rectangle {
+            id: rubberBandRect
+            visible: root.isRubberBanding
+            z: 400
+            x:      Math.min(root.rubberStartX, root.rubberEndX) * root.zoomScale + mycanvas.x
+            y:      Math.min(root.rubberStartY, root.rubberEndY) * root.zoomScale + mycanvas.y
+            width:  Math.abs(root.rubberEndX - root.rubberStartX) * root.zoomScale
+            height: Math.abs(root.rubberEndY - root.rubberStartY) * root.zoomScale
+            color:  Qt.rgba(ThemeManager.primaryColor.r,
+                            ThemeManager.primaryColor.g,
+                            ThemeManager.primaryColor.b, 0.10)
+            border.color: ThemeManager.primaryColor
+            border.width: 1
+            radius: 2
+        }
+
         Item {
             id: mycanvas
             width:  10000
@@ -719,14 +1108,52 @@ Rectangle {
                 anchors.fill: parent
 
                 drag.smoothed: true
-                drag.target: isConnecting ? undefined : mycanvas
+                drag.target: isConnecting ? undefined : (root.toolMode === "pan" ? mycanvas : undefined)
 
                 hoverEnabled: true
                 property bool isHoveringConnection: false
+                property bool _rubberWasMeaningful: false
 
-                cursorShape: dragArea.drag.active ? Qt.ClosedHandCursor : (isHoveringConnection ? Qt.PointingHandCursor : Qt.OpenHandCursor)
+                cursorShape: {
+                    if (root.toolMode === "select" && !isConnecting)
+                        return root.isRubberBanding ? Qt.CrossCursor : Qt.ArrowCursor
+                    return dragArea.drag.active ? Qt.ClosedHandCursor
+                                                : (isHoveringConnection ? Qt.PointingHandCursor : Qt.OpenHandCursor)
+                }
 
-                onPositionChanged: {
+                onPressed: function(mouse) {
+                    _rubberWasMeaningful = false
+                    if (root.toolMode === "select" && !isConnecting) {
+                        root.rubberStartX    = mouse.x
+                        root.rubberStartY    = mouse.y
+                        root.rubberEndX      = mouse.x
+                        root.rubberEndY      = mouse.y
+                        root.isRubberBanding = true
+                    }
+                }
+
+                onReleased: {
+                    if (root.isRubberBanding) {
+                        root.isRubberBanding = false
+                        if (_rubberWasMeaningful) {
+                            root._selectNodesInRect(
+                                Math.min(root.rubberStartX, root.rubberEndX),
+                                Math.min(root.rubberStartY, root.rubberEndY),
+                                Math.max(root.rubberStartX, root.rubberEndX),
+                                Math.max(root.rubberStartY, root.rubberEndY))
+                        }
+                    }
+                }
+
+                onPositionChanged: function(mouse) {
+                    if (root.isRubberBanding && root.toolMode === "select") {
+                        root.rubberEndX = mouse.x
+                        root.rubberEndY = mouse.y
+                        var rw = Math.abs(root.rubberEndX - root.rubberStartX) * root.zoomScale
+                        var rh = Math.abs(root.rubberEndY - root.rubberStartY) * root.zoomScale
+                        if (rw > 6 || rh > 6) _rubberWasMeaningful = true
+                        return
+                    }
                     if (isConnecting || dragArea.drag.active) {
                         isHoveringConnection = false;
                         return;
@@ -774,10 +1201,10 @@ Rectangle {
                     isHoveringConnection = hitFound;
                 }
 
-                onClicked: {
+                onClicked: function(mouse) {
                     root.focus = true
-                    nodeOnFocus = null
-
+                    if (_rubberWasMeaningful) { _rubberWasMeaningful = false; return }
+                    root._clearSelection()
                     if (isConnecting) return;
 
                     // ── Hit Test Connections ──
@@ -858,6 +1285,108 @@ Rectangle {
                     y: 5000
                 }
 
+                // ── Camera frame — above all nodes; connections sit at MAX_VALUE ─
+                CameraFrameItem {
+                    id: cameraFrame
+                    visible: root.showCamera
+                    z: Number.MAX_VALUE - 1
+
+                    // All geometry set imperatively to avoid binding conflicts with drag/resize.
+                    Component.onCompleted: {
+                        x      = root.cameraWorldX
+                        y      = root.cameraWorldY
+                        width  = root.cameraWorldW
+                        height = root.cameraWorldH
+                    }
+
+                    onCameraRectChanged: function(wx, wy, ww, wh) {
+                        root.cameraWorldX = wx
+                        root.cameraWorldY = wy
+                        root.cameraWorldW = ww
+                        root.cameraWorldH = wh
+                    }
+
+                    onCloseRequested: root.showCamera = false
+                }
+
+                // ── Group Frames (behind connections and nodes) ───────────────
+                ListModel { id: frameModel }
+
+                Repeater {
+                    id: frameRepeater
+                    model: frameModel
+
+                    delegate: GroupFrame {
+                        id: groupFrameItem
+                        width:      model.fw
+                        height:     model.fh
+                        frameLabel: model.frameLabel
+                        frameColor: model.frameColorStr
+                        z: 0.5  // behind nodes (z≥1), above grid (z=0)
+
+                        // Set position imperatively — avoids binding conflicts with drag
+                        Component.onCompleted: { x = model.fx; y = model.fy }
+
+                        onLabelEdited: function(newLabel) {
+                            frameModel.set(index, { frameLabel: newLabel })
+                        }
+
+                        // On press: capture node start positions so Connections can
+                        // compute absolute new positions (startX + totalDelta).
+                        onFrameDragStarted: {
+                            var uuids = JSON.parse(model.nodeUuidsJson)
+                            var refs  = []
+                            for (var i = 0; i < uuids.length; i++) {
+                                for (var j = 0; j < nodes.model.count; j++) {
+                                    if (nodes.model.get(j).uuid === uuids[i]) {
+                                        var it = nodes.itemAt(j)
+                                        if (it) refs.push({ node: it, startX: it.x, startY: it.y })
+                                        break
+                                    }
+                                }
+                            }
+                            root._activeFrame    = groupFrameItem
+                            root._frameNodeRefs  = refs
+                        }
+
+                        // On release: stop syncing, record undo, persist frame position.
+                        onFrameDragCompleted: function(oldFx, oldFy, newFx, newFy) {
+                            var dx   = newFx - oldFx
+                            var dy   = newFy - oldFy
+                            var refs = root._frameNodeRefs.slice()  // snapshot before clear
+                            root._activeFrame    = null
+                            root._frameNodeRefs  = []
+                            if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return
+                            viewPort.beginUndoMacro("Move group")
+                            for (var i = 0; i < refs.length; i++) {
+                                viewPort.recordNodeMove(
+                                    viewPort.getUUIDFromBehaviour(refs[i].node.behaviourObject),
+                                    refs[i].startX, refs[i].startY,
+                                    refs[i].node.x,  refs[i].node.y)
+                            }
+                            viewPort.endUndoMacro()
+                            frameModel.set(index, { fx: newFx, fy: newFy })
+                        }
+
+                        onContentsSelected: {
+                            var uuids = JSON.parse(model.nodeUuidsJson)
+                            var toSel = []
+                            for (var i = 0; i < uuids.length; i++) {
+                                for (var j = 0; j < nodes.model.count; j++) {
+                                    if (nodes.model.get(j).uuid === uuids[i]) {
+                                        var it = nodes.itemAt(j)
+                                        if (it) toSel.push(it)
+                                        break
+                                    }
+                                }
+                            }
+                            if (toSel.length > 0) root._setSelection(toSel)
+                        }
+
+                        onDissolved: { frameModel.remove(index) }
+                    }
+                }
+
                 Repeater {
                     id: nodeConnections
 
@@ -869,10 +1398,10 @@ Rectangle {
                         smooth: true
                         z: Number.MAX_VALUE
 
-                        property var circleConnPoint
-                        property var circleConnPoint2
-                        property var circleConn2
-                        property var viewRectConn2
+                        property var circleConnPoint:  null
+                        property var circleConnPoint2: null
+                        property var circleConn2:      null
+                        property var viewRectConn2:    null
 
                         property real dashOffset: 0
 
@@ -998,14 +1527,24 @@ Rectangle {
                         viewportSnap:      root.computeSnap
                         viewportEdgeSnap:  root.computeEdgeSnap
 
-                        onXChanged: { if (isDragging && nodeOnFocus !== this) nodeOnFocus = this }
-                        onYChanged: { if (isDragging && nodeOnFocus !== this) nodeOnFocus = this }
+                        visible:           !model.isVisualization
+
+                        // nodePressed fires on every mouse-down — select the node immediately
+                        // unless it's already part of the current selection (preserves group).
+                        onNodePressed: {
+                            if (root.isShiftHeld) return  // shift handled in onNodeClicked
+                            if (!root.selectedNodes.includes(viewComponentRectV2))
+                                root._setSelection([viewComponentRectV2])
+                        }
+
+                        // nodeClicked fires only on a true click (no significant drag),
+                        // so it never fires after a drag — the group stays selected.
+                        onNodeClicked: {
+                            if (root.isShiftHeld)
+                                root._addToSelection(viewComponentRectV2)
+                        }
 
                         onResizeEnded: root._clearSnapGuides()
-
-                        onFocusChanged: {
-                            if (focus) nodeOnFocus = this
-                        }
 
                         onConnectionSocketClicked: function(conn) {
                             isConnecting = true
@@ -1050,14 +1589,41 @@ Rectangle {
 
                         // Bring to front automatically when the user starts dragging.
                         onIsDraggingChanged: {
-                            if (isDragging) root._bringToFront(viewComponentRectV2)
+                            if (isDragging) {
+                                root._bringToFront(viewComponentRectV2)
+                                root._setupGroupDrag(viewComponentRectV2)
+                            }
+                            // Do NOT clear group state here — onIsDraggingChanged fires
+                            // synchronously inside area.onReleased BEFORE nodeDragEnded is
+                            // emitted, so clearing here would wipe offsets before the undo
+                            // macro can read them. Cleanup happens in onNodeDragEnded.
                         }
 
                         onNodeDragEnded: function(oldX, oldY, newX, newY) {
                             root._clearSnapGuides()
-                            viewPort.recordNodeMove(
-                                viewPort.getUUIDFromBehaviour(model.object),
-                                oldX, oldY, newX, newY)
+                            var uuid    = viewPort.getUUIDFromBehaviour(model.object)
+                            var isGroup = (root._groupLeader === viewComponentRectV2
+                                          && root._groupOffsets.length > 0)
+                            // Snapshot offsets NOW — before clearing group state
+                            var offsets = isGroup ? root._groupOffsets.slice() : []
+
+                            // Clear group state so the Connections watcher stops firing
+                            root._groupLeader  = null
+                            root._groupOffsets = []
+
+                            if (isGroup) {
+                                viewPort.beginUndoMacro("Move " + (offsets.length + 1) + " nodes")
+                                viewPort.recordNodeMove(uuid, oldX, oldY, newX, newY)
+                                for (var mi = 0; mi < offsets.length; mi++) {
+                                    var go2 = offsets[mi]
+                                    viewPort.recordNodeMove(
+                                        viewPort.getUUIDFromBehaviour(go2.node.behaviourObject),
+                                        go2.startX, go2.startY, go2.node.x, go2.node.y)
+                                }
+                                viewPort.endUndoMacro()
+                            } else {
+                                viewPort.recordNodeMove(uuid, oldX, oldY, newX, newY)
+                            }
                         }
 
                         onNodeResizeEnded: function(oldX, oldY, oldW, oldH, newX, newY, newW, newH) {
@@ -1082,6 +1648,109 @@ Rectangle {
         }
     }
 
+
+    // ── Fullscreen visualization window loader ──────────────────────────────────
+    Loader {
+        id: fullscreenLoader
+        active: root.showVisualization && vizWindow.isPlaying
+        sourceComponent: Component {
+            FullscreenVisualization {
+                cameraX:      root.cameraWorldX
+                cameraY:      root.cameraWorldY
+                cameraWidth:  root.cameraWorldW
+                cameraHeight: root.cameraWorldH
+                nodesModel:   nodes.model
+                visible:      true
+                onCloseRequested: vizWindow.isPlaying = false
+            }
+        }
+    }
+
+
+    // ── Visualization window overlay ──────────────────────────────────────────────
+    VisualizationWindow {
+        id: vizWindow
+        visible: root.showVisualization
+        z: 300
+
+        x: root.width  - width  - 12
+        y: topBarHeight + 12
+
+        cameraX:      root.cameraWorldX
+        cameraY:      root.cameraWorldY
+        cameraWidth:  root.cameraWorldW
+        cameraHeight: root.cameraWorldH
+        nodesModel:   nodes.model
+
+        onCloseRequested: root.showVisualization = false
+
+        onIsPlayingChanged: {
+            if (isPlaying) root.startVisualization()
+            else root.stopVisualization()
+        }
+
+        onDetachRequested: {
+            externalVizWindow.show()
+            externalVizWindow.raise()
+        }
+    }
+
+    // ── External visualization window ───────────────────────────────────────────
+    ExternalVisualizationWindow {
+        id: externalVizWindow
+        
+        cameraX:      root.cameraWorldX
+        cameraY:      root.cameraWorldY
+        cameraWidth:  root.cameraWorldW
+        cameraHeight: root.cameraWorldH
+        nodesModel:   nodes.model
+        isPlaying:    vizWindow.isPlaying
+        
+        onClosing: {
+            // Sincroniza o estado de 'playing' caso a janela seja fechada manualmente
+            vizWindow.isPlaying = false
+        }
+    }
+
+    // ── Group frame node sync ─────────────────────────────────────────────────────
+    // Same Connections pattern as multi-select group drag.
+    // Uses absolute offsets (startX + totalDelta) — avoids floating-point drift.
+    function _syncFrameNodes() {
+        if (!_activeFrame || _frameNodeRefs.length === 0) return
+        var dx = _activeFrame.x - _activeFrame._pressFrameX
+        var dy = _activeFrame.y - _activeFrame._pressFrameY
+        for (var i = 0; i < _frameNodeRefs.length; i++) {
+            var ref = _frameNodeRefs[i]
+            ref.node.isGroupFollowing = true
+            ref.node.x = ref.startX + dx
+            ref.node.y = ref.startY + dy
+            ref.node.isGroupFollowing = false
+            if (ref.node.behaviourObject) {
+                ref.node.behaviourObject.x = ref.node.x
+                ref.node.behaviourObject.y = ref.node.y
+            }
+        }
+    }
+
+    Connections {
+        target:  root._activeFrame
+        enabled: root._activeFrame !== null
+        function onXChanged() { root._syncFrameNodes() }
+        function onYChanged() { root._syncFrameNodes() }
+    }
+
+    // ── Group drag follower sync ──────────────────────────────────────────────────
+    // Watches the drag leader's x/y directly. enabled only checks _groupLeader
+    // because _groupOffsets is mutated with push() — QML bindings do NOT detect
+    // array mutations (short-circuit evaluation prevents length being tracked as
+    // a dependency). The _syncGroupFollowers guard handles the empty case.
+    Connections {
+        target:  root._groupLeader
+        enabled: root._groupLeader !== null
+
+        function onXChanged() { root._syncGroupFollowers() }
+        function onYChanged() { root._syncGroupFollowers() }
+    }
 
     // ── Snap guide overlays ────────────────────────────────────────────────────
     // All guide elements use root.guideOpacity which fades out after drag ends.
@@ -1208,6 +1877,24 @@ Rectangle {
                 leftPanelDrawer.open()
             }
         }
+        showCamera:        root.showCamera
+        showVisualization: root.showVisualization
+        onCameraToggled: {
+            root.showCamera = !root.showCamera
+            if (root.showCamera) {
+                cameraFrame.x      = root.cameraWorldX
+                cameraFrame.y      = root.cameraWorldY
+                cameraFrame.width  = root.cameraWorldW
+                cameraFrame.height = root.cameraWorldH
+            }
+        }
+        onVisualizationToggled: {
+            root.showVisualization = !root.showVisualization
+            if (root.showVisualization) {
+                vizWindow.x = root.width  - vizWindow.width  - 12
+                vizWindow.y = topBarHeight + 12
+            }
+        }
         onSettingsRequested:    settingsPopup.open()
         onNewProjectRequested:  {
             if (!viewPort.isClean) confirmNewProjectDialog.open()
@@ -1288,6 +1975,78 @@ Rectangle {
         context:  Qt.ApplicationShortcut
         onActivated: root._focusFrame()
     }
+    Shortcut {
+        sequence: "Ctrl+A"
+        context:  Qt.ApplicationShortcut
+        onActivated: {
+            var all = []
+            for (var i = 0; i < nodes.model.count; i++) {
+                var it = nodes.itemAt(i)
+                if (it) all.push(it)
+            }
+            root._setSelection(all)
+        }
+    }
+    Shortcut {
+        sequence: "Ctrl+C"
+        context:  Qt.ApplicationShortcut
+        onActivated: root._copySelected()
+    }
+    Shortcut {
+        sequence: "Ctrl+V"
+        context:  Qt.ApplicationShortcut
+        onActivated: root._pasteClipboard()
+    }
+    Shortcut {
+        sequence: "Ctrl+D"
+        context:  Qt.ApplicationShortcut
+        onActivated: { root._copySelected(); root._pasteClipboard() }
+    }
+    Shortcut {
+        sequence: "Ctrl+G"
+        context:  Qt.ApplicationShortcut
+        onActivated: root._groupSelected()
+    }
+    Shortcut {
+        sequence: "Ctrl+Shift+C"
+        context:  Qt.ApplicationShortcut
+        onActivated: {
+            root.showCamera = !root.showCamera
+            if (root.showCamera) {
+                cameraFrame.x      = root.cameraWorldX
+                cameraFrame.y      = root.cameraWorldY
+                cameraFrame.width  = root.cameraWorldW
+                cameraFrame.height = root.cameraWorldH
+            }
+        }
+    }
+    Shortcut {
+        sequence: "Ctrl+Shift+V"
+        context:  Qt.ApplicationShortcut
+        onActivated: {
+            root.showVisualization = !root.showVisualization
+            if (root.showVisualization) {
+                vizWindow.x = root.width  - vizWindow.width  - 12
+                vizWindow.y = topBarHeight + 12
+            }
+        }
+    }
+    Shortcut {
+        sequence: "Ctrl+Shift+G"
+        context:  Qt.ApplicationShortcut
+        onActivated: {
+            // Dissolve all frames that contain any selected node
+            var selUuids = []
+            for (var i = 0; i < root.selectedNodes.length; i++)
+                selUuids.push(viewPort.getUUIDFromBehaviour(root.selectedNodes[i].behaviourObject))
+            for (var fi = frameModel.count - 1; fi >= 0; fi--) {
+                var fuuids = JSON.parse(frameModel.get(fi).nodeUuidsJson)
+                for (var k = 0; k < fuuids.length; k++) {
+                    if (selUuids.indexOf(fuuids[k]) >= 0) { frameModel.remove(fi); break }
+                }
+            }
+        }
+    }
 
     // Smooth pan+zoom animation used by the F shortcut.
     ParallelAnimation {
@@ -1301,7 +2060,18 @@ Rectangle {
 
     function _focusFrame() {
         var wx, wy
-        if (root.nodeOnFocus) {
+        if (root.selectedNodes.length > 1) {
+            var mnX = 1e9, mnY = 1e9, mxX = -1e9, mxY = -1e9
+            for (var i = 0; i < root.selectedNodes.length; i++) {
+                var n = root.selectedNodes[i]
+                if (n.x            < mnX) mnX = n.x
+                if (n.y            < mnY) mnY = n.y
+                if (n.x + n.width  > mxX) mxX = n.x + n.width
+                if (n.y + n.height > mxY) mxY = n.y + n.height
+            }
+            wx = (mnX + mxX) / 2
+            wy = (mnY + mxY) / 2
+        } else if (root.nodeOnFocus) {
             wx = root.nodeOnFocus.x + root.nodeOnFocus.width  / 2
             wy = root.nodeOnFocus.y + root.nodeOnFocus.height / 2
         } else {
@@ -1354,7 +2124,7 @@ Rectangle {
         focusedNode: root.nodeOnFocus
         nodes: nodes
         onNodeSelected: function(nodeItem) {
-            root.nodeOnFocus = nodeItem
+            root._setSelection([nodeItem])
         }
     }
 
@@ -2268,6 +3038,9 @@ Rectangle {
         showGrid: GlobalProperties.gridPattern !== "none"
         connectionsMinimized: root.allConnectionsMinimized
         snapEnabled: root.snapEnabled
+        toolMode:    root.toolMode
+
+        onToolModeActivated: function(mode) { root.toolMode = mode }
 
         onZoomIn: {
             var newZoom = clamp(zoomScale + 0.5, minZoom, maxZoom)
@@ -2329,8 +3102,68 @@ Rectangle {
         hoverX:          globalHover.point.position.x
         hoverY:          globalHover.point.position.y
         nodeOnFocus:     root.nodeOnFocus
+        selectedCount:   root.selectedNodes.length
         nodeCount:       nodes.model.count
         fpsCount:        viewPort.fpsCount
         showFps:         GlobalProperties.showFps
+    }
+
+    // ── Loading Spinner Overlay ──────────────────────────────────────────────────
+    // Embedded directly to avoid qrc/import issues with new files.
+    Rectangle {
+        id: cloningOverlay
+        anchors.fill: parent
+        color: Qt.rgba(0, 0, 0, 0.4)
+        visible: root.isCloning
+        z: 20000 // On top of everything
+
+        // Block mouse events during cloning
+        MouseArea { anchors.fill: parent; preventStealing: true }
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: 140; height: 110; radius: 12
+            color: Qt.rgba(0.1, 0.1, 0.1, 0.9)
+            border.color: Qt.rgba(1, 1, 1, 0.1)
+
+            Column {
+                anchors.centerIn: parent
+                spacing: 12
+                
+                BusyIndicator {
+                    id: indicator
+                    running: cloningOverlay.visible
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    
+                    contentItem: Item {
+                        implicitWidth:  42; implicitHeight: 42
+                        Canvas {
+                            anchors.fill: parent
+                            onPaint: {
+                                var ctx = getContext("2d")
+                                ctx.reset()
+                                ctx.translate(width/2, height/2)
+                                ctx.rotate(rotation * Math.PI / 180)
+                                ctx.strokeStyle = "#FF9800" // Use a constant to be safe
+                                ctx.lineWidth = 3
+                                ctx.lineCap = "round"
+                                ctx.beginPath()
+                                ctx.arc(0, 0, width/2 - 4, 0, Math.PI * 1.5)
+                                ctx.stroke()
+                            }
+                            RotationAnimation on rotation {
+                                from: 0; to: 360; duration: 800; loops: Animation.Infinite
+                                running: indicator.running
+                            }
+                        }
+                    }
+                }
+                Text {
+                    text: "Clonando Nós..."
+                    color: "white"; font.pixelSize: 11; font.bold: true
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+            }
+        }
     }
 }

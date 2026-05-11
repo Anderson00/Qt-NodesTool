@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import Qaterial 1.0 as Qaterial
 import App.Theme 1.0
+import ".."
 
 Rectangle {
     id: root
@@ -23,7 +24,9 @@ Rectangle {
     property bool showGrid: true
     property bool connectionsMinimized: false
     property bool snapEnabled: false
+    property string toolMode: "pan"
 
+    signal toolModeActivated(string mode)
     signal zoomIn()
     signal zoomOut()
     signal resetZoom()
@@ -41,20 +44,22 @@ Rectangle {
 
         // Tool Mode: Select
         Qaterial.ToolButton {
-            checkable: false
+            checkable: true
+            checked: root.toolMode === "select"
             icon.source: Qaterial.Icons.cursorDefault
-            icon.color: ThemeManager.accentColor
-            ToolTip.text: "Select Tool"
-            ToolTip.visible: hovered
+            icon.color: root.toolMode === "select" ? ThemeManager.accentColor : ThemeManager.textColor
+            onClicked: root.toolModeActivated("select")
+            AppToolTip { text: "Select Tool  [S]"; visible: parent.hovered }
         }
 
         // Tool Mode: Pan
         Qaterial.ToolButton {
-            checkable: false
+            checkable: true
+            checked: root.toolMode === "pan"
             icon.source: Qaterial.Icons.handBackRight
-            icon.color: ThemeManager.textColor
-            ToolTip.text: "Pan Tool"
-            ToolTip.visible: hovered
+            icon.color: root.toolMode === "pan" ? ThemeManager.accentColor : ThemeManager.textColor
+            onClicked: root.toolModeActivated("pan")
+            AppToolTip { text: "Pan Tool  [P]"; visible: parent.hovered }
         }
 
         Rectangle { width: 1; height: 32; color: ThemeManager.borderColor; Layout.alignment: Qt.AlignVCenter }
@@ -64,9 +69,8 @@ Rectangle {
             checkable: false
             icon.source: Qaterial.Icons.minus
             icon.color: ThemeManager.textColor
-            ToolTip.text: "Zoom Out"
-            ToolTip.visible: hovered
             onClicked: root.zoomOut()
+            AppToolTip { text: "Zoom Out"; visible: parent.hovered }
         }
 
         // Zoom Label
@@ -82,8 +86,7 @@ Rectangle {
                 anchors.fill: parent
                 onClicked: root.resetZoom()
                 cursorShape: Qt.PointingHandCursor
-                ToolTip.text: "Reset Zoom"
-                ToolTip.visible: containsMouse
+                AppToolTip { text: "Reset Zoom"; visible: parent.containsMouse }
             }
         }
 
@@ -92,9 +95,8 @@ Rectangle {
             checkable: false
             icon.source: Qaterial.Icons.plus
             icon.color: ThemeManager.textColor
-            ToolTip.text: "Zoom In"
-            ToolTip.visible: hovered
             onClicked: root.zoomIn()
+            AppToolTip { text: "Zoom In"; visible: parent.hovered }
         }
 
         Rectangle { width: 1; height: 32; color: ThemeManager.borderColor; Layout.alignment: Qt.AlignVCenter }
@@ -110,9 +112,8 @@ Rectangle {
             icon.color: root.connectionsMinimized
                 ? ThemeManager.accentColor
                 : ThemeManager.textColor
-            ToolTip.text: root.connectionsMinimized ? "Expandir todas as conexões" : "Recolher todas as conexões"
-            ToolTip.visible: hovered
             onClicked: root.toggleConnectionsMinimized()
+            AppToolTip { text: root.connectionsMinimized ? "Expandir todas as conexões" : "Recolher todas as conexões"; visible: parent.hovered }
         }
 
         Rectangle { width: 1; height: 32; color: ThemeManager.borderColor; Layout.alignment: Qt.AlignVCenter }
@@ -122,9 +123,8 @@ Rectangle {
             checkable: false
             icon.source: Qaterial.Icons.imageFilterCenterFocus
             icon.color: ThemeManager.textColor
-            ToolTip.text: "Center View"
-            ToolTip.visible: hovered
             onClicked: root.centerView()
+            AppToolTip { text: "Center View"; visible: parent.hovered }
         }
 
         Rectangle { width: 1; height: 32; color: ThemeManager.borderColor; Layout.alignment: Qt.AlignVCenter }
@@ -136,10 +136,8 @@ Rectangle {
             checked: root.snapEnabled
             icon.source: Qaterial.Icons.magnetOn
             icon.color: root.snapEnabled ? "#00e676" : ThemeManager.textColor
-            ToolTip.text: "Grid Snap  [G]"
-            ToolTip.visible: hovered
-            ToolTip.delay: 600
             onClicked: root.toggleSnap()
+            AppToolTip { text: "Grid Snap  [G]"; visible: parent.hovered; delay: 600 }
 
             // Subtle green glow ring when active
             Rectangle {
@@ -156,35 +154,113 @@ Rectangle {
             }
         }
 
-        // View Menu
+        // View Options — fully themed popup (replaces Qaterial.Menu which used
+        // Material colors instead of ThemeManager)
         Qaterial.ToolButton {
             id: viewMenuBtn
             icon.source: Qaterial.Icons.eyeOutline
-            icon.color: ThemeManager.textColor
-            ToolTip.text: "View Options"
-            ToolTip.visible: hovered
+            icon.color:  ThemeManager.textColor
             onClicked: viewMenu.open()
+            AppToolTip { text: "View Options"; visible: parent.hovered }
+        }
 
-            Qaterial.Menu {
-                id: viewMenu
-                y: -height - 12
-                x: -width / 2 + viewMenuBtn.width / 2
+        Popup {
+            id: viewMenu
+            // Position above the button, horizontally centered on it
+            parent: viewMenuBtn
+            y: -implicitHeight - 10
+            x: (viewMenuBtn.width - implicitWidth) / 2
 
-                Qaterial.MenuItem {
-                    text: root.showGrid ? "Hide Grid" : "Show Grid"
-                    icon.source: Qaterial.Icons.grid
+            padding: 0
+            implicitWidth: 188
+
+            closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+            background: Rectangle {
+                color:        ThemeManager.surfaceColor
+                border.color: ThemeManager.borderColor
+                border.width: 1
+                radius:       6
+            }
+
+            // Arrow pointer pointing down toward the button
+            Rectangle {
+                x:      (parent.implicitWidth - 10) / 2
+                y:      parent.implicitHeight - 1
+                width:  10; height: 6; rotation: 180
+                color:  ThemeManager.surfaceColor
+                border.color: ThemeManager.borderColor
+                border.width: 1
+                visible: false  // subtle — hide if too distracting
+            }
+
+            contentItem: Column {
+                spacing: 0
+
+                // Reusable themed menu item
+                component AppMenuItem: Rectangle {
+                    id: mi
+                    property string label:      ""
+                    property string iconSource: ""
+                    signal triggered()
+
+                    width:  188
+                    height: 36
+                    color:  miMouse.containsMouse
+                            ? Qt.rgba(ThemeManager.primaryColor.r,
+                                      ThemeManager.primaryColor.g,
+                                      ThemeManager.primaryColor.b, 0.14)
+                            : "transparent"
+                    radius: 4
+
+                    Row {
+                        anchors { verticalCenter: parent.verticalCenter; left: parent.left; leftMargin: 12 }
+                        spacing: 10
+
+                        Qaterial.ColorIcon {
+                            source: mi.iconSource
+                            color:  ThemeManager.textSecondaryColor
+                            width: 16; height: 16
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text:  mi.label
+                            color: ThemeManager.textColor
+                            font.pixelSize: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
+                    MouseArea {
+                        id: miMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape:  Qt.PointingHandCursor
+                        onClicked: { mi.triggered(); viewMenu.close() }
+                    }
+                }
+
+                // 4 px top padding
+                Item { width: 1; height: 4 }
+
+                AppMenuItem {
+                    label:      root.showGrid ? "Hide Grid" : "Show Grid"
+                    iconSource: Qaterial.Icons.grid
                     onTriggered: root.toggleGrid()
                 }
-                Qaterial.MenuItem {
-                    text: "Toggle FPS"
-                    icon.source: Qaterial.Icons.monitorHeart
+                AppMenuItem {
+                    label:      "Toggle FPS"
+                    iconSource: Qaterial.Icons.speedometer
                     onTriggered: root.toggleFps()
                 }
-                Qaterial.MenuItem {
-                    text: "Toggle Fullscreen"
-                    icon.source: Qaterial.Icons.fullscreen
+                AppMenuItem {
+                    label:      "Toggle Fullscreen"
+                    iconSource: Qaterial.Icons.fullscreen
                     onTriggered: root.toggleFullscreen()
                 }
+
+                // 4 px bottom padding
+                Item { width: 1; height: 4 }
             }
         }
     }

@@ -1,4 +1,4 @@
-import QtQuick 2.15
+﻿import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import QtCharts 2.15
@@ -101,7 +101,7 @@ Item {
                             color: root.filterMode === index ? ThemeManager.backgroundColor : ThemeManager.textColor
                             opacity: root.filterMode === index ? 1.0 : 0.5
                         }
-                        ToolTip.visible: ma_.containsMouse; ToolTip.text: root.modeTips[index]; ToolTip.delay: 600
+                        AppToolTip { text: root.modeTips[index]; visible: ma_.containsMouse; delay: 600 }
                         MouseArea { id: ma_; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                             onClicked: { root.filterMode = index; root.buffer = [] } }
                     }
@@ -201,7 +201,7 @@ Item {
                 Layout.fillWidth: true; implicitHeight: 34
                 label: "α"; value: root.alpha; from: 0.001; to: 1.0; stepSize: 0.01; decimals: 3
                 showBar: true; accentColor: root.modeColors[root.filterMode]
-                onValueModified: root.alpha = newValue
+                onValueModified: function(newValue) { root.alpha = newValue }
             }
             Text {
                 text: root.filterMode === 1 ? "0=no change  1=no filter" : "0=no change  1=no filter (RC≈" + (1.0/(2*Math.PI*root.alpha)).toFixed(1) + ")"
@@ -217,7 +217,7 @@ Item {
                 label: "In"; value: root.rawValue
                 from: -1e9; to: 1e9; stepSize: 1; decimals: 4
                 accentColor: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.5)
-                onValueModified: processValue(newValue)
+                onValueModified: function(newValue) { processValue(newValue) }
             }
             NewButton {
                 Layout.preferredWidth: 56; Layout.preferredHeight: 34
