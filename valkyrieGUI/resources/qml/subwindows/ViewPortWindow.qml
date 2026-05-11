@@ -806,7 +806,7 @@ Rectangle {
             NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
         }
 
-        icon.source: "qrc:/icons/cog.svg"
+        icon.source: Icons.cog
         icon.color: ThemeManager.primaryColor
         flat: false
         
@@ -2219,7 +2219,7 @@ Rectangle {
                     anchors.right:          parent.right
                     anchors.rightMargin:    8
                     anchors.verticalCenter: parent.verticalCenter
-                    icon.source: 'qrc:/icons/close.svg'
+                    icon.source: Icons.close
                     icon.color:  ThemeManager.textSecondaryColor
                     width: 36; height: 36
                     onClicked: saveWorkspaceDialog.close()
@@ -2405,7 +2405,7 @@ Rectangle {
                     anchors.right:          parent.right
                     anchors.rightMargin:    8
                     anchors.verticalCenter: parent.verticalCenter
-                    icon.source: 'qrc:/icons/close.svg'
+                    icon.source: Icons.close
                     icon.color:  ThemeManager.textSecondaryColor
                     width: 36; height: 36
                     onClicked: openWorkspaceDialog.close()
@@ -2658,7 +2658,7 @@ Rectangle {
                     anchors.right:          parent.right
                     anchors.rightMargin:    8
                     anchors.verticalCenter: parent.verticalCenter
-                    icon.source: 'qrc:/icons/close.svg'
+                    icon.source: Icons.close
                     icon.color:  ThemeManager.textSecondaryColor
                     width: 36; height: 36
                     onClicked: confirmNewProjectDialog.close()

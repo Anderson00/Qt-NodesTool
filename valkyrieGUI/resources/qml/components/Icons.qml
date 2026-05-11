@@ -77,4 +77,13 @@ QtObject {
     readonly property url codeBraces:              "qrc:/icons/code-braces.svg"
     readonly property url folder:                  "qrc:/icons/folder.svg"
     readonly property url cog:                     "qrc:/icons/cog.svg"
+    readonly property url close:                  "qrc:/icons/close.svg"
+    readonly property url play:                   "qrc:/icons/play.svg"
+    readonly property url stop:                   "qrc:/icons/stop.svg"
+    readonly property url pause:                  "qrc:/icons/pause.svg"
+    readonly property url information:            "qrc:/icons/information.svg"
+    readonly property url chartLine:              "qrc:/icons/chart-line.svg"
+    readonly property url fileDocumentEditOutline:"qrc:/icons/file-document-edit-outline.svg"
+    readonly property url viewWeek:               "qrc:/icons/view-week.svg"
+    readonly property url viewGrid:               "qrc:/icons/view-grid.svg"
 }

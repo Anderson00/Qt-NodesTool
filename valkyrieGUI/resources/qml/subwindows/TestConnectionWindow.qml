@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.0
 import QtQuick.Controls.Material 2.12
 
 import App.Theme 1.0
+import App.Icons 1.0
 
 
 Rectangle {
@@ -66,7 +67,7 @@ Rectangle {
                     anchors { right: parent.right; verticalCenter: parent.verticalCenter; rightMargin: 2 }
                     visible: cmdLine.text.length > 0
                     width: 28; height: 28; padding: 0
-                    icon.source: 'qrc:/icons/close.svg'
+                    icon.source: Icons.close
                     icon.color:  "#888"
                     icon.width: 14; icon.height: 14
                     onClicked: cmdLine.clear()

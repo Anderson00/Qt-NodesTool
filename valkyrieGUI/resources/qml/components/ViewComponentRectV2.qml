@@ -385,7 +385,7 @@ Rectangle {
                 Layout.preferredHeight: 34
                 Layout.preferredWidth: 30
                 textColor: titleView.color
-                iconSource: "qrc:/icons/close.svg"
+                iconSource: Icons.close
                 iconSize: 14
                 variant: "text"
                 onClicked: root._emitMenuAction("close")
@@ -412,7 +412,7 @@ Rectangle {
 
         MenuItem {
             text: qsTr("Close")
-            icon.source: 'qrc:/icons/close.svg'
+            icon.source: Icons.close
             onTriggered: root._emitMenuAction("close")
         }
         MenuItem {

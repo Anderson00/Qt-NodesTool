@@ -3,6 +3,7 @@ import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 
 import App.Theme 1.0
+import App.Icons 1.0
 import '../../components'
 
 Item {
@@ -148,7 +149,7 @@ Item {
                                 NewButton {
                                     anchors.centerIn: parent
                                     text: "Filled"; variant: "filled"
-                                    iconSource: "qrc:/icons/play.svg"
+                                    iconSource: Icons.play
                                 }
                             }
                             Tile {
@@ -156,7 +157,7 @@ Item {
                                 NewButton {
                                     anchors.centerIn: parent
                                     text: "Outlined"; variant: "outlined"
-                                    iconSource: "qrc:/icons/play.svg"
+                                    iconSource: Icons.play
                                 }
                             }
                             Tile {
@@ -179,7 +180,7 @@ Item {
                                 label: "Icon only"
                                 NewButton {
                                     anchors.centerIn: parent
-                                    iconSource: "qrc:/icons/cog.svg"; variant: "rounded"
+                                    iconSource: Icons.cog; variant: "rounded"
                                     implicitWidth: 40; implicitHeight: 40
                                 }
                             }
@@ -191,7 +192,7 @@ Item {
                                 label: "IconButton"
                                 IconButton {
                                     anchors.centerIn: parent
-                                    iconSource: "qrc:/icons/play.svg"
+                                    iconSource: Icons.play
                                     width: 60; height: 60
                                 }
                             }
@@ -406,12 +407,12 @@ Item {
                             spacing: 12
                             Repeater {
                                 model: [
-                                    { src: "qrc:/icons/play.svg",        c: "#2ecc71" },
-                                    { src: "qrc:/icons/pause.svg",       c: "#f1c40f" },
-                                    { src: "qrc:/icons/stop.svg",        c: "#e74c3c" },
-                                    { src: "qrc:/icons/cog.svg",         c: ThemeManager.primaryColor },
-                                    { src: "qrc:/icons/information.svg", c: "#3498db" },
-                                    { src: "qrc:/icons/chart-line.svg",  c: ThemeManager.accentColor }
+                                    { src: Icons.play,        c: "#2ecc71" },
+                                    { src: Icons.pause,       c: "#f1c40f" },
+                                    { src: Icons.stop,        c: "#e74c3c" },
+                                    { src: Icons.cog,         c: ThemeManager.primaryColor },
+                                    { src: Icons.information, c: "#3498db" },
+                                    { src: Icons.chartLine,   c: ThemeManager.accentColor }
                                 ]
                                 Tile {
                                     width: 90; height: 90

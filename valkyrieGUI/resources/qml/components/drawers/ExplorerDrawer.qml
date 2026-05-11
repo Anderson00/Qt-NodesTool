@@ -100,7 +100,7 @@ Item {
                 }
 
                 ColorIcon {
-                    source: 'qrc:/icons/magnify.svg'
+                    source: Icons.magnify
                     color: ThemeManager.textColor; opacity: 0.4
                     width: 14; height: 14
                 }
@@ -142,7 +142,8 @@ Item {
                                        ThemeManager.textColor.g,
                                        ThemeManager.textColor.b, 0.2)
                         ColorIcon {
-                            source: 'qrc:/icons/close.svg'; color: ThemeManager.textColor
+                            source: Icons.close
+                            color: ThemeManager.textColor
                             width: 9; height: 9; anchors.centerIn: parent
                         }
                         MouseArea {
@@ -230,7 +231,7 @@ Item {
                             ColorIcon {
                                 id: crumbHomeIco
                                 visible: index === 0
-                                source: 'qrc:/icons/home.svg'
+                                source: Icons.home
                                 width: 12; height: 12; anchors.centerIn: parent
                                 color: index === root.breadcrumbLabels.length - 1
                                        ? ThemeManager.textColor : ThemeManager.primaryColor

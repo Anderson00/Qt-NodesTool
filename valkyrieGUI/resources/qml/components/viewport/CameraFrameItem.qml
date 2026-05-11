@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import App.Theme 1.0
+import App.Icons 1.0
 
 import ".."
 
@@ -102,7 +103,7 @@ Rectangle {
 
             AppBarButton {
                 width: 20; height: 20; padding: 0
-                icon.source: 'qrc:/icons/close.svg'
+                icon.source: Icons.close
                 icon.color:  root.camColor; icon.width: 10; icon.height: 10
                 onClicked: root.closeRequested()
             }

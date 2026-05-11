@@ -5,7 +5,7 @@ import QtQuick.Layouts 1.12
 import QtQuick.Shapes 1.15
 
 import App.Theme 1.0
-
+import App.Icons 1.0
 
 Rectangle {
     id: root
@@ -55,7 +55,7 @@ Rectangle {
 
             AppBarButton {
                 width: 40
-                icon.source: modelData.icon ? "qrc:/icons/" + modelData.icon + ".svg" : "qrc:/icons/information.svg"
+                icon.source: modelData.icon ? "qrc:/icons/" + modelData.icon + ".svg" : Icons.information
                 icon.color: ThemeManager.primaryColor
                 Layout.alignment: Qt.AlignLeft
 

@@ -5,6 +5,7 @@ import QtQuick.Window 2.2
 import QtQuick 2.14
 import QtQml 2.14
 import App.Theme 1.0
+import App.Icons 1.0
 import App.NodeRegistry 1.0
 
 import '../'
@@ -20,8 +21,8 @@ Contrl.Drawer {
     signal behaviourSelected(string path, variant infos);
 
     property var categoryIcons: {
-        'Debug': "qrc:/icons/bug.svg",
-        'Plugins': "qrc:/icons/code-braces.svg"
+        'Debug': Icons.bug,
+        'Plugins': Icons.codeBraces
     }
 
     width: parent.width
@@ -86,7 +87,7 @@ Contrl.Drawer {
                             id: breadcrumbIcon
                             width: 20; height: 20
                             visible: modelData === "home"
-                            source: "qrc:/icons/home.svg"
+                            source: Icons.home
                             color: breadcrumbIconHoverHandler.hovered ? ThemeManager.primaryColor : ThemeManager.textColor
 
                             HoverHandler { id: breadcrumbIconHoverHandler; enabled: index < breadcrumb.model.length - 1 }
@@ -128,7 +129,7 @@ Contrl.Drawer {
 
                     ColorIcon {
                         width: 20; height: 20
-                        source: "qrc:/icons/magnify.svg"
+                        source: Icons.magnify
                         color: ThemeManager.textColor
                     }
 
@@ -151,13 +152,13 @@ Contrl.Drawer {
 
                 RowLayout {
                     spacing: 8
-                    ColorIcon { width: 20; height: 20; source: "qrc:/icons/folder.svg"; color: ThemeManager.textColor }
+                    ColorIcon { width: 20; height: 20; source: Icons.folder; color: ThemeManager.textColor }
                     Contrl.Label { text: "2"; color: ThemeManager.textColor }
 
-                    ColorIcon { width: 20; height: 20; source: "qrc:/icons/bug.svg"; color: ThemeManager.textColor }
+                    ColorIcon { width: 20; height: 20; source: Icons.bug; color: ThemeManager.textColor }
                     Contrl.Label { text: "33"; color: ThemeManager.textColor }
 
-                    ColorIcon { width: 20; height: 20; source: "qrc:/icons/code-braces.svg"; color: ThemeManager.textColor }
+                    ColorIcon { width: 20; height: 20; source: Icons.codeBraces; color: ThemeManager.textColor }
                     Contrl.Label { text: "1"; color: ThemeManager.textColor }
                 }
 
@@ -167,13 +168,13 @@ Contrl.Drawer {
                 }
 
                 AppToolButton {
-                    iconSource: "qrc:/icons/plus.svg"
+                    iconSource: Icons.plus
                     iconColor: ThemeManager.primaryColor
                     onClicked: {}
                 }
 
                 AppToolButton {
-                    iconSource: gridMode ? "qrc:/icons/view-list.svg" : "qrc:/icons/view-grid.svg"
+                    iconSource: gridMode ? Icons.viewList : Icons.viewGrid
                     iconColor: ThemeManager.primaryColor
                     onClicked: {
                         gridMode = !gridMode
@@ -216,7 +217,7 @@ Contrl.Drawer {
                                     
                                     ColorIcon {
                                         width: 16; height: 16
-                                        source: "qrc:/icons/chevron-right.svg"
+                                        source: Icons.chevronRight
                                         color: ThemeManager.textColor
                                         rotation: modelData.expanded ? 90 : 0
                                         visible: modelData.children && modelData.children.length > 0
@@ -225,7 +226,7 @@ Contrl.Drawer {
                                     
                                     ColorIcon {
                                         width: 16; height: 16
-                                        source: root.categoryIcons[modelData.text] || "qrc:/icons/folder.svg"
+                                        source: root.categoryIcons[modelData.text] || Icons.folder
                                         color: ThemeManager.textColor
                                     }
                                     

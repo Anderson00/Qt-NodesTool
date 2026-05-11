@@ -526,7 +526,7 @@ Drawer {
                                             anchors.centerIn: parent
                                             width: 16
                                             height: 16
-                                            source: "qrc:/icons/file-document-edit-outline.svg"
+                                            source: Icons.fileDocumentEditOutline
                                             sourceSize: Qt.size(16, 16)
                                         }
                                         MouseArea {
@@ -553,7 +553,7 @@ Drawer {
                                             anchors.centerIn: parent
                                             width: 16
                                             height: 16
-                                            source: "qrc:/icons/view-week.svg"
+                                            source: Icons.viewWeek
                                             sourceSize: Qt.size(16, 16)
                                         }
                                         MouseArea {
@@ -576,7 +576,7 @@ Drawer {
                                             anchors.centerIn: parent
                                             width: 16
                                             height: 16
-                                            source: "qrc:/icons/close.svg"
+                                            source: Icons.close
                                             sourceSize: Qt.size(16, 16)
                                         }
                                         MouseArea {

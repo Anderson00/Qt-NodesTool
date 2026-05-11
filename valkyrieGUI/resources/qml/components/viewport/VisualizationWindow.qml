@@ -75,7 +75,7 @@ Rectangle {
 
             AppBarButton {
                 width: 26; height: 26; padding: 0
-                icon.source: root.isPlaying ? 'qrc:/icons/stop.svg' : 'qrc:/icons/play.svg'
+                icon.source: root.isPlaying ? Icons.stop : Icons.play
                 icon.color:  root.isPlaying ? "#f44336" : "#4caf50"
                 icon.width: 14; icon.height: 14
                 onClicked: { root.isPlaying = !root.isPlaying; root.playToggled(root.isPlaying) }
@@ -93,7 +93,7 @@ Rectangle {
 
             AppBarButton {
                 width: 26; height: 26; padding: 0
-                icon.source: 'qrc:/icons/close.svg'
+                icon.source: Icons.close
                 icon.color:  ThemeManager.textColor; icon.width: 12; icon.height: 12
                 onClicked: root.closeRequested()
                 AppToolTip { text: "Fechar"; visible: parent.hovered }

@@ -1,6 +1,7 @@
 import QtQuick 2.0
 import QtQuick.Layouts 1.0
 import QtQuick.Controls 2.0
+import App.Icons 1.0
 
 import '../../components'
 
@@ -54,7 +55,7 @@ Item {
             Button {
                 id: btOpen
                 text: ""
-                icon.source: 'qrc:/icons/folder-open-outline.svg'
+                icon.source: Icons.folderOpenOutline
                 font.pixelSize: 12
                 Layout.rightMargin: 8
 

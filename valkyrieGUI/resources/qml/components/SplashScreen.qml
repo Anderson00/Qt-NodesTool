@@ -315,7 +315,7 @@ Rectangle {
         anchors.right:       parent.right
         anchors.topMargin:   6
         anchors.rightMargin: 6
-        icon.source: 'qrc:/icons/close.svg'
+        icon.source: Icons.close
         icon.color:  ThemeManager.foregroundColor
         width: 36; height: 36
         opacity: dismissHover.containsMouse ? 0.7 : 0.3

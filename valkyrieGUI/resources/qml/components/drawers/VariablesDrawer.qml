@@ -80,7 +80,7 @@ Item {
                 anchors.leftMargin: 12; anchors.rightMargin: 8; spacing: 6
 
                 ColorIcon {
-                    source: 'qrc:/icons/magnify.svg'
+                    source: Icons.magnify
                     color: ThemeManager.textColor; opacity: 0.4; width: 14; height: 14
                 }
 
@@ -124,7 +124,7 @@ Item {
                                      ThemeManager.primaryColor.b, 0.15)
                     Behavior on color { ColorAnimation { duration: 120 } }
                     ColorIcon {
-                        source: root.addFormOpen ? 'qrc:/icons/close.svg' : Icons.plus
+                        source: root.addFormOpen ? Icons.close : Icons.plus
                         color: root.addFormOpen ? ThemeManager.backgroundColor : ThemeManager.primaryColor
                         width: 14; height: 14; anchors.centerIn: parent
                     }

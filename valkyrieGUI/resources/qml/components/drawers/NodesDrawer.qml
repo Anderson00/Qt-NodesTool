@@ -24,8 +24,8 @@ Item {
     property bool gridMode: true
 
     readonly property var _icons: ({
-        'Debug':   "qrc:/icons/bug.svg",
-        'Plugins': "qrc:/icons/code-braces.svg"
+        'Debug':   Icons.bug,
+        'Plugins': Icons.codeBraces
     })
 
     Component.onCompleted: _loadData()
@@ -392,7 +392,7 @@ Item {
                     visible: parent.filtered.length === 0
 
                     ColorIcon {
-                        source: "qrc:/icons/chart-line.svg"
+                        source: Icons.chartLine
                         color: ThemeManager.textColor; opacity: 0.18
                         width: 28; height: 28; anchors.horizontalCenter: parent.horizontalCenter
                     }
@@ -490,7 +490,7 @@ Item {
                                 anchors.leftMargin: 10; spacing: 8
 
                                 ColorIcon {
-                                    source: "qrc:/icons/chart-line.svg"
+                                    source: Icons.chartLine
                                     color: ThemeManager.primaryColor; width: 14; height: 14
                                 }
                                 Column {

@@ -300,7 +300,7 @@ Popup {
             anchors.topMargin: 6
             anchors.rightMargin: 6
             width: 36; height: 36
-            icon.source: 'qrc:/icons/close.svg'
+            icon.source: Icons.close
             icon.color: ThemeManager.textColor
             onClicked: root.close()
         }
@@ -814,7 +814,7 @@ Popup {
                         { id: "lines",   label: "Lines",   icon: Icons.viewSequential },
                         { id: "circles", label: "Circles", icon: Icons.circleOutline },
                         { id: "cross",   label: "Cross",   icon: Icons.plus },
-                        { id: "x",       label: "X",       icon: 'qrc:/icons/close.svg' },
+                        { id: "x",       label: "X",       icon: Icons.close },
                         { id: "hexagon", label: "Hexagon", icon: Icons.hexagonOutline },
                         { id: "none",    label: "None",    icon: Icons.eyeOffOutline }
                     ]
