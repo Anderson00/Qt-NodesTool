@@ -4,7 +4,7 @@ import QtQuick.Controls.Material 2.12
 import QtQuick.Layouts 1.12
 
 import App.Theme 1.0
-import Qaterial 1.0 as Qaterial
+
 
 Item {
     id: root    
@@ -31,7 +31,7 @@ Item {
 
         opacity: 0.0
 
-        Qaterial.Label {
+        Label {
             id: labelFloating
             text: slider.value.toFixed(0) + prefix
             color: root.textColor
@@ -101,7 +101,7 @@ Item {
             }
         }
 
-        Qaterial.Label {
+        Label {
             id: label
             visible: false
             text: slider.value.toFixed(0)
@@ -110,3 +110,4 @@ Item {
         }
     }
 }
+

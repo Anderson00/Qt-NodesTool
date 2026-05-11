@@ -1,7 +1,7 @@
-﻿import QtQuick 2.15
+import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
-import Qaterial 1.0 as Qaterial
+
 import App.Theme 1.0
 
 import '../../components'
@@ -16,7 +16,7 @@ Item {
         anchors.margins: 6
         spacing: 6
 
-        // ── Pulse indicator ────────────────────────────────────────────────
+        // -- Pulse indicator ------------------------------------------------
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 48
@@ -56,11 +56,11 @@ Item {
             }
         }
 
-        // ── Interval input ─────────────────────────────────────────────────
+        // -- Interval input -------------------------------------------------
         RowLayout {
             Layout.fillWidth: true; spacing: 6
             Text {
-                text: "⏱"
+                text: "?"
                 font.pixelSize: 14
                 Layout.alignment: Qt.AlignVCenter
             }
@@ -76,7 +76,7 @@ Item {
             }
         }
 
-        // ── Control buttons ────────────────────────────────────────────────
+        // -- Control buttons ------------------------------------------------
         RowLayout {
             Layout.fillWidth: true; spacing: 4
 
@@ -84,7 +84,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 32
                 variant: "filled"
-                text: behaviourObject && behaviourObject.running ? "■ Stop" : "▶ Start"
+                text: behaviourObject && behaviourObject.running ? "� Stop" : "? Start"
                 backgroundColor: behaviourObject && behaviourObject.running
                                  ? ThemeManager.dangerColor : ThemeManager.primaryColor
                 onClicked: {
@@ -104,3 +104,4 @@ Item {
         }
     }
 }
+

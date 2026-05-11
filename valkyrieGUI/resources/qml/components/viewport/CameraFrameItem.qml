@@ -1,7 +1,8 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import App.Theme 1.0
-import Qaterial 1.0 as Qaterial
+import App.Icons 1.0
+
 import ".."
 
 // Camera frame — a moveable/resizable rectangle on the canvas that defines
@@ -77,13 +78,17 @@ Rectangle {
             spacing: 0
 
             // Aspect ratio cycle button
-            Qaterial.ToolButton {
+            ToolButton {
                 width: 32; height: 20; padding: 0
                 contentItem: Text {
                     text: root.aspectRatio !== "" ? root.aspectRatio : "free"
                     color: root.camColor; font.pixelSize: 8; font.bold: true
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment:   Text.AlignVCenter
+                }
+                background: Rectangle {
+                    radius: 3
+                    color: parent.pressed ? Qt.rgba(0,0,0,0.15) : parent.hovered ? Qt.rgba(0,0,0,0.08) : "transparent"
                 }
                 onClicked: {
                     if      (root.aspectRatio === "Screen") root.aspectRatio = "16:9"
@@ -96,9 +101,9 @@ Rectangle {
                 AppToolTip { text: "Cycle aspect ratio"; visible: parent.hovered }
             }
 
-            Qaterial.ToolButton {
+            AppBarButton {
                 width: 20; height: 20; padding: 0
-                icon.source: Qaterial.Icons.close
+                icon.source: Icons.close
                 icon.color:  root.camColor; icon.width: 10; icon.height: 10
                 onClicked: root.closeRequested()
             }
@@ -187,3 +192,4 @@ Rectangle {
     Rectangle { x: 0; y: parent.height - _cornerThk; width: _cornerLen; height: _cornerThk; color: camColor }
     Rectangle { x: 0; y: parent.height - _cornerLen; width: _cornerThk; height: _cornerLen; color: camColor }
 }
+

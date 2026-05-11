@@ -4,6 +4,7 @@ import Qt5Compat.GraphicalEffects
 import QtQuick.Layouts 1.12
 import App.Theme 1.0
 import App.Toast 1.0
+import App.Icons 1.0
 import ".."
 
 Popup {
@@ -73,7 +74,7 @@ Popup {
         id: infoBtn
         angle: -90
         distance: 55 * root.expansion
-        iconSource: "qrc:/icons/information.svg"
+        iconSource: Icons.information
         toolTipText: "Informação"
         onClicked: {
             ToastManager.show("Conexão: " + outNodeName + " (" + outMethod + ") -> " + inNodeName + " (" + inMethod + ")", "info")
@@ -86,9 +87,9 @@ Popup {
         id: removeBtn
         angle: 0
         distance: 55 * root.expansion
-        iconSource: "qrc:/icons/close.svg"
+        iconSource: Icons.close
         toolTipText: "Remover"
-        iconColor: ThemeManager.errorColor
+        iconColor: ThemeManager.dangerColor
         onClicked: {
             if (connectionIndex !== -1) {
                 viewPort.removeConnectionWithUndo(outUuid, outMethod, inUuid, inMethod)
@@ -102,7 +103,7 @@ Popup {
         id: commentBtn
         angle: 90
         distance: 55 * root.expansion
-        iconSource: "qrc:/icons/file-document-edit-outline.svg" // Use an edit icon for comment
+        iconSource: Icons.fileDocumentEditOutline // Use an edit icon for comment
         toolTipText: "Adicionar Comentário"
         onClicked: {
             commentDialog.open()
@@ -195,7 +196,7 @@ Popup {
         id: copyBtn
         angle: 180
         distance: 55 * root.expansion
-        iconSource: "qrc:/icons/content-save-cog-outline.svg"
+        iconSource: Icons.contentSaveCogOutline
         toolTipText: "Copiar UUIDs"
         onClicked: {
             ToastManager.show("UUID Origem: " + outUuid + "\nUUID Destino: " + inUuid, "success")
@@ -270,3 +271,4 @@ Popup {
         Behavior on color { ColorAnimation { duration: 150 } }
     }
 }
+

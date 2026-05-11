@@ -66,3 +66,4 @@ Item {
     onColorChanged:   canvas.requestPaint()
     onSizeChanged:    canvas.requestPaint()
 }
+

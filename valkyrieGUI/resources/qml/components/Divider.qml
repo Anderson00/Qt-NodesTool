@@ -71,3 +71,4 @@ Item {
         color: root.color
     }
 }
+

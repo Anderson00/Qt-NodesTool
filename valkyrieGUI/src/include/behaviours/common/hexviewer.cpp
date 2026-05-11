@@ -55,7 +55,7 @@ void HexViewer::input(QByteArray bytes)
     int countTotal = 0;
     for(char byte : bytes){
         arrayOfBytes.push_back(QString::number((int)byte, 16).toUpper().rightJustified(2, '0'));
-        if(count == this->hexColumns() || countTotal+1 == bytes.count()){
+        if(count == this->hexColumns() || countTotal+1 == bytes.size()){
             lines.push_back(QJsonObject({
                                             {"offset", QString::number(lines.count(), 16).toUpper().rightJustified(8, '0')},
                                             {"bytes", arrayOfBytes}

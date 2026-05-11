@@ -50,3 +50,4 @@ T.ToolTip {
         NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: 60; easing.type: Easing.InCubic }
     }
 }
+

@@ -2,7 +2,8 @@ import QtQuick 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.0
 import App.Theme 1.0
-import Qaterial as Qaterial
+import App.Icons 1.0
+
 import ".."
 
 // Top application bar for the ViewPort window.
@@ -117,8 +118,8 @@ Rectangle {
                     anchors.centerIn: parent
                     spacing: 7
 
-                    Qaterial.ColorIcon {
-                        source: Qaterial.Icons.graphOutline
+                    ColorIcon {
+                        source: Icons.graphOutline
                         color:  root.selectedPanel === "nodes" ? ThemeManager.primaryColor : ThemeManager.textColor
                         width: 16; height: 16
                         anchors.verticalCenter: parent.verticalCenter
@@ -168,8 +169,8 @@ Rectangle {
                     anchors.centerIn: parent
                     spacing: 7
 
-                    Qaterial.ColorIcon {
-                        source: Qaterial.Icons.folderOutline
+                    ColorIcon {
+                        source: Icons.folderOutline
                         color:  root.selectedPanel === "explorer" ? ThemeManager.primaryColor : ThemeManager.textColor
                         width: 16; height: 16
                         anchors.verticalCenter: parent.verticalCenter
@@ -219,8 +220,8 @@ Rectangle {
                     anchors.centerIn: parent
                     spacing: 7
 
-                    Qaterial.ColorIcon {
-                        source: Qaterial.Icons.codeJson
+                    ColorIcon {
+                        source: Icons.codeJson
                         color:  root.selectedPanel === "variables" ? ThemeManager.primaryColor : ThemeManager.textColor
                         width: 16; height: 16
                         anchors.verticalCenter: parent.verticalCenter
@@ -261,8 +262,8 @@ Rectangle {
             spacing: 0
             Layout.alignment: Qt.AlignVCenter
 
-            Qaterial.AppBarButton {
-                icon.source: Qaterial.Icons.history
+            AppBarButton {
+                icon.source: Icons.history
                 icon.color:  root.historyPanelOpen ? ThemeManager.primaryColor : ThemeManager.textColor
                 width: 40; height: 40
                 onClicked: root.historyPanelOpen = !root.historyPanelOpen
@@ -270,8 +271,8 @@ Rectangle {
                 AppToolTip { text: "Histórico (Ctrl+H)"; visible: parent.hovered }
             }
 
-            Qaterial.AppBarButton {
-                icon.source: Qaterial.Icons.undo
+            AppBarButton {
+                icon.source: Icons.undo
                 icon.color:  root.canUndo ? ThemeManager.textColor : Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.3)
                 enabled:     root.canUndo
                 width: 40; height: 40
@@ -279,8 +280,8 @@ Rectangle {
                 AppToolTip { text: "Undo (Ctrl+Z)"; visible: parent.hovered }
             }
 
-            Qaterial.AppBarButton {
-                icon.source: Qaterial.Icons.redo
+            AppBarButton {
+                icon.source: Icons.redo
                 icon.color:  root.canRedo ? ThemeManager.textColor : Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.3)
                 enabled:     root.canRedo
                 width: 40; height: 40
@@ -288,16 +289,16 @@ Rectangle {
                 AppToolTip { text: "Redo (Ctrl+Y)"; visible: parent.hovered }
             }
 
-            Qaterial.AppBarButton {
-                icon.source: Qaterial.Icons.filePlusOutline
+            AppBarButton {
+                icon.source: Icons.filePlusOutline
                 icon.color:  ThemeManager.textColor
                 width: 40; height: 40
                 onClicked: root.newProjectRequested()
                 AppToolTip { text: "New Project"; visible: parent.hovered }
             }
 
-            Qaterial.AppBarButton {
-                icon.source: Qaterial.Icons.contentSave
+            AppBarButton {
+                icon.source: Icons.contentSave
                 icon.color:  root.isDirty
                                  ? ThemeManager.textColor
                                  : Qt.rgba(ThemeManager.textColor.r,
@@ -310,8 +311,8 @@ Rectangle {
                 AppToolTip { text: "Save  (Ctrl+S)"; visible: parent.hovered }
             }
 
-            Qaterial.AppBarButton {
-                icon.source: Qaterial.Icons.folderOpenOutline
+            AppBarButton {
+                icon.source: Icons.folderOpenOutline
                 icon.color:  ThemeManager.textColor
                 width: 40; height: 40
                 onClicked: root.openRequested()
@@ -324,9 +325,9 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
             }
 
-            Qaterial.AppBarButton {
+            AppBarButton {
                 width: 40; height: 40
-                icon.source: Qaterial.Icons.cropFree
+                icon.source: Icons.cropFree
                 icon.color:  root.showCamera ? "#FF9800"
                                              : Qt.rgba(ThemeManager.textColor.r,
                                                        ThemeManager.textColor.g,
@@ -336,9 +337,9 @@ Rectangle {
                 AppToolTip { text: "Camera frame (Ctrl+Shift+C)"; visible: parent.hovered }
             }
 
-            Qaterial.AppBarButton {
+            AppBarButton {
                 width: 40; height: 40
-                icon.source: Qaterial.Icons.television
+                icon.source: Icons.television
                 icon.color:  root.showVisualization ? "#FF9800"
                                                     : Qt.rgba(ThemeManager.textColor.r,
                                                               ThemeManager.textColor.g,
@@ -353,17 +354,17 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
             }
 
-            Qaterial.AppBarButton {
+            AppBarButton {
                 width: 40; height: 40
-                icon.source: Qaterial.Icons.cameraOutline
+                icon.source: Icons.cameraOutline
                 icon.color:  ThemeManager.textColor
                 onClicked: root.screenshotRequested()
                 AppToolTip { text: "Screenshot"; visible: parent.hovered }
             }
 
-            Qaterial.AppBarButton {
+            AppBarButton {
                 width: 40; height: 40
-                icon.source: Qaterial.Icons.cogOutline
+                icon.source: Icons.cog
                 icon.color:  ThemeManager.textColor
                 onClicked: root.settingsRequested()
                 AppToolTip { text: "Settings"; visible: parent.hovered }
@@ -371,3 +372,4 @@ Rectangle {
         }
     }
 }
+

@@ -1,7 +1,8 @@
 import QtQuick 2.12
 import App.Theme 1.0
 import App.Toast 1.0
-import Qaterial as Qaterial
+import App.Icons 1.0
+
 
 // Toast display driven by ToastManager singleton
 // Usage from C++: ToastManager::instance()->show("message", "type")
@@ -20,10 +21,10 @@ Item {
         return ThemeManager.primaryColor
     }
     readonly property string _typeIcon: {
-        if (ToastManager.type === "success") return Qaterial.Icons.checkCircleOutline
-        if (ToastManager.type === "error")   return Qaterial.Icons.alertCircleOutline
-        if (ToastManager.type === "warning") return Qaterial.Icons.alertOutline
-        return Qaterial.Icons.informationOutline
+        if (ToastManager.type === "success") return Icons.checkCircleOutline
+        if (ToastManager.type === "error")   return Icons.alertCircleOutline
+        if (ToastManager.type === "warning") return Icons.alertOutline
+        return Icons.informationOutline
     }
 
     Rectangle {
@@ -56,7 +57,7 @@ Item {
             anchors.leftMargin:     20
             spacing: 10
 
-            Qaterial.ColorIcon {
+            ColorIcon {
                 source: root._typeIcon
                 color:  root._typeColor
                 width: 16; height: 16
@@ -85,3 +86,4 @@ Item {
         }
     }
 }
+

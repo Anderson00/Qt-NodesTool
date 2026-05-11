@@ -5,8 +5,8 @@ import QtQuick.Controls.Material 2.12
 import Qt5Compat.GraphicalEffects
 import App.Theme 1.0
 import App.Properties 1.0
+import App.Icons 1.0
 
-import Qaterial 1.0 as Qaterial
 
 Rectangle {
     id: root
@@ -366,7 +366,7 @@ Rectangle {
                 Layout.preferredHeight: 34
                 Layout.preferredWidth: 28
                 textColor: titleView.color
-                iconSource: Qaterial.Icons.dotsVertical
+                text: "⋮"
                 iconSize: 14
                 variant: "text"
                 onClicked: contextMenu.popup()
@@ -376,7 +376,7 @@ Rectangle {
                 Layout.preferredHeight: 34
                 Layout.preferredWidth: 28
                 textColor: titleView.color
-                iconSource: Qaterial.Icons.windowMaximize
+                iconSource: Icons.viewGrid
                 iconSize: 14
                 variant: "text"
                 onClicked: console.log("Maximize clicked")
@@ -386,7 +386,7 @@ Rectangle {
                 Layout.preferredHeight: 34
                 Layout.preferredWidth: 30
                 textColor: titleView.color
-                iconSource: Qaterial.Icons.close
+                iconSource: Icons.close
                 iconSize: 14
                 variant: "text"
                 onClicked: root._emitMenuAction("close")
@@ -413,27 +413,23 @@ Rectangle {
 
         MenuItem {
             text: qsTr("Close")
-            icon.source: 'qrc:/Qaterial/Icons/close.svg'
+            icon.source: Icons.close
             onTriggered: root._emitMenuAction("close")
         }
         MenuItem {
             text: qsTr("Front + 1")
-            icon.source: 'qrc:/Qaterial/Icons/arrow-up.svg'
             onTriggered: root._emitMenuAction("front-step")
         }
         MenuItem {
             text: qsTr("Down - 1")
-            icon.source: 'qrc:/Qaterial/Icons/arrow-down.svg'
             onTriggered: root._emitMenuAction("back-step")
         }
         MenuItem {
             text: qsTr("Front max")
-            icon.source: 'qrc:/Qaterial/Icons/flip-to-front.svg'
             onTriggered: root._emitMenuAction("front-max")
         }
         MenuItem {
             text: qsTr("Back max")
-            icon.source: 'qrc:/Qaterial/Icons/flip-to-back.svg'
             onTriggered: root._emitMenuAction("back-max")
         }
     }
@@ -519,6 +515,25 @@ Rectangle {
                 anchors.right: parent.right
                 height: parent.targetHeight
                 implicitHeight: Math.max(columnLayoutInputConns.height, columnLayoutOutputConns.height) + 8
+
+                handle: Rectangle {
+                    implicitWidth: 6
+                    implicitHeight: splitConns.height
+                    color: SplitHandle.hovered || SplitHandle.pressed
+                           ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.3)
+                           : Qt.rgba(ThemeManager.borderColor.r, ThemeManager.borderColor.g, ThemeManager.borderColor.b, 0.15)
+                    Behavior on color { ColorAnimation { duration: 80 } }
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: 2
+                        height: 16
+                        radius: 1
+                        color: SplitHandle.hovered || SplitHandle.pressed
+                               ? ThemeManager.primaryColor
+                               : Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.3)
+                        Behavior on color { ColorAnimation { duration: 80 } }
+                    }
+                }
 
                 Rectangle {
                     id: connectionsInputBody
@@ -690,3 +705,4 @@ Rectangle {
         }
     }
 }
+

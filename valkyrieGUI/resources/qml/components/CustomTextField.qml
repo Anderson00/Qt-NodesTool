@@ -7,3 +7,4 @@ TextField {
     Layout.fillWidth: true
     font.pixelSize: 12
 }
+

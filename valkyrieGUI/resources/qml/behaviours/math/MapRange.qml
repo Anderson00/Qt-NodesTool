@@ -1,7 +1,7 @@
-﻿import QtQuick 2.15
+import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
-import Qaterial 1.0 as Qaterial
+
 import App.Theme 1.0
 
 import '../../components'
@@ -45,7 +45,7 @@ Item {
         anchors.margins: 6
         spacing: 4
 
-        // ── Result display ─────────────────────────────────────────────────
+        // -- Result display -------------------------------------------------
         Rectangle {
             Layout.fillWidth: true; Layout.preferredHeight: 60; radius: 6
             color: Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.08)
@@ -108,16 +108,16 @@ Item {
             }
         }
 
-        // ── Formula display ────────────────────────────────────────────────
+        // -- Formula display ------------------------------------------------
         Text {
             Layout.alignment: Qt.AlignHCenter
-            text: "[" + previewInMin.toFixed(2) + ", " + previewInMax.toFixed(2) + "]  →  [" +
+            text: "[" + previewInMin.toFixed(2) + ", " + previewInMax.toFixed(2) + "]  ?  [" +
                   previewOutMin.toFixed(2) + ", " + previewOutMax.toFixed(2) + "]"
             font.pixelSize: 10; font.family: "Consolas"
             color: ThemeManager.textSecondaryColor
         }
 
-        // ── Input value ────────────────────────────────────────────────────
+        // -- Input value ----------------------------------------------------
         NumericInputField {
             Layout.fillWidth: true; implicitHeight: 36
             label: "In"; value: root.previewInput
@@ -129,7 +129,7 @@ Item {
             }
         }
 
-        // ── Input range ────────────────────────────────────────────────────
+        // -- Input range ----------------------------------------------------
         Rectangle {
             Layout.fillWidth: true; implicitHeight: 1; color: ThemeManager.borderColor; opacity: 0.3
         }
@@ -154,7 +154,7 @@ Item {
             }
         }
 
-        // ── Output range ───────────────────────────────────────────────────
+        // -- Output range ---------------------------------------------------
         Text { text: "Output Range"; font.pixelSize: 8; color: ThemeManager.textSecondaryColor }
 
         RowLayout {
@@ -175,7 +175,7 @@ Item {
             }
         }
 
-        // ── Clamp toggle ───────────────────────────────────────────────────
+        // -- Clamp toggle ---------------------------------------------------
         RowLayout {
             Layout.fillWidth: true; spacing: 6
             CustomSwitch {
@@ -190,3 +190,4 @@ Item {
         }
     }
 }
+

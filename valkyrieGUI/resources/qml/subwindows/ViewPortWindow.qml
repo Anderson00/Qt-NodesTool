@@ -7,12 +7,13 @@ import App.Theme 1.0
 import App.Properties 1.0
 import App.Workspace 1.0
 import App.Toast 1.0
+import App.Icons 1.0
 
 import "../components"
 import "../components/bottomsheets"
 import "../components/viewport"
 import "../components/drawers"
-import Qaterial as Qaterial
+import Qt5Compat.GraphicalEffects
 
 Rectangle {
     id: root
@@ -792,7 +793,7 @@ Rectangle {
         if (event.key === Qt.Key_Shift) isShiftHeld = false
     }
 
-    Qaterial.MiniFabButton {
+    RoundButton {
         id: fabRightMenu
         visible: nodeOnFocus !== null && nodeOnFocus !== undefined
         anchors.right: parent.right
@@ -805,10 +806,26 @@ Rectangle {
             NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
         }
 
-        icon.source: Qaterial.Icons.tune
+        icon.source: Icons.cog
         icon.color: ThemeManager.primaryColor
         flat: false
-        radius: 6
+        
+        background: Rectangle {
+            implicitWidth: 40
+            implicitHeight: 40
+            radius: 20
+            color: fabRightMenu.pressed ? ThemeManager.secondaryColor : ThemeManager.surfaceColor
+            border.color: ThemeManager.borderColor
+            border.width: 1
+            layer.enabled: true
+            layer.effect: DropShadow {
+                transparentBorder: true
+                horizontalOffset: 0
+                verticalOffset: 2
+                radius: 4
+                color: Qt.rgba(0,0,0,0.3)
+            }
+        }
 
         onClicked: {
             if(rightDrawerOpened)
@@ -2173,8 +2190,8 @@ Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 14
 
-                    Qaterial.ColorIcon {
-                        source: Qaterial.Icons.contentSaveOutline
+                    ColorIcon {
+                        source: Icons.contentSaveOutline
                         color:  ThemeManager.primaryColor
                         width: 22; height: 22
                         anchors.verticalCenter: parent.verticalCenter
@@ -2198,11 +2215,11 @@ Rectangle {
                     }
                 }
 
-                Qaterial.AppBarButton {
+                AppBarButton {
                     anchors.right:          parent.right
                     anchors.rightMargin:    8
                     anchors.verticalCenter: parent.verticalCenter
-                    icon.source: Qaterial.Icons.close
+                    icon.source: Icons.close
                     icon.color:  ThemeManager.textSecondaryColor
                     width: 36; height: 36
                     onClicked: saveWorkspaceDialog.close()
@@ -2359,8 +2376,8 @@ Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 14
 
-                    Qaterial.ColorIcon {
-                        source: Qaterial.Icons.folderOpenOutline
+                    ColorIcon {
+                        source: Icons.folderOpenOutline
                         color:  ThemeManager.primaryColor
                         width: 22; height: 22
                         anchors.verticalCenter: parent.verticalCenter
@@ -2384,11 +2401,11 @@ Rectangle {
                     }
                 }
 
-                Qaterial.AppBarButton {
+                AppBarButton {
                     anchors.right:          parent.right
                     anchors.rightMargin:    8
                     anchors.verticalCenter: parent.verticalCenter
-                    icon.source: Qaterial.Icons.close
+                    icon.source: Icons.close
                     icon.color:  ThemeManager.textSecondaryColor
                     width: 36; height: 36
                     onClicked: openWorkspaceDialog.close()
@@ -2418,8 +2435,8 @@ Rectangle {
                             anchors.centerIn: parent
                             spacing: 8
 
-                            Qaterial.ColorIcon {
-                                source: Qaterial.Icons.folderOutline
+                            ColorIcon {
+                                source: Icons.folderOutline
                                 color:  ThemeManager.textSecondaryColor
                                 width: 28; height: 28
                                 anchors.horizontalCenter: parent.horizontalCenter
@@ -2475,8 +2492,8 @@ Rectangle {
                                 anchors.leftMargin:     16
                                 spacing: 10
 
-                                Qaterial.ColorIcon {
-                                    source: Qaterial.Icons.vectorSquare
+                                ColorIcon {
+                                    source: Icons.vectorSquare
                                     color:  wsCard.isCurrent ? ThemeManager.primaryColor : ThemeManager.textSecondaryColor
                                     width: 16; height: 16
                                     anchors.verticalCenter: parent.verticalCenter
@@ -2511,8 +2528,8 @@ Rectangle {
                                 Behavior on opacity { NumberAnimation { duration: 120 } }
                                 Behavior on color   { ColorAnimation   { duration: 100 } }
 
-                                Qaterial.ColorIcon {
-                                    source: Qaterial.Icons.trashCanOutline
+                                ColorIcon {
+                                    source: Icons.trashCanOutline
                                     color:  ThemeManager.dangerColor
                                     width: 16; height: 16
                                     anchors.centerIn: parent
@@ -2621,8 +2638,8 @@ Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 14
 
-                    Qaterial.ColorIcon {
-                        source: Qaterial.Icons.alertOutline
+                    ColorIcon {
+                        source: Icons.alertOutline
                         color:  "#ff9800"
                         width: 22; height: 22
                         anchors.verticalCenter: parent.verticalCenter
@@ -2637,11 +2654,11 @@ Rectangle {
                     }
                 }
 
-                Qaterial.AppBarButton {
+                AppBarButton {
                     anchors.right:          parent.right
                     anchors.rightMargin:    8
                     anchors.verticalCenter: parent.verticalCenter
-                    icon.source: Qaterial.Icons.close
+                    icon.source: Icons.close
                     icon.color:  ThemeManager.textSecondaryColor
                     width: 36; height: 36
                     onClicked: confirmNewProjectDialog.close()
@@ -3167,3 +3184,4 @@ Rectangle {
         }
     }
 }
+

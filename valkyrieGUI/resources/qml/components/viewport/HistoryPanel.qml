@@ -1,8 +1,10 @@
-﻿import QtQuick 2.15
+import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import App.Theme 1.0
-import Qaterial 1.0 as Qaterial
+import App.Icons 1.0
+
+import ".."
 
 Rectangle {
     id: panel
@@ -25,7 +27,7 @@ Rectangle {
                           ThemeManager.primaryColor.b, 0.45)
     clip: true
 
-    // â”€â”€ Type helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Type helpers ──────────────────────────────────────────────────────────
     function _typeColor(text) {
         if (!text || text === "Initial state") return Qt.rgba(ThemeManager.textColor.r,
                                                               ThemeManager.textColor.g,
@@ -41,17 +43,17 @@ Rectangle {
     }
 
     function _typeIcon(text) {
-        if (!text || text === "Initial state") return Qaterial.Icons.home
-        if (text.indexOf("Move")              !== -1) return Qaterial.Icons.cursorMove
-        if (text.indexOf("Resize")            !== -1) return Qaterial.Icons.resize
-        if (text.indexOf("Add Node")          !== -1) return Qaterial.Icons.plusCircleOutline
-        if (text.indexOf("Remove Node")       !== -1) return Qaterial.Icons.closeCircleOutline
-        if (text.indexOf("Add Connection")    !== -1) return Qaterial.Icons.link
-        if (text.indexOf("Remove Connection") !== -1) return Qaterial.Icons.linkOff
-        return Qaterial.Icons.history
+        if (!text || text === "Initial state") return Icons.home
+        if (text.indexOf("Move")              !== -1) return Icons.cursorMove
+        if (text.indexOf("Resize")            !== -1) return Icons.resize
+        if (text.indexOf("Add Node")          !== -1) return Icons.plusCircleOutline
+        if (text.indexOf("Remove Node")       !== -1) return Icons.close
+        if (text.indexOf("Add Connection")    !== -1) return Icons.link
+        if (text.indexOf("Remove Connection") !== -1) return Icons.linkOff
+        return Icons.history
     }
 
-    // â”€â”€ Header (38px) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Header (38px) ─────────────────────────────────────────────────────────
     RowLayout {
         id: headerRow
         anchors.top:   parent.top
@@ -61,14 +63,14 @@ Rectangle {
         anchors.leftMargin:  14
         anchors.rightMargin: 4
 
-        Qaterial.ColorIcon {
-            source: Qaterial.Icons.history
+        ColorIcon {
+            source: Icons.history
             color:  ThemeManager.primaryColor
             width: 15; height: 15
         }
 
         Text {
-            text: "Histórico"
+            text: "Hist�rico"
             font.pixelSize: 12
             font.bold: true
             color: ThemeManager.textColor
@@ -84,8 +86,8 @@ Rectangle {
             Layout.alignment: Qt.AlignVCenter
         }
 
-        Qaterial.AppBarButton {
-            icon.source: Qaterial.Icons.close
+        AppBarButton {
+            icon.source: Icons.close
             icon.color:  ThemeManager.textColor
             opacity: 0.55
             width: 34; height: 34
@@ -104,9 +106,9 @@ Rectangle {
         opacity: 0.18
     }
 
-    // â”€â”€ Entry list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Entry list ────────────────────────────────────────────────────────────
     // ScrollView fills everything below the header. Height is bounded by
-    // panel.height (which is non-circular â€” see _count formula above).
+    // panel.height (which is non-circular — see _count formula above).
     ScrollView {
         id: scrollView
         anchors.top:    topDivider.bottom
@@ -164,7 +166,7 @@ Rectangle {
                     Behavior on color { ColorAnimation { duration: 100 } }
                 }
 
-                // Timeline connector â€” top half (not drawn on first entry)
+                // Timeline connector — top half (not drawn on first entry)
                 Rectangle {
                     visible: index > 0
                     x: 21; anchors.top: parent.top
@@ -172,7 +174,7 @@ Rectangle {
                     color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g,
                                    ThemeManager.textColor.b, isFuture ? 0.1 : 0.22)
                 }
-                // Timeline connector â€” bottom half (not drawn on last entry)
+                // Timeline connector — bottom half (not drawn on last entry)
                 Rectangle {
                     visible: panel.vp && index < panel.vp.historyCount - 1
                     x: 21; anchors.bottom: parent.bottom
@@ -200,7 +202,7 @@ Rectangle {
                 }
 
                 // Type icon
-                Qaterial.ColorIcon {
+                ColorIcon {
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.left: parent.left
                     anchors.leftMargin: 38
@@ -269,3 +271,4 @@ Rectangle {
         }
     }
 }
+

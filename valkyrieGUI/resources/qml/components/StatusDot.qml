@@ -77,3 +77,4 @@ Item {
         color: ThemeManager.textColor
     }
 }
+

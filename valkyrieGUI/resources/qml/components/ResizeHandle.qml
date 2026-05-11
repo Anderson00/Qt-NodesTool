@@ -254,3 +254,4 @@ Rectangle {
             dragArea.startTargetW, dragArea.startTargetH)
     }
 }
+

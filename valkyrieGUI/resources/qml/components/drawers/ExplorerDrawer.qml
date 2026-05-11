@@ -3,7 +3,8 @@ import QtQuick.Controls 2.15 as Contrl
 import QtQuick.Layouts 1.14
 import Qt.labs.folderlistmodel 2.15
 import App.Theme 1.0
-import Qaterial 1.0 as Qaterial
+import App.Icons 1.0
+import ".."
 
 Item {
     id: root
@@ -85,8 +86,8 @@ Item {
                     opacity: root.breadcrumbUrls.length > 1 ? 1.0 : 0.25
                     Behavior on opacity { NumberAnimation { duration: 120 } }
 
-                    Qaterial.ColorIcon {
-                        source: Qaterial.Icons.arrowLeft
+                    ColorIcon {
+                        source: Icons.arrowLeft
                         color: ThemeManager.textColor
                         width: 14; height: 14; anchors.centerIn: parent
                     }
@@ -98,8 +99,8 @@ Item {
                     }
                 }
 
-                Qaterial.ColorIcon {
-                    source: Qaterial.Icons.magnify
+                ColorIcon {
+                    source: Icons.magnify
                     color: ThemeManager.textColor; opacity: 0.4
                     width: 14; height: 14
                 }
@@ -140,8 +141,9 @@ Item {
                         color: Qt.rgba(ThemeManager.textColor.r,
                                        ThemeManager.textColor.g,
                                        ThemeManager.textColor.b, 0.2)
-                        Qaterial.ColorIcon {
-                            source: Qaterial.Icons.close; color: ThemeManager.textColor
+                        ColorIcon {
+                            source: Icons.close
+                            color: ThemeManager.textColor
                             width: 9; height: 9; anchors.centerIn: parent
                         }
                         MouseArea {
@@ -226,10 +228,10 @@ Item {
                                             crumbTxt.implicitWidth) + 10
                             height: 20
 
-                            Qaterial.ColorIcon {
+                            ColorIcon {
                                 id: crumbHomeIco
                                 visible: index === 0
-                                source: Qaterial.Icons.home
+                                source: Icons.home
                                 width: 12; height: 12; anchors.centerIn: parent
                                 color: index === root.breadcrumbLabels.length - 1
                                        ? ThemeManager.textColor : ThemeManager.primaryColor
@@ -271,8 +273,8 @@ Item {
                 anchors.centerIn: parent; spacing: 10
                 visible: folderModel.count === 0
 
-                Qaterial.ColorIcon {
-                    source: Qaterial.Icons.folderOpenOutline
+                ColorIcon {
+                    source: Icons.folderOpenOutline
                     color: ThemeManager.textColor; opacity: 0.18
                     width: 28; height: 28; anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -316,9 +318,9 @@ Item {
                         anchors.fill: parent
                         anchors.leftMargin: 12; anchors.rightMargin: 10; spacing: 8
 
-                        Qaterial.ColorIcon {
+                        ColorIcon {
                             source: fileIsDir
-                                    ? Qaterial.Icons.folderOutline
+                                    ? Icons.folderOutline
                                     : root._fileIcon(fileName)
                             color: fileIsDir ? "#F59E0B" : ThemeManager.textColor
                             opacity: fileIsDir ? 1.0 : 0.6
@@ -337,9 +339,9 @@ Item {
                             font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.35
                         }
 
-                        Qaterial.ColorIcon {
+                        ColorIcon {
                             visible: fileIsDir
-                            source: Qaterial.Icons.chevronRight
+                            source: Icons.chevronRight
                             color: ThemeManager.textColor; opacity: 0.3
                             width: 12; height: 12
                         }
@@ -359,10 +361,10 @@ Item {
 
     function _fileIcon(name) {
         var ext = name.split('.').pop().toLowerCase()
-        if (ext === "json") return Qaterial.Icons.codeJson
-        if (ext === "txt")  return Qaterial.Icons.fileDocumentOutline
-        if (ext === "vky")  return Qaterial.Icons.graphOutline
-        return Qaterial.Icons.fileOutline
+        if (ext === "json") return Icons.codeJson
+        if (ext === "txt")  return Icons.fileDocumentOutline
+        if (ext === "vky")  return Icons.graphOutline
+        return Icons.fileOutline
     }
 
     function _sizeStr(bytes) {
@@ -371,3 +373,4 @@ Item {
         return (bytes / 1048576).toFixed(1) + " MB"
     }
 }
+

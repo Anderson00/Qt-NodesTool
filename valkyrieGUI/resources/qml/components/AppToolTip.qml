@@ -1,7 +1,7 @@
 // Themed tooltip that follows ThemeManager colors.
 //
 // Why a custom component instead of overriding qrc:/QtQuick/Controls.2/ToolTip.qml:
-// Qaterial/Material loads its ToolTip from the compiled plugin (DLL) internal
+// Material loads its ToolTip from the compiled plugin (DLL) internal
 // resources, not from the engine's import path. The only reliable override is
 // to set `background` and `contentItem` on an individual ToolTip instance —
 // which QQC2 always respects, regardless of the active style.
@@ -51,3 +51,4 @@ ToolTip {
     enter: Transition { NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: 80; easing.type: Easing.OutCubic } }
     exit:  Transition { NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: 60; easing.type: Easing.InCubic } }
 }
+

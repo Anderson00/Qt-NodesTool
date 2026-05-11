@@ -66,3 +66,4 @@ CheckBox {
         leftPadding: control.indicator.width + 8
     }
 }
+

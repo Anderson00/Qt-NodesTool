@@ -60,3 +60,4 @@ Canvas {
         onClicked: parent.clicked()
     }
 }
+

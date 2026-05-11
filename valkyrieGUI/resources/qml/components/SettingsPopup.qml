@@ -5,7 +5,8 @@ import QtQuick.Layouts 1.0
 import App.Theme 1.0
 import App.Properties 1.0
 import App.Presets 1.0
-import Qaterial as Qaterial
+import App.Icons 1.0
+
 
 Popup {
     id: root
@@ -146,8 +147,8 @@ Popup {
                         anchors.leftMargin: 18
                         spacing: 10
 
-                        Qaterial.ColorIcon {
-                            source: Qaterial.Icons.palette
+                        ColorIcon {
+                            source: Icons.palette
                             color: selectedCategory === "appearance"
                                        ? ThemeManager.primaryColor : ThemeManager.textColor
                             width: 16; height: 16
@@ -204,8 +205,8 @@ Popup {
                         anchors.leftMargin: 18
                         spacing: 10
 
-                        Qaterial.ColorIcon {
-                            source: Qaterial.Icons.viewDashboard
+                        ColorIcon {
+                            source: Icons.viewDashboard
                             color: selectedCategory === "viewport"
                                        ? ThemeManager.primaryColor : ThemeManager.textColor
                             width: 16; height: 16
@@ -262,8 +263,8 @@ Popup {
                         anchors.leftMargin: 18
                         spacing: 10
 
-                        Qaterial.ColorIcon {
-                            source: Qaterial.Icons.tune
+                        ColorIcon {
+                            source: Icons.tune
                             color: selectedCategory === "general"
                                        ? ThemeManager.primaryColor : ThemeManager.textColor
                             width: 16; height: 16
@@ -293,13 +294,13 @@ Popup {
         }
 
         // ── Close button ───────────────────────────────────────────────────────
-        Qaterial.AppBarButton {
+        AppBarButton {
             anchors.top: parent.top
             anchors.right: parent.right
             anchors.topMargin: 6
             anchors.rightMargin: 6
             width: 36; height: 36
-            icon.source: Qaterial.Icons.close
+            icon.source: Icons.close
             icon.color: ThemeManager.textColor
             onClicked: root.close()
         }
@@ -809,13 +810,13 @@ Popup {
                     SectionLabel { text: "GRID PATTERN" }
 
                     readonly property var _gridPatterns: [
-                        { id: "dots",    label: "Dots",    icon: Qaterial.Icons.dotsGrid },
-                        { id: "lines",   label: "Lines",   icon: Qaterial.Icons.viewSequential },
-                        { id: "circles", label: "Circles", icon: Qaterial.Icons.circleOutline },
-                        { id: "cross",   label: "Cross",   icon: Qaterial.Icons.plus },
-                        { id: "x",       label: "X",       icon: Qaterial.Icons.close },
-                        { id: "hexagon", label: "Hexagon", icon: Qaterial.Icons.hexagonOutline },
-                        { id: "none",    label: "None",    icon: Qaterial.Icons.eyeOffOutline }
+                        { id: "dots",    label: "Dots",    icon: Icons.dotsGrid },
+                        { id: "lines",   label: "Lines",   icon: Icons.viewSequential },
+                        { id: "circles", label: "Circles", icon: Icons.circleOutline },
+                        { id: "cross",   label: "Cross",   icon: Icons.plus },
+                        { id: "x",       label: "X",       icon: Icons.close },
+                        { id: "hexagon", label: "Hexagon", icon: Icons.hexagonOutline },
+                        { id: "none",    label: "None",    icon: Icons.eyeOffOutline }
                     ]
 
                     Flow {
@@ -839,7 +840,7 @@ Popup {
                                     anchors.centerIn: parent
                                     spacing: 6
 
-                                    Qaterial.ColorIcon {
+                                    ColorIcon {
                                         source: modelData.icon
                                         color: active ? ThemeManager.primaryColor : ThemeManager.textSecondaryColor
                                         width: 20; height: 20
@@ -1435,3 +1436,4 @@ Popup {
         }
     }
 }
+

@@ -1,8 +1,8 @@
-﻿import QtQuick 2.15
+import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
-import Qaterial 1.0 as Qaterial
 import App.Theme 1.0
+import App.Icons 1.0
 
 import '../../components'
 
@@ -14,12 +14,12 @@ Item {
 
     readonly property var modeNames: ["Float", "Int", "Gaussian", "Dice", "Bool", "Sequence"]
     readonly property var modeIcons: [
-        Qaterial.Icons.decimalIncrease,
-        Qaterial.Icons.numeric,
-        Qaterial.Icons.chartBellCurve,
-        Qaterial.Icons.diceMultiple,
-        Qaterial.Icons.toggleSwitch,
-        Qaterial.Icons.formatListNumbered
+        Icons.decimalIncrease,
+        Icons.numeric,
+        Icons.chartBellCurve,
+        Icons.diceMultiple,
+        Icons.toggleSwitch,
+        Icons.formatListNumbered
     ]
 
     Timer {
@@ -72,9 +72,9 @@ Item {
                     color: sendMa.containsMouse
                            ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.2)
                            : "transparent"
-                    Qaterial.ColorIcon {
+                    ColorIcon {
                         anchors.centerIn: parent
-                        source: Qaterial.Icons.send; width: 14; height: 14
+                        source: Icons.send; width: 14; height: 14
                         color: ThemeManager.primaryColor
                     }
                     MouseArea {
@@ -108,7 +108,7 @@ Item {
             Rectangle {
                 width: 28; height: 28; radius: 3
                 color: rstMa.containsMouse ? Qt.rgba(ThemeManager.dangerColor.r, ThemeManager.dangerColor.g, ThemeManager.dangerColor.b, 0.15) : "transparent"
-                Qaterial.ColorIcon { anchors.centerIn: parent; source: Qaterial.Icons.refresh; width: 12; height: 12; color: ThemeManager.textColor; opacity: 0.5 }
+                ColorIcon { anchors.centerIn: parent; source: Icons.refresh; width: 12; height: 12; color: ThemeManager.textColor; opacity: 0.5 }
                 MouseArea { id: rstMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: behaviourObject.resetStats() }
             }
         }
@@ -128,7 +128,7 @@ Item {
                         Behavior on color { ColorAnimation { duration: 120 } }
                         Column {
                             anchors.centerIn: parent; spacing: 1
-                            Qaterial.ColorIcon {
+                            ColorIcon {
                                 source: root.modeIcons[index]; width: 12; height: 12
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 color: behaviourObject && behaviourObject.mode === index ? ThemeManager.backgroundColor : ThemeManager.textColor
@@ -147,7 +147,7 @@ Item {
             }
         }
 
-        // ── Float / Int / Gaussian / Sequence: Min & Max ───────────────────
+        // -- Float / Int / Gaussian / Sequence: Min & Max -------------------
         ColumnLayout {
             Layout.fillWidth: true
             visible: behaviourObject && (behaviourObject.mode <= 2 || behaviourObject.mode === 5)
@@ -171,7 +171,7 @@ Item {
             }
         }
 
-        // ── Gaussian: Mean & StdDev ────────────────────────────────────────
+        // -- Gaussian: Mean & StdDev ----------------------------------------
         ColumnLayout {
             Layout.fillWidth: true
             visible: behaviourObject && behaviourObject.mode === 2
@@ -179,21 +179,21 @@ Item {
 
             NumericInputField {
                 Layout.fillWidth: true; implicitHeight: 34
-                label: "μ"; value: behaviourObject ? behaviourObject.mean : 50
+                label: "�"; value: behaviourObject ? behaviourObject.mean : 50
                 from: -1e6; to: 1e6; stepSize: 1.0; decimals: 2
                 accentColor: "#7C4DFF"
                 onValueModified: function(newValue) { if (behaviourObject) behaviourObject.setMean(newValue) }
             }
             NumericInputField {
                 Layout.fillWidth: true; implicitHeight: 34
-                label: "σ"; value: behaviourObject ? behaviourObject.stddev : 15
+                label: "s"; value: behaviourObject ? behaviourObject.stddev : 15
                 from: 0.001; to: 1e6; stepSize: 1.0; decimals: 3
                 accentColor: "#7C4DFF"
                 onValueModified: function(newValue) { if (behaviourObject) behaviourObject.setStddev(newValue) }
             }
         }
 
-        // ── Dice: Count & Sides ────────────────────────────────────────────
+        // -- Dice: Count & Sides --------------------------------------------
         ColumnLayout {
             Layout.fillWidth: true
             visible: behaviourObject && behaviourObject.mode === 3
@@ -222,7 +222,7 @@ Item {
             }
         }
 
-        // ── Bool: Probability ──────────────────────────────────────────────
+        // -- Bool: Probability ----------------------------------------------
         ColumnLayout {
             Layout.fillWidth: true
             visible: behaviourObject && behaviourObject.mode === 4
@@ -244,7 +244,7 @@ Item {
             }
         }
 
-        // ── Precision (non-Dice, non-Bool) ─────────────────────────────────
+        // -- Precision (non-Dice, non-Bool) ---------------------------------
         RowLayout {
             Layout.fillWidth: true; spacing: 4
             visible: behaviourObject && behaviourObject.mode !== 3 && behaviourObject.mode !== 4
@@ -276,10 +276,10 @@ Item {
             }
         }
 
-        // ── Interval ───────────────────────────────────────────────────────
+        // -- Interval -------------------------------------------------------
         RowLayout {
             Layout.fillWidth: true; spacing: 6
-            Text { text: "⏱"; font.pixelSize: 12; Layout.alignment: Qt.AlignVCenter }
+            Text { text: "?"; font.pixelSize: 12; Layout.alignment: Qt.AlignVCenter }
             NumericInputField {
                 id: intervalField
                 Layout.fillWidth: true; implicitHeight: 34
@@ -288,13 +288,13 @@ Item {
             }
         }
 
-        // ── Control buttons ────────────────────────────────────────────────
+        // -- Control buttons ------------------------------------------------
         RowLayout {
             Layout.fillWidth: true; spacing: 4
             NewButton {
                 Layout.fillWidth: true; Layout.preferredHeight: 32
                 variant: "filled"
-                text: autoTimer.running ? "■ Stop" : "▶ Auto"
+                text: autoTimer.running ? "� Stop" : "? Auto"
                 backgroundColor: autoTimer.running ? ThemeManager.dangerColor : ThemeManager.primaryColor
                 onClicked: { if (autoTimer.running) autoTimer.stop(); else autoTimer.start() }
             }
@@ -307,3 +307,4 @@ Item {
         }
     }
 }
+

@@ -73,6 +73,12 @@ QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent),
             "NodeVariable is created by VariableManager"
             );
 
+        qmlRegisterSingletonType(
+            QUrl("qrc:/components/Icons.qml"),
+            "App.Icons", 1, 0,
+            "Icons"
+        );
+
         m_subTheme = new SubTheme(QUuid::createUuid().toString(QUuid::WithoutBraces));
         ThemeManager::instance()->addSubTheme(m_subTheme);
 
