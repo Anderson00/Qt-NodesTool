@@ -1,4 +1,7 @@
 <RCC>
+    <qresource prefix="/">
+        <file alias="qtquickcontrols2.conf">qtquickcontrols2.conf</file>
+    </qresource>
     <qresource prefix="/behaviours/common">
         <file alias="FileOpener.qml">qml/behaviours/common/FileOpener.qml</file>
         <file alias="HexViewer.qml">qml/behaviours/common/HexViewer.qml</file>

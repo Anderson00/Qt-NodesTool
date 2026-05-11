@@ -88,7 +88,7 @@ Popup {
         distance: 55 * root.expansion
         iconSource: "qrc:/icons/close.svg"
         toolTipText: "Remover"
-        iconColor: ThemeManager.errorColor
+        iconColor: ThemeManager.dangerColor
         onClicked: {
             if (connectionIndex !== -1) {
                 viewPort.removeConnectionWithUndo(outUuid, outMethod, inUuid, inMethod)
