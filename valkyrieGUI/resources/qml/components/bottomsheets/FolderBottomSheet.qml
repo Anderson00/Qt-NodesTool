@@ -191,6 +191,25 @@ Contrl.Drawer {
                 anchors.fill: parent
                 orientation: Qt.Horizontal
 
+                handle: Rectangle {
+                    implicitWidth: 6
+                    implicitHeight: parent.height
+                    color: SplitHandle.hovered || SplitHandle.pressed
+                           ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.3)
+                           : Qt.rgba(ThemeManager.borderColor.r, ThemeManager.borderColor.g, ThemeManager.borderColor.b, 0.15)
+                    Behavior on color { ColorAnimation { duration: 80 } }
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: 2
+                        height: 16
+                        radius: 1
+                        color: SplitHandle.hovered || SplitHandle.pressed
+                               ? ThemeManager.primaryColor
+                               : Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.3)
+                        Behavior on color { ColorAnimation { duration: 80 } }
+                    }
+                }
+
                 Rectangle {
                     width: 200
                     Contrl.SplitView.minimumWidth: 150

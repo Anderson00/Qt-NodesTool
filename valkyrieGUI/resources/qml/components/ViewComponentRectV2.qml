@@ -516,6 +516,25 @@ Rectangle {
                 height: parent.targetHeight
                 implicitHeight: Math.max(columnLayoutInputConns.height, columnLayoutOutputConns.height) + 8
 
+                handle: Rectangle {
+                    implicitWidth: 6
+                    implicitHeight: splitConns.height
+                    color: SplitHandle.hovered || SplitHandle.pressed
+                           ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.3)
+                           : Qt.rgba(ThemeManager.borderColor.r, ThemeManager.borderColor.g, ThemeManager.borderColor.b, 0.15)
+                    Behavior on color { ColorAnimation { duration: 80 } }
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: 2
+                        height: 16
+                        radius: 1
+                        color: SplitHandle.hovered || SplitHandle.pressed
+                               ? ThemeManager.primaryColor
+                               : Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.3)
+                        Behavior on color { ColorAnimation { duration: 80 } }
+                    }
+                }
+
                 Rectangle {
                     id: connectionsInputBody
                     clip: true
