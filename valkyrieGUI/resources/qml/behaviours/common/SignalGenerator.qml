@@ -1,8 +1,8 @@
-﻿import QtQuick 2.15
+import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import QtCharts 2.15
-import Qaterial 1.0 as Qaterial
+
 import App.Theme 1.0
 
 import '../../components'
@@ -22,7 +22,7 @@ Item {
     readonly property var waveNames:  ["Sine", "Square", "Triangle", "Sawtooth", "Noise"]
     readonly property var waveColors: ["#3498db","#e74c3c","#2ecc71","#f39c12","#9b59b6"]
 
-    // single helper — string → color so Qt.rgba can use .r/.g/.b
+    // single helper � string ? color so Qt.rgba can use .r/.g/.b
     property color _wc: waveColors[waveMode]
 
     property real _t:          0.0
@@ -93,7 +93,7 @@ Item {
         anchors.margins: 6
         spacing: 4
 
-        // ── Waveform selector ──────────────────────────────────────────────
+        // -- Waveform selector ----------------------------------------------
         Rectangle {
             Layout.fillWidth: true; height: 32; radius: 4
             color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.04)
@@ -123,7 +123,7 @@ Item {
             }
         }
 
-        // ── Live value display ─────────────────────────────────────────────
+        // -- Live value display ---------------------------------------------
         Rectangle {
             Layout.fillWidth: true; Layout.preferredHeight: 46; radius: 6
             color: Qt.rgba(root._wc.r, root._wc.g, root._wc.b, 0.08)
@@ -170,7 +170,7 @@ Item {
             }
         }
 
-        // ── Preview chart ──────────────────────────────────────────────────
+        // -- Preview chart --------------------------------------------------
         Item {
             Layout.fillWidth: true
             Layout.preferredHeight: 90
@@ -218,7 +218,7 @@ Item {
             }
         }
 
-        // ── Parameters ─────────────────────────────────────────────────────
+        // -- Parameters -----------------------------------------------------
         NumericInputField {
             Layout.fillWidth: true; implicitHeight: 34
             label: "Hz"; value: root.frequency
@@ -245,7 +245,7 @@ Item {
 
         NumericInputField {
             Layout.fillWidth: true; implicitHeight: 34
-            label: "Ï†"; value: root.phase; suffix: "Â°"
+            label: "φ"; value: root.phase; suffix: "°"
             from: 0; to: 360; stepSize: 1; decimals: 1; showBar: true
             accentColor: root._wc
             onValueModified: function(newValue) { root.phase = newValue }
@@ -260,14 +260,14 @@ Item {
             onValueModified: function(newValue) { root.dutyCycle = newValue }
         }
 
-        // ── Controls ───────────────────────────────────────────────────────
+        // -- Controls -------------------------------------------------------
         RowLayout {
             Layout.fillWidth: true; spacing: 4
 
             NewButton {
                 Layout.fillWidth: true; Layout.preferredHeight: 32
                 variant: "filled"
-                text: genTimer.running ? "■ Stop" : "▶ Generate"
+                text: genTimer.running ? "� Stop" : "? Generate"
                 backgroundColor: genTimer.running
                                  ? ThemeManager.dangerColor
                                  : root.waveColors[root.waveMode]
@@ -300,10 +300,11 @@ Item {
 
             NewButton {
                 Layout.preferredWidth: 36; Layout.preferredHeight: 32
-                variant: "outlined"; text: "⟳"
+                variant: "outlined"; text: "?"
                 backgroundColor: ThemeManager.textSecondaryColor
                 onClicked: resetChart()
             }
         }
     }
 }
+

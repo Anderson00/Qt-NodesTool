@@ -1,8 +1,9 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
-import Qaterial 1.0 as Qaterial
+
 import App.Theme 1.0
+import App.Icons 1.0
 
 import '../../components'
 
@@ -57,9 +58,9 @@ Item {
                        : "transparent"
                 Behavior on color { ColorAnimation { duration: 100 } }
 
-                Qaterial.ColorIcon {
+                ColorIcon {
                     anchors.centerIn: parent
-                    source: Qaterial.Icons.deleteOutline
+                    source: Icons.deleteOutline
                     width: 14; height: 14
                     color: ThemeManager.dangerColor
                     opacity: clearMa.containsMouse ? 1.0 : 0.6
@@ -177,3 +178,4 @@ Item {
         }
     }
 }
+

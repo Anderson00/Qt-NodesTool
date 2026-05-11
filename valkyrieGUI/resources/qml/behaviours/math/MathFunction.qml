@@ -1,7 +1,7 @@
-﻿import QtQuick 2.15
+import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
-import Qaterial 1.0 as Qaterial
+
 import App.Theme 1.0
 
 import '../../components'
@@ -11,14 +11,14 @@ Item {
     anchors.fill: parent
     property var behaviourObject
 
-    readonly property var funcNames: ["sin","cos","tan","abs","√","ln","log₁₀","eˣ","⌊x⌋","⌈x⌉","round"]
+    readonly property var funcNames: ["sin","cos","tan","abs","v","ln","log10","e?","?x?","?x?","round"]
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 6
         spacing: 4
 
-        // ── Function selector ──────────────────────────────────────────────
+        // -- Function selector ----------------------------------------------
         Rectangle {
             Layout.fillWidth: true; implicitHeight: funcGrid.height + 8; radius: 4
             color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.04)
@@ -52,7 +52,7 @@ Item {
             }
         }
 
-        // ── Result display ─────────────────────────────────────────────────
+        // -- Result display -------------------------------------------------
         Rectangle {
             Layout.fillWidth: true; Layout.preferredHeight: 46; radius: 6
             color: Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.08)
@@ -78,7 +78,7 @@ Item {
             }
         }
 
-        // ── X input ────────────────────────────────────────────────────────
+        // -- X input --------------------------------------------------------
         NumericInputField {
             Layout.fillWidth: true; implicitHeight: 36
             label: "x"
@@ -91,3 +91,4 @@ Item {
         }
     }
 }
+

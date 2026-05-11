@@ -88,3 +88,4 @@ Item {
         border.color: ThemeManager.backgroundColor; border.width: 2
     }
 }
+

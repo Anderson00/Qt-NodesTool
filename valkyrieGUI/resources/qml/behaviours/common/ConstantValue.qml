@@ -1,8 +1,8 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
-import Qaterial 1.0 as Qaterial
 import App.Theme 1.0
+import App.Icons 1.0
 
 import '../../components'
 
@@ -13,9 +13,9 @@ Item {
 
     readonly property var modeNames: ["Number", "Text", "Bool"]
     readonly property var modeIcons: [
-        Qaterial.Icons.numeric,
-        Qaterial.Icons.formatText,
-        Qaterial.Icons.toggleSwitch
+        Icons.numeric,
+        Icons.formatText,
+        Icons.toggleSwitch
     ]
 
     ColumnLayout {
@@ -39,7 +39,7 @@ Item {
                         Behavior on color { ColorAnimation { duration: 120 } }
                         Column {
                             anchors.centerIn: parent; spacing: 1
-                            Qaterial.ColorIcon {
+                            ColorIcon {
                                 source: root.modeIcons[index]; width: 12; height: 12
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 color: behaviourObject && behaviourObject.mode === index ? ThemeManager.backgroundColor : ThemeManager.textColor

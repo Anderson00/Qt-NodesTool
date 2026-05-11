@@ -62,3 +62,4 @@ Item {
         color: ThemeManager.textColor
     }
 }
+

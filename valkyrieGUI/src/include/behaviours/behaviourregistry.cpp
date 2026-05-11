@@ -3,8 +3,6 @@
 #include <QDir>
 
 BehaviourRegistry::BehaviourRegistry() : QObject(nullptr) {
-    m_treeModelPaths = new qaterial::TreeModel(this);
-
     // Create plugin directories if they don't exist
     QDir().mkdir("Behaviours");
     QDir dir("Behaviours");
@@ -87,44 +85,41 @@ QJsonObject BehaviourRegistry::discoverAll() {
     return m_cachedDiscovery;
 }
 
-qaterial::TreeElement* BehaviourRegistry::discoverAllToTree() {
+QJsonArray BehaviourRegistry::discoverAllToTree() {
     QJsonObject paths = discoverAll();
-
-    qaterial::TreeElement *root = new qaterial::TreeElement(this);
-    QMap<QString, qaterial::TreeElement*> roots;
+    QJsonArray root;
+    QMap<QString, QJsonObject> categoryNodes;
 
     QStringList pathKeys = paths.keys();
-    for (QString key : pathKeys) {
+    for (const QString& key : pathKeys) {
         QStringList keySplit = key.split("/");
-        if (keySplit.length() > 0) {
-            qaterial::TreeElement *element;
-            if (roots.contains(keySplit[0])) {
-                element = roots[keySplit[0]];
-            } else {
-                element = new qaterial::TreeElement(m_treeModelPaths);
-                roots[keySplit[0]] = element;
-                root->append(element);
-                m_treeModelPaths->append(element);
-            }
+        if (keySplit.isEmpty()) continue;
 
-            element->setText(keySplit[0]);
+        QString category = keySplit[0];
+        if (!categoryNodes.contains(category)) {
+            QJsonObject catNode;
+            catNode["text"] = category;
+            catNode["expanded"] = true;
+            catNode["children"] = QJsonArray();
+            categoryNodes[category] = catNode;
+        }
 
-            if (keySplit.length() > 1) {
-                auto *newTree = new qaterial::TreeElement(m_treeModelPaths);
-                element->append(newTree);
-
-                for (int i = 0; i < keySplit.size(); i++) {
-                    newTree->setText(keySplit.join(";"));
-                    keySplit.removeAt(0);
-                    if (i < keySplit.size() - 1) {
-                        auto *newTreeNext = new qaterial::TreeElement(m_treeModelPaths);
-                        newTree->append(newTreeNext);
-                        newTree = newTreeNext;
-                    }
-                }
-            }
+        if (keySplit.size() > 1) {
+            QJsonObject itemNode;
+            itemNode["text"] = keySplit.mid(1).join("/");
+            itemNode["isLeaf"] = true;
+            categoryNodes[category]["children"].toArray().append(itemNode); // Wait, toArray() returns a copy
+            
+            // Correct way to append to nested array
+            QJsonArray children = categoryNodes[category]["children"].toArray();
+            children.append(itemNode);
+            categoryNodes[category]["children"] = children;
         }
     }
 
-    return root->children();
+    for (const auto& node : categoryNodes) {
+        root.append(node);
+    }
+
+    return root;
 }

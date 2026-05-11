@@ -5,7 +5,7 @@ import QtQuick.Controls.Material 2.12
 import QtGraphicalEffects 1.15
 
 import App.Theme 1.0
-import Qaterial 1.0 as Qaterial
+
 
 Rectangle {
     id: root
@@ -143,3 +143,4 @@ Rectangle {
         }
     }
 }
+

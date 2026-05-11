@@ -1,7 +1,7 @@
-﻿import QtQuick 2.15
+import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
-import Qaterial 1.0 as Qaterial
+
 import App.Theme 1.0
 
 import '../../components'
@@ -11,14 +11,14 @@ Item {
     anchors.fill: parent
     property var behaviourObject
 
-    readonly property var opSymbols: ["==", "≠", "<", ">", "≤", "≥"]
+    readonly property var opSymbols: ["==", "?", "<", ">", "=", "="]
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 6
         spacing: 4
 
-        // ── Operator selector ──────────────────────────────────────────────
+        // -- Operator selector ----------------------------------------------
         Rectangle {
             Layout.fillWidth: true; height: 32; radius: 4
             color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.04)
@@ -49,7 +49,7 @@ Item {
             }
         }
 
-        // ── Result indicator ───────────────────────────────────────────────
+        // -- Result indicator -----------------------------------------------
         Rectangle {
             Layout.fillWidth: true; Layout.preferredHeight: 52; radius: 6
             color: {
@@ -80,7 +80,7 @@ Item {
             }
         }
 
-        // ── Formula display ────────────────────────────────────────────────
+        // -- Formula display ------------------------------------------------
         Text {
             Layout.alignment: Qt.AlignHCenter
             text: {
@@ -93,7 +93,7 @@ Item {
             color: ThemeManager.textSecondaryColor
         }
 
-        // ── A input ────────────────────────────────────────────────────────
+        // -- A input --------------------------------------------------------
         NumericInputField {
             Layout.fillWidth: true; implicitHeight: 36
             label: "A"
@@ -105,7 +105,7 @@ Item {
             onValueModified: function(newValue) { if (behaviourObject) behaviourObject.setA(newValue) }
         }
 
-        // ── B input ────────────────────────────────────────────────────────
+        // -- B input --------------------------------------------------------
         NumericInputField {
             Layout.fillWidth: true; implicitHeight: 36
             label: "B"
@@ -118,3 +118,4 @@ Item {
         }
     }
 }
+

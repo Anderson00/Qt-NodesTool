@@ -3,7 +3,8 @@ import QtQuick.Controls 2.12
 import App.Theme 1.0
 import App.Workspace 1.0
 import App.Properties 1.0
-import Qaterial as Qaterial
+import App.Icons 1.0
+
 import "."
 
 // Startup screen shown when no workspace is active.
@@ -80,7 +81,7 @@ Rectangle {
 
             // New Project
             ActionRow {
-                icon:  Qaterial.Icons.plusCircleOutline
+                icon:  Icons.plusCircleOutline
                 label: "New Project"
                 onClicked: {
                     root.dismissed = true
@@ -92,7 +93,7 @@ Rectangle {
 
             // Open Project
             ActionRow {
-                icon:  Qaterial.Icons.folderOpenOutline
+                icon:  Icons.folderOpenOutline
                 label: "Open Project..."
                 onClicked: root.openProjectRequested()
             }
@@ -118,7 +119,7 @@ Rectangle {
 
             ActionRow {
                 visible: GlobalProperties.lastWorkspace !== ""
-                icon:    Qaterial.Icons.restore
+                icon:    Icons.restore
                 label:   "Continue  \"" + GlobalProperties.lastWorkspace + "\""
                 onClicked: {
                     viewPort.loadWorkspace(GlobalProperties.lastWorkspace)
@@ -168,8 +169,8 @@ Rectangle {
 
             Row {
                 spacing: 12
-                Qaterial.ColorIcon {
-                    source: Qaterial.Icons.history
+                ColorIcon {
+                    source: Icons.history
                     color:  ThemeManager.primaryColor
                     width: 16; height: 16
                     anchors.verticalCenter: parent.verticalCenter
@@ -249,8 +250,8 @@ Rectangle {
                         anchors.leftMargin:     16
                         spacing: 12
 
-                        Qaterial.ColorIcon {
-                            source: Qaterial.Icons.vectorSquare
+                        ColorIcon {
+                            source: Icons.vectorSquare
                             color:  ThemeManager.primaryColor
                             width: 18; height: 18
                             anchors.verticalCenter: parent.verticalCenter
@@ -282,8 +283,8 @@ Rectangle {
                         }
                     }
 
-                    Qaterial.ColorIcon {
-                        source:  Qaterial.Icons.chevronRight
+                    ColorIcon {
+                        source:  Icons.chevronRight
                         color:   ThemeManager.primaryColor
                         width:   14; height: 14
                         anchors.verticalCenter: parent.verticalCenter
@@ -309,12 +310,12 @@ Rectangle {
     }
 
     // ── Dismiss (X) button ────────────────────────────────────────────────────
-    Qaterial.AppBarButton {
+    AppBarButton {
         anchors.top:         parent.top
         anchors.right:       parent.right
         anchors.topMargin:   6
         anchors.rightMargin: 6
-        icon.source: Qaterial.Icons.close
+        icon.source: 'qrc:/icons/close.svg'
         icon.color:  ThemeManager.foregroundColor
         width: 36; height: 36
         opacity: dismissHover.containsMouse ? 0.7 : 0.3
@@ -358,7 +359,7 @@ Rectangle {
             anchors.leftMargin:     10
             spacing: 10
 
-            Qaterial.ColorIcon {
+            ColorIcon {
                 source: row.icon
                 color:  ThemeManager.primaryColor
                 width: 16; height: 16
@@ -382,3 +383,4 @@ Rectangle {
         }
     }
 }
+

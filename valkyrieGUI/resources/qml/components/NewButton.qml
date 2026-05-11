@@ -4,7 +4,6 @@ import QtQuick.Controls.Material 2.12
 import QtQuick.Controls.Material.impl 2.12
 import App.Theme 1.0
 
-import Qaterial 1.0 as Qaterial
 
 Button {
     id: control
@@ -173,3 +172,4 @@ Button {
         }
     }
 }
+

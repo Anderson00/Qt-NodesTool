@@ -1,7 +1,8 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import App.Theme 1.0
-import Qaterial 1.0 as Qaterial
+import App.Icons 1.0
+
 import ".."
 
 Rectangle {
@@ -70,17 +71,17 @@ Rectangle {
             anchors { right: parent.right; verticalCenter: parent.verticalCenter; rightMargin: 4 }
             spacing: 0
 
-            Qaterial.ToolButton {
+            AppBarButton {
                 width: 22; height: 22; padding: 0
-                icon.source: Qaterial.Icons.checkboxMultipleOutline
+                icon.source: Icons.checkboxMultipleOutline
                 icon.color:  root.frameColor
                 icon.width: 12; icon.height: 12
                 onClicked: root.contentsSelected()
                 AppToolTip { text: "Select nodes"; visible: parent.hovered }
             }
-            Qaterial.ToolButton {
+            AppBarButton {
                 width: 22; height: 22; padding: 0
-                icon.source: Qaterial.Icons.close
+                icon.source: 'qrc:/icons/close.svg'
                 icon.color:  root.frameColor
                 icon.width: 11; icon.height: 11
                 onClicked: root.dissolved()
@@ -125,3 +126,4 @@ Rectangle {
         }
     }
 }
+

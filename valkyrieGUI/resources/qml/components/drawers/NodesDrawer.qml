@@ -3,7 +3,7 @@ import QtQuick.Controls 2.15 as Contrl
 import QtQuick.Layouts 1.14
 import App.Theme 1.0
 import App.NodeRegistry 1.0
-import Qaterial 1.0 as Qaterial
+import ".."
 
 Item {
     id: root
@@ -24,8 +24,8 @@ Item {
     property bool gridMode: true
 
     readonly property var _icons: ({
-        'Debug':   Qaterial.Icons.bug,
-        'Plugins': Qaterial.Icons.codeBraces
+        'Debug':   "qrc:/icons/bug.svg",
+        'Plugins': "qrc:/icons/code-braces.svg"
     })
 
     Component.onCompleted: _loadData()
@@ -79,8 +79,8 @@ Item {
                     opacity: root.navState === "category" ? 1.0 : 0.25
                     Behavior on opacity { NumberAnimation { duration: 120 } }
 
-                    Qaterial.ColorIcon {
-                        source: Qaterial.Icons.arrowLeft
+                    ColorIcon {
+                        source: "qrc:/icons/arrow-left.svg"
                         color: ThemeManager.textColor
                         width: 14; height: 14; anchors.centerIn: parent
                     }
@@ -92,8 +92,8 @@ Item {
                     }
                 }
 
-                Qaterial.ColorIcon {
-                    source: Qaterial.Icons.magnify
+                ColorIcon {
+                    source: "qrc:/icons/magnify.svg"
                     color: ThemeManager.textColor; opacity: 0.4
                     width: 14; height: 14
                 }
@@ -134,8 +134,8 @@ Item {
                         color: Qt.rgba(ThemeManager.textColor.r,
                                        ThemeManager.textColor.g,
                                        ThemeManager.textColor.b, 0.2)
-                        Qaterial.ColorIcon {
-                            source: Qaterial.Icons.close; color: ThemeManager.textColor
+                        ColorIcon {
+                            source: "qrc:/icons/close.svg"; color: ThemeManager.textColor
                             width: 9; height: 9; anchors.centerIn: parent
                         }
                         MouseArea {
@@ -173,10 +173,10 @@ Item {
                                             crumbLbl.implicitWidth) + 10
                             height: 20
 
-                            Qaterial.ColorIcon {
+                            ColorIcon {
                                 id: homeIco
                                 visible: index === 0
-                                source: Qaterial.Icons.home
+                                source: "qrc:/icons/home.svg"
                                 width: 12; height: 12; anchors.centerIn: parent
                                 color: index === root.breadcrumbArr.length - 1
                                        ? ThemeManager.textColor : ThemeManager.primaryColor
@@ -252,8 +252,8 @@ Item {
                 Item {
                     width: 24; height: 24
                     visible: root.navState === "category"
-                    Qaterial.ColorIcon {
-                        source: root.gridMode ? Qaterial.Icons.viewList : Qaterial.Icons.viewGrid
+                    ColorIcon {
+                        source: root.gridMode ? "qrc:/icons/view-list.svg" : "qrc:/icons/view-grid.svg"
                         color: ThemeManager.textColor; opacity: 0.55
                         width: 14; height: 14; anchors.centerIn: parent
                     }
@@ -297,8 +297,8 @@ Item {
                     anchors.centerIn: parent; spacing: 10
                     visible: catList.count === 0
 
-                    Qaterial.ColorIcon {
-                        source: Qaterial.Icons.graphOutline
+                    ColorIcon {
+                        source: "qrc:/icons/chart-line.svg"
                         color: ThemeManager.textColor; opacity: 0.18
                         width: 28; height: 28; anchors.horizontalCenter: parent.horizontalCenter
                     }
@@ -335,9 +335,9 @@ Item {
                             color: Qt.rgba(ThemeManager.primaryColor.r,
                                            ThemeManager.primaryColor.g,
                                            ThemeManager.primaryColor.b, 0.12)
-                            Qaterial.ColorIcon {
+                            ColorIcon {
                                 anchors.centerIn: parent
-                                source: root._icons[modelData] || Qaterial.Icons.folderOutline
+                                source: root._icons[modelData] || "qrc:/icons/folder.svg"
                                 color: ThemeManager.primaryColor
                                 width: 14; height: 14
                             }
@@ -357,8 +357,8 @@ Item {
                             }
                         }
 
-                        Qaterial.ColorIcon {
-                            source: Qaterial.Icons.chevronRight
+                        ColorIcon {
+                            source: "qrc:/icons/chevron-right.svg"
                             color: ThemeManager.textColor; opacity: 0.3
                             width: 12; height: 12
                         }
@@ -391,8 +391,8 @@ Item {
                     anchors.centerIn: parent; spacing: 10
                     visible: parent.filtered.length === 0
 
-                    Qaterial.ColorIcon {
-                        source: Qaterial.Icons.graphOutline
+                    ColorIcon {
+                        source: "qrc:/icons/chart-line.svg"
                         color: ThemeManager.textColor; opacity: 0.18
                         width: 28; height: 28; anchors.horizontalCenter: parent.horizontalCenter
                     }
@@ -489,8 +489,8 @@ Item {
                                 anchors.fill: parent; anchors.margins: 6
                                 anchors.leftMargin: 10; spacing: 8
 
-                                Qaterial.ColorIcon {
-                                    source: Qaterial.Icons.graphOutline
+                                ColorIcon {
+                                    source: "qrc:/icons/chart-line.svg"
                                     color: ThemeManager.primaryColor; width: 14; height: 14
                                 }
                                 Column {
@@ -566,3 +566,4 @@ Item {
         }
     }
 }
+

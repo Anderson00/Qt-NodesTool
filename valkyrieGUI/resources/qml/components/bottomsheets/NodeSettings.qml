@@ -5,9 +5,10 @@ import QtQuick.Window 2.2
 import QtQuick 2.14
 import QtQml 2.14
 
-import Qaterial 1.0 as Qaterial
+
 
 import App.Theme 1.0
+import App.Icons 1.0
 
 import '../'
 
@@ -618,8 +619,8 @@ Drawer {
                 anchors.rightMargin: 14
                 spacing: 8
 
-                Qaterial.ColorIcon {
-                    source: Qaterial.Icons.deleteOutline
+                ColorIcon {
+                    source: Icons.deleteOutline
                     color: ThemeManager.dangerColor
                     width: 16; height: 16
                 }
@@ -646,3 +647,4 @@ Drawer {
         }
     }
 }
+

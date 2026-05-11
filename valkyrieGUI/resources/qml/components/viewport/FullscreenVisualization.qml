@@ -2,7 +2,9 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import App.Theme 1.0
 import App.Properties 1.0
-import Qaterial 1.0 as Qaterial
+
+import ".."
+
 
 // Full-viewport overlay (same QQuickWindow as ViewPortWindow).
 // Loads only each node's qmlBodyUrl body — no header, no sockets, no handles,
@@ -101,9 +103,9 @@ Window {
             color: closeBtn.containsMouse ? Qt.rgba(1,1,1,0.15) : Qt.rgba(1,1,1,0.08)
             Behavior on color { ColorAnimation { duration: 150 } }
 
-            Qaterial.ColorIcon {
+            ColorIcon {
                 anchors.centerIn: parent
-                source: Qaterial.Icons.close
+                source: 'qrc:/icons/close.svg'
                 color:  Qt.rgba(1, 1, 1, 0.75)
                 width: 16; height: 16
             }
@@ -135,3 +137,4 @@ Window {
         }
     }
 }
+

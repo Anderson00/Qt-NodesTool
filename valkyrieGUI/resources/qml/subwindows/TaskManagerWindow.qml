@@ -6,7 +6,7 @@ import QtQuick.Controls.Material 2.12
 import QtCharts 2.15
 
 import App.Theme 1.0
-import Qaterial 1.0 as Qaterial
+
 
 Rectangle {
     anchors.fill: parent
@@ -75,7 +75,7 @@ Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            Qaterial.Slider
+            Slider
             {
                 id: sliderTimeout
                 value: 0.5
@@ -120,7 +120,7 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true
             //totalProcessMemoryUsage
-            Qaterial.Label {
+            Label {
                 id: labelTotalMemoryUsage
                 text: taskManager.totalSystemMemoryUsage() + " MB"
             }
@@ -153,7 +153,7 @@ Rectangle {
                     }
                 }
 
-                Qaterial.Label {
+                Label {
                     id: progressTotalMemoryUsagePercent
                     anchors.centerIn: progressTotalMemoryUsage
                     z: 100
@@ -199,3 +199,4 @@ Rectangle {
         }
     }
 }
+

@@ -72,3 +72,4 @@ Item {
     function positionViewAtBeginning() { lv.positionViewAtBeginning() }
     function positionViewAtEnd() { lv.positionViewAtEnd() }
 }
+

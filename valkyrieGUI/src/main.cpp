@@ -3,7 +3,6 @@
 #include <iostream>
 
 #include "include/mainwindow.h"
-#include <Qaterial/Qaterial.hpp>
 #include <model/tablemodel.h>
 #include <model/globalproperties.h>
 #include <utils/toastmanager.h>
@@ -78,9 +77,6 @@ int main(int argc, char **argv)
 #endif
 
     QApplication a(argc, argv);
-    // Load Qaterial.
-    qaterial::loadQmlResources();
-    qaterial::registerQmlTypes();
 
     //qmlRegisterType<TableModel>("TableModel", 1, 0, "TableModel");
 

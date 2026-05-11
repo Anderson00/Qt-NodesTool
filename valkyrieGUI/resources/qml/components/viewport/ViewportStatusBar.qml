@@ -255,3 +255,4 @@ Rectangle {
         Item { Layout.preferredWidth: 4; visible: showFps }
     }
 }
+

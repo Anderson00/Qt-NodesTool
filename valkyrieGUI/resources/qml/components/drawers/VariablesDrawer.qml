@@ -3,7 +3,8 @@ import QtQuick.Controls 2.15 as Contrl
 import QtQuick.Layouts 1.14
 import App.Theme 1.0
 import App.Variables 1.0
-import Qaterial 1.0 as Qaterial
+import App.Icons 1.0
+
 
 import '../../components'
 
@@ -78,8 +79,8 @@ Item {
                 anchors.fill: parent
                 anchors.leftMargin: 12; anchors.rightMargin: 8; spacing: 6
 
-                Qaterial.ColorIcon {
-                    source: Qaterial.Icons.magnify
+                ColorIcon {
+                    source: 'qrc:/icons/magnify.svg'
                     color: ThemeManager.textColor; opacity: 0.4; width: 14; height: 14
                 }
 
@@ -122,8 +123,8 @@ Item {
                            : Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g,
                                      ThemeManager.primaryColor.b, 0.15)
                     Behavior on color { ColorAnimation { duration: 120 } }
-                    Qaterial.ColorIcon {
-                        source: root.addFormOpen ? Qaterial.Icons.close : Qaterial.Icons.plus
+                    ColorIcon {
+                        source: root.addFormOpen ? 'qrc:/icons/close.svg' : Icons.plus
                         color: root.addFormOpen ? ThemeManager.backgroundColor : ThemeManager.primaryColor
                         width: 14; height: 14; anchors.centerIn: parent
                     }
@@ -198,8 +199,8 @@ Item {
                                 Layout.fillWidth: true; text: root._newVarType
                                 font.pixelSize: 10; color: ThemeManager.textColor; elide: Text.ElideRight
                             }
-                            Qaterial.ColorIcon {
-                                source: Qaterial.Icons.chevronDown
+                            ColorIcon {
+                                source: Icons.chevronDown
                                 color: ThemeManager.textColor; opacity: 0.5; width: 10; height: 10
                             }
                         }
@@ -426,8 +427,8 @@ Item {
                     width: 48; height: 48; radius: 24; anchors.horizontalCenter: parent.horizontalCenter
                     color: Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g,
                                    ThemeManager.primaryColor.b, 0.08)
-                    Qaterial.ColorIcon {
-                        source: Qaterial.Icons.codeJson; color: ThemeManager.primaryColor; opacity: 0.4
+                    ColorIcon {
+                        source: Icons.codeJson; color: ThemeManager.primaryColor; opacity: 0.4
                         width: 22; height: 22; anchors.centerIn: parent
                     }
                 }
@@ -648,8 +649,8 @@ Item {
                             }
 
                             // ReadOnly lock
-                            Qaterial.ColorIcon {
-                                source: Qaterial.Icons.lockOutline
+                            ColorIcon {
+                                source: Icons.lockOutline
                                 color: ThemeManager.primaryColor
                                 opacity: (varObj && varObj.readOnly) ? 0.65 : 0.0
                                 width: 12; height: 12
@@ -669,9 +670,9 @@ Item {
                                            : Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g,
                                                      ThemeManager.textColor.b, 0.1)
                                     Behavior on color { ColorAnimation { duration: 80 } }
-                                    Qaterial.ColorIcon {
+                                    ColorIcon {
                                         source: (varObj && varObj.readOnly)
-                                                ? Qaterial.Icons.lockOutline : Qaterial.Icons.lockOpenOutline
+                                                ? Icons.lockOutline : Icons.lockOpenOutline
                                         color: ThemeManager.primaryColor; opacity: 0.7
                                         width: 11; height: 11; anchors.centerIn: parent
                                     }
@@ -691,8 +692,8 @@ Item {
                                            : Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g,
                                                      ThemeManager.textColor.b, 0.1)
                                     Behavior on color { ColorAnimation { duration: 80 } }
-                                    Qaterial.ColorIcon {
-                                        source: Qaterial.Icons.trashCanOutline
+                                    ColorIcon {
+                                        source: Icons.trashCanOutline
                                         color: delHover.containsMouse ? "#ffffff" : ThemeManager.textColor
                                         opacity: delHover.containsMouse ? 1.0 : 0.5
                                         width: 11; height: 11; anchors.centerIn: parent
@@ -718,3 +719,4 @@ Item {
         }
     }
 }
+

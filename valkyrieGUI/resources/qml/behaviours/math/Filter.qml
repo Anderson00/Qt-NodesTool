@@ -1,8 +1,8 @@
-﻿import QtQuick 2.15
+import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import QtCharts 2.15
-import Qaterial 1.0 as Qaterial
+
 import App.Theme 1.0
 
 import '../../components'
@@ -83,7 +83,7 @@ Item {
         anchors.margins: 6
         spacing: 4
 
-        // ── Mode selector ──────────────────────────────────────────────────
+        // -- Mode selector --------------------------------------------------
         Rectangle {
             Layout.fillWidth: true; height: 30; radius: 4
             color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.04)
@@ -109,7 +109,7 @@ Item {
             }
         }
 
-        // ── Value display ──────────────────────────────────────────────────
+        // -- Value display --------------------------------------------------
         Rectangle {
             Layout.fillWidth: true; Layout.preferredHeight: 52; radius: 6
             color: Qt.rgba(root.modeColors[root.filterMode].toString(), 0.08)
@@ -128,7 +128,7 @@ Item {
                            color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.6); anchors.horizontalCenter: parent.horizontalCenter }
                 }
 
-                Text { text: "→"; font.pixelSize: 14; color: root.modeColors[root.filterMode]; opacity: 0.7 }
+                Text { text: "?"; font.pixelSize: 14; color: root.modeColors[root.filterMode]; opacity: 0.7 }
 
                 Column {
                     spacing: 1
@@ -139,7 +139,7 @@ Item {
             }
         }
 
-        // ── Preview chart ──────────────────────────────────────────────────
+        // -- Preview chart --------------------------------------------------
         Item {
             Layout.fillWidth: true; Layout.preferredHeight: 90
 
@@ -177,7 +177,7 @@ Item {
             }
         }
 
-        // ── Parameters ─────────────────────────────────────────────────────
+        // -- Parameters -----------------------------------------------------
         ColumnLayout {
             Layout.fillWidth: true; spacing: 3
             visible: root.filterMode === 0 || root.filterMode === 2
@@ -199,17 +199,17 @@ Item {
 
             NumericInputField {
                 Layout.fillWidth: true; implicitHeight: 34
-                label: "α"; value: root.alpha; from: 0.001; to: 1.0; stepSize: 0.01; decimals: 3
+                label: "a"; value: root.alpha; from: 0.001; to: 1.0; stepSize: 0.01; decimals: 3
                 showBar: true; accentColor: root.modeColors[root.filterMode]
                 onValueModified: function(newValue) { root.alpha = newValue }
             }
             Text {
-                text: root.filterMode === 1 ? "0=no change  1=no filter" : "0=no change  1=no filter (RC≈" + (1.0/(2*Math.PI*root.alpha)).toFixed(1) + ")"
+                text: root.filterMode === 1 ? "0=no change  1=no filter" : "0=no change  1=no filter (RC�" + (1.0/(2*Math.PI*root.alpha)).toFixed(1) + ")"
                 font.pixelSize: 8; color: ThemeManager.textSecondaryColor; opacity: 0.7
             }
         }
 
-        // ── Manual input ───────────────────────────────────────────────────
+        // -- Manual input ---------------------------------------------------
         RowLayout {
             Layout.fillWidth: true; spacing: 4
             NumericInputField {
@@ -228,3 +228,4 @@ Item {
         }
     }
 }
+

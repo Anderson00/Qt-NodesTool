@@ -51,3 +51,4 @@ ToolTip {
     enter: Transition { NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: 80; easing.type: Easing.OutCubic } }
     exit:  Transition { NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: 60; easing.type: Easing.InCubic } }
 }
+

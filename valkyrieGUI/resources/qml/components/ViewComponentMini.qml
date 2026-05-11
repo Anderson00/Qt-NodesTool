@@ -5,8 +5,9 @@ import QtQuick.Window 2.2
 import QtQuick 2.14
 import QtQml 2.14
 import App.Theme 1.0
+import App.Icons 1.0
 
-import Qaterial 1.0 as Qaterial
+
 
 Rectangle{
     id: card
@@ -66,7 +67,7 @@ Rectangle{
             SvgIcon {
                 Layout.preferredHeight: 20
                 Layout.preferredWidth: 20
-                source: Qaterial.Icons.upload
+                source: Icons.upload
                 color: card.border.color
             }
 
@@ -77,7 +78,7 @@ Rectangle{
             SvgIcon {
                 Layout.preferredHeight: 20
                 Layout.preferredWidth: 20
-                source: Qaterial.Icons.download
+                source: Icons.download
                 color: card.border.color
             }
 
@@ -116,3 +117,4 @@ Rectangle{
         }
     }
 }
+

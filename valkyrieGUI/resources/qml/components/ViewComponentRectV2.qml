@@ -6,7 +6,6 @@ import Qt5Compat.GraphicalEffects
 import App.Theme 1.0
 import App.Properties 1.0
 
-import Qaterial 1.0 as Qaterial
 
 Rectangle {
     id: root
@@ -366,7 +365,7 @@ Rectangle {
                 Layout.preferredHeight: 34
                 Layout.preferredWidth: 28
                 textColor: titleView.color
-                iconSource: Qaterial.Icons.dotsVertical
+                text: "⋮"
                 iconSize: 14
                 variant: "text"
                 onClicked: contextMenu.popup()
@@ -376,7 +375,7 @@ Rectangle {
                 Layout.preferredHeight: 34
                 Layout.preferredWidth: 28
                 textColor: titleView.color
-                iconSource: Qaterial.Icons.windowMaximize
+                iconSource: "qrc:/icons/view-grid.svg"
                 iconSize: 14
                 variant: "text"
                 onClicked: console.log("Maximize clicked")
@@ -386,7 +385,7 @@ Rectangle {
                 Layout.preferredHeight: 34
                 Layout.preferredWidth: 30
                 textColor: titleView.color
-                iconSource: Qaterial.Icons.close
+                iconSource: "qrc:/icons/close.svg"
                 iconSize: 14
                 variant: "text"
                 onClicked: root._emitMenuAction("close")
@@ -413,27 +412,23 @@ Rectangle {
 
         MenuItem {
             text: qsTr("Close")
-            icon.source: 'qrc:/Qaterial/Icons/close.svg'
+            icon.source: 'qrc:/icons/close.svg'
             onTriggered: root._emitMenuAction("close")
         }
         MenuItem {
             text: qsTr("Front + 1")
-            icon.source: 'qrc:/Qaterial/Icons/arrow-up.svg'
             onTriggered: root._emitMenuAction("front-step")
         }
         MenuItem {
             text: qsTr("Down - 1")
-            icon.source: 'qrc:/Qaterial/Icons/arrow-down.svg'
             onTriggered: root._emitMenuAction("back-step")
         }
         MenuItem {
             text: qsTr("Front max")
-            icon.source: 'qrc:/Qaterial/Icons/flip-to-front.svg'
             onTriggered: root._emitMenuAction("front-max")
         }
         MenuItem {
             text: qsTr("Back max")
-            icon.source: 'qrc:/Qaterial/Icons/flip-to-back.svg'
             onTriggered: root._emitMenuAction("back-max")
         }
     }
@@ -690,3 +685,4 @@ Rectangle {
         }
     }
 }
+

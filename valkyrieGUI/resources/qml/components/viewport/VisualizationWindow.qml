@@ -1,7 +1,8 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import App.Theme 1.0
-import Qaterial 1.0 as Qaterial
+import App.Icons 1.0
+
 import ".."
 
 // Floating visualization panel — loads each node's qmlBodyUrl body as a clean
@@ -72,27 +73,27 @@ Rectangle {
             anchors { right: parent.right; rightMargin: 4; verticalCenter: parent.verticalCenter }
             spacing: 0
 
-            Qaterial.ToolButton {
+            AppBarButton {
                 width: 26; height: 26; padding: 0
-                icon.source: root.isPlaying ? Qaterial.Icons.stop : Qaterial.Icons.play
+                icon.source: root.isPlaying ? 'qrc:/icons/stop.svg' : 'qrc:/icons/play.svg'
                 icon.color:  root.isPlaying ? "#f44336" : "#4caf50"
                 icon.width: 14; icon.height: 14
                 onClicked: { root.isPlaying = !root.isPlaying; root.playToggled(root.isPlaying) }
                 AppToolTip { text: root.isPlaying ? "Stop (fechar fullscreen)" : "Play (abrir fullscreen)"; visible: parent.hovered }
             }
 
-            Qaterial.ToolButton {
+            AppBarButton {
                 width: 26; height: 26; padding: 0
-                icon.source: Qaterial.Icons.openInNew
+                icon.source: Icons.openInNew
                 icon.color:  ThemeManager.textColor
                 icon.width: 13; icon.height: 13
                 onClicked: root.detachRequested()
                 AppToolTip { text: "Abrir em Janela Externa"; visible: parent.hovered }
             }
 
-            Qaterial.ToolButton {
+            AppBarButton {
                 width: 26; height: 26; padding: 0
-                icon.source: Qaterial.Icons.close
+                icon.source: 'qrc:/icons/close.svg'
                 icon.color:  ThemeManager.textColor; icon.width: 12; icon.height: 12
                 onClicked: root.closeRequested()
                 AppToolTip { text: "Fechar"; visible: parent.hovered }
@@ -158,3 +159,4 @@ Rectangle {
         }
     }
 }
+

@@ -4,7 +4,7 @@ import QtQuick.Layouts 1.0
 import QtQuick.Controls.Material 2.12
 
 import App.Theme 1.0
-import Qaterial 1.0 as Qaterial
+
 
 Rectangle {
     anchors.fill: parent
@@ -55,20 +55,27 @@ Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 40
 
-            Qaterial.TextField {
+            TextField {
                 id: cmdLine
                 Layout.fillWidth: true
-                trailingContent: Qaterial.TextFieldButtonContainer
-                {
-                    Qaterial.TextFieldClearButton {
-                        visible: cmdLine.text.length > 0
-                    }
-                } // TextFieldButtonContainer
+                placeholderText: "Command..."
+                rightPadding: clearBtn.visible ? clearBtn.width + 4 : 0
+
+                AppBarButton {
+                    id: clearBtn
+                    anchors { right: parent.right; verticalCenter: parent.verticalCenter; rightMargin: 2 }
+                    visible: cmdLine.text.length > 0
+                    width: 28; height: 28; padding: 0
+                    icon.source: 'qrc:/icons/close.svg'
+                    icon.color:  "#888"
+                    icon.width: 14; icon.height: 14
+                    onClicked: cmdLine.clear()
+                }
             }
 
-            Qaterial.RaisedButton {
+            Button {
                 id: btnAction
-                text: "Send"                
+                text: "Send"
                 onClicked: {
                     let cmdSplits = cmdLine.text.split(" ");
                     midClient.sendCommand(cmdSplits[0], cmdSplits.slice(1,cmdSplits.length))
@@ -129,3 +136,4 @@ Rectangle {
         }
     }
 }
+

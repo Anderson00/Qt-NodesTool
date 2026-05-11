@@ -1,7 +1,7 @@
-﻿import QtQuick 2.15
+import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
-import Qaterial 1.0 as Qaterial
+
 import App.Theme 1.0
 
 import '../../components'
@@ -16,7 +16,7 @@ Item {
         anchors.margins: 6
         spacing: 4
 
-        // ── Result display ─────────────────────────────────────────────────
+        // -- Result display -------------------------------------------------
         Rectangle {
             Layout.fillWidth: true; Layout.preferredHeight: 52; radius: 6
             color: Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.08)
@@ -49,7 +49,7 @@ Item {
             }
         }
 
-        // ── Progress bar ───────────────────────────────────────────────────
+        // -- Progress bar ---------------------------------------------------
         Rectangle {
             Layout.fillWidth: true; height: 8; radius: 4
             color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.1)
@@ -61,7 +61,7 @@ Item {
             }
         }
 
-        // ── Min input ──────────────────────────────────────────────────────
+        // -- Min input ------------------------------------------------------
         NumericInputField {
             Layout.fillWidth: true; implicitHeight: 36
             label: "Min"
@@ -73,7 +73,7 @@ Item {
             onValueModified: function(newValue) { if (behaviourObject) behaviourObject.setMin(newValue) }
         }
 
-        // ── Max input ──────────────────────────────────────────────────────
+        // -- Max input ------------------------------------------------------
         NumericInputField {
             Layout.fillWidth: true; implicitHeight: 36
             label: "Max"
@@ -86,3 +86,4 @@ Item {
         }
     }
 }
+

@@ -10,8 +10,6 @@
 #include <QQmlEngine>
 #include <functional>
 
-#include "Qaterial/Navigation/TreeElement.hpp"
-#include "Qaterial/Qaterial.hpp"
 
 class Behaviours;
 
@@ -83,10 +81,9 @@ public slots:
     QJsonObject discoverAll();
 
     /**
-     * @brief Builds a qaterial::TreeElement hierarchy for the FolderBottomSheet tree.
-     * Called from QML: nodeRegistry.discoverAllToTree()
+     * @brief Builds a hierarchical list for the FolderBottomSheet tree.
      */
-    qaterial::TreeElement* discoverAllToTree();
+    QJsonArray discoverAllToTree();
 
 private:
     BehaviourRegistry();
@@ -94,7 +91,6 @@ private:
     QJsonObject m_cachedDiscovery;
     bool m_dirty = true;
 
-    qaterial::TreeModel* m_treeModelPaths = nullptr;
 };
 
 // ─── Auto-registration macro ────────────────────────────────────────────────

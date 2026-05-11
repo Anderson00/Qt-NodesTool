@@ -40,3 +40,4 @@ Window {
         onActivated: root.close()
     }
 }
+

@@ -1,7 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import Qaterial 1.0 as Qaterial
 import App.Theme 1.0
 import ".."
 
@@ -43,21 +42,21 @@ Rectangle {
         spacing: 8
 
         // Tool Mode: Select
-        Qaterial.ToolButton {
+        AppToolButton {
             checkable: true
             checked: root.toolMode === "select"
-            icon.source: Qaterial.Icons.cursorDefault
-            icon.color: root.toolMode === "select" ? ThemeManager.accentColor : ThemeManager.textColor
+            iconSource: "qrc:/icons/cursor-default.svg"
+            iconColor: root.toolMode === "select" ? ThemeManager.accentColor : ThemeManager.textColor
             onClicked: root.toolModeActivated("select")
             AppToolTip { text: "Select Tool  [S]"; visible: parent.hovered }
         }
 
         // Tool Mode: Pan
-        Qaterial.ToolButton {
+        AppToolButton {
             checkable: true
             checked: root.toolMode === "pan"
-            icon.source: Qaterial.Icons.handBackRight
-            icon.color: root.toolMode === "pan" ? ThemeManager.accentColor : ThemeManager.textColor
+            iconSource: "qrc:/icons/hand-back-right.svg"
+            iconColor: root.toolMode === "pan" ? ThemeManager.accentColor : ThemeManager.textColor
             onClicked: root.toolModeActivated("pan")
             AppToolTip { text: "Pan Tool  [P]"; visible: parent.hovered }
         }
@@ -65,10 +64,10 @@ Rectangle {
         Rectangle { width: 1; height: 32; color: ThemeManager.borderColor; Layout.alignment: Qt.AlignVCenter }
 
         // Zoom Out
-        Qaterial.ToolButton {
+        AppToolButton {
             checkable: false
-            icon.source: Qaterial.Icons.minus
-            icon.color: ThemeManager.textColor
+            iconSource: "qrc:/icons/minus.svg"
+            iconColor: ThemeManager.textColor
             onClicked: root.zoomOut()
             AppToolTip { text: "Zoom Out"; visible: parent.hovered }
         }
@@ -91,10 +90,10 @@ Rectangle {
         }
 
         // Zoom In
-        Qaterial.ToolButton {
+        AppToolButton {
             checkable: false
-            icon.source: Qaterial.Icons.plus
-            icon.color: ThemeManager.textColor
+            iconSource: "qrc:/icons/plus.svg"
+            iconColor: ThemeManager.textColor
             onClicked: root.zoomIn()
             AppToolTip { text: "Zoom In"; visible: parent.hovered }
         }
@@ -102,14 +101,13 @@ Rectangle {
         Rectangle { width: 1; height: 32; color: ThemeManager.borderColor; Layout.alignment: Qt.AlignVCenter }
 
         // Toggle Connections Minimize
-        Qaterial.ToolButton {
+        AppToolButton {
             id: toggleConnsBtn
             checkable: false
-            display: AbstractButton.IconOnly
-            icon.source: root.connectionsMinimized
-                ? Qaterial.Icons.chevronUp
-                : Qaterial.Icons.chevronDown
-            icon.color: root.connectionsMinimized
+            iconSource: root.connectionsMinimized
+                ? "qrc:/icons/chevron-up.svg"
+                : "qrc:/icons/chevron-down.svg"
+            iconColor: root.connectionsMinimized
                 ? ThemeManager.accentColor
                 : ThemeManager.textColor
             onClicked: root.toggleConnectionsMinimized()
@@ -119,10 +117,10 @@ Rectangle {
         Rectangle { width: 1; height: 32; color: ThemeManager.borderColor; Layout.alignment: Qt.AlignVCenter }
 
         // Center View
-        Qaterial.ToolButton {
+        AppToolButton {
             checkable: false
-            icon.source: Qaterial.Icons.imageFilterCenterFocus
-            icon.color: ThemeManager.textColor
+            iconSource: "qrc:/icons/center-focus.svg"
+            iconColor: ThemeManager.textColor
             onClicked: root.centerView()
             AppToolTip { text: "Center View"; visible: parent.hovered }
         }
@@ -130,12 +128,12 @@ Rectangle {
         Rectangle { width: 1; height: 32; color: ThemeManager.borderColor; Layout.alignment: Qt.AlignVCenter }
 
         // Grid Snap toggle
-        Qaterial.ToolButton {
+        AppToolButton {
             id: snapBtn
             checkable: true
             checked: root.snapEnabled
-            icon.source: Qaterial.Icons.magnetOn
-            icon.color: root.snapEnabled ? "#00e676" : ThemeManager.textColor
+            iconSource: "qrc:/icons/magnet.svg"
+            iconColor: root.snapEnabled ? "#00e676" : ThemeManager.textColor
             onClicked: root.toggleSnap()
             AppToolTip { text: "Grid Snap  [G]"; visible: parent.hovered; delay: 600 }
 
@@ -154,12 +152,11 @@ Rectangle {
             }
         }
 
-        // View Options — fully themed popup (replaces Qaterial.Menu which used
-        // Material colors instead of ThemeManager)
-        Qaterial.ToolButton {
+        // View Options
+        AppToolButton {
             id: viewMenuBtn
-            icon.source: Qaterial.Icons.eyeOutline
-            icon.color:  ThemeManager.textColor
+            iconSource: "qrc:/icons/eye.svg"
+            iconColor:  ThemeManager.textColor
             onClicked: viewMenu.open()
             AppToolTip { text: "View Options"; visible: parent.hovered }
         }
@@ -181,17 +178,6 @@ Rectangle {
                 border.color: ThemeManager.borderColor
                 border.width: 1
                 radius:       6
-            }
-
-            // Arrow pointer pointing down toward the button
-            Rectangle {
-                x:      (parent.implicitWidth - 10) / 2
-                y:      parent.implicitHeight - 1
-                width:  10; height: 6; rotation: 180
-                color:  ThemeManager.surfaceColor
-                border.color: ThemeManager.borderColor
-                border.width: 1
-                visible: false  // subtle — hide if too distracting
             }
 
             contentItem: Column {
@@ -217,7 +203,7 @@ Rectangle {
                         anchors { verticalCenter: parent.verticalCenter; left: parent.left; leftMargin: 12 }
                         spacing: 10
 
-                        Qaterial.ColorIcon {
+                        ColorIcon {
                             source: mi.iconSource
                             color:  ThemeManager.textSecondaryColor
                             width: 16; height: 16
@@ -245,17 +231,17 @@ Rectangle {
 
                 AppMenuItem {
                     label:      root.showGrid ? "Hide Grid" : "Show Grid"
-                    iconSource: Qaterial.Icons.grid
+                    iconSource: "qrc:/icons/view-grid.svg"
                     onTriggered: root.toggleGrid()
                 }
                 AppMenuItem {
                     label:      "Toggle FPS"
-                    iconSource: Qaterial.Icons.speedometer
+                    iconSource: "qrc:/icons/speedometer.svg"
                     onTriggered: root.toggleFps()
                 }
                 AppMenuItem {
                     label:      "Toggle Fullscreen"
-                    iconSource: Qaterial.Icons.fullscreen
+                    iconSource: "qrc:/icons/fullscreen.svg"
                     onTriggered: root.toggleFullscreen()
                 }
 
@@ -265,3 +251,4 @@ Rectangle {
         }
     }
 }
+

@@ -1,16 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-# Download & Configure Qaterial as part of your build system
-include(FetchContent)
-FetchContent_Declare(
-  Qaterial
-  GIT_REPOSITORY https://github.com/OlivierLDff/Qaterial.git
-  GIT_TAG        v1.5.2
-  GIT_SHALLOW    1
-)
-FetchContent_MakeAvailable(Qaterial)
-
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick Gui Svg Sql Network Test Qaterial)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick Gui Svg Sql Network Test)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Svg Gui Sql Quick Network Xml QuickControls2 Core5Compat Test Charts Qml)
 
 qt_standard_project_setup()
@@ -85,7 +75,7 @@ qt_add_executable(Debugger
     src/include/behaviours/common/componentsviewer.h src/include/behaviours/common/componentsviewer.cpp
 )
 
-target_link_libraries(Debugger PRIVATE Qt6::Widgets Qt6::Core Qt6::Quick Qt6::Xml Qt6::Charts Qt6::Qml cxxopts Qaterial QOlm::QOlm)
+target_link_libraries(Debugger PRIVATE Qt6::Widgets Qt6::Core Qt6::Quick Qt6::Xml Qt6::Charts Qt6::Qml cxxopts)
 
 
 set_target_properties(Debugger PROPERTIES

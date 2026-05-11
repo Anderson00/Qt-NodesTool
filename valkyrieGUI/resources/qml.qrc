@@ -29,6 +29,10 @@
         <file alias="StringFormat.qml">qml/behaviours/logic/StringFormat.qml</file>
     </qresource>
     <qresource prefix="/components">
+        <file alias="AppBarButton.qml">qml/components/AppBarButton.qml</file>
+        <file alias="ColorIcon.qml">qml/components/ColorIcon.qml</file>
+        <file alias="AppToolButton.qml">qml/components/AppToolButton.qml</file>
+        <file alias="Icons.qml">qml/components/Icons.qml</file>
         <file alias="Accordion.qml">qml/components/Accordion.qml</file>
         <file alias="CustomSlider.qml">qml/components/CustomSlider.qml</file>
         <file alias="CustomSliderVertical.qml">qml/components/CustomSliderVertical.qml</file>

@@ -5,7 +5,7 @@ import QtQuick.Layouts 1.12
 import QtQuick.Shapes 1.15
 
 import App.Theme 1.0
-import Qaterial 1.0 as Qaterial
+
 
 Rectangle {
     id: root
@@ -53,10 +53,10 @@ Rectangle {
             Layout.fillHeight: true
             model: root.actions
 
-            Qaterial.AppBarButton{
+            AppBarButton {
                 width: 40
-                icon.source: `qrc:/Qaterial/Icons/${modelData.icon?? "help"}`
-                icon.color: Material.accentColor
+                icon.source: modelData.icon ? "qrc:/icons/" + modelData.icon + ".svg" : "qrc:/icons/information.svg"
+                icon.color: ThemeManager.primaryColor
                 Layout.alignment: Qt.AlignLeft
 
                 onClicked: {
@@ -73,3 +73,4 @@ Rectangle {
     }
 
 }
+

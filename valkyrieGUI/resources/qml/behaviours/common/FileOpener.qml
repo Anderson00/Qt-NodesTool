@@ -54,7 +54,7 @@ Item {
             Button {
                 id: btOpen
                 text: ""
-                icon.source: 'qrc:/Qaterial/Icons/folder-open'
+                icon.source: 'qrc:/icons/folder-open-outline.svg'
                 font.pixelSize: 12
                 Layout.rightMargin: 8
 

@@ -1,8 +1,9 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
-import Qaterial 1.0 as Qaterial
+
 import App.Theme 1.0
+import App.Icons 1.0
 
 import '../../components'
 
@@ -30,10 +31,10 @@ Item {
 
             RowLayout {
                 anchors.centerIn: parent; spacing: 10
-                Qaterial.ColorIcon {
+                ColorIcon {
                     source: behaviourObject && behaviourObject.gateOpen
-                            ? Qaterial.Icons.lockOpenVariant
-                            : Qaterial.Icons.lock
+                            ? Icons.lockOpenVariant
+                            : Icons.lock
                     width: 22; height: 22
                     color: behaviourObject && behaviourObject.gateOpen ? "#00C853" : "#FF1744"
                 }
@@ -97,3 +98,4 @@ Item {
         }
     }
 }
+

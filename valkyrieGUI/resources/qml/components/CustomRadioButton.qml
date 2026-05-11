@@ -45,3 +45,4 @@ RadioButton {
         leftPadding: control.indicator.width + 8
     }
 }
+
