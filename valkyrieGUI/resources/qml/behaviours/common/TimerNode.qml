@@ -84,7 +84,8 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 32
                 variant: "filled"
-                text: behaviourObject && behaviourObject.running ? "¦ Stop" : "? Start"
+                iconSource: behaviourObject && behaviourObject.running ? Icons.stop : Icons.play
+                text: behaviourObject && behaviourObject.running ? "Stop" : "Start"
                 backgroundColor: behaviourObject && behaviourObject.running
                                  ? ThemeManager.dangerColor : ThemeManager.primaryColor
                 onClicked: {

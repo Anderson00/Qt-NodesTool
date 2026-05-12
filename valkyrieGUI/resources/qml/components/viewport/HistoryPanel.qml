@@ -70,7 +70,7 @@ Rectangle {
         }
 
         Text {
-            text: "Hist�rico"
+            text: "Histórico"
             font.pixelSize: 12
             font.bold: true
             color: ThemeManager.textColor

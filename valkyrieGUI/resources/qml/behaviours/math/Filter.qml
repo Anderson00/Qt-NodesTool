@@ -204,7 +204,7 @@ Item {
                 onValueModified: function(newValue) { root.alpha = newValue }
             }
             Text {
-                text: root.filterMode === 1 ? "0=no change  1=no filter" : "0=no change  1=no filter (RC˜" + (1.0/(2*Math.PI*root.alpha)).toFixed(1) + ")"
+                text: root.filterMode === 1 ? "0=no change  1=no filter" : "0=no change  1=no filter (RC" + (1.0/(2*Math.PI*root.alpha)).toFixed(1) + ")"
                 font.pixelSize: 8; color: ThemeManager.textSecondaryColor; opacity: 0.7
             }
         }

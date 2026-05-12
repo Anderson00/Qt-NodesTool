@@ -11,7 +11,7 @@ Item {
     anchors.fill: parent
     property var behaviourObject
 
-    readonly property var opNames:  ["+", "-", "×", "÷", "%", "xn"]
+    readonly property var opNames:  ["+", "-", "*", "/", "%", "xn"]
     readonly property var opColors: ["#2ecc71","#e74c3c","#3498db","#f39c12","#9b59b6","#1abc9c"]
 
     ColumnLayout {

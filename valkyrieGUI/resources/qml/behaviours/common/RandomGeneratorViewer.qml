@@ -179,7 +179,7 @@ Item {
 
             NumericInputField {
                 Layout.fillWidth: true; implicitHeight: 34
-                label: "�"; value: behaviourObject ? behaviourObject.mean : 50
+                label: ""; value: behaviourObject ? behaviourObject.mean : 50
                 from: -1e6; to: 1e6; stepSize: 1.0; decimals: 2
                 accentColor: "#7C4DFF"
                 onValueModified: function(newValue) { if (behaviourObject) behaviourObject.setMean(newValue) }
@@ -294,7 +294,8 @@ Item {
             NewButton {
                 Layout.fillWidth: true; Layout.preferredHeight: 32
                 variant: "filled"
-                text: autoTimer.running ? "� Stop" : "? Auto"
+                iconSource: autoTimer.running ? Icons.stop : Icons.play
+                text: autoTimer.running ? "Stop" : "Auto"
                 backgroundColor: autoTimer.running ? ThemeManager.dangerColor : ThemeManager.primaryColor
                 onClicked: { if (autoTimer.running) autoTimer.stop(); else autoTimer.start() }
             }
