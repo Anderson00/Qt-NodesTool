@@ -2927,6 +2927,14 @@ Rectangle {
                     anchors.fill: parent
                     visible: selectedPanel === "explorer"
                     rootFolder: "file:///" + appDirPath
+                    onFileActivated: function(filePath) {
+                        if (filePath.endsWith(".py")) {
+                            var cleanPath = filePath.replace("file:///", "")
+                            var cx = ((viewPort.width / 2) - mycanvas.x) / zoomScale
+                            var cy = ((viewPort.height / 2) - mycanvas.y) / zoomScale
+                            viewPort.addPythonNodeWithScript(cleanPath, cx, cy)
+                        }
+                    }
                 }
 
                 VariablesDrawer {

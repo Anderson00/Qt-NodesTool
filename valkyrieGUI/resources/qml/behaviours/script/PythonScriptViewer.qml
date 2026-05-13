@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15 as Ctrl
+import Qt.labs.platform 1.1 as Platform
 import App.Theme 1.0
 import '../../components'
 
@@ -14,6 +15,35 @@ Item {
         id: _autoRunTimer
         interval: 300; repeat: false
         onTriggered: if (behaviourObject && behaviourObject.autoRun) behaviourObject.run()
+    }
+
+    // ── File Dialogs ─────────────────────────────────────────────────────────
+    Platform.FileDialog {
+        id: loadDialog
+        title: "Load Python Script"
+        nameFilters: ["Python files (*.py)", "All files (*)"]
+        fileMode: Platform.FileDialog.OpenFile
+        onAccepted: {
+            if (behaviourObject) {
+                if (behaviourObject.loadFromFile(file)) {
+                    // Success
+                }
+            }
+        }
+    }
+
+    Platform.FileDialog {
+        id: saveDialog
+        title: "Save Python Script"
+        nameFilters: ["Python files (*.py)", "All files (*)"]
+        fileMode: Platform.FileDialog.SaveFile
+        onAccepted: {
+            if (behaviourObject) {
+                if (behaviourObject.saveToFile(file)) {
+                    // Success
+                }
+            }
+        }
     }
 
     ColumnLayout {
@@ -72,7 +102,7 @@ Item {
 
                 // Docs button
                 Rectangle {
-                    width: 50; height: 24; radius: 4
+                    width: 40; height: 24; radius: 4
                     color: _docsMa.pressed ? Qt.darker(ThemeManager.primaryColor, 1.2) : "transparent"
                     border.width: 1; border.color: ThemeManager.primaryColor
                     Text { 
@@ -83,6 +113,56 @@ Item {
                         id: _docsMa; anchors.fill: parent; cursorShape: Qt.PointingHandCursor
                         onClicked: if (behaviourObject) behaviourObject.injectDocs()
                     }
+                }
+
+                // Save button
+                Rectangle {
+                    width: 40; height: 24; radius: 4
+                    color: _saveMa.pressed ? Qt.darker(ThemeManager.primaryColor, 1.2) : "transparent"
+                    border.width: 1; border.color: ThemeManager.primaryColor
+                    Text { 
+                        anchors.centerIn: parent; text: "SAVE"; font.pixelSize: 10; font.bold: true
+                        color: _saveMa.pressed ? ThemeManager.backgroundColor : ThemeManager.primaryColor 
+                    }
+                    MouseArea {
+                        id: _saveMa; anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: saveDialog.open()
+                    }
+                }
+
+                // Load button
+                Rectangle {
+                    width: 40; height: 24; radius: 4
+                    color: _loadMa.pressed ? Qt.darker(ThemeManager.primaryColor, 1.2) : "transparent"
+                    border.width: 1; border.color: ThemeManager.primaryColor
+                    Text { 
+                        anchors.centerIn: parent; text: "LOAD"; font.pixelSize: 10; font.bold: true
+                        color: _loadMa.pressed ? ThemeManager.backgroundColor : ThemeManager.primaryColor 
+                    }
+                    MouseArea {
+                        id: _loadMa; anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: loadDialog.open()
+                    }
+                }
+
+                // Timeout config
+                RowLayout {
+                    spacing: 2
+                    Text { text: "Timeout:"; font.pixelSize: 10; color: ThemeManager.textColor }
+                    Rectangle {
+                        width: 40; height: 18; radius: 2
+                        color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.1)
+                        border.color: ThemeManager.borderColor; border.width: 1
+                        TextInput {
+                            anchors.fill: parent; anchors.margins: 2
+                            text: behaviourObject ? behaviourObject.timeoutMs : 5000
+                            color: ThemeManager.textColor; font.pixelSize: 10
+                            horizontalAlignment: Text.AlignHCenter
+                            validator: IntValidator { bottom: 0; top: 999999 }
+                            onEditingFinished: if (behaviourObject) behaviourObject.setTimeoutMs(parseInt(text) || 0)
+                        }
+                    }
+                    Text { text: "ms (0=∞)"; font.pixelSize: 9; color: ThemeManager.textSecondaryColor }
                 }
 
                 Item { Layout.fillWidth: true } // spacer

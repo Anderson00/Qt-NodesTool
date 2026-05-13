@@ -3,6 +3,17 @@
 #include "model/variablemanager.h"
 #include <QUuid>
 #include <QDateTime>
+#include <QFile>
+#include <QJsonObject>
+#include <QUrl>
+
+#ifdef slots
+#undef slots
+#include <pybind11/embed.h>
+#define slots Q_SLOTS
+#else
+#include <pybind11/embed.h>
+#endif
 
 REGISTER_BEHAVIOUR(PythonBehaviour,
     "Python Script",
@@ -72,6 +83,13 @@ void PythonBehaviour::setAutoRun(bool autoRun) {
     }
 }
 
+void PythonBehaviour::setTimeoutMs(int timeoutMs) {
+    if (m_timeoutMs != timeoutMs) {
+        m_timeoutMs = timeoutMs;
+        emit timeoutMsChanged();
+    }
+}
+
 void PythonBehaviour::updateInput(const QString& name, const QVariant& value) {
     m_inputs[name] = value;
     if (m_autoRun && !m_isRunning) {
@@ -135,6 +153,7 @@ void PythonBehaviour::run() {
     task.id = m_currentTaskId;
     task.script = m_script;
     task.inputs = m_inputs;
+    task.timeoutMs = m_timeoutMs;
     
     // Inject all global variables
     VariableManager* vm = VariableManager::instance();
@@ -203,10 +222,38 @@ QJsonObject PythonBehaviour::saveState() const {
     QJsonObject s;
     s["script"] = m_script;
     s["autoRun"] = m_autoRun;
+    s["timeoutMs"] = m_timeoutMs;
     return s;
 }
 
 void PythonBehaviour::loadState(const QJsonObject& s) {
     if (s.contains("script")) setScript(s["script"].toString());
     if (s.contains("autoRun")) setAutoRun(s["autoRun"].toBool());
+    if (s.contains("timeoutMs")) setTimeoutMs(s["timeoutMs"].toInt());
+}
+
+// ── File I/O ─────────────────────────────────────────────────────────────────
+
+bool PythonBehaviour::loadFromFile(const QString& filePath) {
+    QUrl url(filePath);
+    QString actualPath = url.isLocalFile() ? url.toLocalFile() : filePath;
+    
+    QFile f(actualPath);
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return false;
+    }
+    setScript(QString::fromUtf8(f.readAll()));
+    return true;
+}
+
+bool PythonBehaviour::saveToFile(const QString& filePath) {
+    QUrl url(filePath);
+    QString actualPath = url.isLocalFile() ? url.toLocalFile() : filePath;
+    
+    QFile f(actualPath);
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        return false;
+    }
+    f.write(m_script.toUtf8());
+    return true;
 }

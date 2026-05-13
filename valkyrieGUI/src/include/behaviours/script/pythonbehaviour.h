@@ -20,6 +20,7 @@ class PythonBehaviour : public Behaviours
     Q_PROPERTY(QString errorMsg     READ errorMsg                           NOTIFY hasErrorChanged)
     Q_PROPERTY(int     lastExecTime READ lastExecTime                       NOTIFY lastExecTimeChanged)
     Q_PROPERTY(bool    autoRun      READ autoRun      WRITE setAutoRun      NOTIFY autoRunChanged)
+    Q_PROPERTY(int     timeoutMs    READ timeoutMs    WRITE setTimeoutMs    NOTIFY timeoutMsChanged)
     Q_PROPERTY(QStringList logs     READ logs                               NOTIFY logsChanged)
 
 public:
@@ -38,11 +39,13 @@ public:
     QString errorMsg()     const { return m_error; }
     int     lastExecTime() const { return m_lastExecTime; }
     bool    autoRun()      const { return m_autoRun; }
+    int     timeoutMs()    const { return m_timeoutMs; }
     QStringList logs()     const { return m_logs; }
 
 public slots:
     void setScript(const QString& script);
     void setAutoRun(bool autoRun);
+    void setTimeoutMs(int timeoutMs);
     
     // Evaluate node inputs. Whenever an input changes, if autoRun is true, run() is called.
     void updateInput(const QString& name, const QVariant& value);
@@ -50,6 +53,9 @@ public slots:
     Q_INVOKABLE void run();
     Q_INVOKABLE void clearLogs();
     Q_INVOKABLE void injectDocs();
+    
+    Q_INVOKABLE bool loadFromFile(const QString& filePath);
+    Q_INVOKABLE bool saveToFile(const QString& filePath);
 
 signals:
     // Emitted to dynamically update the output ports
@@ -60,6 +66,7 @@ signals:
     void hasErrorChanged();
     void lastExecTimeChanged();
     void autoRunChanged();
+    void timeoutMsChanged();
     void logsChanged();
 
 private slots:
@@ -71,6 +78,7 @@ private:
     QString m_error;
     int     m_lastExecTime = 0;
     bool    m_autoRun = false;
+    int     m_timeoutMs = 5000;
     QStringList m_logs;
     QVariantMap m_inputs;
 

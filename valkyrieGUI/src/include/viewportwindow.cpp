@@ -172,6 +172,27 @@ bool ViewPortWindow::addBehaviourWithUuid(const QString& path, const QJsonObject
     return true;
 }
 
+bool ViewPortWindow::addPythonNodeWithScript(const QString& filePath, double x, double y) {
+    QFile f(filePath);
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return false;
+    }
+    QString content = QString::fromUtf8(f.readAll());
+    
+    QJsonObject state;
+    state["script"] = content;
+    
+    QJsonObject infos;
+    infos["name"] = QFileInfo(filePath).fileName();
+    infos["type"] = Behaviours::CPP; // pythonbehaviour is registered as CPP type historically
+    infos["className"] = "PythonBehaviour";
+    infos["desc"] = "Loaded from " + QFileInfo(filePath).fileName();
+    
+    const QString uuid = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    
+    return addBehaviourWithUuid("qrc:/behaviours/script/PythonScriptViewer.qml", infos, uuid, x, y, 360, 280, infos["name"].toString(), state);
+}
+
 bool ViewPortWindow::removeBehaviourFromUUID(const QString& uuid) {
     return m_behaviours.remove(uuid);
 }

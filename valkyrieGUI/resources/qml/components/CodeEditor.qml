@@ -50,8 +50,8 @@ Item {
                                     ? Math.max(36, _gutterMetrics.advanceWidth(String(_editor.lineCount)) + 20)
                                     : 0
 
-    // Line height in pixels (approximated from font metrics)
-    readonly property real _lineH: _editor.contentHeight / Math.max(1, _editor.lineCount)
+    // Line height in pixels (exact calculation via FontMetrics)
+    readonly property real _lineH: Math.max(1, _editorMetrics.lineSpacing)
 
     // Y position of the highlighted bar under the cursor
     readonly property real _cursorY: _editor.cursorRectangle.y
@@ -115,6 +115,10 @@ Item {
                 model: _editor.lineCount
                 interactive: false
                 clip: true
+                
+                // Match the padding of the TextEdit so they align perfectly
+                topMargin: 8
+                bottomMargin: 8
 
                 // Keep gutter Y in sync with editor scroll
                 contentY: _scroll.contentItem ? _scroll.contentItem.contentY : 0
@@ -149,6 +153,8 @@ Item {
                 right:  parent.right
             }
             clip: true
+            contentWidth: _editor.width
+            contentHeight: _editor.height
 
             // Styled scrollbars matching the project's thin scrollbar style
             Ctrl.ScrollBar.vertical: Ctrl.ScrollBar {
@@ -164,11 +170,11 @@ Item {
                 }
             }
 
-            // ── The actual TextEdit ───────────────────────────────────────────
             TextEdit {
                 id: _editor
 
                 width: Math.max(_scroll.width, implicitWidth)
+                height: Math.max(_scroll.height, implicitHeight)
 
                 topPadding:    8
                 bottomPadding: 8
@@ -178,6 +184,9 @@ Item {
                 text:          root.code
                 readOnly:      root.readOnly
                 color:         root.textColor_
+                selectByMouse: true
+                selectByKeyboard: true
+                persistentSelection: true
                 selectionColor: Qt.rgba(ThemeManager.primaryColor.r,
                                         ThemeManager.primaryColor.g,
                                         ThemeManager.primaryColor.b, 0.35)
@@ -335,6 +344,12 @@ Item {
         id: _gutterMetrics
         font.family: "Consolas, Courier New, monospace"
         font.pixelSize: root.fontSize - 1
+    }
+
+    FontMetrics {
+        id: _editorMetrics
+        font.family: "Consolas, Courier New, monospace"
+        font.pixelSize: root.fontSize
     }
 
     // ── Public method: focus the editor ──────────────────────────────────────

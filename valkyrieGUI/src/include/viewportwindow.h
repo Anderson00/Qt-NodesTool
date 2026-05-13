@@ -66,6 +66,8 @@ public slots:
                                const QString& title,
                                const QJsonObject& state = QJsonObject());
 
+    Q_INVOKABLE bool addPythonNodeWithScript(const QString& filePath, double x, double y);
+
     bool removeBehaviourFromUUID(const QString& uuid);
     bool removeBehaviourObject(Behaviours* object);
     void clearBehaviours();
