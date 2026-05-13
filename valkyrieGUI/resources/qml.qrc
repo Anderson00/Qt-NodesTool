@@ -25,6 +25,7 @@
         <file alias="Clamp.qml">qml/behaviours/math/Clamp.qml</file>
         <file alias="MapRange.qml">qml/behaviours/math/MapRange.qml</file>
         <file alias="Filter.qml">qml/behaviours/math/Filter.qml</file>
+        <file alias="ExpressionEvaluator.qml">qml/behaviours/math/ExpressionEvaluator.qml</file>
     </qresource>
     <qresource prefix="/behaviours/logic">
         <file alias="Comparison.qml">qml/behaviours/logic/Comparison.qml</file>
@@ -99,6 +100,8 @@
         <file alias="LoadingSpinner.qml">qml/components/LoadingSpinner.qml</file>
         <file alias="SplitPane.qml">qml/components/SplitPane.qml</file>
         <file alias="CodeBlock.qml">qml/components/CodeBlock.qml</file>
+        <file alias="CodeEditor.qml">qml/components/CodeEditor.qml</file>
+        <file alias="VariableValueCard.qml">qml/components/VariableValueCard.qml</file>
         <file alias="Kbd.qml">qml/components/Kbd.qml</file>
     </qresource>
     <qresource prefix="/subwindows">
@@ -134,5 +137,11 @@
     </qresource>
     <qresource prefix="/behaviours">
         <file alias="BaseBehaviour.qml">qml/behaviours/BaseBehaviour.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/script">
+        <file alias="VariableReaderViewer.qml">qml/behaviours/script/VariableReaderViewer.qml</file>
+        <file alias="VariableWriterViewer.qml">qml/behaviours/script/VariableWriterViewer.qml</file>
+        <file alias="VariableMonitorViewer.qml">qml/behaviours/script/VariableMonitorViewer.qml</file>
+        <file alias="PythonScriptViewer.qml">qml/behaviours/script/PythonScriptViewer.qml</file>
     </qresource>
 </RCC>

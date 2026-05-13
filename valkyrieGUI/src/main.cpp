@@ -9,6 +9,7 @@
 #include <utils/logmanager.h>
 #include <utils/fastlinechart.h>
 #include <utils/viewportgriditem.h>
+#include <utils/pythonhighlighter.h>
 #include <behaviours/behaviourregistry.h>
 
 static QFile log_file(QDateTime::currentDateTime().toString().replace(":","-").append(".log"));
@@ -98,6 +99,9 @@ int main(int argc, char **argv)
 
     // Register ViewportGridItem — direct SGG replacement for ViewportGridCanvas
     qmlRegisterType<ViewportGridItem>("App.Widgets", 1, 0, "ViewportGridItem");
+
+    // Register PythonHighlighter — QSyntaxHighlighter for Python code editor nodes
+    qmlRegisterType<PythonHighlighter>("App.Widgets", 1, 0, "PythonHighlighter");
 
     MainWindow w;
     w.show();

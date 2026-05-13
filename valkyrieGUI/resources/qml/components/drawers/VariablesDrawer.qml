@@ -14,9 +14,14 @@ Item {
     readonly property var typeConfig: ({
         "STRING":  { color: "#3B82F6", symbol: "\"\"", label: "String"  },
         "NUMBER":  { color: "#F59E0B", symbol: "#",    label: "Number"  },
+        "INT":     { color: "#EF4444", symbol: "\u2124",  label: "Int"     },
         "BOOLEAN": { color: "#10B981", symbol: "✓",    label: "Boolean" },
         "COLOR":   { color: "#8B5CF6", symbol: "◆",    label: "Color"   },
-        "ARRAY":   { color: "#F97316", symbol: "[ ]",  label: "Array"   }
+        "ARRAY":   { color: "#F97316", symbol: "[ ]",  label: "Array"   },
+        "LIST":    { color: "#06B6D4", symbol: "⟨⟩", label: "List" },
+        "DICT":    { color: "#84CC16", symbol: "{}",    label: "Dict"    },
+        "VEC2":    { color: "#F43F5E", symbol: "↗",  label: "Vec2"    },
+        "VEC3":    { color: "#A855F7", symbol: "⊕",  label: "Vec3"    }
     })
 
     property string typeFilter:      "ALL"
@@ -26,8 +31,11 @@ Item {
     property string _newVarType:     "STRING"
     property bool   _newVarBool:     false
     property color  _newVarColor:    "#7C6AF7"
+    property string _newVarVecX:     "0"
+    property string _newVarVecY:     "0"
+    property string _newVarVecZ:     "0"
 
-    readonly property var _typeKeys: ["STRING", "NUMBER", "BOOLEAN", "COLOR", "ARRAY"]
+    readonly property var _typeKeys: ["STRING", "NUMBER", "INT", "BOOLEAN", "COLOR", "ARRAY", "LIST", "DICT", "VEC2", "VEC3"]
 
     function _typeColor(t) {
         return typeConfig[t] ? typeConfig[t].color : ThemeManager.textColor.toString()
@@ -44,6 +52,10 @@ Item {
             val = root._newVarBool ? "true" : "false"
         else if (root._newVarType === "COLOR")
             val = root._newVarColor.toString().toUpperCase()
+        else if (root._newVarType === "VEC2")
+            val = (root._newVarVecX || "0") + "," + (root._newVarVecY || "0")
+        else if (root._newVarType === "VEC3")
+            val = (root._newVarVecX || "0") + "," + (root._newVarVecY || "0") + "," + (root._newVarVecZ || "0")
         else
             val = newVarValue.text
         VariableManager.addVariable(name, root._newVarType, val, root._newVarReadOnly)
@@ -56,6 +68,9 @@ Item {
         root._newVarBool      = false
         root._newVarColor     = "#7C6AF7"
         root._newVarType      = "STRING"
+        root._newVarVecX      = "0"
+        root._newVarVecY      = "0"
+        root._newVarVecZ      = "0"
         newVarName.text       = ""
         newVarValue.text      = ""
         newVarType.currentIndex = 0
@@ -217,11 +232,15 @@ Item {
                 // Row 2: Type-aware value input
                 Item {
                     Layout.fillWidth: true
-                    height: root._newVarType === "COLOR" ? 36 : 30
+                    height: root._newVarType === "COLOR" ? 36
+                          : (root._newVarType === "VEC2") ? 30
+                          : (root._newVarType === "VEC3") ? 30
+                          : 30
 
-                    // ── STRING / NUMBER / ARRAY ──────────────────────────────
+                    // ── STRING / NUMBER / INT / ARRAY / LIST / DICT ──────────
                     Rectangle {
                         visible: root._newVarType !== "BOOLEAN" && root._newVarType !== "COLOR"
+                              && root._newVarType !== "VEC2"    && root._newVarType !== "VEC3"
                         anchors.fill: parent; radius: 4
                         color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g,
                                        ThemeManager.textColor.b, 0.06)
@@ -232,7 +251,11 @@ Item {
                             anchors.left: parent.left; anchors.leftMargin: 8
                             anchors.verticalCenter: parent.verticalCenter
                             font.pixelSize: 9; color: ThemeManager.textColor; opacity: 0.35
-                            text: root._newVarType === "ARRAY" ? "item1, item2, …" : "value"
+                            text: root._newVarType === "ARRAY" ? "1.0, 2.5, -3.0"
+                                : root._newVarType === "LIST"  ? '[1, "text", true]'
+                                : root._newVarType === "DICT"  ? '{"key": "value"}'
+                                : root._newVarType === "INT"   ? "0"
+                                : "value"
                             visible: !newVarValue.text.length && !newVarValue.activeFocus
                         }
                         TextInput {
@@ -241,15 +264,15 @@ Item {
                             verticalAlignment: TextInput.AlignVCenter
                             font.pixelSize: 12; color: ThemeManager.textColor
                             clip: true; selectionColor: ThemeManager.primaryColor
-                            validator: root._newVarType === "NUMBER" ? _formNumValidator : null
-                            inputMethodHints: root._newVarType === "NUMBER"
+                            validator: root._newVarType === "NUMBER" ? _formNumValidator
+                                     : root._newVarType === "INT"    ? _formIntValidator
+                                     : null
+                            inputMethodHints: (root._newVarType === "NUMBER" || root._newVarType === "INT")
                                              ? Qt.ImhFormattedNumbersOnly : Qt.ImhNone
                             Keys.onReturnPressed: root._addVariable()
                         }
-                        DoubleValidator {
-                            id: _formNumValidator
-                            notation: DoubleValidator.StandardNotation
-                        }
+                        DoubleValidator  { id: _formNumValidator; notation: DoubleValidator.StandardNotation }
+                        IntValidator     { id: _formIntValidator }
                     }
 
                     // ── BOOLEAN ──────────────────────────────────────────────
@@ -263,19 +286,14 @@ Item {
                                    ? Qt.rgba(0.07, 0.73, 0.51, 0.2)
                                    : Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g,
                                              ThemeManager.textColor.b, 0.06)
-                            border.width: root._newVarBool ? 1 : 0
-                            border.color: "#10B981"
+                            border.width: root._newVarBool ? 1 : 0; border.color: "#10B981"
                             Behavior on color { ColorAnimation { duration: 100 } }
-                            Text {
-                                anchors.centerIn: parent; text: "TRUE"
-                                font.pixelSize: 11; font.bold: root._newVarBool
-                                color: root._newVarBool ? "#10B981" : ThemeManager.textColor
-                                opacity: root._newVarBool ? 1.0 : 0.4
-                            }
-                            MouseArea {
-                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                                onClicked: root._newVarBool = true
-                            }
+                            Text { anchors.centerIn: parent; text: "TRUE"; font.pixelSize: 11
+                                   font.bold: root._newVarBool
+                                   color: root._newVarBool ? "#10B981" : ThemeManager.textColor
+                                   opacity: root._newVarBool ? 1.0 : 0.4 }
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                        onClicked: root._newVarBool = true }
                         }
 
                         Rectangle {
@@ -284,19 +302,14 @@ Item {
                                    ? Qt.rgba(0.94, 0.27, 0.27, 0.2)
                                    : Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g,
                                              ThemeManager.textColor.b, 0.06)
-                            border.width: !root._newVarBool ? 1 : 0
-                            border.color: "#EF4444"
+                            border.width: !root._newVarBool ? 1 : 0; border.color: "#EF4444"
                             Behavior on color { ColorAnimation { duration: 100 } }
-                            Text {
-                                anchors.centerIn: parent; text: "FALSE"
-                                font.pixelSize: 11; font.bold: !root._newVarBool
-                                color: !root._newVarBool ? "#EF4444" : ThemeManager.textColor
-                                opacity: !root._newVarBool ? 1.0 : 0.4
-                            }
-                            MouseArea {
-                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                                onClicked: root._newVarBool = false
-                            }
+                            Text { anchors.centerIn: parent; text: "FALSE"; font.pixelSize: 11
+                                   font.bold: !root._newVarBool
+                                   color: !root._newVarBool ? "#EF4444" : ThemeManager.textColor
+                                   opacity: !root._newVarBool ? 1.0 : 0.4 }
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                        onClicked: root._newVarBool = false }
                         }
                     }
 
@@ -308,6 +321,79 @@ Item {
                         showHex: true; label: ""
                         value: root._newVarColor
                         onAccepted: function(c) { root._newVarColor = c }
+                    }
+
+                    // ── VEC2 ──────────────────────────────────────────────────
+                    RowLayout {
+                        visible: root._newVarType === "VEC2"
+                        anchors.fill: parent; spacing: 6
+
+                        Repeater {
+                            model: [{lbl:"X", prop:"_newVarVecX"}, {lbl:"Y", prop:"_newVarVecY"}]
+                            delegate: Rectangle {
+                                Layout.fillWidth: true; height: 30; radius: 4
+                                color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g,
+                                               ThemeManager.textColor.b, 0.06)
+                                border.width: vecIn.activeFocus ? 1 : 0
+                                border.color: ThemeManager.primaryColor
+                                RowLayout {
+                                    anchors.fill: parent; anchors.leftMargin: 6; spacing: 4
+                                    Text { text: modelData.lbl; font.pixelSize: 9
+                                           color: ThemeManager.primaryColor; opacity: 0.8 }
+                                    TextInput {
+                                        id: vecIn
+                                        Layout.fillWidth: true
+                                        verticalAlignment: TextInput.AlignVCenter
+                                        font.pixelSize: 11; color: ThemeManager.textColor
+                                        clip: true; selectionColor: ThemeManager.primaryColor
+                                        text: modelData.prop === "_newVarVecX" ? root._newVarVecX : root._newVarVecY
+                                        validator: DoubleValidator { notation: DoubleValidator.StandardNotation }
+                                        onTextChanged: {
+                                            if (modelData.prop === "_newVarVecX") root._newVarVecX = text
+                                            else root._newVarVecY = text
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // ── VEC3 ──────────────────────────────────────────────────
+                    RowLayout {
+                        visible: root._newVarType === "VEC3"
+                        anchors.fill: parent; spacing: 4
+
+                        Repeater {
+                            model: [{lbl:"X",prop:"X"},{lbl:"Y",prop:"Y"},{lbl:"Z",prop:"Z"}]
+                            delegate: Rectangle {
+                                Layout.fillWidth: true; height: 30; radius: 4
+                                color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g,
+                                               ThemeManager.textColor.b, 0.06)
+                                border.width: vec3In.activeFocus ? 1 : 0
+                                border.color: ThemeManager.primaryColor
+                                RowLayout {
+                                    anchors.fill: parent; anchors.leftMargin: 6; spacing: 4
+                                    Text { text: modelData.lbl; font.pixelSize: 9
+                                           color: ThemeManager.primaryColor; opacity: 0.8 }
+                                    TextInput {
+                                        id: vec3In
+                                        Layout.fillWidth: true
+                                        verticalAlignment: TextInput.AlignVCenter
+                                        font.pixelSize: 11; color: ThemeManager.textColor
+                                        clip: true; selectionColor: ThemeManager.primaryColor
+                                        text: modelData.lbl === "X" ? root._newVarVecX
+                                            : modelData.lbl === "Y" ? root._newVarVecY
+                                            : root._newVarVecZ
+                                        validator: DoubleValidator { notation: DoubleValidator.StandardNotation }
+                                        onTextChanged: {
+                                            if (modelData.lbl === "X")      root._newVarVecX = text
+                                            else if (modelData.lbl === "Y") root._newVarVecY = text
+                                            else                            root._newVarVecZ = text
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 

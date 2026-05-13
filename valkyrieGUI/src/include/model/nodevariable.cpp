@@ -1,5 +1,8 @@
 #include "nodevariable.h"
 #include <QUuid>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QPointF>
 
 NodeVariable* NodeVariable::create(const Data& d, QObject* parent) {
     Data data = d;
@@ -55,4 +58,40 @@ QJsonObject NodeVariable::toJson() const {
     obj["value"]    = m_value;
     obj["readOnly"] = m_readOnly;
     return obj;
+}
+
+QVariant NodeVariable::parsedValue() const {
+    if (m_type == "NUMBER")  return QVariant(m_value.toDouble());
+    if (m_type == "INT")     return QVariant(m_value.toInt());
+    if (m_type == "BOOLEAN") return QVariant(m_value == "true");
+    if (m_type == "ARRAY") {
+        QList<double> list;
+        const auto parts = m_value.split(',', Qt::SkipEmptyParts);
+        for (const auto& p : parts) list.append(p.trimmed().toDouble());
+        return QVariant::fromValue(list);
+    }
+    if (m_type == "VEC2") {
+        const auto parts = m_value.split(',');
+        double x = parts.size() > 0 ? parts[0].trimmed().toDouble() : 0.0;
+        double y = parts.size() > 1 ? parts[1].trimmed().toDouble() : 0.0;
+        return QVariant::fromValue(QPointF(x, y));
+    }
+    if (m_type == "VEC3") {
+        const auto parts = m_value.split(',');
+        QList<double> vec;
+        for (int i = 0; i < 3; i++)
+            vec.append(parts.size() > i ? parts[i].trimmed().toDouble() : 0.0);
+        return QVariant::fromValue(vec);
+    }
+    // STRING, COLOR, LIST, DICT — return raw string (caller parses JSON if needed)
+    return QVariant(m_value);
+}
+
+bool NodeVariable::isNumericType() const {
+    return m_type == "NUMBER" || m_type == "INT"
+        || m_type == "VEC2"   || m_type == "VEC3";
+}
+
+bool NodeVariable::isContainerType() const {
+    return m_type == "ARRAY" || m_type == "LIST" || m_type == "DICT";
 }

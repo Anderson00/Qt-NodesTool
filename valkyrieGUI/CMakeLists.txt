@@ -3,6 +3,18 @@ cmake_minimum_required(VERSION 3.16)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick Gui Svg Sql Network Test)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Svg Gui Sql Quick Network Xml QuickControls2 Core5Compat Test Charts Qml)
 
+# --- Python & pybind11 setup ---
+set(Python3_ROOT_DIR "${CMAKE_SOURCE_DIR}/python_env")
+find_package(Python3 COMPONENTS Interpreter Development.Embed REQUIRED)
+
+include(FetchContent)
+FetchContent_Declare(
+  pybind11
+  GIT_REPOSITORY https://github.com/pybind/pybind11.git
+  GIT_TAG        v2.11.1
+)
+FetchContent_MakeAvailable(pybind11)
+
 qt_standard_project_setup()
 
 set(PROJECT_SOURCES
@@ -17,6 +29,8 @@ set(PROJECT_SOURCES
     src/include/utils/logmanager.h src/include/utils/logmanager.cpp
     src/include/utils/fastlinechart.h src/include/utils/fastlinechart.cpp
     src/include/utils/viewportgriditem.h src/include/utils/viewportgriditem.cpp
+    src/include/utils/pythonhighlighter.h src/include/utils/pythonhighlighter.cpp
+    src/include/utils/pythonengine.h src/include/utils/pythonengine.cpp
     src/include/mainwindow.cpp
     src/include/mainwindow.ui
     src/include/qmlwindow.h src/include/qmlwindow.cpp
@@ -40,6 +54,11 @@ set(PROJECT_SOURCES
     src/include/behaviours/math/clamp.h src/include/behaviours/math/clamp.cpp
     src/include/behaviours/math/maprange.h src/include/behaviours/math/maprange.cpp
     src/include/behaviours/math/filter.h src/include/behaviours/math/filter.cpp
+    src/include/behaviours/math/expressioneval.h src/include/behaviours/math/expressioneval.cpp
+    src/include/behaviours/script/variablereader.h src/include/behaviours/script/variablereader.cpp
+    src/include/behaviours/script/variablewriter.h src/include/behaviours/script/variablewriter.cpp
+    src/include/behaviours/script/variablemonitor.h src/include/behaviours/script/variablemonitor.cpp
+    src/include/behaviours/script/pythonbehaviour.h src/include/behaviours/script/pythonbehaviour.cpp
     src/include/behaviours/common/piechartviewer.h src/include/behaviours/common/piechartviewer.cpp
     src/include/behaviours/common/barchartviewer.h src/include/behaviours/common/barchartviewer.cpp
     src/include/behaviours/common/gaugeviewer.h src/include/behaviours/common/gaugeviewer.cpp
@@ -75,8 +94,7 @@ qt_add_executable(Debugger
     src/include/behaviours/common/componentsviewer.h src/include/behaviours/common/componentsviewer.cpp
 )
 
-target_link_libraries(Debugger PRIVATE Qt6::Widgets Qt6::Core Qt6::Quick Qt6::Xml Qt6::Charts Qt6::Qml cxxopts)
-
+target_link_libraries(Debugger PRIVATE Qt6::Widgets Qt6::Core Qt6::Quick Qt6::Xml Qt6::Charts Qt6::Qml cxxopts pybind11::embed)
 
 set_target_properties(Debugger PROPERTIES
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
@@ -90,3 +108,13 @@ target_include_directories(Debugger PUBLIC
                           "src/"
                           "src/include"
                           )
+
+# Copy python_env to the build directory so the executable can find it side-by-side
+add_custom_command(TARGET Debugger POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/python_env"
+        "$<TARGET_FILE_DIR:Debugger>/python_env"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_SOURCE_DIR}/python_env/python311.dll"
+        "$<TARGET_FILE_DIR:Debugger>/python311.dll"
+)
