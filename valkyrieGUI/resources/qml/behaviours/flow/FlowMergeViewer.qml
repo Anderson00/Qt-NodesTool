@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import App.Theme 1.0
+import App.Icons 1.0
 import '../../components'
 
 Item {
@@ -32,11 +33,21 @@ Item {
                 border.width: 1; border.color: isLast ? "#FF9800" : Qt.rgba(1,0.6,0,0.2)
                 Behavior on color       { ColorAnimation { duration: 150 } }
                 Behavior on border.color { ColorAnimation { duration: 150 } }
-                Text {
-                    anchors.centerIn: parent
-                    text: "Trigger " + modelData + (parent.isLast ? "  ◀ last" : "")
-                    font.pixelSize: 11; font.bold: parent.isLast; color: "#FF9800"
+                RowLayout {
+                    anchors.centerIn: parent; spacing: 4
                     opacity: parent.isLast ? 1.0 : 0.45
+                    Text {
+                        text: "Trigger " + modelData
+                        font.pixelSize: 11; font.bold: parent.parent.isLast; color: "#FF9800"
+                    }
+                    SvgIcon {
+                        visible: parent.parent.isLast
+                        width: 10; height: 10; source: Icons.arrowLeft; color: "#FF9800"
+                    }
+                    Text {
+                        visible: parent.parent.isLast
+                        text: "last"; font.pixelSize: 11; font.bold: true; color: "#FF9800"
+                    }
                 }
             }
         }

@@ -465,21 +465,21 @@ Item {
                                 Item { Layout.fillHeight: true }
                                 Row {
                                     spacing: 6
-                                    Text {
-                                        text: "↑" + modelData.outputs_count
-                                        font.pixelSize: 9
-                                        color: ThemeManager.primaryColor; opacity: 0.8
+                                    Row {
+                                        spacing: 2
+                                        SvgIcon { width: 9; height: 9; source: Icons.chevronUp; color: ThemeManager.primaryColor; opacity: 0.8 }
+                                        Text { text: modelData.outputs_count; font.pixelSize: 9; color: ThemeManager.primaryColor; opacity: 0.8 }
                                     }
-                                    Text {
-                                        text: "↓" + modelData.inputs_count
-                                        font.pixelSize: 9
-                                        color: ThemeManager.textColor; opacity: 0.5
+                                    Row {
+                                        spacing: 2
+                                        SvgIcon { width: 9; height: 9; source: Icons.chevronDown; color: ThemeManager.textColor; opacity: 0.5 }
+                                        Text { text: modelData.inputs_count; font.pixelSize: 9; color: ThemeManager.textColor; opacity: 0.5 }
                                     }
                                     Item { Layout.fillWidth: true }
-                                    Text {
-                                        text: "drag →"
-                                        font.pixelSize: 8
-                                        color: ThemeManager.textColor; opacity: 0.22
+                                    Row {
+                                        spacing: 2
+                                        Text { text: "drag"; font.pixelSize: 8; color: ThemeManager.textColor; opacity: 0.22 }
+                                        SvgIcon { width: 8; height: 8; source: Icons.chevronRight; color: ThemeManager.textColor; opacity: 0.22 }
                                     }
                                 }
                             }
@@ -501,14 +501,24 @@ Item {
                                         color: ThemeManager.textColor; elide: Text.ElideRight
                                         width: parent.width
                                     }
-                                    Text {
-                                        text: "↑" + modelData.outputs_count + "  ↓" + modelData.inputs_count
-                                        font.pixelSize: 9; color: ThemeManager.textColor; opacity: 0.45
+                                    Row {
+                                        spacing: 6
+                                        Row {
+                                            spacing: 2
+                                            SvgIcon { width: 9; height: 9; source: Icons.chevronUp; color: ThemeManager.textColor; opacity: 0.45 }
+                                            Text { text: modelData.outputs_count; font.pixelSize: 9; color: ThemeManager.textColor; opacity: 0.45 }
+                                        }
+                                        Row {
+                                            spacing: 2
+                                            SvgIcon { width: 9; height: 9; source: Icons.chevronDown; color: ThemeManager.textColor; opacity: 0.45 }
+                                            Text { text: modelData.inputs_count; font.pixelSize: 9; color: ThemeManager.textColor; opacity: 0.45 }
+                                        }
                                     }
                                 }
-                                Text {
-                                    text: "drag →"; font.pixelSize: 9
-                                    color: ThemeManager.primaryColor; opacity: 0.35
+                                Row {
+                                    spacing: 2
+                                    Text { text: "drag"; font.pixelSize: 9; color: ThemeManager.primaryColor; opacity: 0.35 }
+                                    SvgIcon { width: 9; height: 9; source: Icons.chevronRight; color: ThemeManager.primaryColor; opacity: 0.35 }
                                 }
                             }
 

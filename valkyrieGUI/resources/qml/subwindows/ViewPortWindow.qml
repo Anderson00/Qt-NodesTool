@@ -2975,9 +2975,10 @@ Rectangle {
                     font.pixelSize: 12; font.bold: true
                     color: "white"; elide: Text.ElideRight
                 }
-                Text {
-                    text: "→ drop on canvas"
-                    font.pixelSize: 9; color: "white"; opacity: 0.7
+                Row {
+                    spacing: 3
+                    Text { text: "drop on canvas"; font.pixelSize: 9; color: "white"; opacity: 0.7 }
+                    SvgIcon { width: 9; height: 9; source: Icons.chevronRight; color: "white"; opacity: 0.7 }
                 }
             }
         }

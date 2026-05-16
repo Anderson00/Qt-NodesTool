@@ -56,7 +56,7 @@ Item {
 
             NewButton {
                 Layout.fillWidth: true; Layout.preferredHeight: 32
-                variant: "outlined"; text: "−"
+                variant: "outlined"; iconSource: Icons.minus
                 backgroundColor: ThemeManager.dangerColor
                 onClicked: behaviourObject.decrement()
             }

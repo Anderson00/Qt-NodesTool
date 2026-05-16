@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import App.Theme 1.0
 import App.Icons 1.0
+import '../../components'
 
 Item {
     id: root

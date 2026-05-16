@@ -16,7 +16,7 @@ Item {
     property var    selectedEvent:   null
 
     readonly property var triggerTypes: ["Intervalo","Data/Hora","Cron","Multi-Data"]
-    readonly property var triggerIcons: ["⏱","📅","🔄","📆"]
+    readonly property var triggerIcons: [Icons.timerOutline, Icons.calendarOutline, Icons.refresh, Icons.calendarOutline]
 
     function refreshSelected() {
         if (!behaviourObject || selectedEventId === "") { selectedEvent = null; return }
@@ -98,6 +98,7 @@ Item {
 
                 // Start / Stop button
                 Rectangle {
+                    id: startStopRect
                     height: 26
                     width: startStopLabel.implicitWidth + 18; radius: 6
 
@@ -109,16 +110,21 @@ Item {
                         : (_isActive ? "#DC2626" : ThemeManager.primaryColor)
                     Behavior on color { ColorAnimation { duration: 150 } }
 
-                    Text {
+                    RowLayout {
                         id: startStopLabel
-                        anchors.centerIn: parent
-                        text: parent._isActive ? "⏹ Parar" : "▶ Iniciar"
-                        // Use always-visible white — button bg is always a saturated color
-                        color: "#ffffff"
-                        font.pixelSize: 11; font.bold: true
-                        // Subtle shadow so text pops even against lighter primaries
-                        style: Text.Outline
-                        styleColor: Qt.rgba(0, 0, 0, 0.25)
+                        anchors.centerIn: parent; spacing: 5
+                        SvgIcon {
+                            Layout.preferredWidth: 12; Layout.preferredHeight: 12
+                            source: startStopRect._isActive ? Icons.stop : Icons.play
+                            color: "#ffffff"
+                        }
+                        Text {
+                            text: startStopRect._isActive ? "Parar" : "Iniciar"
+                            color: "#ffffff"
+                            font.pixelSize: 11; font.bold: true
+                            style: Text.Outline
+                            styleColor: Qt.rgba(0, 0, 0, 0.25)
+                        }
                     }
                     MouseArea {
                         id: startStopA; anchors.fill: parent
@@ -229,10 +235,17 @@ Item {
                                             font.pixelSize: 11
                                             font.bold: isSelected
                                         }
-                                        Text {
-                                            text: (root.triggerIcons[modelData.triggerType] || "?") +
-                                                  " " + (root.triggerTypes[modelData.triggerType] || "?")
-                                            color: ThemeManager.textSecondaryColor; font.pixelSize: 9
+                                        RowLayout {
+                                            spacing: 3
+                                            SvgIcon {
+                                                width: 9; height: 9
+                                                source: root.triggerIcons[modelData.triggerType] || ""
+                                                color: ThemeManager.textSecondaryColor
+                                            }
+                                            Text {
+                                                text: root.triggerTypes[modelData.triggerType] || "?"
+                                                color: ThemeManager.textSecondaryColor; font.pixelSize: 9
+                                            }
                                         }
                                     }
 
@@ -443,7 +456,7 @@ Item {
                                         Behavior on border.color { ColorAnimation { duration: 120 } }
                                         RowLayout {
                                             anchors.centerIn: parent; spacing: 6
-                                            Text { text: root.triggerIcons[index]; font.pixelSize: 13 }
+                                            SvgIcon { width: 14; height: 14; source: root.triggerIcons[index]; color: isActive ? ThemeManager.primaryColor : ThemeManager.textSecondaryColor }
                                             Text {
                                                 text: modelData; font.pixelSize: 11; font.bold: isActive
                                                 color: isActive ? ThemeManager.primaryColor : ThemeManager.textSecondaryColor
@@ -544,7 +557,7 @@ Item {
                                 Behavior on border.color { ColorAnimation { duration: 150 } }
                                 RowLayout {
                                     anchors { fill: parent; leftMargin: 10; rightMargin: 10 } spacing: 6
-                                    Text { text: "λ"; font.family: "Consolas"; font.pixelSize: 14; color: ThemeManager.primaryColor; opacity: 0.7 }
+                                    SvgIcon { width: 14; height: 14; source: Icons.codeBraces; color: ThemeManager.primaryColor; opacity: 0.7 }
                                     TextInput {
                                         id: cronInput
                                         Layout.fillWidth: true
@@ -646,7 +659,7 @@ Item {
                                 RowLayout {
                                     anchors { fill: parent; margins: 3 } spacing: 3
                                     Repeater {
-                                        model: ["⌨  Inline", "📄  Arquivo"]
+                                        model: ["Inline", "Arquivo"]
                                         Rectangle {
                                             Layout.fillWidth: true; height: parent.height; radius: 5
                                             property bool isCurrent: {
@@ -655,10 +668,18 @@ Item {
                                             }
                                             color: isCurrent ? Qt.rgba(1,1,1,0.12) : "transparent"
                                             Behavior on color { ColorAnimation { duration: 120 } }
-                                            Text {
-                                                anchors.centerIn: parent; text: modelData
-                                                color: isCurrent ? ThemeManager.textColor : ThemeManager.textSecondaryColor
-                                                font.pixelSize: 11; font.bold: isCurrent
+                                            RowLayout {
+                                                anchors.centerIn: parent; spacing: 5
+                                                SvgIcon {
+                                                    width: 12; height: 12
+                                                    source: index === 0 ? Icons.codeBraces : Icons.fileDocumentOutline
+                                                    color: isCurrent ? ThemeManager.textColor : ThemeManager.textSecondaryColor
+                                                }
+                                                Text {
+                                                    text: modelData
+                                                    color: isCurrent ? ThemeManager.textColor : ThemeManager.textSecondaryColor
+                                                    font.pixelSize: 11; font.bold: isCurrent
+                                                }
                                             }
                                             MouseArea {
                                                 anchors.fill: parent; cursorShape: Qt.PointingHandCursor

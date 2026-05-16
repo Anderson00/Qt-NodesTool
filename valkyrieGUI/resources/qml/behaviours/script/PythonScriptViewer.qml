@@ -70,9 +70,10 @@ Item {
                     
                     RowLayout {
                         anchors.centerIn: parent; spacing: 4
-                        Text { 
-                            text: behaviourObject && behaviourObject.isRunning ? "⟳" : "▶"
-                            font.pixelSize: 11; color: ThemeManager.backgroundColor
+                        SvgIcon {
+                            width: 12; height: 12
+                            source: behaviourObject && behaviourObject.isRunning ? Icons.refresh : Icons.play
+                            color: ThemeManager.backgroundColor
                             RotationAnimation on rotation {
                                 loops: Animation.Infinite
                                 from: 0; to: 360; duration: 800
@@ -172,9 +173,9 @@ Item {
                 RowLayout {
                     spacing: 4
                     visible: behaviourObject && (behaviourObject.lastExecTime > 0 || behaviourObject.hasError)
-                    Text { 
-                        text: behaviourObject && behaviourObject.hasError ? "✗" : "✓"
-                        font.pixelSize: 12; font.bold: true
+                    SvgIcon {
+                        width: 14; height: 14
+                        source: behaviourObject && behaviourObject.hasError ? Icons.alertCircleOutline : Icons.checkCircleOutline
                         color: behaviourObject && behaviourObject.hasError ? "#EF4444" : "#10B981"
                     }
                     Text {

@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import App.Theme 1.0
+import App.Icons 1.0
 
 // Stepper — step wizard progress indicator.
 //
@@ -74,11 +75,19 @@ Item {
                 Behavior on color { ColorAnimation { duration: 200 } }
                 Behavior on border.color { ColorAnimation { duration: 200 } }
 
+                SvgIcon {
+                    anchors.centerIn: parent
+                    visible: stepItem.done
+                    width: 14; height: 14
+                    source: Icons.checkCircleOutline
+                    color: "#FFF"
+                }
                 Text {
                     anchors.centerIn: parent
-                    text: stepItem.done ? "✓" : (index + 1).toString()
+                    visible: !stepItem.done
+                    text: (index + 1).toString()
                     font.pixelSize: 12; font.bold: true
-                    color: stepItem.done ? "#FFF" : (stepItem.active ? root.accentColor : Qt.rgba(root.textColor.r, root.textColor.g, root.textColor.b, 0.5))
+                    color: stepItem.active ? root.accentColor : Qt.rgba(root.textColor.r, root.textColor.g, root.textColor.b, 0.5)
                     Behavior on color { ColorAnimation { duration: 200 } }
                 }
             }

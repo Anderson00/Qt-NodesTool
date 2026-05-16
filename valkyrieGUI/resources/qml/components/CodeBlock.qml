@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import App.Theme 1.0
+import App.Icons 1.0
 
 // CodeBlock — styled code display with optional copy button and scrollbars.
 //
@@ -187,10 +188,17 @@ Item {
                 border.color: ThemeManager.borderColor; border.width: 1
                 Behavior on color { ColorAnimation { duration: 80 } }
 
-                Text {
-                    id: copyTxt; anchors.centerIn: parent
-                    text: _copied ? "✓ Copied" : "⎘ Copy"
-                    font.pixelSize: 10; color: _copied ? ThemeManager.successColor : ThemeManager.textSecondaryColor
+                RowLayout {
+                    id: copyTxt; anchors.centerIn: parent; spacing: 4
+                    SvgIcon {
+                        width: 10; height: 10
+                        source: _copied ? Icons.checkCircleOutline : Icons.clipboardTextOutline
+                        color: _copied ? ThemeManager.successColor : ThemeManager.textSecondaryColor
+                    }
+                    Text {
+                        text: _copied ? "Copied" : "Copy"
+                        font.pixelSize: 10; color: _copied ? ThemeManager.successColor : ThemeManager.textSecondaryColor
+                    }
                 }
 
                 property bool _copied: false
