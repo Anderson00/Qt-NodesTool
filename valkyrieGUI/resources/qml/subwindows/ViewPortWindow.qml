@@ -793,7 +793,7 @@ Rectangle {
         if (event.key === Qt.Key_Shift) isShiftHeld = false
     }
 
-    RoundButton {
+    FabButton {
         id: fabRightMenu
         visible: nodeOnFocus !== null && nodeOnFocus !== undefined
         anchors.right: parent.right
@@ -802,33 +802,15 @@ Rectangle {
         anchors.topMargin: historyPanel.visible ? historyPanel.height + 16 : 8
         z: 100
 
+        iconSource: Icons.cog
+        iconColor: ThemeManager.primaryColor
+
         Behavior on anchors.topMargin {
             NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
         }
 
-        icon.source: Icons.cog
-        icon.color: ThemeManager.primaryColor
-        flat: false
-        
-        background: Rectangle {
-            implicitWidth: 40
-            implicitHeight: 40
-            radius: 20
-            color: fabRightMenu.pressed ? ThemeManager.secondaryColor : ThemeManager.surfaceColor
-            border.color: ThemeManager.borderColor
-            border.width: 1
-            layer.enabled: true
-            layer.effect: DropShadow {
-                transparentBorder: true
-                horizontalOffset: 0
-                verticalOffset: 2
-                radius: 4
-                color: Qt.rgba(0,0,0,0.3)
-            }
-        }
-
         onClicked: {
-            if(rightDrawerOpened)
+            if (rightDrawerOpened)
                 drawer.close()
             else
                 drawer.open()

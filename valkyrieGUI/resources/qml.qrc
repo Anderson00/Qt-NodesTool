@@ -65,6 +65,7 @@
         <file alias="SearchableSelect.qml">qml/components/SearchableSelect.qml</file>
         <file alias="CustomDatePicker.qml">qml/components/CustomDatePicker.qml</file>
         <file alias="ResizeHandle.qml">qml/components/ResizeHandle.qml</file>
+        <file alias="FabButton.qml">qml/components/FabButton.qml</file>
         <file alias="SettingsPopup.qml">qml/components/SettingsPopup.qml</file>
         <file alias="SplashScreen.qml">qml/components/SplashScreen.qml</file>
         <file alias="Toast.qml">qml/components/Toast.qml</file>
