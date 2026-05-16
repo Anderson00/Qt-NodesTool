@@ -81,6 +81,7 @@ CI uses `jurplel/install-qt-action` to fetch Qt 6.5.3 — see `.github/workflows
 - `behaviours/logic/` — Comparison, Gate, Hub, StringFormat
 - `behaviours/math/` — Clamp, ExpressionEvaluator, Filter, MapRange, MathFunction, MathOperation
 - `behaviours/script/` — PythonBehaviour, VariableMonitor, VariableReader, VariableWriter
+- `behaviours/scheduling/` — ScriptSchedulerViewer (multi-event scheduler with Interval/DateTime/Cron/Multi-Date triggers + inline CodeEditor), CronTriggerViewer (cron expression + preset chips + enable/fire controls), IntervalTriggerViewer (day/hour/min/sec spinboxes + countdown display)
 
 **Sub-windows:**
 - `DebuggerMain`, `QmlMdiSubWindow`, `TaskManagerWindow`, `TestConnectionWindow`
@@ -121,6 +122,7 @@ CI uses `jurplel/install-qt-action` to fetch Qt 6.5.3 — see `.github/workflows
 - Startup: `SplashScreen` — Project selection on startup
 - Settings: `SettingsPopup` — Settings + color preset picker
 - Editor: `CodeEditor` — Python code editor with syntax highlighting; `CodeBlock` — read-only code display
+- Calendar: `CalendarView` — supports `multiSelect`, `rangeSelect` (first/second click sets start/end, fills all intermediate dates, emits `rangeChanged(start,end)` + hover preview bridge visual), and `markedDates`; `TimePicker` — hours/minutes/seconds spinners with `onTimeChanged(h,m,s)` signal
 - Data: `DataTable`, `VirtualList`, `NodesList`
 - Viewport utility: `FileDropZone`, `SegmentedControl`, `NewButton`, `AppBarButton`, `AppToolButton`, `CustomToolbar`, `Triangle`, `RippleEffectBackground`, `Accordion`
 
@@ -163,4 +165,4 @@ CI uses `jurplel/install-qt-action` to fetch Qt 6.5.3 — see `.github/workflows
 
 - All QML files are registered in `valkyrieGUI/resources/qml.qrc`
 - New files **must** be added there manually — no auto-discovery
-- Prefixes used: `/components`, `/components/viewport`, `/components/bottomsheets`, `/components/drawers`, `/subwindows`, `/behaviours`, `/behaviours/common`, `/behaviours/logic`, `/behaviours/math`, `/behaviours/script`
+- Prefixes used: `/components`, `/components/viewport`, `/components/bottomsheets`, `/components/drawers`, `/subwindows`, `/behaviours`, `/behaviours/common`, `/behaviours/logic`, `/behaviours/math`, `/behaviours/script`, `/behaviours/scheduling`
