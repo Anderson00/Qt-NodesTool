@@ -114,19 +114,26 @@ target_include_directories(Debugger PUBLIC
                           "src/include"
                           )
 
-# Copy python_env to the build directory only when the embedded distribution
-# exists locally (not present in CI where the system Python is used instead).
+# Copy python_env directory only when the embedded distribution exists locally.
 if(EXISTS "${CMAKE_SOURCE_DIR}/python_env")
     add_custom_command(TARGET Debugger POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${CMAKE_SOURCE_DIR}/python_env"
             "$<TARGET_FILE_DIR:Debugger>/python_env"
     )
-    if(WIN32)
+endif()
+
+# Copy the Python runtime DLL on Windows, regardless of whether python_env/
+# exists. The DLL is located next to the Python executable that CMake found,
+# which covers both the local python_env/ case and the CI system-Python case.
+if(WIN32)
+    get_filename_component(_python_dir "${Python3_EXECUTABLE}" DIRECTORY)
+    set(_python_dll "${_python_dir}/python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}.dll")
+    if(EXISTS "${_python_dll}")
         add_custom_command(TARGET Debugger POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${CMAKE_SOURCE_DIR}/python_env/python311.dll"
-                "$<TARGET_FILE_DIR:Debugger>/python311.dll"
+                "${_python_dll}"
+                "$<TARGET_FILE_DIR:Debugger>/python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}.dll"
         )
     endif()
 endif()
