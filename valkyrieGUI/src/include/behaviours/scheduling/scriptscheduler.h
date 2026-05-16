@@ -15,10 +15,13 @@ class ScriptScheduler : public Behaviours
     Q_OBJECT
     Q_PROPERTY(QVariantList events     READ eventsAsVariant  NOTIFY eventsChanged)
     Q_PROPERTY(int          eventCount READ eventCount       NOTIFY eventsChanged)
+    Q_PROPERTY(bool         active     READ isActive         NOTIFY activeChanged)
 
 public:
     explicit ScriptScheduler(QObject *parent = nullptr);
     ~ScriptScheduler() override = default;
+
+    bool isActive() const;
 
     QMap<QString, QVariant> loadInfos() override;
     static QMap<QString, QVariant> static_infos();
@@ -30,6 +33,10 @@ public:
     int          eventCount() const { return m_events.size(); }
 
 public slots:
+    // ── Scheduler control ─────────────────────────────────────────────────────
+    void startScheduler();
+    void stopScheduler();
+
     // ── Event CRUD ────────────────────────────────────────────────────────────
     QString     addEvent();
     void        removeEvent(const QString &id);
@@ -45,6 +52,8 @@ public slots:
     void triggerEvent(const QString &id);
 
 signals:
+    void activeChanged();
+
     // Primary signals for inter-node connection
     void eventFired(const QString &eventId, const QVariantMap &params);
     void eventScriptFinished(const QString &eventId, const QVariantMap &outputs);

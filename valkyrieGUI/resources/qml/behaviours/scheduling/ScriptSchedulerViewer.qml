@@ -130,14 +130,20 @@ Item {
                         id: startStopA; anchors.fill: parent
                         hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            if (!behaviourObject) return
-                            // Try method calls first; fall back to toggling the active property
-                            try {
-                                if (behaviourObject.active) behaviourObject.stopScheduler()
-                                else                        behaviourObject.startScheduler()
-                            } catch(e) {
-                                try { behaviourObject.active = !behaviourObject.active } catch(e2) {}
+                            if (!behaviourObject) {
+                                console.warn("[ScriptScheduler] behaviourObject is null — cannot toggle")
+                                return
                             }
+                            var wasActive = behaviourObject.active
+                            console.log("[ScriptScheduler] toggle click — active=" + wasActive)
+                            if (wasActive) {
+                                behaviourObject.stopScheduler()
+                                console.log("[ScriptScheduler] stopScheduler() called")
+                            } else {
+                                behaviourObject.startScheduler()
+                                console.log("[ScriptScheduler] startScheduler() called")
+                            }
+                            console.log("[ScriptScheduler] new active=" + behaviourObject.active)
                         }
                     }
                 }

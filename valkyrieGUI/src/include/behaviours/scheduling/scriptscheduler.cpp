@@ -64,6 +64,29 @@ QMap<QString, QVariant> ScriptScheduler::static_infos()
     };
 }
 
+// ── Scheduler control ──────────────────────────────────────────────────────────
+
+bool ScriptScheduler::isActive() const
+{
+    return m_globalTimer.isActive();
+}
+
+void ScriptScheduler::startScheduler()
+{
+    if (!m_globalTimer.isActive()) {
+        m_globalTimer.start();
+        emit activeChanged();
+    }
+}
+
+void ScriptScheduler::stopScheduler()
+{
+    if (m_globalTimer.isActive()) {
+        m_globalTimer.stop();
+        emit activeChanged();
+    }
+}
+
 // ── Event CRUD ─────────────────────────────────────────────────────────────────
 
 QString ScriptScheduler::addEvent()
@@ -383,6 +406,7 @@ QJsonObject ScriptScheduler::saveState() const
         arr.append(ev.toJson());
     QJsonObject obj;
     obj["events"] = arr;
+    obj["active"] = m_globalTimer.isActive();
     return obj;
 }
 
@@ -393,4 +417,12 @@ void ScriptScheduler::loadState(const QJsonObject &state)
     for (const auto &v : arr)
         m_events.append(ScheduledEvent::fromJson(v.toObject()));
     emit eventsChanged();
+
+    // Restore active state (default: true for backwards compatibility)
+    bool wasActive = state.value("active").toBool(true);
+    if (wasActive && !m_globalTimer.isActive())
+        m_globalTimer.start();
+    else if (!wasActive && m_globalTimer.isActive())
+        m_globalTimer.stop();
+    emit activeChanged();
 }
