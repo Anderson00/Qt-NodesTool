@@ -4,7 +4,12 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick Gui Svg Sql Network
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Svg Gui Sql Quick Network Xml QuickControls2 Core5Compat Test Charts Qml)
 
 # --- Python & pybind11 setup ---
-set(Python3_ROOT_DIR "${CMAKE_SOURCE_DIR}/python_env")
+# Use python_env/ when present (local embedded distribution); otherwise fall
+# back to whatever Python the caller/CI has already provided via PATH or
+# -DPython3_EXECUTABLE=.
+if(NOT Python3_EXECUTABLE AND EXISTS "${CMAKE_SOURCE_DIR}/python_env")
+    set(Python3_ROOT_DIR "${CMAKE_SOURCE_DIR}/python_env")
+endif()
 find_package(Python3 COMPONENTS Interpreter Development.Embed REQUIRED)
 
 include(FetchContent)
@@ -109,12 +114,19 @@ target_include_directories(Debugger PUBLIC
                           "src/include"
                           )
 
-# Copy python_env to the build directory so the executable can find it side-by-side
-add_custom_command(TARGET Debugger POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/python_env"
-        "$<TARGET_FILE_DIR:Debugger>/python_env"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_SOURCE_DIR}/python_env/python311.dll"
-        "$<TARGET_FILE_DIR:Debugger>/python311.dll"
-)
+# Copy python_env to the build directory only when the embedded distribution
+# exists locally (not present in CI where the system Python is used instead).
+if(EXISTS "${CMAKE_SOURCE_DIR}/python_env")
+    add_custom_command(TARGET Debugger POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/python_env"
+            "$<TARGET_FILE_DIR:Debugger>/python_env"
+    )
+    if(WIN32)
+        add_custom_command(TARGET Debugger POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${CMAKE_SOURCE_DIR}/python_env/python311.dll"
+                "$<TARGET_FILE_DIR:Debugger>/python311.dll"
+        )
+    endif()
+endif()

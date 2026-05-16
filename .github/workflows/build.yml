@@ -31,6 +31,12 @@ jobs:
           modules: 'qt5compat qtshadertools qtcharts'
           cache: 'false'
 
+      - name: Set up Python 3.11
+        id: python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Verify Qt Installation
         run: |
           $qtPath = "D:\a\Qt-NodesTool\Qt\6.5.3\msvc2019_64"
@@ -63,7 +69,7 @@ jobs:
         run: |
           mkdir -p build
           cd build
-          cmake -G "Visual Studio 17 2022" -A x64 ..
+          cmake -G "Visual Studio 17 2022" -A x64 -DPython3_EXECUTABLE="${{ steps.python.outputs.python-path }}" ..
 
       - name: Build
         run: |
@@ -246,6 +252,12 @@ jobs:
           brew install ninja cmake
         shell: bash
 
+      - name: Set up Python 3.11
+        id: python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
@@ -268,6 +280,7 @@ jobs:
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_SKIP_RPATH=ON \
             -DFETCHCONTENT_FULLY_DISCONNECTED=OFF \
+            -DPython3_EXECUTABLE="${{ steps.python.outputs.python-path }}" \
             ..
         shell: bash
 
@@ -340,6 +353,12 @@ jobs:
             ninja-build
         shell: bash
 
+      - name: Set up Python 3.11
+        id: python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
@@ -362,6 +381,7 @@ jobs:
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_SKIP_RPATH=ON \
             -DFETCHCONTENT_FULLY_DISCONNECTED=OFF \
+            -DPython3_EXECUTABLE="${{ steps.python.outputs.python-path }}" \
             ..
         shell: bash
 
