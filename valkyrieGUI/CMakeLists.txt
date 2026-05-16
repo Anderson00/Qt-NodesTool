@@ -52,7 +52,10 @@ set(PROJECT_SOURCES
     src/include/behaviours/logic/stringformat.h src/include/behaviours/logic/stringformat.cpp
     src/include/behaviours/common/constantvalue.h src/include/behaviours/common/constantvalue.cpp
     src/include/behaviours/common/textdisplay.h src/include/behaviours/common/textdisplay.cpp
-    src/include/behaviours/common/timernode.h src/include/behaviours/common/timernode.cpp
+    src/include/behaviours/scheduling/intervaltrigger.h src/include/behaviours/scheduling/intervaltrigger.cpp
+    src/include/behaviours/scheduling/crontrigger.h src/include/behaviours/scheduling/crontrigger.cpp
+    src/include/behaviours/scheduling/scheduledscript.h
+    src/include/behaviours/scheduling/scriptscheduler.h src/include/behaviours/scheduling/scriptscheduler.cpp
     src/include/behaviours/common/counter.h src/include/behaviours/common/counter.cpp
     src/include/behaviours/math/mathoperation.h src/include/behaviours/math/mathoperation.cpp
     src/include/behaviours/math/mathfunction.h src/include/behaviours/math/mathfunction.cpp

@@ -11,7 +11,6 @@
         <file alias="ComponentsViewer.qml">qml/behaviours/common/ComponentsViewer.qml</file>
         <file alias="ConstantValue.qml">qml/behaviours/common/ConstantValue.qml</file>
         <file alias="TextDisplay.qml">qml/behaviours/common/TextDisplay.qml</file>
-        <file alias="TimerNode.qml">qml/behaviours/common/TimerNode.qml</file>
         <file alias="Counter.qml">qml/behaviours/common/Counter.qml</file>
         <file alias="PieChartViewer.qml">qml/behaviours/common/PieChartViewer.qml</file>
         <file alias="BarChartViewer.qml">qml/behaviours/common/BarChartViewer.qml</file>
@@ -57,6 +56,7 @@
         <file alias="CustomSwitch.qml">qml/components/CustomSwitch.qml</file>
         <file alias="CustomComboBox.qml">qml/components/CustomComboBox.qml</file>
         <file alias="NumberSpinBox.qml">qml/components/NumberSpinBox.qml</file>
+        <file alias="VerticalSpinBox.qml">qml/components/VerticalSpinBox.qml</file>
         <file alias="NumericInputField.qml">qml/components/NumericInputField.qml</file>
         <file alias="PasswordField.qml">qml/components/PasswordField.qml</file>
         <file alias="ColorPicker.qml">qml/components/ColorPicker.qml</file>
@@ -103,7 +103,13 @@
         <file alias="CodeBlock.qml">qml/components/CodeBlock.qml</file>
         <file alias="CodeEditor.qml">qml/components/CodeEditor.qml</file>
         <file alias="VariableValueCard.qml">qml/components/VariableValueCard.qml</file>
+        <file alias="CalendarView.qml">qml/components/CalendarView.qml</file>
         <file alias="Kbd.qml">qml/components/Kbd.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/scheduling">
+        <file alias="IntervalTriggerViewer.qml">qml/behaviours/scheduling/IntervalTriggerViewer.qml</file>
+        <file alias="CronTriggerViewer.qml">qml/behaviours/scheduling/CronTriggerViewer.qml</file>
+        <file alias="ScriptSchedulerViewer.qml">qml/behaviours/scheduling/ScriptSchedulerViewer.qml</file>
     </qresource>
     <qresource prefix="/subwindows">
         <file alias="DebuggerMain.qml">qml/subwindows/DebuggerMain.qml</file>

@@ -41,12 +41,14 @@ AbstractButton {
         }
     }
 
-    contentItem: SvgIcon {
-        id: icon
-        anchors.centerIn: parent
-        width:  control.iconSize
-        height: control.iconSize
-        color:  control.iconColor
+    contentItem: Item {
+        SvgIcon {
+            id: icon
+            anchors.centerIn: parent
+            width:  control.iconSize
+            height: control.iconSize
+            color:  control.iconColor
+        }
     }
 
     MouseArea {
