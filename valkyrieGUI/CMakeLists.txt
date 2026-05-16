@@ -123,9 +123,11 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/python_env")
     )
 endif()
 
-# Copy the Python runtime DLL on Windows, regardless of whether python_env/
-# exists. The DLL is located next to the Python executable that CMake found,
-# which covers both the local python_env/ case and the CI system-Python case.
+# Copy the Python runtime library next to the executable on every platform.
+# Windows : python3XX.dll lives beside python.exe (Python3_LIBRARY_RELEASE is
+#           the import .lib, so we locate the DLL manually).
+# macOS   : Python3_LIBRARY_RELEASE is libpython3.X.dylib
+# Linux   : Python3_LIBRARY_RELEASE is libpython3.X.so (or versioned .so.1.0)
 if(WIN32)
     get_filename_component(_python_dir "${Python3_EXECUTABLE}" DIRECTORY)
     set(_python_dll "${_python_dir}/python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}.dll")
@@ -136,4 +138,10 @@ if(WIN32)
                 "$<TARGET_FILE_DIR:Debugger>/python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}.dll"
         )
     endif()
+elseif(Python3_LIBRARY_RELEASE)
+    add_custom_command(TARGET Debugger POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${Python3_LIBRARY_RELEASE}"
+            "$<TARGET_FILE_DIR:Debugger>/"
+    )
 endif()
