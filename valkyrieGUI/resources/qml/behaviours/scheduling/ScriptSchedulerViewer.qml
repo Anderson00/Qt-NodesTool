@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import Qt.labs.platform 1.1 as Platform
 import App.Theme 1.0
+import App.Icons 1.0
 
 import '../../components'
 
@@ -81,12 +82,15 @@ Item {
                     border.color: Qt.rgba(ThemeManager.primaryColor.r,
                                           ThemeManager.primaryColor.g,
                                           ThemeManager.primaryColor.b, 0.3)
-                    Text {
+                    RowLayout {
                         id: nextLabel
-                        anchors.centerIn: parent
-                        text: "⏳ " + countdownPill._ni
-                        color: ThemeManager.primaryColor
-                        font.pixelSize: 10; font.bold: true; font.family: "Consolas"
+                        anchors.centerIn: parent; spacing: 4
+                        SvgIcon { width: 11; height: 11; source: Icons.timerSand; color: ThemeManager.primaryColor }
+                        Text {
+                            text: countdownPill._ni
+                            color: ThemeManager.primaryColor
+                            font.pixelSize: 10; font.bold: true; font.family: "Consolas"
+                        }
                     }
                 }
 
@@ -238,7 +242,7 @@ Item {
                                         color: delA.containsMouse ? Qt.rgba(239,68,68,0.25) : "transparent"
                                         visible: itemArea.containsMouse || delA.containsMouse
                                         Behavior on color { ColorAnimation { duration: 100 } }
-                                        Text { anchors.centerIn: parent; text: "✕"; color: "#EF4444"; font.pixelSize: 8 }
+                                        SvgIcon { anchors.centerIn: parent; width: 10; height: 10; source: Icons.close; color: "#EF4444" }
                                         MouseArea {
                                             id: delA; anchors.fill: parent; hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
@@ -262,7 +266,7 @@ Item {
                                     RowLayout {
                                         anchors { fill: parent; leftMargin: 5; rightMargin: 5 }
                                         spacing: 3
-                                        Text { text: "⏳"; font.pixelSize: 8 }
+                                        SvgIcon { width: 10; height: 10; source: Icons.timerSand; color: ThemeManager.primaryColor }
                                         Text {
                                             Layout.fillWidth: true
                                             text: modelData.nextIn || ""
@@ -291,7 +295,7 @@ Item {
                         Behavior on color { ColorAnimation { duration: 150 } }
                         RowLayout {
                             anchors.centerIn: parent; spacing: 5
-                            Text { text: "+"; color: "#fff"; font.pixelSize: 15; font.bold: true }
+                            SvgIcon { width: 16; height: 16; source: Icons.plus; color: "#fff" }
                             Text { text: "Evento"; color: "#fff"; font.pixelSize: 11; font.bold: true }
                         }
                         MouseArea {
@@ -318,7 +322,7 @@ Item {
                 ColumnLayout {
                     anchors.centerIn: parent; spacing: 10
                     visible: root.selectedEvent === null
-                    Text { Layout.alignment: Qt.AlignHCenter; text: "📋"; font.pixelSize: 32; opacity: 0.2 }
+                    SvgIcon { Layout.alignment: Qt.AlignHCenter; width: 36; height: 36; source: Icons.clipboardTextOutline; color: ThemeManager.textColor; opacity: 0.2 }
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: "Selecione ou crie\num evento"
@@ -360,7 +364,7 @@ Item {
 
                                     RowLayout {
                                         anchors { fill: parent; leftMargin: 10; rightMargin: 10 } spacing: 6
-                                        Text { text: "✏"; font.pixelSize: 11; color: ThemeManager.textSecondaryColor; opacity: 0.5 }
+                                        SvgIcon { width: 14; height: 14; source: Icons.pencilOutline; color: ThemeManager.textSecondaryColor; opacity: 0.5 }
                                         TextInput {
                                             id: nameField
                                             Layout.fillWidth: true
@@ -392,7 +396,7 @@ Item {
                                         color: Qt.rgba(1,1,1,0.07)
                                         RowLayout {
                                             id: runBadge; anchors.centerIn: parent; spacing: 3
-                                            Text { text: "×"; color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
+                                            SvgIcon { width: 10; height: 10; source: Icons.restore; color: ThemeManager.textSecondaryColor }
                                             Text {
                                                 text: root.selectedEvent ? root.selectedEvent.runCount : "0"
                                                 color: ThemeManager.textColor; font.pixelSize: 10; font.bold: true
@@ -513,7 +517,7 @@ Item {
                                 color: Qt.rgba(0,0,0,0.18); border.width: 1; border.color: Qt.rgba(1,1,1,0.07)
                                 ColumnLayout {
                                     anchors.centerIn: parent; spacing: 4
-                                    Text { Layout.alignment: Qt.AlignHCenter; text: "📅"; font.pixelSize: 22; opacity: 0.5 }
+                                    SvgIcon { Layout.alignment: Qt.AlignHCenter; width: 28; height: 28; source: Icons.calendarOutline; color: ThemeManager.textSecondaryColor; opacity: 0.5 }
                                     Text {
                                         Layout.alignment: Qt.AlignHCenter
                                         text: root.selectedEvent && root.selectedEvent.dateTimes &&
@@ -686,7 +690,7 @@ Item {
                                     color: Qt.rgba(1,1,1,0.05); border.width: 1; border.color: Qt.rgba(1,1,1,0.12)
                                     RowLayout {
                                         anchors { fill: parent; leftMargin: 10; rightMargin: 10 } spacing: 6
-                                        Text { text: "📄"; font.pixelSize: 11; color: ThemeManager.textSecondaryColor; opacity: 0.6 }
+                                        SvgIcon { width: 14; height: 14; source: Icons.fileDocumentOutline; color: ThemeManager.textSecondaryColor; opacity: 0.6 }
                                         TextField {
                                             Layout.fillWidth: true
                                             verticalAlignment: TextInput.AlignVCenter
@@ -703,7 +707,7 @@ Item {
                                     color: browseBtnA.containsMouse
                                         ? Qt.lighter(ThemeManager.primaryColor, 1.2) : ThemeManager.primaryColor
                                     Behavior on color { ColorAnimation { duration: 150 } }
-                                    Text { anchors.centerIn: parent; text: "📁"; font.pixelSize: 14 }
+                                    SvgIcon { anchors.centerIn: parent; width: 16; height: 16; source: Icons.folderOutline; color: "#fff" }
                                     MouseArea { id: browseBtnA; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: fileDialog.open() }
                                 }
                             }
@@ -734,7 +738,7 @@ Item {
                                                   ThemeManager.primaryColor.b, 0.2)
                                         : Qt.rgba(1,1,1,0.06)
                                     Behavior on color { ColorAnimation { duration: 120 } }
-                                    Text { anchors.centerIn: parent; text: "+"; color: ThemeManager.primaryColor; font.pixelSize: 14; font.bold: true }
+                                    SvgIcon { anchors.centerIn: parent; width: 14; height: 14; source: Icons.plus; color: ThemeManager.primaryColor }
                                     MouseArea {
                                         id: addParamA; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                         onClicked: {
@@ -811,7 +815,7 @@ Item {
                                                 width: 20; height: 20; radius: 4
                                                 color: rmPA.containsMouse ? Qt.rgba(239,68,68,0.2) : "transparent"
                                                 Behavior on color { ColorAnimation { duration: 100 } }
-                                                Text { anchors.centerIn: parent; text: "✕"; color: "#EF4444"; font.pixelSize: 9 }
+                                                SvgIcon { anchors.centerIn: parent; width: 10; height: 10; source: Icons.close; color: "#EF4444" }
                                                 MouseArea {
                                                     id: rmPA; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                                     onClicked: behaviourObject.removeEventParam(root.selectedEventId, paramRow._currentKey)
@@ -852,7 +856,10 @@ Item {
                                     ? Qt.lighter(ThemeManager.primaryColor, 1.15)
                                     : ThemeManager.primaryColor
                                 Behavior on color { ColorAnimation { duration: 150 } }
-                                Text { id: fireLabel; anchors.centerIn: parent; text: "⚡ Disparar agora"; color: "#fff"; font.pixelSize: 11; font.bold: true }
+                                RowLayout { id: fireLabel; anchors.centerIn: parent; spacing: 5
+                                    SvgIcon { width: 12; height: 12; source: Icons.flash; color: "#fff" }
+                                    Text { text: "Disparar agora"; color: "#fff"; font.pixelSize: 11; font.bold: true }
+                                }
                                 MouseArea {
                                     id: fireNowA; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                     onClicked: behaviourObject.triggerEvent(root.selectedEventId)

@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import App.Theme 1.0
+import App.Icons 1.0
 import '../../components'
 
 Item {
@@ -60,7 +61,10 @@ Item {
                 color: behaviourObject && behaviourObject.lastPath === 1 ? Qt.rgba(0, 0.78, 0.33, 0.2) : Qt.rgba(0, 0.78, 0.33, 0.05)
                 border.width: 1; border.color: "#00C853"
                 Behavior on color { ColorAnimation { duration: 150 } }
-                Text { anchors.centerIn: parent; text: "▶ TRUE"; font.pixelSize: 11; font.bold: true; color: "#00C853" }
+                RowLayout { anchors.centerIn: parent; spacing: 4
+                    SvgIcon { width: 11; height: 11; source: Icons.play; color: "#00C853" }
+                    Text { text: "TRUE"; font.pixelSize: 11; font.bold: true; color: "#00C853" }
+                }
             }
 
             Rectangle {
@@ -68,7 +72,10 @@ Item {
                 color: behaviourObject && behaviourObject.lastPath === 2 ? Qt.rgba(1, 0.09, 0.27, 0.2) : Qt.rgba(1, 0.09, 0.27, 0.05)
                 border.width: 1; border.color: "#FF1744"
                 Behavior on color { ColorAnimation { duration: 150 } }
-                Text { anchors.centerIn: parent; text: "▶ FALSE"; font.pixelSize: 11; font.bold: true; color: "#FF1744" }
+                RowLayout { anchors.centerIn: parent; spacing: 4
+                    SvgIcon { width: 11; height: 11; source: Icons.play; color: "#FF1744" }
+                    Text { text: "FALSE"; font.pixelSize: 11; font.bold: true; color: "#FF1744" }
+                }
             }
         }
 

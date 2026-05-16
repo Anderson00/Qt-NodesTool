@@ -122,7 +122,8 @@ Item {
             Layout.fillWidth: true
             Layout.preferredHeight: 32
             variant: "filled"
-            text: "⚡ Send"
+            iconSource: Icons.flash
+            text: "Send"
             backgroundColor: ThemeManager.primaryColor
             onClicked: behaviourObject.send()
         }

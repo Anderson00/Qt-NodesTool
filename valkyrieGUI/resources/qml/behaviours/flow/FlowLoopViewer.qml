@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import App.Theme 1.0
+import App.Icons 1.0
 import '../../components'
 
 Item {
@@ -70,7 +71,10 @@ Item {
                 color: runMa.containsMouse ? Qt.rgba(1,0.6,0,0.2) : Qt.rgba(1,0.6,0,0.1)
                 border.width: 1; border.color: "#FF9800"
                 Behavior on color { ColorAnimation { duration: 100 } }
-                Text { anchors.centerIn: parent; text: "▶ Run"; font.pixelSize: 11; font.bold: true; color: "#FF9800" }
+                RowLayout { anchors.centerIn: parent; spacing: 4
+                    SvgIcon { width: 11; height: 11; source: Icons.play; color: "#FF9800" }
+                    Text { text: "Run"; font.pixelSize: 11; font.bold: true; color: "#FF9800" }
+                }
                 MouseArea { id: runMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                     onClicked: if (behaviourObject) behaviourObject.trigger() }
             }
@@ -80,7 +84,10 @@ Item {
                 color: brkMa.containsMouse ? Qt.rgba(1,0.09,0.27,0.2) : Qt.rgba(1,0.09,0.27,0.08)
                 border.width: 1; border.color: "#FF1744"
                 Behavior on color { ColorAnimation { duration: 100 } }
-                Text { anchors.centerIn: parent; text: "■ Break"; font.pixelSize: 11; font.bold: true; color: "#FF1744" }
+                RowLayout { anchors.centerIn: parent; spacing: 4
+                    SvgIcon { width: 11; height: 11; source: Icons.stop; color: "#FF1744" }
+                    Text { text: "Break"; font.pixelSize: 11; font.bold: true; color: "#FF1744" }
+                }
                 MouseArea { id: brkMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                     onClicked: if (behaviourObject) behaviourObject.breakLoop() }
             }

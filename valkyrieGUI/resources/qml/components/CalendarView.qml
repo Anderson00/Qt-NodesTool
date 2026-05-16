@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import App.Theme 1.0
+import App.Icons 1.0
 
 // ─── CalendarView ──────────────────────────────────────────────────────────────
 // Full standalone calendar with month/year navigation, multi-select, range-select,
@@ -244,7 +245,7 @@ Item {
                         visible: root.rangeStart !== ""
                         width: 16; height: 16; radius: 8
                         color: clearA.containsMouse ? Qt.rgba(1,1,1,0.12) : "transparent"
-                        Text { anchors.centerIn: parent; text: "×"; color: Qt.rgba(1,1,1,0.4); font.pixelSize: 10 }
+                        SvgIcon { anchors.centerIn: parent; width: 10; height: 10; source: Icons.close; color: Qt.rgba(1,1,1,0.4) }
                         MouseArea {
                             id: clearA; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                             onClicked: { root.rangeStart = ""; root.rangeEnd = ""; root.selectedDates = []; root.selectionChanged([]) }

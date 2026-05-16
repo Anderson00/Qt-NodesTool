@@ -87,4 +87,11 @@ QtObject {
     readonly property url viewGrid:               "qrc:/icons/view-grid.svg"
     readonly property url fullscreen:             "qrc:/icons/fullscreen.svg"
     readonly property url contentSaveCogOutline:  "qrc:/icons/content-save-cog-outline.svg"
+    readonly property url dotsVertical:           "qrc:/icons/dots-vertical.svg"
+    readonly property url flash:                  "qrc:/icons/flash.svg"
+    readonly property url timerSand:              "qrc:/icons/timer-sand.svg"
+    readonly property url timerOutline:           "qrc:/icons/timer-outline.svg"
+    readonly property url pencilOutline:          "qrc:/icons/pencil-outline.svg"
+    readonly property url clipboardTextOutline:   "qrc:/icons/clipboard-text-outline.svg"
+    readonly property url calendarOutline:        "qrc:/icons/calendar-outline.svg"
 }

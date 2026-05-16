@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import App.Theme 1.0
+import App.Icons 1.0
 
 import '../../components'
 
@@ -62,14 +63,14 @@ Item {
 
             NewButton {
                 Layout.preferredWidth: 50; Layout.preferredHeight: 32
-                variant: "outlined"; text: "⟳"
+                variant: "outlined"; iconSource: Icons.refresh
                 backgroundColor: ThemeManager.textSecondaryColor
                 onClicked: behaviourObject.reset()
             }
 
             NewButton {
                 Layout.fillWidth: true; Layout.preferredHeight: 32
-                variant: "filled"; text: "+"
+                variant: "filled"; iconSource: Icons.plus
                 backgroundColor: ThemeManager.primaryColor
                 onClicked: behaviourObject.increment()
             }

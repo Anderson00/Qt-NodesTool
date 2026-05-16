@@ -399,7 +399,7 @@ Rectangle {
                 Layout.preferredHeight: 34
                 Layout.preferredWidth: 28
                 textColor: titleView.color
-                text: "⋮"
+                iconSource: Icons.dotsVertical
                 iconSize: 14
                 variant: "text"
                 onClicked: contextMenu.popup()

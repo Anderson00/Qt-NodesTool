@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import App.Theme 1.0
+import App.Icons 1.0
 import '../../components'
 
 Item {
@@ -32,8 +33,12 @@ Item {
                 Behavior on border.color { ColorAnimation { duration: 100 } }
                 RowLayout {
                     anchors.fill: parent; anchors.margins: 8; spacing: 6
+                    SvgIcon {
+                        width: 11; height: 11; source: Icons.play; color: "#FF9800"
+                        opacity: parent.parent.isActive ? 1.0 : 0.5
+                    }
                     Text {
-                        text: "▶ Step " + (index + 1)
+                        text: "Step " + (index + 1)
                         font.pixelSize: 11; font.bold: parent.parent.isActive; color: "#FF9800"
                         opacity: parent.parent.isActive ? 1.0 : 0.5
                     }
@@ -55,7 +60,10 @@ Item {
             color: trigMa.containsMouse ? Qt.rgba(1,0.6,0,0.2) : Qt.rgba(1,0.6,0,0.1)
             border.width: 1; border.color: "#FF9800"
             Behavior on color { ColorAnimation { duration: 100 } }
-            Text { anchors.centerIn: parent; text: "▶ Run Sequence"; font.pixelSize: 11; font.bold: true; color: "#FF9800" }
+            RowLayout { anchors.centerIn: parent; spacing: 4
+                SvgIcon { width: 11; height: 11; source: Icons.play; color: "#FF9800" }
+                Text { text: "Run Sequence"; font.pixelSize: 11; font.bold: true; color: "#FF9800" }
+            }
             MouseArea { id: trigMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                 onClicked: if (behaviourObject) behaviourObject.trigger() }
         }

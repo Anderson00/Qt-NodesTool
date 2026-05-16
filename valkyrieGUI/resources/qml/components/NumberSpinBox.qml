@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import App.Theme 1.0
+import App.Icons 1.0
 
 SpinBox {
     id: control
@@ -49,12 +50,11 @@ SpinBox {
                                   : control.up.hovered ? Qt.rgba(1, 1, 1, 0.06)
                                                        : "transparent"
         radius: control.radius
-        Text {
+        SvgIcon {
             anchors.centerIn: parent
-            text: "+"
+            width: 14; height: 14
+            source: Icons.plus
             color: ThemeManager.textColor
-            font.pixelSize: 14
-            font.bold: true
         }
     }
 
@@ -67,12 +67,11 @@ SpinBox {
                                     : control.down.hovered ? Qt.rgba(1, 1, 1, 0.06)
                                                            : "transparent"
         radius: control.radius
-        Text {
+        SvgIcon {
             anchors.centerIn: parent
-            text: "−"
+            width: 14; height: 14
+            source: Icons.minus
             color: ThemeManager.textColor
-            font.pixelSize: 14
-            font.bold: true
         }
     }
 }

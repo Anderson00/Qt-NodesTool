@@ -3,6 +3,7 @@ import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15 as Ctrl
 import App.Theme 1.0
 import App.Variables 1.0
+import App.Icons 1.0
 import '../../components'
 
 Item {
@@ -39,8 +40,8 @@ Item {
                        ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g,
                                  ThemeManager.primaryColor.b, 0.2)
                        : "transparent"
-                Text { anchors.centerIn: parent; text: "+"; font.pixelSize: 14
-                       color: ThemeManager.primaryColor }
+                SvgIcon { anchors.centerIn: parent; width: 14; height: 14
+                          source: Icons.plus; color: ThemeManager.primaryColor }
                 MouseArea {
                     id: _addMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                     onClicked: root._popupOpen = !root._popupOpen
@@ -51,7 +52,7 @@ Item {
             Rectangle {
                 width: 20; height: 20; radius: 10; visible: behaviourObject && behaviourObject.watchedIds.length > 0
                 color: _clrMa.containsMouse ? Qt.rgba(0.94,0.27,0.27,0.2) : "transparent"
-                Text { anchors.centerIn: parent; text: "\u00D7"; font.pixelSize: 14; color: "#EF4444" }
+                SvgIcon { anchors.centerIn: parent; width: 12; height: 12; source: Icons.close; color: "#EF4444" }
                 MouseArea { id: _clrMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                             onClicked: { if (behaviourObject) behaviourObject.clearWatch() } }
             }

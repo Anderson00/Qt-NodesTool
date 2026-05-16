@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import App.Theme 1.0
+import App.Icons 1.0
 
 Rectangle {
     id: root
@@ -25,7 +26,7 @@ Rectangle {
         Rectangle {
             Layout.fillWidth: true; Layout.preferredHeight: 22; radius: 5
             color: upA.containsMouse ? Qt.rgba(1, 1, 1, 0.08) : "transparent"
-            Text { anchors.centerIn: parent; text: "▲"; font.pixelSize: 9; color: ThemeManager.textSecondaryColor }
+            SvgIcon { anchors.centerIn: parent; width: 14; height: 14; source: Icons.chevronUp; color: ThemeManager.textSecondaryColor }
             MouseArea {
                 id: upA; anchors.fill: parent; hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
@@ -50,7 +51,7 @@ Rectangle {
         Rectangle {
             Layout.fillWidth: true; Layout.preferredHeight: 22; radius: 5
             color: downA.containsMouse ? Qt.rgba(1, 1, 1, 0.08) : "transparent"
-            Text { anchors.centerIn: parent; text: "▼"; font.pixelSize: 9; color: ThemeManager.textSecondaryColor }
+            SvgIcon { anchors.centerIn: parent; width: 14; height: 14; source: Icons.chevronDown; color: ThemeManager.textSecondaryColor }
             MouseArea {
                 id: downA; anchors.fill: parent; hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor

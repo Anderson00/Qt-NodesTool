@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import App.Theme 1.0
+import App.Icons 1.0
 
 // CommandPalette — VS Code-style ⌘P command search overlay.
 //
@@ -67,9 +68,11 @@ Popup {
 
             Row {
                 anchors { fill: parent; leftMargin: 14; rightMargin: 14 } spacing: 10
-                Text {
+                SvgIcon {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "⌕"; font.pixelSize: 20; color: ThemeManager.textSecondaryColor
+                    width: 20; height: 20
+                    source: Icons.magnify
+                    color: ThemeManager.textSecondaryColor
                 }
                 TextInput {
                     id: _query

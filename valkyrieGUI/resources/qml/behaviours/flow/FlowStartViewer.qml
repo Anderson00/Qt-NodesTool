@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import App.Theme 1.0
+import App.Icons 1.0
 import '../../components'
 
 Item {
@@ -71,7 +72,7 @@ Item {
 
             RowLayout {
                 anchors.centerIn: parent; spacing: 6
-                Text { text: "▶"; font.pixelSize: 14; color: "#FF9800" }
+                SvgIcon { width: 16; height: 16; source: Icons.play; color: "#FF9800" }
                 Text { text: "Trigger"; font.pixelSize: 13; font.bold: true; color: "#FF9800" }
             }
 

@@ -3,6 +3,7 @@ import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15 as Ctrl
 import Qt.labs.platform 1.1 as Platform
 import App.Theme 1.0
+import App.Icons 1.0
 import '../../components'
 
 Item {
@@ -244,7 +245,7 @@ Item {
                 anchors { top: parent.top; right: parent.right; margins: 4 }
                 width: 16; height: 16; radius: 8
                 color: _clrLog.containsMouse ? Qt.rgba(1,1,1,0.1) : "transparent"
-                Text { anchors.centerIn: parent; text: "×"; font.pixelSize: 12; color: ThemeManager.textSecondaryColor }
+                SvgIcon { anchors.centerIn: parent; width: 12; height: 12; source: Icons.close; color: ThemeManager.textSecondaryColor }
                 MouseArea {
                     id: _clrLog; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                     onClicked: if (behaviourObject) behaviourObject.clearLogs()

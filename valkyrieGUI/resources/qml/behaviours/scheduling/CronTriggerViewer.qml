@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import App.Theme 1.0
+import App.Icons 1.0
 
 import '../../components'
 
@@ -90,9 +91,13 @@ Item {
                 color: ThemeManager.textSecondaryColor; font.pixelSize: 11
             }
             Item { Layout.fillWidth: true }
-            Text {
-                text: "×" + (behaviourObject ? behaviourObject.fireCount : 0)
-                color: ThemeManager.textSecondaryColor; font.pixelSize: 11
+            RowLayout {
+                spacing: 3
+                SvgIcon { width: 10; height: 10; source: Icons.flash; color: ThemeManager.textSecondaryColor }
+                Text {
+                    text: behaviourObject ? String(behaviourObject.fireCount) : "0"
+                    color: ThemeManager.textSecondaryColor; font.pixelSize: 11
+                }
             }
         }
 
@@ -155,10 +160,17 @@ Item {
                     ? (behaviourObject && behaviourObject.enabled ? "#DC2626" : Qt.lighter(ThemeManager.primaryColor,1.2))
                     : (behaviourObject && behaviourObject.enabled ? "#EF4444" : ThemeManager.primaryColor)
                 Behavior on color { ColorAnimation { duration: 150 } }
-                Text {
-                    anchors.centerIn: parent
-                    text: behaviourObject && behaviourObject.enabled ? "⏸ Desativar" : "▶ Ativar"
-                    color: "#fff"; font.pixelSize: 12; font.bold: true
+                RowLayout {
+                    anchors.centerIn: parent; spacing: 5
+                    SvgIcon {
+                        width: 13; height: 13
+                        source: behaviourObject && behaviourObject.enabled ? Icons.pause : Icons.play
+                        color: "#fff"
+                    }
+                    Text {
+                        text: behaviourObject && behaviourObject.enabled ? "Desativar" : "Ativar"
+                        color: "#fff"; font.pixelSize: 12; font.bold: true
+                    }
                 }
                 MouseArea {
                     id: enableA; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
@@ -170,7 +182,7 @@ Item {
                 width: 30; height: 30; radius: 6
                 color: testA.containsMouse ? Qt.rgba(1,1,1,0.12) : Qt.rgba(1,1,1,0.06)
                 border.width: 1; border.color: Qt.rgba(1,1,1,0.15)
-                Text { anchors.centerIn: parent; text: "⚡"; font.pixelSize: 14 }
+                SvgIcon { anchors.centerIn: parent; width: 16; height: 16; source: Icons.flash; color: ThemeManager.textColor }
                 MouseArea { id: testA; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: behaviourObject.testFire() }
                 AppToolTip { text: "Disparar agora (teste)" }
             }

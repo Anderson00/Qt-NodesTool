@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import App.Theme 1.0
+import App.Icons 1.0
 
 Item {
     id: root
@@ -73,9 +74,13 @@ Item {
                 color: ThemeManager.textSecondaryColor; font.pixelSize: 11
             }
             Item { Layout.fillWidth: true }
-            Text {
-                text: "×" + (behaviourObject ? behaviourObject.tickCount : 0)
-                color: ThemeManager.textSecondaryColor; font.pixelSize: 11
+            RowLayout {
+                spacing: 3
+                SvgIcon { width: 10; height: 10; source: Icons.flash; color: ThemeManager.textSecondaryColor }
+                Text {
+                    text: behaviourObject ? String(behaviourObject.tickCount) : "0"
+                    color: ThemeManager.textSecondaryColor; font.pixelSize: 11
+                }
             }
         }
 
@@ -90,9 +95,10 @@ Item {
             RowLayout {
                 anchors.centerIn: parent
                 spacing: 6
-                Text {
-                    text: "⏱"
-                    font.pixelSize: 14
+                SvgIcon {
+                    width: 16; height: 16
+                    source: Icons.timerOutline
+                    color: behaviourObject && behaviourObject.running ? ThemeManager.primaryColor : ThemeManager.textSecondaryColor
                 }
                 Text {
                     id: countdownLabel
@@ -116,10 +122,17 @@ Item {
                     ? Qt.lighter(ThemeManager.primaryColor, 1.2)
                     : ThemeManager.primaryColor
                 Behavior on color { ColorAnimation { duration: 150 } }
-                Text {
-                    anchors.centerIn: parent
-                    text: behaviourObject && behaviourObject.running ? "⏸ Pausar" : "▶ Iniciar"
-                    color: "#fff"; font.pixelSize: 12; font.bold: true
+                RowLayout {
+                    anchors.centerIn: parent; spacing: 5
+                    SvgIcon {
+                        width: 13; height: 13
+                        source: behaviourObject && behaviourObject.running ? Icons.pause : Icons.play
+                        color: "#fff"
+                    }
+                    Text {
+                        text: behaviourObject && behaviourObject.running ? "Pausar" : "Iniciar"
+                        color: "#fff"; font.pixelSize: 12; font.bold: true
+                    }
                 }
                 MouseArea {
                     id: startArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
@@ -135,7 +148,7 @@ Item {
                 width: 30; height: 30; radius: 6
                 color: resetArea.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
                 border.width: 1; border.color: Qt.rgba(1,1,1,0.15)
-                Text { anchors.centerIn: parent; text: "🔄"; font.pixelSize: 14 }
+                SvgIcon { anchors.centerIn: parent; width: 16; height: 16; source: Icons.refresh; color: ThemeManager.textColor }
                 MouseArea { id: resetArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: behaviourObject.resetCount() }
             }
 
@@ -144,7 +157,7 @@ Item {
                 width: 30; height: 30; radius: 6
                 color: fireArea.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
                 border.width: 1; border.color: Qt.rgba(1,1,1,0.15)
-                Text { anchors.centerIn: parent; text: "⚡"; font.pixelSize: 14 }
+                SvgIcon { anchors.centerIn: parent; width: 16; height: 16; source: Icons.flash; color: ThemeManager.textColor }
                 MouseArea { id: fireArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: behaviourObject.trigger() }
             }
         }

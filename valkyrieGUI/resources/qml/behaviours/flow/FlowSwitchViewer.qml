@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import App.Theme 1.0
+import App.Icons 1.0
 import '../../components'
 
 Item {
@@ -48,12 +49,11 @@ Item {
                 border.color: isActive ? root.caseColors[index] : Qt.rgba(0.5, 0.5, 0.5, 0.15)
                 Behavior on color       { ColorAnimation { duration: 150 } }
                 Behavior on border.color { ColorAnimation { duration: 150 } }
-                Text {
-                    anchors.centerIn: parent
-                    text: "▶ " + root.caseLabels[index]
-                    font.pixelSize: 10; font.bold: true
-                    color: root.caseColors[index]
+                RowLayout {
+                    anchors.centerIn: parent; spacing: 3
                     opacity: parent.isActive ? 1.0 : 0.45
+                    SvgIcon { width: 10; height: 10; source: Icons.play; color: root.caseColors[index] }
+                    Text { text: root.caseLabels[index]; font.pixelSize: 10; font.bold: true; color: root.caseColors[index] }
                 }
             }
         }

@@ -627,11 +627,10 @@ Popup {
                                                      ThemeManager.dangerColor.b, 0.55)
                                     Behavior on color { ColorAnimation { duration: 120 } }
 
-                                    Text {
+                                    SvgIcon {
                                         anchors.centerIn: parent
-                                        text: "×"
-                                        font.pixelSize: 13
-                                        font.bold: true
+                                        width: 12; height: 12
+                                        source: Icons.close
                                         color: "white"
                                     }
 
