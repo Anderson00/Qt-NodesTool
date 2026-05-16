@@ -32,7 +32,8 @@ ScriptScheduler::ScriptScheduler(QObject *parent)
 
     addInputOutputExclusion(QList<QString>({"eventsChanged()"}));
 
-    m_globalTimer.setInterval(30000);
+    m_globalTimer.setInterval(200);              // 200 ms tick — limits max delay to 200 ms
+    m_globalTimer.setTimerType(Qt::PreciseTimer); // avoids CoarseTimer jitter on Windows
     connect(&m_globalTimer, &QTimer::timeout, this, &ScriptScheduler::onGlobalTimer);
     m_globalTimer.start();
 
@@ -140,7 +141,8 @@ QVariantMap ScriptScheduler::getEvent(const QString &id) const
         {"params",         ev->params},
         {"runCount",       ev->runCount},
         {"lastRun",        ev->lastRun.toString("dd/MM/yyyy HH:mm")},
-        {"nextRun",        ev->nextRun.toString("dd/MM/yyyy HH:mm")}
+        {"nextRun",        ev->nextRun.toString("dd/MM/yyyy HH:mm")},
+        {"nextFireMs",     (qlonglong)ev->nextFireMs}
     };
 }
 
@@ -167,6 +169,11 @@ void ScriptScheduler::updateEventField(const QString &id, const QString &field, 
     else if (field == "scriptMode") ev->scriptMode     = static_cast<ScheduledEvent::ScriptMode>(value.toInt());
     else if (field == "scriptCode") ev->scriptCode     = value.toString();
     else if (field == "scriptFile") ev->scriptFile     = value.toString();
+
+    // Any change to interval or trigger type invalidates the cached next-fire timestamp
+    if (field == "triggerType" || field == "days"    || field == "hours"  ||
+        field == "minutes"     || field == "seconds" || field == "fireImmediately")
+        ev->nextFireMs = 0;
 
     emit eventsChanged();
 }
@@ -212,9 +219,11 @@ void ScriptScheduler::triggerEvent(const QString &id)
 
 void ScriptScheduler::onGlobalTimer()
 {
+    bool scheduleChanged = false;
     for (ScheduledEvent &ev : m_events) {
         if (!ev.enabled) continue;
 
+        qint64 prevNextFireMs = ev.nextFireMs;
         bool due = false;
         switch (ev.triggerType) {
         case ScheduledEvent::Interval:  due = isDueInterval(ev);   break;
@@ -223,8 +232,11 @@ void ScriptScheduler::onGlobalTimer()
         case ScheduledEvent::MultiDate: due = isDueMultiDate(ev);  break;
         }
 
-        if (due) runScript(ev);
+        if (ev.nextFireMs != prevNextFireMs) scheduleChanged = true;
+        if (due) runScript(ev); // runScript emits eventsChanged itself
     }
+    // Emit only when nextFireMs changed (first tick) and no runScript already did it
+    if (scheduleChanged) emit eventsChanged();
 }
 
 // ── Due checks ────────────────────────────────────────────────────────────────
@@ -239,12 +251,23 @@ bool ScriptScheduler::isDueInterval(ScheduledEvent &ev) const
 
     qint64 now = QDateTime::currentMSecsSinceEpoch();
     if (ev.nextFireMs == 0) {
-        // First time — schedule next fire
+        if (ev.fireImmediately) {
+            ev.nextFireMs = now + ms;
+            ev.nextRun = QDateTime::fromMSecsSinceEpoch(ev.nextFireMs);
+            return true;
+        }
         ev.nextFireMs = now + ms;
+        ev.nextRun = QDateTime::fromMSecsSinceEpoch(ev.nextFireMs);
         return false;
     }
     if (now >= ev.nextFireMs) {
-        ev.nextFireMs = now + ms;
+        // Anchor next fire to the scheduled time, not to 'now', to prevent drift accumulation.
+        // If we're more than one period behind (e.g. system was suspended), reset from now
+        // to avoid immediate catch-up firing.
+        qint64 next = ev.nextFireMs + ms;
+        if (next <= now) next = now + ms;
+        ev.nextFireMs = next;
+        ev.nextRun = QDateTime::fromMSecsSinceEpoch(ev.nextFireMs);
         return true;
     }
     return false;

@@ -18,14 +18,91 @@ Item {
     readonly property var triggerTypes: ["Intervalo","Data/Hora","Cron","Multi-Data"]
     readonly property var triggerIcons: [Icons.timerOutline, Icons.calendarOutline, Icons.refresh, Icons.calendarOutline]
 
+    // Clock tick used by delegates to recompute countdowns without model refresh
+    property int _clockTick: 0
+    Timer {
+        interval: 1000
+        running: behaviourObject && behaviourObject.active
+        repeat: true
+        onTriggered: root._clockTick++
+    }
+
+    // ── Console ────────────────────────────────────────────────────────────────
+    property bool _consoleOpen: true
+    property var  _consoleLogs: []
+
+    function _addLog(type, eventId, text) {
+        var evName = eventId
+        if (behaviourObject) {
+            var ev = behaviourObject.getEvent(eventId)
+            if (ev && ev.name) evName = ev.name
+        }
+        var logs = _consoleLogs.slice()
+        logs.unshift({
+            type: type,
+            time: Qt.formatDateTime(new Date(), "HH:mm:ss"),
+            event: evName,
+            text: (text && text.length > 0) ? text : "(sem saída)"
+        })
+        if (logs.length > 300) logs.length = 300
+        _consoleLogs = logs
+    }
+
+    function formatCountdown(nextFireMs) {
+        if (!nextFireMs || nextFireMs <= 0) return ""
+        var left = Math.max(0, nextFireMs - Date.now())
+        if (left === 0) return "agora"
+        var s = Math.ceil(left / 1000)
+        var h = Math.floor(s / 3600); s = s % 3600
+        var m = Math.floor(s / 60);   s = s % 60
+        if (h > 0) return h + "h " + m + "m " + s + "s"
+        if (m > 0) return m + "m " + s + "s"
+        return s + "s"
+    }
+
     function refreshSelected() {
         if (!behaviourObject || selectedEventId === "") { selectedEvent = null; return }
         selectedEvent = behaviourObject.getEvent(selectedEventId)
     }
 
+    // Re-populate text fields when the selected event changes.
+    // QML TextInput breaks its declarative binding on first user edit, so switching
+    // events would leave stale text without this explicit reset.
+    onSelectedEventIdChanged: {
+        if (!behaviourObject || selectedEventId === "") return
+        var ev = behaviourObject.getEvent(selectedEventId)
+        if (!ev) return
+        // Restore all fields whose QML bindings are broken by user interaction
+        nameField.text     = ev.name           || ""
+        cronInput.text     = ev.cronExpression || "0 * * * *"
+        filePathField.text = ev.scriptFile     || ""
+        inlineEditor.code  = ev.scriptCode     || ""
+        daysSpinBox.value  = ev.days  !== undefined ? ev.days    : 0
+        hoursSpinBox.value = ev.hours !== undefined ? ev.hours   : 1
+        minsSpinBox.value  = ev.minutes !== undefined ? ev.minutes : 0
+        secsSpinBox.value  = ev.seconds !== undefined ? ev.seconds : 0
+    }
+
     Connections {
         target: behaviourObject
         function onEventsChanged() { root.refreshSelected() }
+
+        function onEventScriptFinished(eventId, outputs) {
+            var text = outputs["stdout"] || outputs["output"] || outputs["_out"] || ""
+            if (!text) {
+                var lines = []
+                var skip = ["event_id","event_name","run_count","timestamp"]
+                for (var k in outputs) {
+                    if (skip.indexOf(k) < 0) lines.push(k + " = " + outputs[k])
+                }
+                text = lines.join("\n")
+            }
+            root._addLog("ok", eventId, text)
+        }
+
+        function onEventScriptError(eventId, error) {
+            root._addLog("err", eventId, error)
+        }
     }
 
     // ── Root layout ────────────────────────────────────────────────────────────
@@ -202,7 +279,11 @@ Item {
                             width: eventList.width; height: nextInVisible ? 58 : 48
                             radius: 6
                             property bool isSelected: modelData.id === root.selectedEventId
-                            property bool nextInVisible: modelData.nextIn && modelData.nextIn.length > 0
+                            property string _countdown: {
+                                root._clockTick  // reactive tick dependency
+                                return root.formatCountdown(modelData.nextFireMs || 0)
+                            }
+                            property bool nextInVisible: _countdown.length > 0
 
                             Behavior on height { NumberAnimation { duration: 120; easing.type: Easing.OutQuad } }
 
@@ -288,7 +369,7 @@ Item {
                                         SvgIcon { width: 10; height: 10; source: Icons.timerSand; color: ThemeManager.primaryColor }
                                         Text {
                                             Layout.fillWidth: true
-                                            text: modelData.nextIn || ""
+                                            text: _countdown
                                             color: ThemeManager.primaryColor
                                             font.pixelSize: 9; font.family: "Consolas"; font.bold: true
                                             elide: Text.ElideRight
@@ -497,27 +578,57 @@ Item {
                                     id: intervalRow
                                     anchors { fill: parent; margins: 10 } spacing: 8
 
-                                    Repeater {
-                                        model: [
-                                            {lbl:"Dias",  fld:"days"},
-                                            {lbl:"Horas", fld:"hours"},
-                                            {lbl:"Min",   fld:"minutes"},
-                                            {lbl:"Seg",   fld:"seconds"}
-                                        ]
-                                        ColumnLayout {
-                                            Layout.fillWidth: true; spacing: 4
-                                            Text {
-                                                Layout.alignment: Qt.AlignHCenter; text: modelData.lbl
-                                                color: ThemeManager.textSecondaryColor; font.pixelSize: 9
+                                    // Explicit items (not Repeater) so each SpinBox has an id
+                                    // and can be reset in onSelectedEventIdChanged when switching events.
+                                    ColumnLayout {
+                                        Layout.fillWidth: true; spacing: 4
+                                        Text { Layout.alignment: Qt.AlignHCenter; text: "Dias"; color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
+                                        VerticalSpinBox {
+                                            id: daysSpinBox; Layout.alignment: Qt.AlignHCenter
+                                            from: 0; to: 999
+                                            value: root.selectedEvent ? root.selectedEvent.days : 0
+                                            onValueModified: function(v) {
+                                                if (root.selectedEventId !== "")
+                                                    behaviourObject.updateEventField(root.selectedEventId, "days", v)
                                             }
-                                            VerticalSpinBox {
-                                                Layout.alignment: Qt.AlignHCenter
-                                                from: 0; to: 999
-                                                value: root.selectedEvent ? root.selectedEvent[modelData.fld] : 0
-                                                onValueModified: function(v) {
-                                                    if (root.selectedEventId !== "")
-                                                        behaviourObject.updateEventField(root.selectedEventId, modelData.fld, v)
-                                                }
+                                        }
+                                    }
+                                    ColumnLayout {
+                                        Layout.fillWidth: true; spacing: 4
+                                        Text { Layout.alignment: Qt.AlignHCenter; text: "Horas"; color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
+                                        VerticalSpinBox {
+                                            id: hoursSpinBox; Layout.alignment: Qt.AlignHCenter
+                                            from: 0; to: 999
+                                            value: root.selectedEvent ? root.selectedEvent.hours : 1
+                                            onValueModified: function(v) {
+                                                if (root.selectedEventId !== "")
+                                                    behaviourObject.updateEventField(root.selectedEventId, "hours", v)
+                                            }
+                                        }
+                                    }
+                                    ColumnLayout {
+                                        Layout.fillWidth: true; spacing: 4
+                                        Text { Layout.alignment: Qt.AlignHCenter; text: "Min"; color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
+                                        VerticalSpinBox {
+                                            id: minsSpinBox; Layout.alignment: Qt.AlignHCenter
+                                            from: 0; to: 999
+                                            value: root.selectedEvent ? root.selectedEvent.minutes : 0
+                                            onValueModified: function(v) {
+                                                if (root.selectedEventId !== "")
+                                                    behaviourObject.updateEventField(root.selectedEventId, "minutes", v)
+                                            }
+                                        }
+                                    }
+                                    ColumnLayout {
+                                        Layout.fillWidth: true; spacing: 4
+                                        Text { Layout.alignment: Qt.AlignHCenter; text: "Seg"; color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
+                                        VerticalSpinBox {
+                                            id: secsSpinBox; Layout.alignment: Qt.AlignHCenter
+                                            from: 0; to: 999
+                                            value: root.selectedEvent ? root.selectedEvent.seconds : 0
+                                            onValueModified: function(v) {
+                                                if (root.selectedEventId !== "")
+                                                    behaviourObject.updateEventField(root.selectedEventId, "seconds", v)
                                             }
                                         }
                                     }
@@ -698,6 +809,7 @@ Item {
 
                             // Inline: CodeEditor
                             CodeEditor {
+                                id: inlineEditor
                                 Layout.fillWidth: true; height: 200
                                 visible: !root.selectedEvent || root.selectedEvent.scriptMode === 0
                                 code: root.selectedEvent ? root.selectedEvent.scriptCode : ""
@@ -719,6 +831,7 @@ Item {
                                         anchors { fill: parent; leftMargin: 10; rightMargin: 10 } spacing: 6
                                         SvgIcon { width: 14; height: 14; source: Icons.fileDocumentOutline; color: ThemeManager.textSecondaryColor; opacity: 0.6 }
                                         TextField {
+                                            id: filePathField
                                             Layout.fillWidth: true
                                             verticalAlignment: TextInput.AlignVCenter
                                             text: root.selectedEvent ? root.selectedEvent.scriptFile : ""
@@ -891,6 +1004,182 @@ Item {
                                     id: fireNowA; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                     onClicked: behaviourObject.triggerEvent(root.selectedEventId)
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ══════════════ CONSOLE ═══════════════════════════════════════════════
+        Rectangle { Layout.fillWidth: true; height: 1; color: Qt.rgba(1,1,1,0.07) }
+
+        Rectangle {
+            Layout.fillWidth: true
+            height: root._consoleOpen ? 150 : 28
+            color: Qt.rgba(0,0,0,0.25)
+            clip: true
+            Behavior on height { NumberAnimation { duration: 200; easing.type: Easing.OutQuad } }
+
+            ColumnLayout {
+                anchors.fill: parent
+                spacing: 0
+
+                // Header
+                Rectangle {
+                    Layout.fillWidth: true; height: 28
+                    color: Qt.rgba(0,0,0,0.18)
+
+                    RowLayout {
+                        anchors { fill: parent; leftMargin: 10; rightMargin: 8 }
+                        spacing: 6
+
+                        SvgIcon { width: 11; height: 11; source: Icons.codeBraces; color: ThemeManager.textSecondaryColor; opacity: 0.7 }
+                        Text {
+                            text: "SAÍDA"
+                            color: ThemeManager.textSecondaryColor
+                            font.pixelSize: 9; font.bold: true; font.letterSpacing: 1.2
+                        }
+
+                        // Total entries badge
+                        Rectangle {
+                            height: 14; width: logCountTxt.implicitWidth + 10; radius: 7
+                            visible: root._consoleLogs.length > 0
+                            color: Qt.rgba(1,1,1,0.07)
+                            Text {
+                                id: logCountTxt; anchors.centerIn: parent
+                                text: root._consoleLogs.length
+                                color: ThemeManager.textSecondaryColor; font.pixelSize: 8; font.bold: true
+                            }
+                        }
+
+                        // Error count badge
+                        Rectangle {
+                            id: errBadge
+                            property int _errCount: {
+                                var c = 0
+                                for (var i = 0; i < root._consoleLogs.length; i++)
+                                    if (root._consoleLogs[i].type === "err") c++
+                                return c
+                            }
+                            height: 14; width: errBadgeTxt.implicitWidth + 10; radius: 7
+                            visible: _errCount > 0
+                            color: Qt.rgba(239,68,68,0.18)
+                            Text {
+                                id: errBadgeTxt; anchors.centerIn: parent
+                                text: errBadge._errCount + " erro" + (errBadge._errCount > 1 ? "s" : "")
+                                color: "#EF4444"; font.pixelSize: 8; font.bold: true
+                            }
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        // Clear button
+                        Rectangle {
+                            width: 20; height: 20; radius: 4
+                            visible: root._consoleLogs.length > 0
+                            color: clearLogA.containsMouse ? Qt.rgba(1,1,1,0.1) : "transparent"
+                            Behavior on color { ColorAnimation { duration: 100 } }
+                            SvgIcon { anchors.centerIn: parent; width: 10; height: 10; source: Icons.close; color: ThemeManager.textSecondaryColor }
+                            MouseArea {
+                                id: clearLogA; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                onClicked: root._consoleLogs = []
+                            }
+                        }
+
+                        // Collapse / expand toggle
+                        Rectangle {
+                            width: 20; height: 20; radius: 4
+                            color: colA.containsMouse ? Qt.rgba(1,1,1,0.1) : "transparent"
+                            Behavior on color { ColorAnimation { duration: 100 } }
+                            Text {
+                                anchors.centerIn: parent
+                                text: root._consoleOpen ? "▼" : "▲"
+                                color: ThemeManager.textSecondaryColor; font.pixelSize: 8
+                            }
+                            MouseArea {
+                                id: colA; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                onClicked: root._consoleOpen = !root._consoleOpen
+                            }
+                        }
+                    }
+                }
+
+                // Log list
+                ListView {
+                    id: consoleList
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    visible: root._consoleOpen
+                    model: root._consoleLogs
+                    spacing: 0
+
+                    onCountChanged: if (count > 0) positionViewAtBeginning()
+
+                    // Empty state
+                    Text {
+                        anchors.centerIn: parent
+                        visible: consoleList.count === 0
+                        text: "Nenhuma saída ainda"
+                        color: Qt.rgba(1,1,1,0.15); font.pixelSize: 10
+                    }
+
+                    delegate: Rectangle {
+                        width: consoleList.width
+                        height: logEntryText.implicitHeight + 12
+                        color: modelData.type === "err"
+                            ? Qt.rgba(239,68,68,0.06) : Qt.rgba(0,0,0,0)
+
+                        // Left color strip
+                        Rectangle {
+                            width: 2; height: parent.height; anchors.left: parent.left
+                            color: modelData.type === "err" ? "#EF4444" : "#22C55E"
+                        }
+
+                        // Bottom separator
+                        Rectangle {
+                            width: parent.width; height: 1
+                            anchors.bottom: parent.bottom
+                            color: Qt.rgba(1,1,1,0.04)
+                        }
+
+                        RowLayout {
+                            anchors { fill: parent; leftMargin: 10; rightMargin: 8; topMargin: 5; bottomMargin: 5 }
+                            spacing: 8
+
+                            // Timestamp
+                            Text {
+                                text: modelData.time
+                                color: ThemeManager.textSecondaryColor; font.pixelSize: 9; font.family: "Consolas"
+                                Layout.alignment: Qt.AlignTop
+                                opacity: 0.7
+                            }
+
+                            // Event name tag
+                            Rectangle {
+                                height: 14; width: evTagTxt.implicitWidth + 8; radius: 3
+                                color: modelData.type === "err"
+                                    ? Qt.rgba(239,68,68,0.15) : Qt.rgba(34,197,94,0.12)
+                                Layout.alignment: Qt.AlignTop
+                                Text {
+                                    id: evTagTxt; anchors.centerIn: parent
+                                    text: modelData.event
+                                    color: modelData.type === "err" ? "#EF4444" : "#22C55E"
+                                    font.pixelSize: 8; font.bold: true
+                                }
+                            }
+
+                            // Output text
+                            Text {
+                                id: logEntryText
+                                Layout.fillWidth: true
+                                text: modelData.text
+                                color: modelData.type === "err"
+                                    ? "#FC8181" : ThemeManager.textColor
+                                font.pixelSize: 10; font.family: "Consolas"
+                                wrapMode: Text.WrapAnywhere
+                                opacity: modelData.type === "err" ? 1.0 : 0.9
                             }
                         }
                     }
