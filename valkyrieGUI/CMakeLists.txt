@@ -64,6 +64,14 @@ set(PROJECT_SOURCES
     src/include/behaviours/script/variablewriter.h src/include/behaviours/script/variablewriter.cpp
     src/include/behaviours/script/variablemonitor.h src/include/behaviours/script/variablemonitor.cpp
     src/include/behaviours/script/pythonbehaviour.h src/include/behaviours/script/pythonbehaviour.cpp
+    src/include/behaviours/flow/flowstart.h src/include/behaviours/flow/flowstart.cpp
+    src/include/behaviours/flow/flowbranch.h src/include/behaviours/flow/flowbranch.cpp
+    src/include/behaviours/flow/flowswitch.h src/include/behaviours/flow/flowswitch.cpp
+    src/include/behaviours/flow/flowsequence.h src/include/behaviours/flow/flowsequence.cpp
+    src/include/behaviours/flow/flowmerge.h src/include/behaviours/flow/flowmerge.cpp
+    src/include/behaviours/flow/flowdelay.h src/include/behaviours/flow/flowdelay.cpp
+    src/include/behaviours/flow/flowloop.h src/include/behaviours/flow/flowloop.cpp
+    src/include/behaviours/flow/flowend.h src/include/behaviours/flow/flowend.cpp
     src/include/behaviours/common/piechartviewer.h src/include/behaviours/common/piechartviewer.cpp
     src/include/behaviours/common/barchartviewer.h src/include/behaviours/common/barchartviewer.cpp
     src/include/behaviours/common/gaugeviewer.h src/include/behaviours/common/gaugeviewer.cpp
