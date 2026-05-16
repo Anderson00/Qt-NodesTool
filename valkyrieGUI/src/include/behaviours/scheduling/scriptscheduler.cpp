@@ -43,7 +43,12 @@ ScriptScheduler::ScriptScheduler(QObject *parent)
                 if (eventId.isEmpty()) return;
                 m_taskEventMap.remove(result.id);
                 if (result.success) {
-                    emit eventScriptFinished(eventId, result.outputs);
+                    QVariantMap outputs = result.outputs;
+                    // Merge captured stdout (print() calls) into outputs["stdout"]
+                    // so the QML console can display it.
+                    if (!result.logs.isEmpty())
+                        outputs["stdout"] = result.logs.join("\n");
+                    emit eventScriptFinished(eventId, outputs);
                 } else {
                     emit eventScriptError(eventId, result.error);
                 }

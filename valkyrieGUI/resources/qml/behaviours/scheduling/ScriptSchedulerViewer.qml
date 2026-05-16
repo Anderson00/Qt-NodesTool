@@ -719,7 +719,7 @@ Item {
                                 id: schedCal
                                 Layout.fillWidth: true
                                 height: 300
-                                rangeSelect: true
+                                multiSelect: true
                                 compact: true
                                 selectedDates: {
                                     if (!root.selectedEvent) return []
@@ -729,9 +729,6 @@ Item {
                                 onSelectionChanged: function(dates) {
                                     var isoList = dates.map(function(d) { return d + "T00:00:00" })
                                     behaviourObject.setEventDates(root.selectedEventId, isoList)
-                                }
-                                onRangeChanged: function(s, e) {
-                                    // rangeChanged fires after selectionChanged, no extra action needed
                                 }
                             }
 
