@@ -83,6 +83,7 @@ Rectangle {
     property real _pressY: 0
 
     property bool isConnectionsMinimized: false
+    property bool _heightInitialized:    false
 
     signal backTotalClicked()
 
@@ -153,6 +154,17 @@ Rectangle {
         if (behaviourObject) behaviourObject.height = root.height
     }
 
+    // Compute the correct total node height once the connections area has been
+    // laid out. Uses max(computed, stored) so user-resized heights are preserved.
+    function _initHeight() {
+        if (_heightInitialized) return
+        _heightInitialized = true
+        const connH    = connectionsBody.targetHeight
+        const computed = topHeaderRect.height + divider.height + connH + behaviourObject.contentHeight
+        root.height    = Math.max(root.minHeight, Math.max(computed, behaviourObject.height))
+        behaviourObject.height = root.height
+    }
+
     function _emitMenuAction(action) {
         menuActionTriggered(action)
         switch (action) {
@@ -171,15 +183,36 @@ Rectangle {
     Component.onCompleted: {
         root.title = Qt.binding(() => behaviourObject.title)
         root.bodySourceQML = Qt.binding(() => behaviourObject.qmlBodyUrl)
-        root.width  = behaviourObject.width  > 0 ? behaviourObject.width  : root.minWidth
-        root.height = behaviourObject.height > 0 ? behaviourObject.height
-                                                  : (behaviourObject.contentHeight + topHeaderRect.height +
-                                                     divider.height + connectionsBody.height)
+        root.width = behaviourObject.width > 0 ? behaviourObject.width : root.minWidth
         root.x = behaviourObject.x
         root.y = behaviourObject.y
         loadInputConns()
         loadOutputConns()
+
+        // Set a placeholder height immediately to avoid the node having 0 height
+        // on the first frame. _initHeight() corrects it once the connections
+        // area has finished its layout pass.
+        root.height = behaviourObject.height > 0
+                      ? behaviourObject.height
+                      : Math.max(root.minHeight,
+                                 topHeaderRect.height + divider.height + behaviourObject.contentHeight)
+
+        // Nodes with no ports can be finalised right away (connH stays 0).
+        if (connectionsInput.length === 0 && connectionsOutput.length === 0)
+            _initHeight()
+
         Qt.callLater(() => animEnabled = true)
+    }
+
+    // Fires once the connections Repeater has had a layout pass and
+    // connectionsBody.targetHeight reflects the actual port area height.
+    Connections {
+        id: connHeightWatcher
+        target: connectionsBody
+        enabled: !root._heightInitialized
+        function onTargetHeightChanged() {
+            if (connectionsBody.targetHeight > 0) root._initHeight()
+        }
     }
 
     onXChanged:      if ((isResizing || isDragging) && behaviourObject) behaviourObject.x = x
