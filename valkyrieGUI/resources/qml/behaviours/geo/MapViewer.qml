@@ -41,18 +41,13 @@ Item {
     function latLngToPixel(lat, lng) {
         var tileSize = 256
         var scale = Math.pow(2, zoom) * tileSize
-        var n = Math.PI - 2*Math.PI*lat/180
-        var py = Math.log(Math.tan(Math.PI/4 + lat*Math.PI/360)) / Math.PI
-        var centerPy = Math.log(Math.tan(Math.PI/4 + centerLat*Math.PI/360)) / Math.PI
-
-        var px = (lng + 180) / 360 * scale
-        var pxCenter = (centerLng + 180) / 360 * scale
-        var mapPy = (1 - py) / 2 * scale
-        var mapPyCenter = (1 - centerPy) / 2 * scale
-
+        var px      = (lng + 180) / 360 * scale
+        var pxCtr   = (centerLng + 180) / 360 * scale
+        var py      = (1 - Math.log(Math.tan(Math.PI/4 + lat       * Math.PI/360)) / Math.PI) / 2 * scale
+        var pyCtr   = (1 - Math.log(Math.tan(Math.PI/4 + centerLat * Math.PI/360)) / Math.PI) / 2 * scale
         return Qt.point(
-            mapCanvas.width/2  + (px - pxCenter),
-            mapCanvas.height/2 + (mapPy - mapPyCenter)
+            mapCanvas.width/2  + (px  - pxCtr),
+            mapCanvas.height/2 + (py  - pyCtr)
         )
     }
 
@@ -134,37 +129,37 @@ Item {
                 property var tileItems: []
 
                 function refresh() {
-                    // Clear old tiles
                     for (var i = 0; i < tileItems.length; i++) tileItems[i].destroy()
                     tileItems = []
 
                     var tileSize = 256
-                    var centerTileX = root.lon2tile(root.centerLng, root.zoom)
-                    var centerTileY = root.lat2tile(root.centerLat, root.zoom)
-                    var tilesWide = Math.ceil(width  / tileSize) + 2
-                    var tilesTall = Math.ceil(height / tileSize) + 2
+                    var maxTile  = Math.pow(2, root.zoom)
+                    var cTileX   = root.lon2tile(root.centerLng, root.zoom)
+                    var cTileY   = root.lat2tile(root.centerLat, root.zoom)
+                    var tilesW   = Math.ceil(width  / tileSize) + 2
+                    var tilesH   = Math.ceil(height / tileSize) + 2
 
-                    // pixel offset of center tile from widget center
-                    var maxTile = Math.pow(2, root.zoom)
-                    var centerTilePxX = (centerTileX + 0.5) * tileSize
+                    // Sub-tile pixel offset: how far into the center tile the exact position falls
                     var totalPxX = (root.centerLng + 180) / 360 * maxTile * tileSize
-                    var offsetX = width/2 - (totalPxX - centerTileX * tileSize)
+                    var subOffX  = totalPxX - cTileX * tileSize
 
-                    var n = Math.PI - 2*Math.PI*root.centerLat/180
-                    var centerPy = (1 - Math.log(Math.tan(Math.PI/4 + root.centerLat*Math.PI/360))/Math.PI) / 2
-                    var totalPxY = centerPy * maxTile * tileSize
-                    var offsetY = height/2 - (totalPxY - centerTileY * tileSize)
+                    var cPy      = (1 - Math.log(Math.tan(Math.PI/4 + root.centerLat*Math.PI/360)) / Math.PI) / 2
+                    var totalPxY = cPy * maxTile * tileSize
+                    var subOffY  = totalPxY - cTileY * tileSize
 
-                    for (var dx = -Math.floor(tilesWide/2); dx <= Math.ceil(tilesWide/2); dx++) {
-                        for (var dy = -Math.floor(tilesTall/2); dy <= Math.ceil(tilesTall/2); dy++) {
-                            var tx = ((centerTileX + dx) % maxTile + maxTile) % maxTile
-                            var ty = centerTileY + dy
+                    // Screen position of the center tile's top-left corner
+                    var originX  = width/2  - subOffX
+                    var originY  = height/2 - subOffY
+
+                    for (var dx = -Math.floor(tilesW/2) - 1; dx <= Math.ceil(tilesW/2) + 1; dx++) {
+                        for (var dy = -Math.floor(tilesH/2) - 1; dy <= Math.ceil(tilesH/2) + 1; dy++) {
+                            var tx = ((cTileX + dx) % maxTile + maxTile) % maxTile
+                            var ty = cTileY + dy
                             if (ty < 0 || ty >= maxTile) continue
-                            var comp = Qt.createComponent("qrc:/components/Image.qml") // fallback: use Image directly
-                            var px = (centerTileX + dx) * tileSize + offsetX
-                            var py = (centerTileY + dy) * tileSize + offsetY
                             var obj = tileComp.createObject(tileGrid, {
-                                x: px, y: py, width: tileSize, height: tileSize,
+                                x: originX + dx * tileSize,
+                                y: originY + dy * tileSize,
+                                width: tileSize, height: tileSize,
                                 source: "https://tile.openstreetmap.org/" + root.zoom + "/" + tx + "/" + ty + ".png"
                             })
                             if (obj) tileItems.push(obj)
