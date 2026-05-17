@@ -108,9 +108,32 @@ set(PROJECT_SOURCES
 qt_add_executable(Debugger
     ${PROJECT_SOURCES}
     src/include/behaviours/common/componentsviewer.h src/include/behaviours/common/componentsviewer.cpp
+    src/include/behaviours/networking/httprequester.h src/include/behaviours/networking/httprequester.cpp
+    src/include/behaviours/data/jsonparser.h src/include/behaviours/data/jsonparser.cpp
+    src/include/behaviours/data/statisticsanalyzer.h src/include/behaviours/data/statisticsanalyzer.cpp
+    src/include/behaviours/data/datatableviewer.h src/include/behaviours/data/datatableviewer.cpp
+    src/include/behaviours/data/jsontreeviewer.h src/include/behaviours/data/jsontreeviewer.cpp
+    src/include/behaviours/io/filewatcher.h src/include/behaviours/io/filewatcher.cpp
+    src/include/behaviours/ai/aiquerynode.h src/include/behaviours/ai/aiquerynode.cpp
+    src/include/behaviours/visualization/heatmapviewer.h src/include/behaviours/visualization/heatmapviewer.cpp
+    src/include/behaviours/visualization/radarchartviewer.h src/include/behaviours/visualization/radarchartviewer.cpp
+    src/include/behaviours/visualization/nodegraphviewer.h src/include/behaviours/visualization/nodegraphviewer.cpp
+    src/include/behaviours/encoding/hashgenerator.h src/include/behaviours/encoding/hashgenerator.cpp
+    src/include/behaviours/encoding/base64node.h src/include/behaviours/encoding/base64node.cpp
+    src/include/behaviours/encoding/regexprocessor.h src/include/behaviours/encoding/regexprocessor.cpp
+    src/include/behaviours/database/sqlitequery.h src/include/behaviours/database/sqlitequery.cpp
+    src/include/behaviours/database/csvreaderwriter.h src/include/behaviours/database/csvreaderwriter.cpp
+    src/include/behaviours/system/processlauncher.h src/include/behaviours/system/processlauncher.cpp
+    src/include/behaviours/system/clipboardnode.h src/include/behaviours/system/clipboardnode.cpp
+    src/include/behaviours/system/networkinterfaceinfo.h src/include/behaviours/system/networkinterfaceinfo.cpp
+    src/include/behaviours/transform/bufferaccumulator.h src/include/behaviours/transform/bufferaccumulator.cpp
+    src/include/behaviours/transform/ratelimiter.h src/include/behaviours/transform/ratelimiter.cpp
+    src/include/behaviours/transform/unitconverter.h src/include/behaviours/transform/unitconverter.cpp
+    src/include/behaviours/networking/websocketclient.h src/include/behaviours/networking/websocketclient.cpp
+    src/include/behaviours/geo/mapviewer.h src/include/behaviours/geo/mapviewer.cpp
 )
 
-target_link_libraries(Debugger PRIVATE Qt6::Widgets Qt6::Core Qt6::Quick Qt6::Xml Qt6::Charts Qt6::Qml cxxopts pybind11::embed)
+target_link_libraries(Debugger PRIVATE Qt6::Widgets Qt6::Core Qt6::Quick Qt6::Xml Qt6::Charts Qt6::Qml Qt6::Network Qt6::Sql cxxopts pybind11::embed)
 
 set_target_properties(Debugger PROPERTIES
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}

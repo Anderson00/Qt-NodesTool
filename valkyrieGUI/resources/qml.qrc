@@ -145,6 +145,49 @@
     <qresource prefix="/behaviours">
         <file alias="BaseBehaviour.qml">qml/behaviours/BaseBehaviour.qml</file>
     </qresource>
+    <qresource prefix="/behaviours/networking">
+        <file alias="HttpRequester.qml">qml/behaviours/networking/HttpRequester.qml</file>
+        <file alias="WebSocketClient.qml">qml/behaviours/networking/WebSocketClient.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/geo">
+        <file alias="MapViewer.qml">qml/behaviours/geo/MapViewer.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/data">
+        <file alias="JSONParser.qml">qml/behaviours/data/JSONParser.qml</file>
+        <file alias="StatisticsAnalyzer.qml">qml/behaviours/data/StatisticsAnalyzer.qml</file>
+        <file alias="DataTableViewer.qml">qml/behaviours/data/DataTableViewer.qml</file>
+        <file alias="JsonTreeViewer.qml">qml/behaviours/data/JsonTreeViewer.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/io">
+        <file alias="FileWatcher.qml">qml/behaviours/io/FileWatcher.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/ai">
+        <file alias="AIQueryNode.qml">qml/behaviours/ai/AIQueryNode.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/visualization">
+        <file alias="HeatMapViewer.qml">qml/behaviours/visualization/HeatMapViewer.qml</file>
+        <file alias="RadarChartViewer.qml">qml/behaviours/visualization/RadarChartViewer.qml</file>
+        <file alias="NodeGraphViewer.qml">qml/behaviours/visualization/NodeGraphViewer.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/encoding">
+        <file alias="HashGenerator.qml">qml/behaviours/encoding/HashGenerator.qml</file>
+        <file alias="Base64Node.qml">qml/behaviours/encoding/Base64Node.qml</file>
+        <file alias="RegexProcessor.qml">qml/behaviours/encoding/RegexProcessor.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/database">
+        <file alias="SQLiteQuery.qml">qml/behaviours/database/SQLiteQuery.qml</file>
+        <file alias="CSVReaderWriter.qml">qml/behaviours/database/CSVReaderWriter.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/system">
+        <file alias="ProcessLauncher.qml">qml/behaviours/system/ProcessLauncher.qml</file>
+        <file alias="ClipboardNode.qml">qml/behaviours/system/ClipboardNode.qml</file>
+        <file alias="NetworkInterfaceInfo.qml">qml/behaviours/system/NetworkInterfaceInfo.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/transform">
+        <file alias="BufferAccumulator.qml">qml/behaviours/transform/BufferAccumulator.qml</file>
+        <file alias="RateLimiter.qml">qml/behaviours/transform/RateLimiter.qml</file>
+        <file alias="UnitConverter.qml">qml/behaviours/transform/UnitConverter.qml</file>
+    </qresource>
     <qresource prefix="/behaviours/flow">
         <file alias="FlowStartViewer.qml">qml/behaviours/flow/FlowStartViewer.qml</file>
         <file alias="FlowBranchViewer.qml">qml/behaviours/flow/FlowBranchViewer.qml</file>
