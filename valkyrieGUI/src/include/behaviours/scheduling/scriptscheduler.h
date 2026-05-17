@@ -37,6 +37,10 @@ public slots:
     void startScheduler();
     void stopScheduler();
 
+    // ── Bulk event enable/disable ─────────────────────────────────────────────
+    void enableAllEvents();
+    void disableAllEvents();
+
     // ── Event CRUD ────────────────────────────────────────────────────────────
     QString     addEvent();
     void        removeEvent(const QString &id);

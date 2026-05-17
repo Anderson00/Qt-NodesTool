@@ -93,6 +93,20 @@ void ScriptScheduler::stopScheduler()
     }
 }
 
+// ── Bulk enable/disable ────────────────────────────────────────────────────────
+
+void ScriptScheduler::enableAllEvents()
+{
+    for (auto &ev : m_events) ev.enabled = true;
+    emit eventsChanged();
+}
+
+void ScriptScheduler::disableAllEvents()
+{
+    for (auto &ev : m_events) ev.enabled = false;
+    emit eventsChanged();
+}
+
 // ── Event CRUD ─────────────────────────────────────────────────────────────────
 
 QString ScriptScheduler::addEvent()
@@ -285,8 +299,9 @@ bool ScriptScheduler::isDueDateTime(const ScheduledEvent &ev) const
 
     switch (ev.repeatMode) {
     case ScheduledEvent::OneShot:
-        // Fire once when we pass the target; guard with lastRun
-        return now >= ev.targetDateTime && ev.lastRun < ev.targetDateTime;
+        // Guard with isValid() first — comparing invalid QDateTime in Qt 6 is undefined
+        return now >= ev.targetDateTime &&
+               (!ev.lastRun.isValid() || ev.lastRun < ev.targetDateTime);
     case ScheduledEvent::Daily: {
         QDateTime todayTarget = ev.targetDateTime;
         todayTarget.setDate(now.date());

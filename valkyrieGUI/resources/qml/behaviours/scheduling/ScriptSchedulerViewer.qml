@@ -77,10 +77,14 @@ Item {
         cronInput.text     = ev.cronExpression || "0 * * * *"
         filePathField.text = ev.scriptFile     || ""
         inlineEditor.code  = ev.scriptCode     || ""
-        daysSpinBox.value  = ev.days  !== undefined ? ev.days    : 0
-        hoursSpinBox.value = ev.hours !== undefined ? ev.hours   : 1
+        daysSpinBox.value  = ev.days    !== undefined ? ev.days    : 0
+        hoursSpinBox.value = ev.hours   !== undefined ? ev.hours   : 1
         minsSpinBox.value  = ev.minutes !== undefined ? ev.minutes : 0
         secsSpinBox.value  = ev.seconds !== undefined ? ev.seconds : 0
+        // DateTime trigger time picker
+        var iso = ev.targetDateTime || ""
+        dtTimePicker.hours   = iso.length >= 13 ? (parseInt(iso.substring(11, 13)) || 0) : 9
+        dtTimePicker.minutes = iso.length >= 16 ? (parseInt(iso.substring(14, 16)) || 0) : 0
     }
 
     Connections {
@@ -256,6 +260,7 @@ Item {
                             font.pixelSize: 9; font.bold: true; font.letterSpacing: 1.2
                             Layout.fillWidth: true
                         }
+                        // Event count badge
                         Rectangle {
                             width: 18; height: 18; radius: 9
                             color: Qt.rgba(1,1,1,0.08)
@@ -263,6 +268,32 @@ Item {
                                 anchors.centerIn: parent
                                 text: behaviourObject ? behaviourObject.eventCount + "" : "0"
                                 color: ThemeManager.textSecondaryColor; font.pixelSize: 9; font.bold: true
+                            }
+                        }
+                        // Enable all
+                        Rectangle {
+                            width: 18; height: 18; radius: 4
+                            color: enAllA.containsMouse
+                                ? Qt.rgba(34,197,94,0.25) : Qt.rgba(1,1,1,0.06)
+                            Behavior on color { ColorAnimation { duration: 100 } }
+                            SvgIcon { anchors.centerIn: parent; width: 10; height: 10; source: Icons.play; color: "#22C55E" }
+                            MouseArea {
+                                id: enAllA; anchors.fill: parent; hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: if (behaviourObject) behaviourObject.enableAllEvents()
+                            }
+                        }
+                        // Disable all
+                        Rectangle {
+                            width: 18; height: 18; radius: 4
+                            color: disAllA.containsMouse
+                                ? Qt.rgba(239,68,68,0.25) : Qt.rgba(1,1,1,0.06)
+                            Behavior on color { ColorAnimation { duration: 100 } }
+                            SvgIcon { anchors.centerIn: parent; width: 10; height: 10; source: Icons.stop; color: Qt.rgba(1,1,1,0.4) }
+                            MouseArea {
+                                id: disAllA; anchors.fill: parent; hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: if (behaviourObject) behaviourObject.disableAllEvents()
                             }
                         }
                     }
@@ -305,12 +336,18 @@ Item {
                                 RowLayout {
                                     Layout.fillWidth: true; spacing: 6
 
-                                    // Status dot
+                                    // Status dot — click to toggle enabled
                                     Rectangle {
-                                        width: 6; height: 6; radius: 3
+                                        width: 8; height: 8; radius: 4
                                         Layout.alignment: Qt.AlignVCenter
                                         color: modelData.enabled ? "#22C55E" : Qt.rgba(1,1,1,0.2)
                                         Behavior on color { ColorAnimation { duration: 200 } }
+                                        MouseArea {
+                                            anchors { fill: parent; margins: -5 }
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: behaviourObject.updateEventField(
+                                                modelData.id, "enabled", !modelData.enabled)
+                                        }
                                     }
 
                                     ColumnLayout {
@@ -358,17 +395,27 @@ Item {
 
                                 // Per-event countdown
                                 Rectangle {
-                                    Layout.fillWidth: true; height: 16; radius: 4
+                                    Layout.fillWidth: true; height: 18; radius: 4
+                                    clip: true
                                     visible: nextInVisible
                                     color: Qt.rgba(ThemeManager.primaryColor.r,
                                                    ThemeManager.primaryColor.g,
                                                    ThemeManager.primaryColor.b, 0.12)
                                     RowLayout {
-                                        anchors { fill: parent; leftMargin: 5; rightMargin: 5 }
-                                        spacing: 3
-                                        SvgIcon { width: 10; height: 10; source: Icons.timerSand; color: ThemeManager.primaryColor }
+                                        anchors {
+                                            left: parent.left; right: parent.right
+                                            verticalCenter: parent.verticalCenter
+                                            leftMargin: 6; rightMargin: 6
+                                        }
+                                        spacing: 4
+                                        SvgIcon {
+                                            width: 9; height: 9
+                                            source: Icons.timerSand; color: ThemeManager.primaryColor
+                                            Layout.alignment: Qt.AlignVCenter
+                                        }
                                         Text {
                                             Layout.fillWidth: true
+                                            Layout.alignment: Qt.AlignVCenter
                                             text: _countdown
                                             color: ThemeManager.primaryColor
                                             font.pixelSize: 9; font.family: "Consolas"; font.bold: true
@@ -638,22 +685,75 @@ Item {
 
                         // ── Single DateTime (type 1) ───────────────────────────
                         ColumnLayout {
+                            id: dtSection
                             Layout.fillWidth: true
                             Layout.leftMargin: 12; Layout.rightMargin: 12; Layout.topMargin: 10
+                            spacing: 8
                             visible: root.selectedEvent && root.selectedEvent.triggerType === 1
 
+                            // Parse targetDateTime ISO string into parts
+                            property string _iso:  root.selectedEvent ? (root.selectedEvent.targetDateTime || "") : ""
+                            property string _date: _iso.length >= 10 ? _iso.substring(0, 10) : ""
+                            property int    _h:    _iso.length >= 13 ? parseInt(_iso.substring(11, 13)) || 0 : 9
+                            property int    _m:    _iso.length >= 16 ? parseInt(_iso.substring(14, 16)) || 0 : 0
+
+                            function _commit(dateStr, h, m) {
+                                if (!dateStr || dateStr.length < 10 || !root.selectedEventId) return
+                                var hh = ("0" + h).slice(-2)
+                                var mm = ("0" + m).slice(-2)
+                                behaviourObject.updateEventField(root.selectedEventId, "targetDateTime",
+                                    dateStr + "T" + hh + ":" + mm + ":00")
+                            }
+
+                            CalendarView {
+                                Layout.fillWidth: true; height: 220
+                                compact: true
+                                selectedDates: dtSection._date.length > 0 ? [dtSection._date] : []
+                                onSelectionChanged: function(dates) {
+                                    if (dates.length > 0)
+                                        dtSection._commit(dates[0], dtSection._h, dtSection._m)
+                                }
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true; spacing: 8
+                                Text { text: "Hora:"; color: ThemeManager.textSecondaryColor; font.pixelSize: 11 }
+                                TimePicker {
+                                    id: dtTimePicker
+                                    hours: dtSection._h; minutes: dtSection._m
+                                    seconds: 0; showSeconds: false
+                                    implicitWidth: 130; implicitHeight: 70
+                                    onTimeChanged: function(h, m, s) {
+                                        dtSection._commit(dtSection._date, h, m)
+                                    }
+                                }
+                                Item { Layout.fillWidth: true }
+                            }
+
+                            // Repeat mode selector
                             Rectangle {
-                                Layout.fillWidth: true; height: 72; radius: 8
-                                color: Qt.rgba(0,0,0,0.18); border.width: 1; border.color: Qt.rgba(1,1,1,0.07)
-                                ColumnLayout {
-                                    anchors.centerIn: parent; spacing: 4
-                                    SvgIcon { Layout.alignment: Qt.AlignHCenter; width: 28; height: 28; source: Icons.calendarOutline; color: ThemeManager.textSecondaryColor; opacity: 0.5 }
-                                    Text {
-                                        Layout.alignment: Qt.AlignHCenter
-                                        text: root.selectedEvent && root.selectedEvent.dateTimes &&
-                                              root.selectedEvent.dateTimes.length > 0
-                                            ? root.selectedEvent.dateTimes[0] : "Nenhuma data definida"
-                                        color: ThemeManager.textSecondaryColor; font.pixelSize: 11
+                                Layout.fillWidth: true; height: 30; radius: 7
+                                color: Qt.rgba(0,0,0,0.25); border.width: 1; border.color: Qt.rgba(1,1,1,0.08)
+                                RowLayout {
+                                    anchors { fill: parent; margins: 3 } spacing: 3
+                                    Repeater {
+                                        model: ["Único", "Diário", "Semanal"]
+                                        Rectangle {
+                                            Layout.fillWidth: true; height: parent.height; radius: 5
+                                            property bool isCurrent: root.selectedEvent && root.selectedEvent.repeatMode === index
+                                            color: isCurrent ? Qt.rgba(1,1,1,0.12) : "transparent"
+                                            Behavior on color { ColorAnimation { duration: 120 } }
+                                            Text {
+                                                anchors.centerIn: parent; text: modelData
+                                                font.pixelSize: 11; font.bold: isCurrent
+                                                color: isCurrent ? ThemeManager.textColor : ThemeManager.textSecondaryColor
+                                                Behavior on color { ColorAnimation { duration: 120 } }
+                                            }
+                                            MouseArea {
+                                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                                onClicked: behaviourObject.updateEventField(root.selectedEventId, "repeatMode", index)
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -719,7 +819,7 @@ Item {
                                 id: schedCal
                                 Layout.fillWidth: true
                                 height: 300
-                                multiSelect: true
+                                rangeSelect: true
                                 compact: true
                                 selectedDates: {
                                     if (!root.selectedEvent) return []
