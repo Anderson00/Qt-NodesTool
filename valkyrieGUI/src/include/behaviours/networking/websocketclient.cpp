@@ -281,8 +281,13 @@ QByteArray WebSocketClient::buildTextFrame(const QString& text)
     QByteArray frame;
     frame.append(static_cast<char>(0x81)); // FIN + text opcode
 
+    quint32 maskRaw;
+    QRandomGenerator::global()->fillRange(&maskRaw, 1);
     quint8 maskBuf[4];
-    QRandomGenerator::global()->fillRange(maskBuf, 4);
+    maskBuf[0] = (maskRaw >> 24) & 0xFF;
+    maskBuf[1] = (maskRaw >> 16) & 0xFF;
+    maskBuf[2] = (maskRaw >>  8) & 0xFF;
+    maskBuf[3] =  maskRaw        & 0xFF;
 
     int len = payload.size();
     if (len < 126) {

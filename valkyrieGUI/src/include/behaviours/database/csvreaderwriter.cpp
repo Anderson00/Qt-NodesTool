@@ -81,7 +81,7 @@ QStringList CSVReaderWriter::parseLine(const QString& line) const
         } else {
             if (ch == '"') {
                 inQuotes = true;
-            } else if (line.midRef(i, m_delimiter.size()) == m_delimiter) {
+            } else if (QStringView(line).mid(i, m_delimiter.size()) == m_delimiter) {
                 fields.append(field);
                 field.clear();
                 i += m_delimiter.size() - 1;
