@@ -39,7 +39,7 @@ QMap<QString, QVariant> AIQueryNode::static_infos()
     });
 }
 
-void AIQueryNode::setSystemPrompt(const QString& sp)
+void AIQueryNode::setSystemPrompt(QString sp)
 {
     if (m_systemPrompt != sp) {
         m_systemPrompt = sp;
@@ -47,23 +47,12 @@ void AIQueryNode::setSystemPrompt(const QString& sp)
     }
 }
 
-// Slot overload (takes QString by value for QML/signal compatibility)
-void AIQueryNode::setSystemPrompt(QString sp)
-{
-    setSystemPrompt(static_cast<const QString&>(sp));
-}
-
-void AIQueryNode::setModel(const QString& model)
+void AIQueryNode::setModel(QString model)
 {
     if (m_model != model) {
         m_model = model;
         emit modelChanged();
     }
-}
-
-void AIQueryNode::setModel(QString model)
-{
-    setModel(static_cast<const QString&>(model));
 }
 
 void AIQueryNode::setMaxTokens(int tokens)

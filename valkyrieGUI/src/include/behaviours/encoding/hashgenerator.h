@@ -25,8 +25,6 @@ public:
     QString algorithm() const { return m_algorithm; }
     QString lastHash()  const { return m_lastHash; }
 
-    void setAlgorithm(const QString& alg);
-
 public slots:
     void hash(QString input);
     void setAlgorithm(QString alg);

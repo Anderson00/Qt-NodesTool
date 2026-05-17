@@ -116,7 +116,8 @@ void HttpRequester::sendRequest(const QString& method, const QString& url, const
         m_reply = nullptr;
     }
 
-    QNetworkRequest request(QUrl(url));
+    QUrl qurl(url);
+    QNetworkRequest request(qurl);
 
     // Apply custom headers
     for (auto it = m_headers.constBegin(); it != m_headers.constEnd(); ++it) {

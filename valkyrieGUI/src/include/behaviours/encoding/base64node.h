@@ -26,8 +26,6 @@ public:
     QString lastDecoded() const { return m_lastDecoded; }
     bool    urlSafe()     const { return m_urlSafe; }
 
-    void setUrlSafe(bool safe);
-
 public slots:
     void encode(QString input);
     void decode(QString base64String);
@@ -36,7 +34,7 @@ public slots:
 signals:
     // Node outputs
     void encoded(QString result);
-    void decoded(QString result);
+    void decodeResult(QString result);
 
     // Internal QML-only signals
     void internalEncoded(QString result);

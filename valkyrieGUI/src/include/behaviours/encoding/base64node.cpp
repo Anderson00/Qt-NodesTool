@@ -77,10 +77,10 @@ void Base64Node::decode(QString base64String)
         ? QByteArray::Base64UrlEncoding
         : QByteArray::Base64Encoding;
 
-    QByteArray decoded = QByteArray::fromBase64(base64String.toLatin1(), options);
-    QString result = QString::fromUtf8(decoded);
+    QByteArray decodedBytes = QByteArray::fromBase64(base64String.toLatin1(), options);
+    QString result = QString::fromUtf8(decodedBytes);
     setLastDecoded(result);
-    emit decoded(result);
+    emit decodeResult(result);
     emit internalDecoded(result);
 }
 

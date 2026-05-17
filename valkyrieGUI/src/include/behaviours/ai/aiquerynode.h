@@ -36,8 +36,6 @@ public:
     bool    isLoading()    const { return m_isLoading; }
     QString lastResponse() const { return m_lastResponse; }
 
-    void setSystemPrompt(const QString& sp);
-    void setModel(const QString& model);
     void setMaxTokens(int tokens);
 
 public slots:

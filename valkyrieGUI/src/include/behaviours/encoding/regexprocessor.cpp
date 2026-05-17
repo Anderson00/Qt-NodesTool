@@ -73,18 +73,13 @@ void RegexProcessor::rebuildRegex()
     }
 }
 
-void RegexProcessor::setPattern(const QString& pattern)
+void RegexProcessor::setPattern(QString pattern)
 {
     if (m_pattern != pattern) {
         m_pattern = pattern;
         rebuildRegex();
         emit patternChanged();
     }
-}
-
-void RegexProcessor::setPattern(QString pattern)
-{
-    setPattern(static_cast<const QString&>(pattern));
 }
 
 void RegexProcessor::setCaseInsensitive(bool ci)

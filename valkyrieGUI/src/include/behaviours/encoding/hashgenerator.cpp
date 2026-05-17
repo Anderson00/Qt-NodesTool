@@ -42,18 +42,13 @@ void HashGenerator::setLastHash(const QString& h)
     }
 }
 
-void HashGenerator::setAlgorithm(const QString& alg)
+void HashGenerator::setAlgorithm(QString alg)
 {
     if (m_algorithm != alg) {
         m_algorithm = alg;
         emit algorithmChanged();
         emit internalAlgorithmChanged(alg);
     }
-}
-
-void HashGenerator::setAlgorithm(QString alg)
-{
-    setAlgorithm(static_cast<const QString&>(alg));
 }
 
 void HashGenerator::hash(QString input)

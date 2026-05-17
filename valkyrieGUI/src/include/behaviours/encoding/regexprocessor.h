@@ -32,10 +32,6 @@ public:
     int     matchCount()      const { return m_matchCount; }
     QString lastError()       const { return m_lastError; }
 
-    void setPattern(const QString& pattern);
-    void setCaseInsensitive(bool ci);
-    void setMultiLine(bool ml);
-
 public slots:
     void setText(QString text);
     void setPattern(QString pattern);

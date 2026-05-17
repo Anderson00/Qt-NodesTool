@@ -27,8 +27,8 @@ public:
     QJsonObject saveState() const override;
     void loadState(const QJsonObject& state) override;
 
-    int     nodeCount() const { return m_nodes.size(); }
-    int     edgeCount() const { return m_edges.size(); }
+    int     nodeCount() const { return m_nodesMap.size(); }
+    int     edgeCount() const { return m_edgeList.size(); }
     QString layout()    const { return m_layout; }
     void    setLayout(const QString& type);
 
