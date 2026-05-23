@@ -1,7 +1,7 @@
 #include "gaugeviewer.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(GaugeViewer, "Gauge", "Circular gauge with configurable color zones and digital readout", "common", 1, 0)
+REGISTER_BEHAVIOUR(GaugeViewer, "Gauge", "Circular gauge with configurable color zones and digital readout", "Visualization", 1, 0)
 
 GaugeViewer::GaugeViewer(QObject *parent) : Behaviours(parent)
 {

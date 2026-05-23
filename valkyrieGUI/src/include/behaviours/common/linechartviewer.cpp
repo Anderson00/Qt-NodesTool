@@ -2,7 +2,7 @@
 #include "behaviours/behaviourregistry.h"
 #include <QtCharts/QXYSeries>
 
-REGISTER_BEHAVIOUR(LineChartViewer, "Line Chart", "Advanced XY line chart with multi-series, zoom/pan and live stats", "common", 13, 0)
+REGISTER_BEHAVIOUR(LineChartViewer, "Line Chart", "Advanced XY line chart with multi-series, zoom/pan and live stats", "Charts", 13, 0)
 
 LineChartViewer::LineChartViewer(QObject *parent)
 {

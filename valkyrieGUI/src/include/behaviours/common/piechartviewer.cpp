@@ -1,7 +1,7 @@
 #include "piechartviewer.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(PieChartViewer, "Pie Chart", "Interactive pie/donut chart with dynamic slices", "common", 0, 0)
+REGISTER_BEHAVIOUR(PieChartViewer, "Pie Chart", "Interactive pie/donut chart with dynamic slices", "Charts", 0, 0)
 
 PieChartViewer::PieChartViewer(QObject *parent) : Behaviours(parent)
 {

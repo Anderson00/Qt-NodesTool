@@ -1,7 +1,7 @@
 #include "signalgenerator.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(SignalGenerator, "Signal Generator", "Generates sine, square, triangle, sawtooth, or noise waveforms", "common", 0, 1)
+REGISTER_BEHAVIOUR(SignalGenerator, "Signal Generator", "Generates sine, square, triangle, sawtooth, or noise waveforms", "Generators", 0, 1)
 
 SignalGenerator::SignalGenerator(QObject *parent) : Behaviours(parent)
 {

@@ -1,7 +1,7 @@
 #include "barchartviewer.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(BarChartViewer, "Bar Chart", "Multi-series bar chart with auto-scaling Y axis", "common", 0, 0)
+REGISTER_BEHAVIOUR(BarChartViewer, "Bar Chart", "Multi-series bar chart with auto-scaling Y axis", "Charts", 0, 0)
 
 BarChartViewer::BarChartViewer(QObject *parent) : Behaviours(parent)
 {

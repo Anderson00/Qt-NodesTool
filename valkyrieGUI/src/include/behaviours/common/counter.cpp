@@ -1,7 +1,7 @@
 #include "counter.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(Counter, "Counter", "Simple increment/decrement counter with step control", "common", 4, 2)
+REGISTER_BEHAVIOUR(Counter, "Counter", "Simple increment/decrement counter with step control", "Math", 4, 2)
 
 Counter::Counter(QObject *parent) : Behaviours(parent)
 {

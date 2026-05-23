@@ -1,7 +1,7 @@
 #include "textdisplay.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(TextDisplay, "Text Display", "Console/log viewer — receives and displays text lines", "common", 3, 0)
+REGISTER_BEHAVIOUR(TextDisplay, "Text Display", "Console/log viewer — receives and displays text lines", "Visualization", 3, 0)
 
 TextDisplay::TextDisplay(QObject *parent) : Behaviours(parent)
 {

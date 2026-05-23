@@ -3,7 +3,7 @@
 
 #include <QJsonArray>
 
-REGISTER_BEHAVIOUR(RadarChartViewer, "Radar Chart", "Spider/radar chart for multi-dimensional data comparison", "visualization", 4, 1)
+REGISTER_BEHAVIOUR(RadarChartViewer, "Radar Chart", "Spider/radar chart for multi-dimensional data comparison", "Charts", 4, 1)
 
 RadarChartViewer::RadarChartViewer(QObject *parent)
     : Behaviours(parent)
