@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QJsonObject>
+#include <QVariantList>
 #include <behaviours/behaviours.h>
 
 class KeyValueInput : public Behaviours
@@ -36,10 +37,11 @@ public slots:
     void setAutoSend(bool enabled);
 
 signals:
-    void outputLabelValue(QString label, double value);  // OUTPUT PORT
-    void outputIndexValue(int index, double value);      // OUTPUT PORT
-    void outputString(QString value);                    // OUTPUT PORT (key)
-    void outputValue(double value);                      // OUTPUT PORT (value)
+    void outputLabelValue(QString label, double value);  // OUTPUT PORT — (label, value)
+    void outputIndexValue(int index, double value);      // OUTPUT PORT — (index, value)
+    void outputString(QString value);                    // OUTPUT PORT — key string
+    void outputValue(double value);                      // OUTPUT PORT — numeric value
+    void outputData(QVariantList data);                  // OUTPUT PORT — universal [key, value]
 
     void keyTextChanged();
     void valueNumChanged();

@@ -2,6 +2,7 @@
 
 #include <QDebug>
 #include <model/connectionmodel.h>
+#include "behaviours/typecoercions.h"
 
 Behaviours::Behaviours(QObject *parent) : QObject(parent)
 {
@@ -130,14 +131,30 @@ bool Behaviours::isConnectionCompatible(const QString &sender, Behaviours *targe
     Connections *connections = this->getConnectionFromMethodSignature(sender);
     Connections *outputConn = target ? target->getConnectionFromMethodSignature(receiver) : nullptr;
 
-    if (connections != nullptr && outputConn != nullptr) {
-        if (connections->methodType() == Connections::Signal && outputConn->methodType() == Connections::Slot) {
-            return QMetaObject::checkConnectArgs(connections->metaMethod().methodSignature().constData(), outputConn->metaMethod().methodSignature().constData());
-        } else if (connections->methodType() == Connections::Slot && outputConn->methodType() == Connections::Signal) {
-            return QMetaObject::checkConnectArgs(outputConn->metaMethod().methodSignature().constData(), connections->metaMethod().methodSignature().constData());
-        }
+    if (connections == nullptr || outputConn == nullptr)
+        return false;
+
+    QMetaMethod signalMethod, slotMethod;
+    if (connections->methodType() == Connections::Signal && outputConn->methodType() == Connections::Slot) {
+        signalMethod = connections->metaMethod();
+        slotMethod   = outputConn->metaMethod();
+    } else if (connections->methodType() == Connections::Slot && outputConn->methodType() == Connections::Signal) {
+        signalMethod = outputConn->metaMethod();
+        slotMethod   = connections->metaMethod();
+    } else {
+        return false;
     }
-    return false;
+
+    // ── Exact type match ────────────────────────────────────────────────────
+    if (QMetaObject::checkConnectArgs(signalMethod.methodSignature().constData(),
+                                      slotMethod.methodSignature().constData())) {
+        return true;
+    }
+
+    // ── Coercible type match (int ↔ double etc.) ────────────────────────────
+    const QByteArray srcParams = TypeCoercions::extractParams(signalMethod.methodSignature());
+    const QByteArray dstParams = TypeCoercions::extractParams(slotMethod.methodSignature());
+    return TypeCoercions::isCoercible(srcParams, dstParams);
 }
 
 bool Behaviours::addConnection(const QString &sender, Behaviours *target, const QString &receiver)

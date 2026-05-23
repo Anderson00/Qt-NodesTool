@@ -3,7 +3,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 
-REGISTER_BEHAVIOUR(ArrayInput, "Array Input", "Builds and sends a list of string values to connected nodes", "input", 1, 3)
+REGISTER_BEHAVIOUR(ArrayInput, "Array Input", "Builds and sends a list of string values to connected nodes", "input", 1, 4)
 
 ArrayInput::ArrayInput(QObject *parent) : Behaviours(parent)
 {
@@ -36,7 +36,7 @@ QMap<QString, QVariant> ArrayInput::static_infos()
         {"className",     "ArrayInput"},
         {"desc",          "Builds and sends a list of string values"},
         {"inputs_count",  "1"},
-        {"outputs_count", "3"}
+        {"outputs_count", "4"}
     });
 }
 
@@ -97,6 +97,7 @@ void ArrayInput::send() {
     emit outputArray(m_items);
     emit outputString(json);
     emit outputCount(m_items.size());
+    emit outputData(m_items);  // universal port mirrors outputArray
 }
 
 // ── State persistence ────────────────────────────────────────────────────────

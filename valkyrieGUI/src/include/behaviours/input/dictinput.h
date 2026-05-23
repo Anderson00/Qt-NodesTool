@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QVariantMap>
+#include <QVariantList>
 #include <QJsonObject>
 #include <behaviours/behaviours.h>
 
@@ -33,9 +34,10 @@ public slots:
     void setAutoSend(bool enabled);
 
 signals:
-    void outputDict(QVariantMap dict);      // OUTPUT PORT
-    void outputString(QString jsonString);  // OUTPUT PORT (JSON)
-    void outputCount(int count);            // OUTPUT PORT
+    void outputDict(QVariantMap dict);      // OUTPUT PORT — typed map
+    void outputString(QString jsonString);  // OUTPUT PORT — JSON string
+    void outputCount(int count);            // OUTPUT PORT — entry count
+    void outputData(QVariantList data);     // OUTPUT PORT — universal [QVariantMap]
 
     void dictChanged();
     void autoSendChanged();

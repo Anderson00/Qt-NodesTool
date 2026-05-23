@@ -1,7 +1,7 @@
 #include "pairinput.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(PairInput, "Pair Input", "Sends an (X, Y) data point to connected nodes", "input", 1, 1)
+REGISTER_BEHAVIOUR(PairInput, "Pair Input", "Sends an (X, Y) data point to connected nodes", "input", 1, 2)
 
 PairInput::PairInput(QObject *parent) : Behaviours(parent)
 {
@@ -33,7 +33,7 @@ QMap<QString, QVariant> PairInput::static_infos()
         {"className",     "PairInput"},
         {"desc",          "Sends an (X, Y) data point to connected nodes"},
         {"inputs_count",  "1"},
-        {"outputs_count", "1"}
+        {"outputs_count", "2"}
     });
 }
 
@@ -74,6 +74,7 @@ void PairInput::trigger() { send(); }
 
 void PairInput::send() {
     emit outputXY(m_xValue, m_yValue);
+    emit outputData({m_xValue, m_yValue});
 }
 
 // ── State persistence ────────────────────────────────────────────────────────

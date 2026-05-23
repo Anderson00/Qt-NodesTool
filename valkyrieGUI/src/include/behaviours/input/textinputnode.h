@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QJsonObject>
+#include <QVariantList>
 #include <behaviours/behaviours.h>
 
 class TextInputNode : public Behaviours
@@ -30,7 +31,8 @@ public slots:
     void setAutoSend(bool enabled);
 
 signals:
-    void outputString(QString value);  // OUTPUT PORT
+    void outputString(QString value);  // OUTPUT PORT — plain text
+    void outputData(QVariantList data); // OUTPUT PORT — universal [text]
 
     void textChanged();
     void autoSendChanged();

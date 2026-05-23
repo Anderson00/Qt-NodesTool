@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QDateTime>
 #include <QJsonObject>
+#include <QVariantList>
 #include <behaviours/behaviours.h>
 
 class DateTimeInput : public Behaviours
@@ -35,8 +36,9 @@ public slots:
     void setAutoSend(bool enabled);
 
 signals:
-    void outputString(QString formatted);    // OUTPUT PORT
-    void outputTimestamp(int unixTimestamp); // OUTPUT PORT
+    void outputString(QString formatted);    // OUTPUT PORT — formatted string
+    void outputTimestamp(int unixTimestamp); // OUTPUT PORT — Unix timestamp
+    void outputData(QVariantList data);      // OUTPUT PORT — universal [formatted, timestamp]
 
     void dateStrChanged();
     void formatChanged();

@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QColor>
 #include <QJsonObject>
+#include <QVariantList>
 #include <behaviours/behaviours.h>
 
 class ColorInput : public Behaviours
@@ -31,8 +32,9 @@ public slots:
     void setAutoSend(bool enabled);
 
 signals:
-    void outputString(QString hexColor);  // OUTPUT PORT — "#RRGGBB"
-    void outputRGB(int r, int g, int b);  // OUTPUT PORT
+    void outputString(QString hexColor);   // OUTPUT PORT — "#RRGGBB"
+    void outputRGB(int r, int g, int b);   // OUTPUT PORT — (r, g, b) ints 0-255
+    void outputData(QVariantList data);    // OUTPUT PORT — universal [hex, r, g, b]
 
     void colorHexChanged();
     void autoSendChanged();

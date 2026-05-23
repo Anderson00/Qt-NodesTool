@@ -1,7 +1,7 @@
 #include "datetimeinput.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(DateTimeInput, "DateTime Input", "Sends a formatted date/time string or Unix timestamp to connected nodes", "input", 1, 2)
+REGISTER_BEHAVIOUR(DateTimeInput, "DateTime Input", "Sends a formatted date/time string or Unix timestamp to connected nodes", "input", 1, 3)
 
 DateTimeInput::DateTimeInput(QObject *parent) : Behaviours(parent)
 {
@@ -36,7 +36,7 @@ QMap<QString, QVariant> DateTimeInput::static_infos()
         {"className",     "DateTimeInput"},
         {"desc",          "Sends a formatted date/time or Unix timestamp"},
         {"inputs_count",  "1"},
-        {"outputs_count", "2"}
+        {"outputs_count", "3"}
     });
 }
 
@@ -87,7 +87,9 @@ void DateTimeInput::trigger() { send(); }
 
 void DateTimeInput::send() {
     emit outputString(m_dateTime.toString(m_format));
-    emit outputTimestamp(static_cast<int>(m_dateTime.toSecsSinceEpoch()));
+    const int ts = static_cast<int>(m_dateTime.toSecsSinceEpoch());
+    emit outputTimestamp(ts);
+    emit outputData({m_dateTime.toString(m_format), ts});
 }
 
 // ── State persistence ────────────────────────────────────────────────────────

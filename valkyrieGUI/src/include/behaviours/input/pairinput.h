@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QJsonObject>
+#include <QVariantList>
 #include <behaviours/behaviours.h>
 
 class PairInput : public Behaviours
@@ -33,7 +34,8 @@ public slots:
     void setAutoSend(bool enabled);
 
 signals:
-    void outputXY(double x, double y);  // OUTPUT PORT
+    void outputXY(double x, double y);   // OUTPUT PORT — (x, y) pair
+    void outputData(QVariantList data);  // OUTPUT PORT — universal [x, y]
 
     void xValueChanged();
     void yValueChanged();

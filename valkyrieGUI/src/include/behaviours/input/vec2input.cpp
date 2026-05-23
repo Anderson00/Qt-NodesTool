@@ -1,7 +1,7 @@
 #include "vec2input.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(Vec2Input, "Vec2 Input", "Sends a 2D vector (X, Y) with graphical arrow preview to connected nodes", "input", 1, 2)
+REGISTER_BEHAVIOUR(Vec2Input, "Vec2 Input", "Sends a 2D vector (X, Y) with graphical arrow preview to connected nodes", "input", 1, 3)
 
 Vec2Input::Vec2Input(QObject *parent) : Behaviours(parent)
 {
@@ -33,7 +33,7 @@ QMap<QString, QVariant> Vec2Input::static_infos()
         {"className",     "Vec2Input"},
         {"desc",          "Sends a 2D vector with graphical preview"},
         {"inputs_count",  "1"},
-        {"outputs_count", "2"}
+        {"outputs_count", "3"}
     });
 }
 
@@ -75,6 +75,7 @@ void Vec2Input::trigger() { send(); }
 void Vec2Input::send() {
     emit outputXY(m_vecX, m_vecY);
     emit outputString(QString("(%1, %2)").arg(m_vecX).arg(m_vecY));
+    emit outputData({m_vecX, m_vecY});
 }
 
 // ── State persistence ────────────────────────────────────────────────────────

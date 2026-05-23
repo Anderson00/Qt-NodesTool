@@ -14,8 +14,10 @@ class ConnectionModel : public QObject
 public:
     explicit ConnectionModel(Behaviours *output, QMetaMethod signal, Behaviours *input, QMetaMethod slot, QObject *parent = nullptr);
 
-    inline bool isValid(){
-        return this->m_connection;
+    inline bool isValid() {
+        // Valid if direct connection succeeded OR coercion relay is fully wired
+        return m_connection ||
+               (m_coercionRelay != nullptr && m_relayConn1 && m_relayConn2);
     }
 
     const QMetaObject::Connection &connection() const;
@@ -31,7 +33,15 @@ signals:
 private:
     Behaviours *m_output, *m_input;
     QMetaMethod m_signal, m_slot;
+
+    // Direct Qt connection (non-null when types matched exactly)
     QMetaObject::Connection m_connection;
+
+    // Coercion relay: non-null when a type-conversion bridge is in use.
+    // Parented to this ConnectionModel → auto-deleted when the model is destroyed.
+    QObject*                m_coercionRelay = nullptr;
+    QMetaObject::Connection m_relayConn1;   // source signal  → relay rcv slot
+    QMetaObject::Connection m_relayConn2;   // relay fwd signal → target slot
 };
 
 #endif // CONNECTIONMODEL_H

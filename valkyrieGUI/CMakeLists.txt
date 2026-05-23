@@ -89,6 +89,10 @@ set(PROJECT_SOURCES
     src/include/behaviours/common/gaugeviewer.h src/include/behaviours/common/gaugeviewer.cpp
     src/include/behaviours/common/signalgenerator.h src/include/behaviours/common/signalgenerator.cpp
     src/include/behaviours/common/serialmonitor.h src/include/behaviours/common/serialmonitor.cpp
+    src/include/behaviours/typecoercions.h src/include/behaviours/typecoercions.cpp
+    src/include/behaviours/converters/numbercast.h src/include/behaviours/converters/numbercast.cpp
+    src/include/behaviours/converters/pairadapter.h src/include/behaviours/converters/pairadapter.cpp
+    src/include/behaviours/converters/mergenumbers.h src/include/behaviours/converters/mergenumbers.cpp
     src/include/behaviours/behaviourregistry.h src/include/behaviours/behaviourregistry.cpp
     src/include/behaviours/connections.h src/include/behaviours/connections.cpp
     src/include/model/tablemodel.h src/include/model/tablemodel.cpp

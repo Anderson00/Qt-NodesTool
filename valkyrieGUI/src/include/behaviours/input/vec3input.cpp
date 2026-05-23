@@ -1,7 +1,7 @@
 #include "vec3input.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(Vec3Input, "Vec3 Input", "Sends a 3D vector (X, Y, Z) with color-coded axes to connected nodes", "input", 1, 2)
+REGISTER_BEHAVIOUR(Vec3Input, "Vec3 Input", "Sends a 3D vector (X, Y, Z) with color-coded axes to connected nodes", "input", 1, 3)
 
 Vec3Input::Vec3Input(QObject *parent) : Behaviours(parent)
 {
@@ -35,7 +35,7 @@ QMap<QString, QVariant> Vec3Input::static_infos()
         {"className",     "Vec3Input"},
         {"desc",          "Sends a 3D vector with color-coded axes"},
         {"inputs_count",  "1"},
-        {"outputs_count", "2"}
+        {"outputs_count", "3"}
     });
 }
 
@@ -86,6 +86,7 @@ void Vec3Input::trigger() { send(); }
 void Vec3Input::send() {
     emit outputXYZ(m_vecX, m_vecY, m_vecZ);
     emit outputString(QString("(%1, %2, %3)").arg(m_vecX).arg(m_vecY).arg(m_vecZ));
+    emit outputData({m_vecX, m_vecY, m_vecZ});
 }
 
 // ── State persistence ────────────────────────────────────────────────────────

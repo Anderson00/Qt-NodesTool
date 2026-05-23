@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QJsonObject>
+#include <QVariantList>
 #include <behaviours/behaviours.h>
 
 class NumberInput : public Behaviours
@@ -39,10 +40,11 @@ public slots:
     void setMaxValue(double max);
 
 signals:
-    void outputValue(double value);    // OUTPUT PORT
-    void outputInt(int value);         // OUTPUT PORT
-    void outputBool(bool value);       // OUTPUT PORT (value != 0)
-    void outputString(QString value);  // OUTPUT PORT (toString)
+    void outputValue(double value);     // OUTPUT PORT — double
+    void outputInt(int value);          // OUTPUT PORT — int
+    void outputBool(bool value);        // OUTPUT PORT — bool (value != 0)
+    void outputString(QString value);   // OUTPUT PORT — string
+    void outputData(QVariantList data); // OUTPUT PORT — universal [value]
 
     void valueChanged();
     void autoSendChanged();

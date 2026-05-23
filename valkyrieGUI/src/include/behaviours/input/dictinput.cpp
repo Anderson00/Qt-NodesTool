@@ -2,7 +2,7 @@
 #include "behaviours/behaviourregistry.h"
 #include <QJsonDocument>
 
-REGISTER_BEHAVIOUR(DictInput, "Dict Input", "Builds and sends a key/value dictionary to connected nodes", "input", 1, 3)
+REGISTER_BEHAVIOUR(DictInput, "Dict Input", "Builds and sends a key/value dictionary to connected nodes", "input", 1, 4)
 
 DictInput::DictInput(QObject *parent) : Behaviours(parent)
 {
@@ -34,7 +34,7 @@ QMap<QString, QVariant> DictInput::static_infos()
         {"className",     "DictInput"},
         {"desc",          "Builds and sends a key/value dictionary"},
         {"inputs_count",  "1"},
-        {"outputs_count", "3"}
+        {"outputs_count", "4"}
     });
 }
 
@@ -87,6 +87,7 @@ void DictInput::send() {
     emit outputDict(m_dict);
     emit outputString(json);
     emit outputCount(m_dict.size());
+    emit outputData({QVariant(m_dict)});  // universal port: single QVariantMap element
 }
 
 // ── State persistence ────────────────────────────────────────────────────────

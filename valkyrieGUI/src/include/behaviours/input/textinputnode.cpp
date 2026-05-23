@@ -1,7 +1,7 @@
 #include "textinputnode.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(TextInputNode, "Text Input", "Sends a user-defined text string to connected nodes", "input", 1, 1)
+REGISTER_BEHAVIOUR(TextInputNode, "Text Input", "Sends a user-defined text string to connected nodes", "input", 1, 2)
 
 TextInputNode::TextInputNode(QObject *parent) : Behaviours(parent)
 {
@@ -31,7 +31,7 @@ QMap<QString, QVariant> TextInputNode::static_infos()
         {"className",     "TextInputNode"},
         {"desc",          "Sends a user-defined text string to connected nodes"},
         {"inputs_count",  "1"},
-        {"outputs_count", "1"}
+        {"outputs_count", "2"}
     });
 }
 
@@ -59,7 +59,10 @@ void TextInputNode::setAutoSend(bool enabled) {
 
 // ── Core ─────────────────────────────────────────────────────────────────────
 
-void TextInputNode::send()    { emit outputString(m_text); }
+void TextInputNode::send() {
+    emit outputString(m_text);
+    emit outputData({m_text});
+}
 void TextInputNode::trigger() { send(); }
 
 // ── State persistence ────────────────────────────────────────────────────────

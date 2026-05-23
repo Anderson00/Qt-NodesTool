@@ -1,7 +1,7 @@
 #include "keyvalueinput.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(KeyValueInput, "Key/Value Input", "Sends a labeled value pair to connected chart/data nodes", "input", 1, 4)
+REGISTER_BEHAVIOUR(KeyValueInput, "Key/Value Input", "Sends a labeled value pair to connected chart/data nodes", "input", 1, 5)
 
 KeyValueInput::KeyValueInput(QObject *parent) : Behaviours(parent)
 {
@@ -35,7 +35,7 @@ QMap<QString, QVariant> KeyValueInput::static_infos()
         {"className",     "KeyValueInput"},
         {"desc",          "Sends a labeled value pair to connected nodes"},
         {"inputs_count",  "1"},
-        {"outputs_count", "4"}
+        {"outputs_count", "5"}
     });
 }
 
@@ -88,6 +88,7 @@ void KeyValueInput::send() {
     emit outputIndexValue(m_indexNum, m_valueNum);
     emit outputString(m_keyText);
     emit outputValue(m_valueNum);
+    emit outputData({m_keyText, m_valueNum});
 }
 
 // ── State persistence ────────────────────────────────────────────────────────

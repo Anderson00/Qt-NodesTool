@@ -1,7 +1,7 @@
 #include "colorinput.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(ColorInput, "Color Input", "Sends a selected color as hex string or RGB values to connected nodes", "input", 1, 2)
+REGISTER_BEHAVIOUR(ColorInput, "Color Input", "Sends a selected color as hex string or RGB values to connected nodes", "input", 1, 3)
 
 ColorInput::ColorInput(QObject *parent) : Behaviours(parent)
 {
@@ -31,7 +31,7 @@ QMap<QString, QVariant> ColorInput::static_infos()
         {"className",     "ColorInput"},
         {"desc",          "Sends a color as hex string or RGB values"},
         {"inputs_count",  "1"},
-        {"outputs_count", "2"}
+        {"outputs_count", "3"}
     });
 }
 
@@ -66,6 +66,7 @@ void ColorInput::send() {
     QColor c(m_colorHex);
     emit outputString(m_colorHex);
     emit outputRGB(c.red(), c.green(), c.blue());
+    emit outputData({m_colorHex, c.red(), c.green(), c.blue()});
 }
 
 // ── State persistence ────────────────────────────────────────────────────────

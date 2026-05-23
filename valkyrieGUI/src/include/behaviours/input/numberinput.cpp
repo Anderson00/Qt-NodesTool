@@ -1,7 +1,7 @@
 #include "numberinput.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(NumberInput, "Number Input", "Sends a numeric value (double, int, bool or string) to connected nodes", "input", 1, 4)
+REGISTER_BEHAVIOUR(NumberInput, "Number Input", "Sends a numeric value (double, int, bool or string) to connected nodes", "input", 1, 5)
 
 NumberInput::NumberInput(QObject *parent) : Behaviours(parent)
 {
@@ -37,7 +37,7 @@ QMap<QString, QVariant> NumberInput::static_infos()
         {"className",     "NumberInput"},
         {"desc",          "Sends a numeric value to connected nodes"},
         {"inputs_count",  "1"},
-        {"outputs_count", "4"}
+        {"outputs_count", "5"}
     });
 }
 
@@ -97,6 +97,7 @@ void NumberInput::send() {
     emit outputInt(static_cast<int>(m_value));
     emit outputBool(m_value != 0.0);
     emit outputString(QString::number(m_value));
+    emit outputData({m_value});
 }
 
 // ── State persistence ────────────────────────────────────────────────────────

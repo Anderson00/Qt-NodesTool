@@ -34,9 +34,10 @@ public slots:
     void setAutoSend(bool enabled);
 
 signals:
-    void outputArray(QVariantList items);    // OUTPUT PORT
-    void outputString(QString jsonString);   // OUTPUT PORT (JSON)
-    void outputCount(int count);             // OUTPUT PORT
+    void outputArray(QVariantList items);    // OUTPUT PORT — typed array
+    void outputString(QString jsonString);   // OUTPUT PORT — JSON string
+    void outputCount(int count);             // OUTPUT PORT — item count
+    void outputData(QVariantList data);      // OUTPUT PORT — universal (same as outputArray)
 
     void itemsChanged();
     void autoSendChanged();

@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QJsonObject>
+#include <QVariantList>
 #include <behaviours/behaviours.h>
 
 class Vec3Input : public Behaviours
@@ -37,8 +38,9 @@ public slots:
     void setAutoSend(bool enabled);
 
 signals:
-    void outputXYZ(double x, double y, double z);  // OUTPUT PORT
+    void outputXYZ(double x, double y, double z);  // OUTPUT PORT — (x, y, z) doubles
     void outputString(QString formatted);           // OUTPUT PORT — "(x, y, z)"
+    void outputData(QVariantList data);             // OUTPUT PORT — universal [x, y, z]
 
     void vecXChanged();
     void vecYChanged();

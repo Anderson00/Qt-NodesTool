@@ -117,6 +117,11 @@
         <file alias="Vec2Input.qml">qml/behaviours/input/Vec2Input.qml</file>
         <file alias="Vec3Input.qml">qml/behaviours/input/Vec3Input.qml</file>
     </qresource>
+    <qresource prefix="/behaviours/converters">
+        <file alias="NumberCast.qml">qml/behaviours/converters/NumberCast.qml</file>
+        <file alias="PairAdapter.qml">qml/behaviours/converters/PairAdapter.qml</file>
+        <file alias="MergeNumbers.qml">qml/behaviours/converters/MergeNumbers.qml</file>
+    </qresource>
     <qresource prefix="/behaviours/scheduling">
         <file alias="IntervalTriggerViewer.qml">qml/behaviours/scheduling/IntervalTriggerViewer.qml</file>
         <file alias="CronTriggerViewer.qml">qml/behaviours/scheduling/CronTriggerViewer.qml</file>

@@ -117,6 +117,17 @@ void LineChartViewer::setChartTitle(const QString &title)
     }
 }
 
+void LineChartViewer::setInputData(const QVariantList& data)
+{
+    if (data.size() == 1) {
+        appendYAutoIncrementX(data[0].toDouble());
+    } else if (data.size() == 2) {
+        appendXY(data[0].toDouble(), data[1].toDouble());
+    } else if (data.size() >= 3) {
+        appendXYToSeries(data[0].toInt(), data[1].toDouble(), data[2].toDouble());
+    }
+}
+
 void LineChartViewer::replaceSeriesPoints(QObject *series, const QVariantList &points)
 {
     auto *xySeries = qobject_cast<QXYSeries *>(series);

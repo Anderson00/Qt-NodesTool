@@ -1,5 +1,6 @@
 #include "gaugeviewer.h"
 #include "behaviours/behaviourregistry.h"
+#include <QVariantList>
 
 REGISTER_BEHAVIOUR(GaugeViewer, "Gauge", "Circular gauge with configurable color zones and digital readout", "Visualization", 1, 0)
 
@@ -98,6 +99,16 @@ void GaugeViewer::setUnit(const QString& unit)
         m_unitLabel = unit;
         emit unitLabelChanged();
         emit internalSetUnit(unit);
+    }
+}
+
+void GaugeViewer::setInputData(const QVariantList& data)
+{
+    if (data.isEmpty()) return;
+    setInputValue(data[0].toDouble());
+    if (data.size() >= 3) {
+        setMin(data[1].toDouble());
+        setMax(data[2].toDouble());
     }
 }
 

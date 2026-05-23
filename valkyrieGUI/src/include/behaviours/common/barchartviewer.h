@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QJsonObject>
+#include <QVariantList>
 #include <behaviours/behaviours.h>
 
 class BarChartViewer : public Behaviours
@@ -22,6 +23,8 @@ public slots:
     void appendToSet(int setIndex, double value);
     void addSet(const QString& name);
     void clearChart();
+    // Universal input — [setIndex, value] or [value] (uses index 0)
+    void setInputData(const QVariantList& data);
 
 signals:
     void internalAppendToSet(int setIndex, double value);
