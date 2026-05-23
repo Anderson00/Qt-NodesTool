@@ -151,6 +151,8 @@ Item {
         layer.enabled: true
         layer.effect: null   // simple drop shadow not needed — border suffices
 
+        MouseArea { anchors.fill: parent; onClicked: {} }  // eat clicks so map doesn't get them
+
         Column {
             id: styleCol
             anchors { fill: parent; margins: 4 }
@@ -176,7 +178,6 @@ Item {
                 }
             }
         }
-        MouseArea { anchors.fill: parent; onClicked: {} }  // eat clicks so map doesn't get them
     }
 
     // ── Marker label popup ─────────────────────────────────────────────────────
@@ -691,65 +692,6 @@ Item {
                 }
             }
 
-            // Scale bar
-            Item { anchors{left:parent.left;bottom:parent.bottom;leftMargin:10;bottomMargin:6}
-                Text {
-                    id: scaleLbl
-                    anchors { horizontalCenter: scaleRect.horizontalCenter; bottom: scaleRect.top; bottomMargin: 2 }
-                    text: root.scaleInfo ? root.scaleInfo.label : ""
-                    color: root.isDark ? "white" : "#222"
-                    font.pixelSize: 9
-                    style: Text.Outline
-                    styleColor: root.isDark ? "#111" : "white"
-                }
-                Rectangle{id:scaleRect;anchors{bottom:parent.bottom;left:parent.left;bottomMargin:12}width:root.scaleInfo?Math.max(20,Math.min(root.scaleInfo.px,120)):60;height:3;color:root.isDark?"white":"#333"
-                    Rectangle{width:1;height:7;color:parent.color;anchors{left:parent.left;verticalCenter:parent.verticalCenter}}
-                    Rectangle{width:1;height:7;color:parent.color;anchors{right:parent.right;verticalCenter:parent.verticalCenter}}}
-            }
-
-            // Attribution
-            Text {
-                anchors { right: parent.right; bottom: parent.bottom; rightMargin: 5; bottomMargin: 3 }
-                text: root.attrib()
-                color: root.isDark ? "#8cc8c8c8" : "#a63c3c3c"
-                font.pixelSize: 8
-            }
-
-            // Mode banners
-            Rectangle { anchors{top:parent.top;horizontalCenter:parent.horizontalCenter;topMargin:8} visible:root.addMarkerMode;width:addBTxt.width+24;height:26;radius:13;color:"#22c55e"
-                Text{id:addBTxt;anchors.centerIn:parent;text:"Clique para posicionar marcador";color:"white";font.pixelSize:11;font.bold:true} }
-            Rectangle { anchors{top:parent.top;horizontalCenter:parent.horizontalCenter;topMargin:8} visible:root.addCircleMode;width:cBTxt.width+24;height:26;radius:13;color:"#3b82f6"
-                Text{id:cBTxt;anchors.centerIn:parent;text:"Clique para posicionar o centro do círculo";color:"white";font.pixelSize:11;font.bold:true} }
-            Rectangle { anchors{top:parent.top;horizontalCenter:parent.horizontalCenter;topMargin:8} visible:root.addTraceMode;width:tBTxt.width+24;height:26;radius:13;color:"#8b5cf6"
-                Text{id:tBTxt;anchors.centerIn:parent;text:"Clique para adicionar ponto de trace";color:"white";font.pixelSize:11;font.bold:true} }
-            Rectangle { anchors{top:parent.top;horizontalCenter:parent.horizontalCenter;topMargin:8} visible:root.measureMode;width:mBTxt.width+24;height:26;radius:13;color:"#f59e0b"
-                Text{id:mBTxt;anchors.centerIn:parent;color:"white";font.pixelSize:11;font.bold:true
-                    text:root.measurePts.length===0?"Clique ponto A":root.measurePts.length===1?"Clique ponto B":"Clique para nova medição · ESC limpa"} }
-
-            // Trace mode undo/clear bar (floating, bottom right)
-            Row {
-                anchors { right: parent.right; bottom: parent.bottom; rightMargin: 10; bottomMargin: 8 }
-                spacing: 6; visible: root.addTraceMode
-                Rectangle {
-                    width: 64; height: 24; radius: 5
-                    color: "#d88b5cf6"
-                    Text { anchors.centerIn: parent; text: "⎌ Desfazer"; color: "white"; font.pixelSize: 9; font.bold: true }
-                    MouseArea { anchors.fill: parent; onClicked: if(behaviourObject) behaviourObject.removeLastTracePoint() }
-                }
-                Rectangle {
-                    width: 56; height: 24; radius: 5
-                    color: "#bf505050"
-                    Text { anchors.centerIn: parent; text: "Limpar"; color: "white"; font.pixelSize: 9; font.bold: true }
-                    MouseArea { anchors.fill: parent; onClicked: if(behaviourObject) behaviourObject.clearTrace() }
-                }
-                Rectangle {
-                    width: 58; height: 24; radius: 5
-                    color: "#d88b5cf6"
-                    Text { anchors.centerIn: parent; text: "✓ Concluir"; color: "white"; font.pixelSize: 9; font.bold: true }
-                    MouseArea { anchors.fill: parent; onClicked: root.activeMode = "" }
-                }
-            }
-
             // ── Mouse area ─────────────────────────────────────────────────────
             MouseArea {
                 id: mapArea; anchors.fill: parent; hoverEnabled: true
@@ -837,6 +779,65 @@ Item {
                 }
 
                 onExited: { root.hoveredMarkerIdx=-1; overlayCanvas.requestPaint() }
+            }
+
+            // Scale bar
+            Item { anchors{left:parent.left;bottom:parent.bottom;leftMargin:10;bottomMargin:6}
+                Text {
+                    id: scaleLbl
+                    anchors { horizontalCenter: scaleRect.horizontalCenter; bottom: scaleRect.top; bottomMargin: 2 }
+                    text: root.scaleInfo ? root.scaleInfo.label : ""
+                    color: root.isDark ? "white" : "#222"
+                    font.pixelSize: 9
+                    style: Text.Outline
+                    styleColor: root.isDark ? "#111" : "white"
+                }
+                Rectangle{id:scaleRect;anchors{bottom:parent.bottom;left:parent.left;bottomMargin:12}width:root.scaleInfo?Math.max(20,Math.min(root.scaleInfo.px,120)):60;height:3;color:root.isDark?"white":"#333"
+                    Rectangle{width:1;height:7;color:parent.color;anchors{left:parent.left;verticalCenter:parent.verticalCenter}}
+                    Rectangle{width:1;height:7;color:parent.color;anchors{right:parent.right;verticalCenter:parent.verticalCenter}}}
+            }
+
+            // Attribution
+            Text {
+                anchors { right: parent.right; bottom: parent.bottom; rightMargin: 5; bottomMargin: 3 }
+                text: root.attrib()
+                color: root.isDark ? "#8cc8c8c8" : "#a63c3c3c"
+                font.pixelSize: 8
+            }
+
+            // Mode banners
+            Rectangle { anchors{top:parent.top;horizontalCenter:parent.horizontalCenter;topMargin:8} visible:root.addMarkerMode;width:addBTxt.width+24;height:26;radius:13;color:"#22c55e"
+                Text{id:addBTxt;anchors.centerIn:parent;text:"Clique para posicionar marcador";color:"white";font.pixelSize:11;font.bold:true} }
+            Rectangle { anchors{top:parent.top;horizontalCenter:parent.horizontalCenter;topMargin:8} visible:root.addCircleMode;width:cBTxt.width+24;height:26;radius:13;color:"#3b82f6"
+                Text{id:cBTxt;anchors.centerIn:parent;text:"Clique para posicionar o centro do círculo";color:"white";font.pixelSize:11;font.bold:true} }
+            Rectangle { anchors{top:parent.top;horizontalCenter:parent.horizontalCenter;topMargin:8} visible:root.addTraceMode;width:tBTxt.width+24;height:26;radius:13;color:"#8b5cf6"
+                Text{id:tBTxt;anchors.centerIn:parent;text:"Clique para adicionar ponto de trace";color:"white";font.pixelSize:11;font.bold:true} }
+            Rectangle { anchors{top:parent.top;horizontalCenter:parent.horizontalCenter;topMargin:8} visible:root.measureMode;width:mBTxt.width+24;height:26;radius:13;color:"#f59e0b"
+                Text{id:mBTxt;anchors.centerIn:parent;color:"white";font.pixelSize:11;font.bold:true
+                    text:root.measurePts.length===0?"Clique ponto A":root.measurePts.length===1?"Clique ponto B":"Clique para nova medição · ESC limpa"} }
+
+            // Trace mode undo/clear bar (floating, bottom right)
+            Row {
+                anchors { right: parent.right; bottom: parent.bottom; rightMargin: 10; bottomMargin: 8 }
+                spacing: 6; visible: root.addTraceMode
+                Rectangle {
+                    width: 64; height: 24; radius: 5
+                    color: "#d88b5cf6"
+                    Text { anchors.centerIn: parent; text: "⎌ Desfazer"; color: "white"; font.pixelSize: 9; font.bold: true }
+                    MouseArea { anchors.fill: parent; onClicked: if(behaviourObject) behaviourObject.removeLastTracePoint() }
+                }
+                Rectangle {
+                    width: 56; height: 24; radius: 5
+                    color: "#bf505050"
+                    Text { anchors.centerIn: parent; text: "Limpar"; color: "white"; font.pixelSize: 9; font.bold: true }
+                    MouseArea { anchors.fill: parent; onClicked: if(behaviourObject) behaviourObject.clearTrace() }
+                }
+                Rectangle {
+                    width: 58; height: 24; radius: 5
+                    color: "#d88b5cf6"
+                    Text { anchors.centerIn: parent; text: "✓ Concluir"; color: "white"; font.pixelSize: 9; font.bold: true }
+                    MouseArea { anchors.fill: parent; onClicked: root.activeMode = "" }
+                }
             }
         }
 
