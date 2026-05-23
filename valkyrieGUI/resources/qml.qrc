@@ -9,7 +9,6 @@
         <file alias="LineChartViewer.qml">qml/behaviours/common/LineChartViewer.qml</file>
         <file alias="RandomGeneratorViewer.qml">qml/behaviours/common/RandomGeneratorViewer.qml</file>
         <file alias="ComponentsViewer.qml">qml/behaviours/common/ComponentsViewer.qml</file>
-        <file alias="ConstantValue.qml">qml/behaviours/common/ConstantValue.qml</file>
         <file alias="TextDisplay.qml">qml/behaviours/common/TextDisplay.qml</file>
         <file alias="Counter.qml">qml/behaviours/common/Counter.qml</file>
         <file alias="PieChartViewer.qml">qml/behaviours/common/PieChartViewer.qml</file>
@@ -105,6 +104,18 @@
         <file alias="VariableValueCard.qml">qml/components/VariableValueCard.qml</file>
         <file alias="CalendarView.qml">qml/components/CalendarView.qml</file>
         <file alias="Kbd.qml">qml/components/Kbd.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/input">
+        <file alias="TextInputNode.qml">qml/behaviours/input/TextInputNode.qml</file>
+        <file alias="NumberInput.qml">qml/behaviours/input/NumberInput.qml</file>
+        <file alias="PairInput.qml">qml/behaviours/input/PairInput.qml</file>
+        <file alias="KeyValueInput.qml">qml/behaviours/input/KeyValueInput.qml</file>
+        <file alias="ArrayInput.qml">qml/behaviours/input/ArrayInput.qml</file>
+        <file alias="DateTimeInput.qml">qml/behaviours/input/DateTimeInput.qml</file>
+        <file alias="ColorInput.qml">qml/behaviours/input/ColorInput.qml</file>
+        <file alias="DictInput.qml">qml/behaviours/input/DictInput.qml</file>
+        <file alias="Vec2Input.qml">qml/behaviours/input/Vec2Input.qml</file>
+        <file alias="Vec3Input.qml">qml/behaviours/input/Vec3Input.qml</file>
     </qresource>
     <qresource prefix="/behaviours/scheduling">
         <file alias="IntervalTriggerViewer.qml">qml/behaviours/scheduling/IntervalTriggerViewer.qml</file>

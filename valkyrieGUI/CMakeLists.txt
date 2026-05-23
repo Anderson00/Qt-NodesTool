@@ -50,8 +50,17 @@ set(PROJECT_SOURCES
     src/include/behaviours/logic/comparison.h src/include/behaviours/logic/comparison.cpp
     src/include/behaviours/logic/gate.h src/include/behaviours/logic/gate.cpp
     src/include/behaviours/logic/stringformat.h src/include/behaviours/logic/stringformat.cpp
-    src/include/behaviours/common/constantvalue.h src/include/behaviours/common/constantvalue.cpp
     src/include/behaviours/common/textdisplay.h src/include/behaviours/common/textdisplay.cpp
+    src/include/behaviours/input/textinputnode.h src/include/behaviours/input/textinputnode.cpp
+    src/include/behaviours/input/numberinput.h src/include/behaviours/input/numberinput.cpp
+    src/include/behaviours/input/pairinput.h src/include/behaviours/input/pairinput.cpp
+    src/include/behaviours/input/keyvalueinput.h src/include/behaviours/input/keyvalueinput.cpp
+    src/include/behaviours/input/arrayinput.h src/include/behaviours/input/arrayinput.cpp
+    src/include/behaviours/input/datetimeinput.h src/include/behaviours/input/datetimeinput.cpp
+    src/include/behaviours/input/colorinput.h src/include/behaviours/input/colorinput.cpp
+    src/include/behaviours/input/dictinput.h src/include/behaviours/input/dictinput.cpp
+    src/include/behaviours/input/vec2input.h src/include/behaviours/input/vec2input.cpp
+    src/include/behaviours/input/vec3input.h src/include/behaviours/input/vec3input.cpp
     src/include/behaviours/scheduling/intervaltrigger.h src/include/behaviours/scheduling/intervaltrigger.cpp
     src/include/behaviours/scheduling/crontrigger.h src/include/behaviours/scheduling/crontrigger.cpp
     src/include/behaviours/scheduling/scheduledscript.h
