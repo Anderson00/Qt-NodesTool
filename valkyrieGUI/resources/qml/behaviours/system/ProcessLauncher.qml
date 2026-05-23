@@ -115,7 +115,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 28
                 variant: "filled"
-                label: "Launch"
+                text: "Launch"
                 backgroundColor: ThemeManager.primaryColor
                 enabled: !running
                 onClicked: {
@@ -136,7 +136,7 @@ Item {
                 Layout.preferredWidth: 60
                 Layout.preferredHeight: 28
                 variant: "filled"
-                label: "Kill"
+                text: "Kill"
                 backgroundColor: "#e74c3c"
                 enabled: running
                 onClicked: { if (behaviourObject) behaviourObject.kill() }

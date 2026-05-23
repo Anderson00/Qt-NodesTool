@@ -81,7 +81,7 @@ Item {
 
         // ── URL row ───────────────────────────────────────────────────────────
         Rectangle {
-            Layout.fillWidth: true; height: 38
+            Layout.fillWidth: true; height: 42
             color: ThemeManager.backgroundColor
 
             RowLayout {
@@ -93,12 +93,14 @@ Item {
                 CustomTextField {
                     id: urlField
                     Layout.fillWidth: true
+                    Layout.fillHeight: true
                     placeholderText: "ws://host:port/path"
                     text: behaviourObject ? behaviourObject.url : ""
                 }
 
                 NewButton {
-                    Layout.preferredWidth: 64; Layout.fillHeight: true
+                    Layout.preferredWidth: 72
+                    Layout.preferredHeight: 30
                     variant: behaviourObject && behaviourObject.isConnected ? "outlined" : "filled"
                     text: behaviourObject && behaviourObject.isConnected ? "Disc." : "Connect"
                     backgroundColor: behaviourObject && behaviourObject.isConnected
@@ -130,7 +132,7 @@ Item {
                 }
                 Item { Layout.fillWidth: true }
                 NewButton {
-                    Layout.preferredWidth: 50; height: 20
+                    Layout.preferredWidth: 50; Layout.preferredHeight: 22
                     variant: "outlined"; text: "Clear"
                     onClicked: { root.messages = []; msgList.model = [] }
                 }
@@ -180,7 +182,8 @@ Item {
                 }
                 NewButton {
                     id: sendBtn
-                    Layout.preferredWidth: 50; Layout.fillHeight: true
+                    Layout.preferredWidth: 60
+                    Layout.preferredHeight: 30
                     variant: "filled"; text: "Send"
                     backgroundColor: ThemeManager.primaryColor
                     enabled: behaviourObject && behaviourObject.isConnected && sendField.text.length > 0

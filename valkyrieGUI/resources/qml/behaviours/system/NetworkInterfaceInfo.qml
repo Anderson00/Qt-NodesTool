@@ -41,8 +41,8 @@ Item {
             Item { Layout.fillWidth: true }
 
             Badge {
-                value: behaviourObject ? behaviourObject.interfaceCount : 0
-                color: ThemeManager.primaryColor
+                count: behaviourObject ? behaviourObject.interfaceCount : 0
+                badgeColor: ThemeManager.primaryColor
             }
 
             NewButton {
@@ -109,7 +109,9 @@ Item {
                                 Chip {
                                     visible: modelData.isLoopback
                                     label: "lo"
-                                    backgroundColor: Qt.rgba(ThemeManager.textSecondaryColor.r, ThemeManager.textSecondaryColor.g, ThemeManager.textSecondaryColor.b, 0.2)
+                                    closeable: false
+                                    selectable: false
+                                    chipColor: Qt.rgba(ThemeManager.textSecondaryColor.r, ThemeManager.textSecondaryColor.g, ThemeManager.textSecondaryColor.b, 0.2)
                                 }
                             }
 

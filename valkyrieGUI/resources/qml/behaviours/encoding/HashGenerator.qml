@@ -40,25 +40,33 @@ Item {
             }
 
             Chip {
-                text: "MD5"
+                label: "MD5"
+                closeable: false
+                selectable: true
                 selected: behaviourObject ? behaviourObject.algorithm === "md5" : false
                 onClicked: behaviourObject.setAlgorithm("md5")
             }
 
             Chip {
-                text: "SHA1"
+                label: "SHA1"
+                closeable: false
+                selectable: true
                 selected: behaviourObject ? behaviourObject.algorithm === "sha1" : false
                 onClicked: behaviourObject.setAlgorithm("sha1")
             }
 
             Chip {
-                text: "SHA256"
+                label: "SHA256"
+                closeable: false
+                selectable: true
                 selected: behaviourObject ? behaviourObject.algorithm === "sha256" : true
                 onClicked: behaviourObject.setAlgorithm("sha256")
             }
 
             Chip {
-                text: "SHA512"
+                label: "SHA512"
+                closeable: false
+                selectable: true
                 selected: behaviourObject ? behaviourObject.algorithm === "sha512" : false
                 onClicked: behaviourObject.setAlgorithm("sha512")
             }
@@ -126,7 +134,7 @@ Item {
 
                 SvgIcon {
                     anchors.centerIn: parent
-                    source: Icons.copy
+                    source: Icons.clipboardTextOutline
                     color: ThemeManager.textSecondaryColor
                     width: 14; height: 14
                 }

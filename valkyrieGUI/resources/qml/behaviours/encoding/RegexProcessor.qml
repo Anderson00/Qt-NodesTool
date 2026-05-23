@@ -176,8 +176,8 @@ Item {
             }
 
             Badge {
-                text: behaviourObject ? behaviourObject.matchCount.toString() : "0"
-                color: behaviourObject && behaviourObject.matchCount > 0
+                dotText: behaviourObject ? behaviourObject.matchCount.toString() : "0"
+                badgeColor: behaviourObject && behaviourObject.matchCount > 0
                     ? ThemeManager.successColor : ThemeManager.textSecondaryColor
             }
 

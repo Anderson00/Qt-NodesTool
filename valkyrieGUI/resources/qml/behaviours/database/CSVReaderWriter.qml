@@ -146,7 +146,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 28
                 variant: "filled"
-                label: "Read"
+                text: "Read"
                 backgroundColor: ThemeManager.primaryColor
                 onClicked: {
                     if (behaviourObject && filePathField.text.trim() !== "")
@@ -157,7 +157,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 28
                 variant: "outlined"
-                label: "Write"
+                text: "Write"
                 onClicked: {
                     if (behaviourObject && filePathField.text.trim() !== "" && previewRows.length > 0)
                         behaviourObject.writeFile(filePathField.text.trim(), previewRows)
@@ -167,7 +167,7 @@ Item {
                 Layout.preferredWidth: 52
                 Layout.preferredHeight: 28
                 variant: "outlined"
-                label: "Clear"
+                text: "Clear"
                 onClicked: { if (behaviourObject) behaviourObject.clear() }
             }
         }

@@ -79,12 +79,9 @@ Item {
 
             Chip {
                 label: "Throttle"
-                backgroundColor: localMode === "throttle"
-                                 ? ThemeManager.primaryColor
-                                 : Qt.rgba(ThemeManager.borderColor.r, ThemeManager.borderColor.g, ThemeManager.borderColor.b, 0.3)
-                textColor: localMode === "throttle"
-                           ? "white"
-                           : ThemeManager.textSecondaryColor
+                closeable: false
+                selectable: true
+                selected: localMode === "throttle"
                 onClicked: {
                     localMode = "throttle"
                     if (behaviourObject) behaviourObject.setMode("throttle")
@@ -93,12 +90,9 @@ Item {
 
             Chip {
                 label: "Debounce"
-                backgroundColor: localMode === "debounce"
-                                 ? ThemeManager.primaryColor
-                                 : Qt.rgba(ThemeManager.borderColor.r, ThemeManager.borderColor.g, ThemeManager.borderColor.b, 0.3)
-                textColor: localMode === "debounce"
-                           ? "white"
-                           : ThemeManager.textSecondaryColor
+                closeable: false
+                selectable: true
+                selected: localMode === "debounce"
                 onClicked: {
                     localMode = "debounce"
                     if (behaviourObject) behaviourObject.setMode("debounce")
@@ -170,7 +164,7 @@ Item {
                 Layout.preferredWidth: 46
                 Layout.preferredHeight: 22
                 variant: "outlined"
-                label: "Reset"
+                text: "Reset"
                 onClicked: {
                     localPassed  = 0
                     localDropped = 0

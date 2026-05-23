@@ -114,7 +114,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 28
                 variant: "outlined"
-                label: "Read"
+                text: "Read"
                 onClicked: {
                     if (behaviourObject) behaviourObject.readText()
                 }
@@ -124,7 +124,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 28
                 variant: "filled"
-                label: "Write"
+                text: "Write"
                 backgroundColor: ThemeManager.primaryColor
                 onClicked: {
                     if (behaviourObject && clipText.text !== "")

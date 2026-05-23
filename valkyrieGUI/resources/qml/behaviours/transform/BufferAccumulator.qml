@@ -68,8 +68,8 @@ Item {
             Item { Layout.fillWidth: true }
 
             Badge {
-                value: localCurrent + "/" + localMax
-                color: localCurrent >= localMax
+                dotText: localCurrent + "/" + localMax
+                badgeColor: localCurrent >= localMax
                        ? ThemeManager.errorColor
                        : ThemeManager.primaryColor
             }
@@ -199,7 +199,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 26
                 variant: "outlined"
-                label: "Flush"
+                text: "Flush"
                 onClicked: { if (behaviourObject) behaviourObject.flush() }
             }
 
@@ -207,7 +207,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 26
                 variant: "outlined"
-                label: "Reset"
+                text: "Reset"
                 onClicked: { if (behaviourObject) behaviourObject.reset() }
             }
         }

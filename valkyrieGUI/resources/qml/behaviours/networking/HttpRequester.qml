@@ -111,7 +111,7 @@ Item {
                     Layout.preferredWidth: 52
                     Layout.fillHeight: true
                     variant: "filled"
-                    label: "Send"
+                    text: "Send"
                     backgroundColor: ThemeManager.primaryColor
                     onClicked: {
                         if (!behaviourObject) return
@@ -161,7 +161,7 @@ Item {
                         Layout.preferredWidth: 20
                         Layout.preferredHeight: 20
                         variant: "outlined"
-                        iconSource: parent.parent.parent.headersVisible ? Icons.x : Icons.plus
+                        iconSource: parent.parent.parent.headersVisible ? Icons.close : Icons.plus
                         onClicked: parent.parent.parent.headersVisible = !parent.parent.parent.headersVisible
                     }
 
@@ -297,7 +297,7 @@ Item {
                     Layout.preferredWidth: 52
                     Layout.preferredHeight: 20
                     variant: "outlined"
-                    label: "Cancel"
+                    text: "Cancel"
                     onClicked: { if (behaviourObject) behaviourObject.cancel() }
                     visible: behaviourObject && behaviourObject.isLoading
                 }

@@ -29,7 +29,7 @@ Item {
             rowsCount  = 0
         }
         function onIsConnectedChanged() {
-            connectIndicator.requestPaint()
+            // connection state updated via property binding
         }
     }
 
@@ -97,7 +97,7 @@ Item {
                     Layout.preferredWidth: 52
                     Layout.fillHeight: true
                     variant: "filled"
-                    label: "Open"
+                    text: "Open"
                     backgroundColor: ThemeManager.primaryColor
                     onClicked: {
                         if (behaviourObject && dbPathField.text.trim() !== "")
@@ -154,7 +154,7 @@ Item {
                 Layout.preferredWidth: 80
                 Layout.fillHeight: true
                 variant: "filled"
-                label: "Execute"
+                text: "Execute"
                 backgroundColor: ThemeManager.primaryColor
                 enabled: behaviourObject && behaviourObject.isConnected
                 onClicked: {

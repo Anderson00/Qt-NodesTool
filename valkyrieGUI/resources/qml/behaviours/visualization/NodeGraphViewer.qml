@@ -162,7 +162,7 @@ Item {
                     Layout.preferredWidth: 52
                     Layout.preferredHeight: 24
                     variant: root.simRunning ? "filled" : "outlined"
-                    label: root.simRunning ? "Pause" : "Run"
+                    text: root.simRunning ? "Pause" : "Run"
                     backgroundColor: root.simRunning ? ThemeManager.primaryColor : "transparent"
                     onClicked: root.simRunning = !root.simRunning
                 }

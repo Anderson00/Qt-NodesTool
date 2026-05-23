@@ -48,19 +48,25 @@ Item {
             }
 
             Chip {
-                text: "Haiku"
+                label: "Haiku"
+                closeable: false
+                selectable: true
                 selected: behaviourObject ? behaviourObject.model === "claude-haiku-4-5-20251001" : true
                 onClicked: behaviourObject.setModel("claude-haiku-4-5-20251001")
             }
 
             Chip {
-                text: "Sonnet"
+                label: "Sonnet"
+                closeable: false
+                selectable: true
                 selected: behaviourObject ? behaviourObject.model === "claude-sonnet-4-5-20251001" : false
                 onClicked: behaviourObject.setModel("claude-sonnet-4-5-20251001")
             }
 
             Chip {
-                text: "Opus"
+                label: "Opus"
+                closeable: false
+                selectable: true
                 selected: behaviourObject ? behaviourObject.model === "claude-opus-4-5-20251001" : false
                 onClicked: behaviourObject.setModel("claude-opus-4-5-20251001")
             }

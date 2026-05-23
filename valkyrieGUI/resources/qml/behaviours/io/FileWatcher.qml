@@ -105,8 +105,8 @@ Item {
 
             // Change count badge
             Badge {
-                text: behaviourObject ? behaviourObject.changeCount.toString() : "0"
-                color: ThemeManager.primaryColor
+                dotText: behaviourObject ? behaviourObject.changeCount.toString() : "0"
+                badgeColor: ThemeManager.primaryColor
             }
         }
 
@@ -116,7 +116,7 @@ Item {
             spacing: 4
 
             StatusDot {
-                active: behaviourObject ? behaviourObject.isWatching : false
+                status: behaviourObject && behaviourObject.isWatching ? "online" : "offline"
             }
 
             Text {

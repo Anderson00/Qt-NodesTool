@@ -119,7 +119,7 @@ Item {
                     Layout.preferredWidth: 60
                     Layout.preferredHeight: 24
                     variant: "outlined"
-                    label: "CSV"
+                    text: "CSV"
                     onClicked: {
                         var lines = []
                         if (tableHeaders.length > 0)
@@ -135,7 +135,7 @@ Item {
                     Layout.preferredWidth: 52
                     Layout.preferredHeight: 24
                     variant: "outlined"
-                    label: "Clear"
+                    text: "Clear"
                     onClicked: { if (behaviourObject) behaviourObject.clear() }
                 }
             }
@@ -155,7 +155,7 @@ Item {
                 spacing: 4
 
                 SvgIcon {
-                    source: Icons.search
+                    source: Icons.magnify
                     color: ThemeManager.textSecondaryColor
                     width: 14; height: 14
                     Layout.alignment: Qt.AlignVCenter
