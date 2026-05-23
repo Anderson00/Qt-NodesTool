@@ -31,6 +31,12 @@ Rectangle {
     property var shapeConn
     property bool m_suppressConnectionDraw: false
 
+    // ── Drag-connect highlight state ─────────────────────────────────────────
+    // Set when the user starts dragging a connection wire from a port.
+    // Broadcast to every ViewComponentRectV2 so incompatible ports can dim.
+    property string draggingPortSig:      ""    // method signature of the port being dragged
+    property bool   draggingPortIsOutput: false // true = dragging from an output (signal)
+
     //Behaviours properties
     property var nodeOnFocus
 
@@ -771,6 +777,15 @@ Rectangle {
                 event.accepted = true
                 break
             case Qt.Key_Escape:
+                if (isConnecting) {
+                    isConnecting = false
+                    mouseAreaGlobal.enabled = false
+                    // Remove the pending (incomplete) connection line
+                    if (nodeConnections.model.count > 0)
+                        nodeConnections.model.remove(nodeConnections.model.count - 1)
+                }
+                root.draggingPortSig      = ""
+                root.draggingPortIsOutput = false
                 _clearSelection()
                 event.accepted = true
                 break
@@ -904,6 +919,8 @@ Rectangle {
             }
 
             shapeConn = undefined
+            root.draggingPortSig      = ""
+            root.draggingPortIsOutput = false
             mouse.accepted = false
         }
 
@@ -1547,6 +1564,18 @@ Rectangle {
 
                         onConnectionSocketClicked: function(conn) {
                             isConnecting = true
+
+                            // Determine if the clicked port is an output (signal) or input (slot)
+                            var isOut = false
+                            for (var k = 0; k < viewComponentRectV2.connectionsOutput.length; k++) {
+                                if (viewComponentRectV2.connectionsOutput[k].name === conn.name) {
+                                    isOut = true
+                                    break
+                                }
+                            }
+                            root.draggingPortSig      = conn.name
+                            root.draggingPortIsOutput = isOut
+
                             nodeConnections.model.append({
                                 methodSignature1: conn.name, node: this,
                                 circleConn: conn.circleConn, node2: this, methodSignature2: "",
@@ -1560,6 +1589,9 @@ Rectangle {
                         borderColor:    ThemeManager.primaryColor
                         rootBodyColor:  "transparent"
                         behaviourObject: model.object
+
+                        draggingPortSig:      root.draggingPortSig
+                        draggingPortIsOutput: root.draggingPortIsOutput
 
                         Component.onCompleted: {
                             // New nodes appear on top of all existing ones.

@@ -1,6 +1,7 @@
 #include "viewportwindow.h"
 #include "behaviours/behaviourregistry.h"
 #include "behaviours/connections.h"
+#include "behaviours/typecoercions.h"
 #include "model/connectionmodel.h"
 #include "utils/workspacemanager.h"
 #include "commands/nodeundocommands.h"
@@ -439,4 +440,17 @@ void ViewPortWindow::takeScreenshot(const QString& filePath) {
     QImage image = view()->grabWindow();
     QPixmap screenshot = QPixmap::fromImage(image);
     screenshot.save(filePath);
+}
+
+bool ViewPortWindow::isPortCompatible(const QString& srcSig, const QString& dstSig) const
+{
+    const QByteArray src = srcSig.toUtf8();
+    const QByteArray dst = dstSig.toUtf8();
+    // Exact type match (Qt checks parameter types including base-class coercions)
+    if (QMetaObject::checkConnectArgs(src.constData(), dst.constData()))
+        return true;
+    // Registered coercion relay pair
+    const QByteArray srcP = TypeCoercions::extractParams(src);
+    const QByteArray dstP = TypeCoercions::extractParams(dst);
+    return TypeCoercions::isCoercible(srcP, dstP);
 }

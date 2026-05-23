@@ -120,6 +120,11 @@ public slots:
     // Screenshot
     Q_INVOKABLE void takeScreenshot(const QString& filePath);
 
+    // Port compatibility check — used by QML for drag-connect visual highlighting.
+    // srcSig is the signal (output) method signature, dstSig is the slot (input).
+    // Returns true for exact matches and all registered coercion pairs.
+    Q_INVOKABLE bool isPortCompatible(const QString& srcSig, const QString& dstSig) const;
+
     void restoreViewport(qreal x, qreal y, qreal scale);
 
 signals:

@@ -61,6 +61,52 @@ Rectangle {
     // Explicit selection state — set externally by ViewPortWindow via nodeOnFocus
     property bool isSelected: false
 
+    // ── Drag-connect highlight ────────────────────────────────────────────────
+    // Bound from ViewPortWindow delegate. When a port is being dragged,
+    // incompatible ports and nodes fade to near-invisible so only valid targets
+    // remain prominent.
+    property string draggingPortSig:      ""
+    property bool   draggingPortIsOutput: false
+
+    // Derived state — updated reactively whenever the dragging sig changes.
+    readonly property bool isAnyPortDragging: draggingPortSig !== ""
+
+    // True if this node contains the port that is being dragged (source node).
+    // Source node is never dimmed — the user just clicked from it.
+    readonly property bool isSourceNode: {
+        if (!isAnyPortDragging) return false
+        var sig = draggingPortSig
+        if (draggingPortIsOutput) {
+            for (var j = 0; j < connectionsOutput.length; j++)
+                if (connectionsOutput[j].name === sig) return true
+        } else {
+            for (var i = 0; i < connectionsInput.length; i++)
+                if (connectionsInput[i].name === sig) return true
+        }
+        return false
+    }
+
+    // True if at least one port on this node is compatible with the dragging port.
+    readonly property bool hasCompatiblePort: {
+        if (!isAnyPortDragging || isSourceNode) return true
+        var sig   = draggingPortSig
+        var isOut = draggingPortIsOutput
+        if (isOut) {
+            // dragging output → look for compatible INPUT ports
+            for (var i = 0; i < connectionsInput.length; i++) {
+                if (viewPort.isPortCompatible(sig, connectionsInput[i].name))
+                    return true
+            }
+        } else {
+            // dragging input → look for compatible OUTPUT ports
+            for (var j = 0; j < connectionsOutput.length; j++) {
+                if (viewPort.isPortCompatible(connectionsOutput[j].name, sig))
+                    return true
+            }
+        }
+        return false
+    }
+
     // -- Signals --
     signal connectionSocketClicked(conn: var)
 
@@ -93,6 +139,10 @@ Rectangle {
     radius: 4
     border.width: 1
     border.color: root.borderColor
+
+    // Dim entire node when a connection is being dragged and no ports are compatible
+    opacity: isAnyPortDragging && !hasCompatiblePort ? 0.22 : 1.0
+    Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.InOutQuad } }
 
     // ============== Helpers ==============
     function stringToColour(str) {
@@ -592,12 +642,28 @@ Rectangle {
                             Rectangle {
                                 id: inputArea
                                 readonly property string style: GlobalProperties.connectionStyle
+
+                                // ── compatibility when dragging ──────────────────
+                                readonly property bool _isCompatible: {
+                                    if (!root.isAnyPortDragging) return false
+                                    if (root.isSourceNode) return true
+                                    if (!root.draggingPortIsOutput) return false
+                                    return viewPort.isPortCompatible(root.draggingPortSig, modelData.name)
+                                }
+
                                 width: style === "list" ? columnLayoutInputConns.width : rowInput.implicitWidth + 16
                                 height: style === "list" ? 14 : 20
                                 radius: style === "list" ? 0 : 10
                                 color: style === "list" ? "transparent" : (inputMouse.containsMouse ? Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.25) : "transparent")
-                                border.width: style === "list" ? 0 : 1
+                                border.width: style === "list" ? 0 : (_isCompatible ? 1 : 1)
                                 border.color: style === "list" ? "transparent" : Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.4)
+
+                                // Dim incompatible input ports during drag
+                                opacity: {
+                                    if (!root.isAnyPortDragging || root.isSourceNode) return 1.0
+                                    return _isCompatible ? 1.0 : 0.15
+                                }
+                                Behavior on opacity { NumberAnimation { duration: 140 } }
 
                                 Component.onCompleted: {
                                     connectionsInput[index].connArea = inputArea
@@ -622,13 +688,42 @@ Rectangle {
 
                                     Rectangle {
                                         id: connInConnCircle
-                                        width: style === "list" ? 6 : 8
+                                        // Grow + bright border on compatible target ports
+                                        readonly property real _baseW: style === "list" ? 6 : 8
+                                        width:  inputArea._isCompatible && root.isAnyPortDragging ? _baseW + 4 : _baseW
                                         height: width
                                         radius: width / 2
-                                        color: stringToColour(extractParams(modelData.name))
+                                        color:  stringToColour(extractParams(modelData.name))
                                         anchors.verticalCenter: parent.verticalCenter
-                                        border.width: style === "list" ? 0 : 1
-                                        border.color: Qt.rgba(0,0,0,0.2)
+                                        border.width: inputArea._isCompatible && root.isAnyPortDragging
+                                                      ? 2
+                                                      : (style === "list" ? 0 : 1)
+                                        border.color: inputArea._isCompatible && root.isAnyPortDragging
+                                                      ? Qt.lighter(stringToColour(extractParams(modelData.name)), 1.6)
+                                                      : Qt.rgba(0,0,0,0.2)
+                                        Behavior on width  { NumberAnimation { duration: 140 } }
+                                        Behavior on border.width { NumberAnimation { duration: 140 } }
+
+                                        // Pulsing glow ring on compatible port
+                                        Rectangle {
+                                            id: inputGlowRing
+                                            visible: inputArea._isCompatible && root.isAnyPortDragging
+                                            anchors.centerIn: parent
+                                            width:  parent.width  + 6
+                                            height: parent.height + 6
+                                            radius: width / 2
+                                            color:  "transparent"
+                                            border.width: 1.5
+                                            border.color: parent.color
+                                            opacity: 0.0
+
+                                            SequentialAnimation on opacity {
+                                                running: inputGlowRing.visible
+                                                loops:   Animation.Infinite
+                                                NumberAnimation { to: 0.75; duration: 550; easing.type: Easing.InOutSine }
+                                                NumberAnimation { to: 0.0;  duration: 550; easing.type: Easing.InOutSine }
+                                            }
+                                        }
                                     }
                                     Text {
                                         id: connInName
@@ -669,12 +764,36 @@ Rectangle {
                             Rectangle {
                                 id: outputArea
                                 readonly property string style: GlobalProperties.connectionStyle
+
+                                // ── compatibility when dragging ──────────────────
+                                // This output port is "compatible" when:
+                                //   dragging from input → this output can drive that input
+                                //   dragging from output → only the SOURCE port stays bright
+                                readonly property bool _isCompatible: {
+                                    if (!root.isAnyPortDragging) return false
+                                    if (root.isSourceNode && modelData.name === root.draggingPortSig) return true
+                                    if (root.isSourceNode) return false
+                                    if (root.draggingPortIsOutput) return false
+                                    return viewPort.isPortCompatible(modelData.name, root.draggingPortSig)
+                                }
+
                                 width: style === "list" ? columnLayoutOutputConns.width : rowOutput.implicitWidth + 16
                                 height: style === "list" ? 14 : 20
                                 radius: style === "list" ? 0 : 10
                                 color: style === "list" ? "transparent" : (outputMouse.containsMouse ? Qt.rgba(ThemeManager.successColor.r, ThemeManager.successColor.g, ThemeManager.successColor.b, 0.25) : "transparent")
                                 border.width: style === "list" ? 0 : 1
                                 border.color: style === "list" ? "transparent" : Qt.rgba(ThemeManager.successColor.r, ThemeManager.successColor.g, ThemeManager.successColor.b, 0.4)
+
+                                // Dim incompatible output ports during drag
+                                opacity: {
+                                    if (!root.isAnyPortDragging) return 1.0
+                                    if (root.isSourceNode) {
+                                        // Source port (being dragged) stays fully bright
+                                        return modelData.name === root.draggingPortSig ? 1.0 : 0.25
+                                    }
+                                    return _isCompatible ? 1.0 : 0.15
+                                }
+                                Behavior on opacity { NumberAnimation { duration: 140 } }
 
                                 Component.onCompleted: {
                                     connectionsOutput[index].connArea = outputArea
@@ -706,13 +825,42 @@ Rectangle {
                                     }
                                     Rectangle {
                                         id: connOutConnCircle
-                                        width: style === "list" ? 6 : 8
+                                        // Grow + bright border on compatible source/target ports
+                                        readonly property real _baseW: style === "list" ? 6 : 8
+                                        width:  outputArea._isCompatible && root.isAnyPortDragging ? _baseW + 4 : _baseW
                                         height: width
                                         radius: width / 2
-                                        color: stringToColour(extractParams(modelData.name))
+                                        color:  stringToColour(extractParams(modelData.name))
                                         anchors.verticalCenter: parent.verticalCenter
-                                        border.width: style === "list" ? 0 : 1
-                                        border.color: Qt.rgba(0,0,0,0.2)
+                                        border.width: outputArea._isCompatible && root.isAnyPortDragging
+                                                      ? 2
+                                                      : (style === "list" ? 0 : 1)
+                                        border.color: outputArea._isCompatible && root.isAnyPortDragging
+                                                      ? Qt.lighter(stringToColour(extractParams(modelData.name)), 1.6)
+                                                      : Qt.rgba(0,0,0,0.2)
+                                        Behavior on width  { NumberAnimation { duration: 140 } }
+                                        Behavior on border.width { NumberAnimation { duration: 140 } }
+
+                                        // Pulsing glow ring on compatible port
+                                        Rectangle {
+                                            id: outputGlowRing
+                                            visible: outputArea._isCompatible && root.isAnyPortDragging
+                                            anchors.centerIn: parent
+                                            width:  parent.width  + 6
+                                            height: parent.height + 6
+                                            radius: width / 2
+                                            color:  "transparent"
+                                            border.width: 1.5
+                                            border.color: parent.color
+                                            opacity: 0.0
+
+                                            SequentialAnimation on opacity {
+                                                running: outputGlowRing.visible
+                                                loops:   Animation.Infinite
+                                                NumberAnimation { to: 0.75; duration: 550; easing.type: Easing.InOutSine }
+                                                NumberAnimation { to: 0.0;  duration: 550; easing.type: Easing.InOutSine }
+                                            }
+                                        }
                                     }
                                 }
                             }
