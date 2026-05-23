@@ -1547,6 +1547,90 @@ Popup {
 
                     Item { width: 1; height: 20 }
 
+                    // ── AUTOSAVE ────────────────────────────────────────────────
+                    Text {
+                        text: "AUTOSAVE"
+                        font.pixelSize: 10
+                        font.letterSpacing: 1.2
+                        color: ThemeManager.textColor
+                        opacity: 0.45
+                        bottomPadding: 14
+                    }
+
+                    RowLayout {
+                        width: parent.width
+                        height: 44
+
+                        Column {
+                            Layout.fillWidth: true
+                            spacing: 2
+                            Text { text: "Enable Autosave"; font.pixelSize: 12; color: ThemeManager.textColor }
+                            Text {
+                                text: "Saves a recovery snapshot of the active workspace at a regular interval"
+                                font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.45
+                            }
+                        }
+
+                        CustomSwitch {
+                            checked: GlobalProperties.autosaveEnabled
+                            onToggled: GlobalProperties.autosaveEnabled = checked
+                        }
+                    }
+
+                    // Autosave interval — visible only when enabled
+                    RowLayout {
+                        width: parent.width
+                        height: 44
+                        visible: GlobalProperties.autosaveEnabled
+
+                        Column {
+                            Layout.fillWidth: true
+                            spacing: 2
+                            Text { text: "Autosave Interval"; font.pixelSize: 12; color: ThemeManager.textColor }
+                            Text {
+                                text: GlobalProperties.autosaveIntervalMin + " minute" + (GlobalProperties.autosaveIntervalMin === 1 ? "" : "s")
+                                font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.45
+                            }
+                        }
+
+                        Row {
+                            spacing: 4
+                            Repeater {
+                                model: [1, 5, 10, 15, 30]
+                                delegate: Rectangle {
+                                    readonly property bool active: GlobalProperties.autosaveIntervalMin === modelData
+                                    width: 42; height: 30; radius: 6
+                                    color: active
+                                           ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.18)
+                                           : ThemeManager.foregroundColor
+                                    border.width: active ? 2 : 1
+                                    border.color: active ? ThemeManager.primaryColor : ThemeManager.borderColor
+                                    Behavior on color { ColorAnimation { duration: 110 } }
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: modelData + "m"
+                                        font.pixelSize: 10; font.bold: active
+                                        color: active ? ThemeManager.primaryColor : ThemeManager.textSecondaryColor
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent; hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: GlobalProperties.autosaveIntervalMin = modelData
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Item { width: 1; height: 20 }
+
+                    Rectangle {
+                        width: parent.width; height: 1
+                        color: ThemeManager.primaryColor; opacity: 0.1
+                    }
+
+                    Item { width: 1; height: 20 }
+
                     Text {
                         text: "ABOUT"
                         font.pixelSize: 10

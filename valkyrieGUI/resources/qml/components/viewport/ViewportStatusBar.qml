@@ -36,6 +36,11 @@ Rectangle {
     property int fpsCount: 0
     property bool showFps: false
 
+    // Workspace info
+    property string workspaceName: ""   // empty = unsaved
+    property bool   workspaceDirty: false
+    property string workspaceLastSavedIso: ""
+
     height: 22
     color: Qt.darker(ThemeManager.backgroundColor, 1.55)
 
@@ -105,6 +110,33 @@ Rectangle {
                     return "X " + mx + "  Y " + my
                 }
             }
+        }
+
+        Rectangle {
+            Layout.preferredWidth: 1; Layout.preferredHeight: 12
+            Layout.alignment: Qt.AlignVCenter
+            color: ThemeManager.textColor; opacity: 0.18
+        }
+
+        // ── Workspace info ────────────────────────────────────────────────────
+        Item { Layout.preferredWidth: 4 }
+        Text {
+            text: root.workspaceDirty ? "●" : "◌"
+            font.pixelSize: 11
+            color: root.workspaceDirty ? ThemeManager.warningColor : ThemeManager.primaryColor
+            opacity: 0.85
+            Layout.alignment: Qt.AlignVCenter
+        }
+        Item { Layout.preferredWidth: 5 }
+        Text {
+            font.pixelSize: 10
+            color: ThemeManager.textColor
+            opacity: 0.65
+            Layout.alignment: Qt.AlignVCenter
+            Layout.maximumWidth: 200
+            elide: Text.ElideMiddle
+            text: (root.workspaceName === "" ? "Untitled" : root.workspaceName)
+                  + (root.workspaceDirty ? " *" : "")
         }
 
         Rectangle {

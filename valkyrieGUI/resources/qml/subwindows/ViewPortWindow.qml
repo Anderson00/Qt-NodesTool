@@ -3,6 +3,7 @@ import QtQuick.Controls 2.12
 import QtQuick.Controls.Material 2.12
 import QtQuick.Layouts 1.0
 import QtQuick.Shapes 1.15
+import QtQuick.Dialogs
 import App.Theme 1.0
 import App.Properties 1.0
 import App.Workspace 1.0
@@ -1967,15 +1968,41 @@ Rectangle {
         onSaveRequested: {
             if (WorkspaceManager.currentWorkspace !== "") {
                 const ok = viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
+                if (ok) WorkspaceManager.clearAutosave(WorkspaceManager.currentWorkspace)
                 ToastManager.show(ok ? "Project saved" : "Failed to save project",
                                   ok ? "success" : "error")
             } else {
                 saveWorkspaceDialog.open()
             }
         }
+        onSaveAsRequested: {
+            // Always prompt for a new name, regardless of dirty/current state
+            saveNameField.text = WorkspaceManager.currentWorkspace
+            saveWorkspaceDialog.open()
+        }
         onOpenRequested: openWorkspaceDialog.open()
         onUndoRequested: viewPort.undo()
         onRedoRequested: viewPort.redo()
+        onHomeRequested: {
+            if (!viewPort.isClean) confirmHomeDialog.open()
+            else                   root._goHome()
+        }
+        onRenameRequested: function(newName) {
+            const oldName = WorkspaceManager.currentWorkspace
+            if (oldName === "") {
+                // No saved workspace yet — just open the Save dialog with the new name
+                saveNameField.text = newName
+                saveWorkspaceDialog.open()
+                return
+            }
+            const ok = WorkspaceManager.renameWorkspace(oldName, newName)
+            if (ok) {
+                GlobalProperties.lastWorkspace = newName
+                ToastManager.show("Renamed to \"" + newName + "\"", "success")
+            } else {
+                ToastManager.show("Failed to rename (name may already exist)", "error")
+            }
+        }
         onScreenshotRequested: {
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
             const path = appDirPath + "/screenshots/screenshot_" + timestamp + ".png"
@@ -2017,11 +2044,20 @@ Rectangle {
         onActivated: {
             if (WorkspaceManager.currentWorkspace !== "") {
                 const ok = viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
+                if (ok) WorkspaceManager.clearAutosave(WorkspaceManager.currentWorkspace)
                 ToastManager.show(ok ? "Project saved" : "Failed to save project",
                                   ok ? "success" : "error")
             } else {
                 saveWorkspaceDialog.open()
             }
+        }
+    }
+    Shortcut {
+        sequence: "Ctrl+Shift+S"
+        context:  Qt.ApplicationShortcut
+        onActivated: {
+            saveNameField.text = WorkspaceManager.currentWorkspace
+            saveWorkspaceDialog.open()
         }
     }
     Shortcut {
@@ -2154,6 +2190,241 @@ Rectangle {
         id: splashScreen
         onNewProjectRequested: { /* canvas is already empty — user can start and save later */ }
         onOpenProjectRequested: openWorkspaceDialog.open()
+        onWorkspaceOpenRequested: function(name) {
+            root._openWorkspaceWithAutosave(name)
+        }
+        onWorkspaceRenameRequested: function(name) {
+            renameWorkspaceDialog.openFor(name)
+        }
+        onWorkspaceExportRequested: function(name) {
+            exportWorkspaceDialog.pendingName = name
+            exportWorkspaceDialog.open()
+        }
+        onWorkspaceDeleteRequested: function(name) {
+            confirmDeleteDialog.openFor(name)
+        }
+    }
+
+    // ─── Rename Workspace Dialog (from SplashScreen) ────────────────────────────
+    Popup {
+        id: renameWorkspaceDialog
+        width: 380
+        x: (parent.width  - width)  / 2
+        y: (parent.height - height) / 2
+        z: 1100
+        modal: true
+        padding: 0
+        closePolicy: Popup.CloseOnEscape
+
+        property string oldName: ""
+
+        function openFor(name) {
+            renameWorkspaceDialog.oldName = name
+            renameField.text = name
+            renameWorkspaceDialog.open()
+            Qt.callLater(function() { renameField.selectAll(); renameField.forceActiveFocus() })
+        }
+
+        background: Rectangle {
+            color:  ThemeManager.surfaceColor
+            radius: 10
+            border.color: Qt.rgba(ThemeManager.borderColor.r,
+                                  ThemeManager.borderColor.g,
+                                  ThemeManager.borderColor.b, 0.5)
+            border.width: 1
+        }
+
+        function doConfirm() {
+            const newName = renameField.text.trim()
+            if (newName === "" || newName === renameWorkspaceDialog.oldName) {
+                renameWorkspaceDialog.close()
+                return
+            }
+            const ok = WorkspaceManager.renameWorkspace(renameWorkspaceDialog.oldName, newName)
+            if (ok) {
+                if (GlobalProperties.lastWorkspace === renameWorkspaceDialog.oldName)
+                    GlobalProperties.lastWorkspace = newName
+                ToastManager.show("Renamed to \"" + newName + "\"", "success")
+            } else {
+                ToastManager.show("Rename failed (name may already exist)", "error")
+            }
+            renameWorkspaceDialog.close()
+        }
+
+        Column {
+            width: parent.width
+            spacing: 0
+
+            Item {
+                width: parent.width
+                height: 64
+                Row {
+                    anchors.left: parent.left; anchors.leftMargin: 24
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 14
+                    ColorIcon { source: Icons.pencilOutline; color: ThemeManager.primaryColor; width: 22; height: 22
+                                anchors.verticalCenter: parent.verticalCenter }
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2
+                        Text { text: "Rename Workspace"; font.pixelSize: 14; font.bold: true; color: ThemeManager.textColor }
+                        Text { text: "New name for \"" + renameWorkspaceDialog.oldName + "\""
+                               font.pixelSize: 11; color: ThemeManager.textSecondaryColor; elide: Text.ElideRight; width: 280 }
+                    }
+                }
+            }
+            Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.4 }
+
+            Item {
+                width: parent.width
+                height: 130
+
+                Column {
+                    x: 24; y: 24
+                    width: parent.width - 48
+                    spacing: 16
+
+                    Rectangle {
+                        width: parent.width; height: 40; radius: 6
+                        color: Qt.darker(ThemeManager.surfaceColor, 1.3)
+                        border.color: renameField.activeFocus ? ThemeManager.primaryColor : ThemeManager.borderColor
+                        border.width: renameField.activeFocus ? 1.5 : 1
+                        Behavior on border.color { ColorAnimation { duration: 120 } }
+
+                        TextInput {
+                            id: renameField
+                            anchors.fill: parent
+                            anchors.leftMargin: 12; anchors.rightMargin: 12
+                            verticalAlignment: TextInput.AlignVCenter
+                            color: ThemeManager.textColor
+                            font.pixelSize: 13
+                            selectByMouse: true
+                            Keys.onReturnPressed: renameWorkspaceDialog.doConfirm()
+                            Keys.onEnterPressed:  renameWorkspaceDialog.doConfirm()
+                            Keys.onEscapePressed: renameWorkspaceDialog.close()
+                        }
+                    }
+
+                    Row {
+                        anchors.right: parent.right
+                        spacing: 8
+                        Rectangle {
+                            width: 80; height: 36; radius: 6
+                            color: "transparent"
+                            border.color: ThemeManager.borderColor; border.width: 1
+                            Text { anchors.centerIn: parent; text: "Cancel"
+                                   color: ThemeManager.textSecondaryColor; font.pixelSize: 12 }
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                        hoverEnabled: true; onClicked: renameWorkspaceDialog.close() }
+                        }
+                        Rectangle {
+                            width: 90; height: 36; radius: 6
+                            color: ThemeManager.primaryColor
+                            Text { anchors.centerIn: parent; text: "Rename"
+                                   color: "white"; font.pixelSize: 12; font.bold: true }
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                        hoverEnabled: true; onClicked: renameWorkspaceDialog.doConfirm() }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ─── Confirm Delete Dialog ──────────────────────────────────────────────────
+    Popup {
+        id: confirmDeleteDialog
+        width: 360
+        x: (parent.width  - width)  / 2
+        y: (parent.height - height) / 2
+        z: 1100
+        modal: true
+        padding: 0
+        closePolicy: Popup.CloseOnEscape
+
+        property string pendingName: ""
+        function openFor(name) { pendingName = name; open() }
+
+        background: Rectangle {
+            color: ThemeManager.surfaceColor; radius: 10
+            border.color: Qt.rgba(ThemeManager.borderColor.r, ThemeManager.borderColor.g, ThemeManager.borderColor.b, 0.5)
+            border.width: 1
+        }
+
+        Column {
+            width: parent.width
+            spacing: 0
+            Item {
+                width: parent.width; height: 64
+                Row {
+                    anchors.left: parent.left; anchors.leftMargin: 24
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 14
+                    ColorIcon { source: Icons.alertOutline; color: ThemeManager.dangerColor; width: 22; height: 22
+                                anchors.verticalCenter: parent.verticalCenter }
+                    Text { text: "Delete Workspace?"; font.pixelSize: 14; font.bold: true
+                           color: ThemeManager.textColor; anchors.verticalCenter: parent.verticalCenter }
+                }
+            }
+            Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.4 }
+            Item {
+                width: parent.width; height: 140
+                Column {
+                    x: 24; y: 24
+                    width: parent.width - 48
+                    spacing: 20
+                    Text {
+                        width: parent.width
+                        text: "Permanently delete \"" + confirmDeleteDialog.pendingName + "\"? This action cannot be undone."
+                        color: ThemeManager.textSecondaryColor
+                        font.pixelSize: 13; lineHeight: 1.5; wrapMode: Text.WordWrap
+                    }
+                    Row {
+                        anchors.right: parent.right; spacing: 8
+                        Rectangle {
+                            width: 80; height: 36; radius: 6
+                            color: "transparent"; border.color: ThemeManager.borderColor; border.width: 1
+                            Text { anchors.centerIn: parent; text: "Cancel"
+                                   color: ThemeManager.textSecondaryColor; font.pixelSize: 12 }
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                        hoverEnabled: true; onClicked: confirmDeleteDialog.close() }
+                        }
+                        Rectangle {
+                            width: 90; height: 36; radius: 6
+                            color: ThemeManager.dangerColor
+                            Text { anchors.centerIn: parent; text: "Delete"
+                                   color: "white"; font.pixelSize: 12; font.bold: true }
+                            MouseArea {
+                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor; hoverEnabled: true
+                                onClicked: {
+                                    const name = confirmDeleteDialog.pendingName
+                                    const ok = WorkspaceManager.deleteWorkspace(name)
+                                    ToastManager.show(ok ? "Deleted \"" + name + "\"" : "Delete failed",
+                                                      ok ? "warning" : "error")
+                                    confirmDeleteDialog.close()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ─── Export Workspace File Dialog ───────────────────────────────────────────
+    FileDialog {
+        id: exportWorkspaceDialog
+        property string pendingName: ""
+        title: "Export Workspace"
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["Valkyrie Workspace (*.json)"]
+        defaultSuffix: "json"
+        currentFile: pendingName !== "" ? ("file:///" + pendingName + ".json") : ""
+        onAccepted: {
+            const ok = WorkspaceManager.exportWorkspace(pendingName, selectedFile.toString())
+            ToastManager.show(ok ? "Exported \"" + pendingName + "\"" : "Export failed",
+                              ok ? "success" : "error")
+        }
     }
 
     // ─── Settings Popup ─────────────────────────────────────────────────────────
@@ -2391,13 +2662,38 @@ Rectangle {
     // ─── Open Workspace Dialog ───────────────────────────────────────────────────
     Popup {
         id: openWorkspaceDialog
-        width: 420
+        width: 520
+        height: Math.min(parent ? parent.height - 80 : 560, 560)
         x: (parent.width  - width)  / 2
         y: (parent.height - height) / 2
         z: 1000
         modal: true
         padding: 0
         closePolicy: Popup.CloseOnEscape
+
+        property string searchText: ""
+        property string sortMode: "name"   // "name" | "modified"
+
+        onAboutToShow: {
+            searchText = ""
+            openSearchField.text = ""
+        }
+
+        function _filteredSortedList() {
+            const all = WorkspaceManager.workspaceList
+            const q = openWorkspaceDialog.searchText.toLowerCase()
+            let arr = q === "" ? all.slice() : all.filter(function(n) { return n.toLowerCase().indexOf(q) !== -1 })
+            if (openWorkspaceDialog.sortMode === "modified") {
+                arr.sort(function(a, b) {
+                    const ia = WorkspaceManager.getWorkspaceInfo(a)
+                    const ib = WorkspaceManager.getWorkspaceInfo(b)
+                    return (ib.modifiedAt || ib.fileModified || "").localeCompare(ia.modifiedAt || ia.fileModified || "")
+                })
+            } else {
+                arr.sort(function(a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()) })
+            }
+            return arr
+        }
 
         background: Rectangle {
             color:  ThemeManager.surfaceColor
@@ -2461,6 +2757,91 @@ Rectangle {
 
             Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.4 }
 
+            // ── Search + sort bar ──────────────────────────────────────────────
+            Item {
+                width: parent.width
+                height: 52
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin:  16
+                    anchors.rightMargin: 16
+                    spacing: 8
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 32
+                        radius: 6
+                        color: Qt.darker(ThemeManager.surfaceColor, 1.3)
+                        border.color: openSearchField.activeFocus ? ThemeManager.primaryColor : ThemeManager.borderColor
+                        border.width: openSearchField.activeFocus ? 1.5 : 1
+
+                        Row {
+                            anchors.fill: parent
+                            anchors.leftMargin: 8; anchors.rightMargin: 8
+                            spacing: 6
+                            ColorIcon {
+                                source: Icons.magnify
+                                color:  ThemeManager.textSecondaryColor
+                                width: 14; height: 14
+                                anchors.verticalCenter: parent.verticalCenter
+                                opacity: 0.7
+                            }
+                            TextInput {
+                                id: openSearchField
+                                width: parent.width - 24
+                                height: parent.height
+                                verticalAlignment: TextInput.AlignVCenter
+                                color: ThemeManager.textColor
+                                font.pixelSize: 12
+                                selectByMouse: true
+                                onTextChanged: openWorkspaceDialog.searchText = text
+                                Keys.onEscapePressed: text = ""
+
+                                Text {
+                                    visible: parent.text === ""
+                                    text: "Search workspaces…"
+                                    color: ThemeManager.textSecondaryColor
+                                    font.pixelSize: 12
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+                        }
+                    }
+
+                    Row {
+                        spacing: 4
+                        Repeater {
+                            model: [{ id: "name", label: "Name" }, { id: "modified", label: "Modified" }]
+                            delegate: Rectangle {
+                                readonly property bool active: openWorkspaceDialog.sortMode === modelData.id
+                                width: 70; height: 32; radius: 6
+                                color: active
+                                       ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.18)
+                                       : "transparent"
+                                border.color: active ? ThemeManager.primaryColor : ThemeManager.borderColor
+                                border.width: 1
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: modelData.label
+                                    font.pixelSize: 11
+                                    font.bold: active
+                                    color: active ? ThemeManager.primaryColor : ThemeManager.textSecondaryColor
+                                }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    hoverEnabled: true
+                                    onClicked: openWorkspaceDialog.sortMode = modelData.id
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.4 }
+
             // ── Body ───────────────────────────────────────────────────────────
             Item {
                 width: parent.width
@@ -2499,16 +2880,38 @@ Rectangle {
                         }
                     }
 
-                    // Workspace list
-                    Repeater {
-                        model: WorkspaceManager.workspaceList
+                    // Workspace list — bounded scrolling area
+                    ListView {
+                        id: openWorkspaceList
+                        width: parent.width
+                        // Cap list height so the dialog has room for the footer
+                        height: Math.min(380, Math.max(48, count * 60))
+                        clip: true
+                        spacing: 4
+                        boundsBehavior: Flickable.StopAtBounds
+                        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+
+                        // Recompute the filtered + sorted list when triggers change
+                        property var _items: openWorkspaceDialog._filteredSortedList()
+                        Connections {
+                            target: WorkspaceManager
+                            function onWorkspaceListChanged() { openWorkspaceList._items = openWorkspaceDialog._filteredSortedList() }
+                        }
+                        Connections {
+                            target: openWorkspaceDialog
+                            function onSearchTextChanged()  { openWorkspaceList._items = openWorkspaceDialog._filteredSortedList() }
+                            function onSortModeChanged()    { openWorkspaceList._items = openWorkspaceDialog._filteredSortedList() }
+                        }
+
+                        model: _items
 
                         delegate: Rectangle {
                             id: wsCard
                             readonly property bool isCurrent: modelData === WorkspaceManager.currentWorkspace
+                            readonly property var info: WorkspaceManager.getWorkspaceInfo(modelData)
 
-                            width:  parent ? parent.width : 0
-                            height: 48
+                            width:  ListView.view ? ListView.view.width : 0
+                            height: 56
                             radius: 6
                             color:  wsDel.containsMouse
                                         ? Qt.rgba(ThemeManager.dangerColor.r,
@@ -2546,16 +2949,36 @@ Rectangle {
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
 
-                                Text {
-                                    text:  modelData + (wsCard.isCurrent ? "  (current)" : "")
-                                    color: wsCard.isCurrent
-                                               ? ThemeManager.primaryColor
-                                               : wsItemMouse.containsMouse
-                                                     ? ThemeManager.textColor
-                                                     : ThemeManager.textSecondaryColor
-                                    font.pixelSize: 13
+                                Column {
                                     anchors.verticalCenter: parent.verticalCenter
-                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                    spacing: 2
+
+                                    Text {
+                                        text:  modelData + (wsCard.isCurrent ? "  (current)" : "")
+                                        color: wsCard.isCurrent
+                                                   ? ThemeManager.primaryColor
+                                                   : wsItemMouse.containsMouse
+                                                         ? ThemeManager.textColor
+                                                         : ThemeManager.textSecondaryColor
+                                        font.pixelSize: 13
+                                        Behavior on color { ColorAnimation { duration: 100 } }
+                                    }
+
+                                    Text {
+                                        // Show metadata: "N nodes · M conns · modified <iso>"
+                                        readonly property string modIso: (wsCard.info.modifiedAt || wsCard.info.fileModified || "")
+                                        // Display only YYYY-MM-DD HH:mm of the ISO timestamp
+                                        readonly property string modPretty: modIso.length >= 16
+                                                                            ? modIso.substring(0, 10) + " " + modIso.substring(11, 16)
+                                                                            : modIso
+                                        text: (wsCard.info.nodeCount || 0) + " nodes · "
+                                              + (wsCard.info.connectionCount || 0) + " conns"
+                                              + (modPretty !== "" ? "  ·  " + modPretty : "")
+                                              + (wsCard.info.hasAutosave ? "  ·  autosave available" : "")
+                                        font.pixelSize: 10
+                                        color: wsCard.info.hasAutosave ? ThemeManager.warningColor : ThemeManager.textSecondaryColor
+                                        opacity: 0.85
+                                    }
                                 }
                             }
 
@@ -2588,9 +3011,7 @@ Rectangle {
                                     hoverEnabled: true
                                     cursorShape:  Qt.PointingHandCursor
                                     onClicked: {
-                                        const name = modelData
-                                        WorkspaceManager.deleteWorkspace(name)
-                                        ToastManager.show("Deleted \"" + name + "\"", "warning")
+                                        confirmDeleteDialog.openFor(modelData)
                                     }
                                 }
                             }
@@ -2602,11 +3023,8 @@ Rectangle {
                                 hoverEnabled:   true
                                 cursorShape:    Qt.PointingHandCursor
                                 onClicked: {
-                                    root.m_suppressConnectionDraw = true
-                                    viewPort.loadWorkspace(modelData)
-                                    root.m_suppressConnectionDraw = false
-                                    GlobalProperties.lastWorkspace = modelData
                                     openWorkspaceDialog.close()
+                                    root._openWorkspaceWithAutosave(modelData)
                                 }
                             }
                         }
@@ -2798,6 +3216,362 @@ Rectangle {
         splashScreen.dismissed = true
         WorkspaceManager.newWorkspace()
         ToastManager.show("New project created", "success")
+    }
+
+    // Return to the SplashScreen: clear any active workspace and reveal the splash.
+    function _goHome() {
+        splashScreen.dismissed = false
+        WorkspaceManager.newWorkspace()
+    }
+
+    // ─── Confirm "Go Home" when unsaved changes exist ───────────────────────────
+    Popup {
+        id: confirmHomeDialog
+        width: 360
+        x: (parent.width  - width)  / 2
+        y: (parent.height - height) / 2
+        z: 1000
+        modal: true
+        padding: 0
+        closePolicy: Popup.CloseOnEscape
+
+        background: Rectangle {
+            color:  ThemeManager.surfaceColor
+            radius: 10
+            border.color: Qt.rgba(ThemeManager.borderColor.r,
+                                  ThemeManager.borderColor.g,
+                                  ThemeManager.borderColor.b, 0.5)
+            border.width: 1
+        }
+
+        Column {
+            width: parent.width
+            spacing: 0
+
+            Item {
+                width: parent.width
+                height: 64
+
+                Row {
+                    anchors.left:           parent.left
+                    anchors.leftMargin:     24
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 14
+
+                    ColorIcon {
+                        source: Icons.alertOutline
+                        color:  "#ff9800"
+                        width: 22; height: 22
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Text {
+                        text:           "Back to Home"
+                        font.pixelSize: 14
+                        font.bold:      true
+                        color:          ThemeManager.textColor
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                AppBarButton {
+                    anchors.right:          parent.right
+                    anchors.rightMargin:    8
+                    anchors.verticalCenter: parent.verticalCenter
+                    icon.source: Icons.close
+                    icon.color:  ThemeManager.textSecondaryColor
+                    width: 36; height: 36
+                    onClicked: confirmHomeDialog.close()
+                }
+            }
+
+            Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.4 }
+
+            Item {
+                width: parent.width
+                height: confirmHomeBodyCol.implicitHeight + 48
+
+                Column {
+                    id: confirmHomeBodyCol
+                    x: 24; y: 24
+                    width: parent.width - 48
+                    spacing: 20
+
+                    Text {
+                        width: parent.width
+                        text: "This project has unsaved changes. They will be lost if you go back to the home screen."
+                        color:          ThemeManager.textSecondaryColor
+                        font.pixelSize: 13
+                        lineHeight:     1.5
+                        wrapMode:       Text.WordWrap
+                    }
+
+                    Row {
+                        anchors.right: parent.right
+                        spacing: 8
+
+                        Rectangle {
+                            width: 80; height: 36; radius: 6
+                            color: homeCancelHover.containsMouse
+                                       ? Qt.rgba(ThemeManager.borderColor.r,
+                                                 ThemeManager.borderColor.g,
+                                                 ThemeManager.borderColor.b, 0.25)
+                                       : "transparent"
+                            border.color: ThemeManager.borderColor
+                            border.width: 1
+                            Behavior on color { ColorAnimation { duration: 100 } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text:           "Cancel"
+                                color:          ThemeManager.textSecondaryColor
+                                font.pixelSize: 12
+                            }
+                            MouseArea {
+                                id: homeCancelHover
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape:  Qt.PointingHandCursor
+                                onClicked:    confirmHomeDialog.close()
+                            }
+                        }
+
+                        Rectangle {
+                            width: 100; height: 36; radius: 6
+                            color: homeSaveHover.containsMouse
+                                       ? Qt.lighter(ThemeManager.primaryColor, 1.1)
+                                       : ThemeManager.primaryColor
+                            Behavior on color { ColorAnimation { duration: 100 } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text:           "Save & Exit"
+                                color:          "white"
+                                font.pixelSize: 12
+                                font.bold:      true
+                            }
+                            MouseArea {
+                                id: homeSaveHover
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape:  Qt.PointingHandCursor
+                                onClicked: {
+                                    confirmHomeDialog.close()
+                                    if (WorkspaceManager.currentWorkspace !== "") {
+                                        viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
+                                        root._goHome()
+                                    } else {
+                                        saveWorkspaceDialog.open()
+                                    }
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            width: 120; height: 36; radius: 6
+                            color: homeDiscardHover.containsMouse
+                                       ? Qt.lighter(ThemeManager.dangerColor, 1.1)
+                                       : ThemeManager.dangerColor
+                            Behavior on color { ColorAnimation { duration: 100 } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text:           "Discard & Exit"
+                                color:          "white"
+                                font.pixelSize: 12
+                                font.bold:      true
+                            }
+                            MouseArea {
+                                id: homeDiscardHover
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape:  Qt.PointingHandCursor
+                                onClicked: {
+                                    confirmHomeDialog.close()
+                                    root._goHome()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ─── Autosave Recovery Dialog ────────────────────────────────────────────────
+    Popup {
+        id: recoverAutosaveDialog
+        width: 380
+        x: (parent.width  - width)  / 2
+        y: (parent.height - height) / 2
+        z: 1000
+        modal: true
+        padding: 0
+        closePolicy: Popup.NoAutoClose
+
+        property string pendingName: ""
+
+        background: Rectangle {
+            color:  ThemeManager.surfaceColor
+            radius: 10
+            border.color: Qt.rgba(ThemeManager.borderColor.r,
+                                  ThemeManager.borderColor.g,
+                                  ThemeManager.borderColor.b, 0.5)
+            border.width: 1
+        }
+
+        Column {
+            width: parent.width
+            spacing: 0
+
+            Item {
+                width: parent.width
+                height: 64
+
+                Row {
+                    anchors.left:           parent.left
+                    anchors.leftMargin:     24
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 14
+
+                    ColorIcon {
+                        source: Icons.restore
+                        color:  ThemeManager.primaryColor
+                        width: 22; height: 22
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2
+
+                        Text {
+                            text:           "Recover Autosave?"
+                            font.pixelSize: 14
+                            font.bold:      true
+                            color:          ThemeManager.textColor
+                        }
+                        Text {
+                            text:           "A newer autosave was found for \"" + recoverAutosaveDialog.pendingName + "\""
+                            font.pixelSize: 11
+                            color:          ThemeManager.textSecondaryColor
+                            elide:          Text.ElideRight
+                            width:          280
+                        }
+                    }
+                }
+            }
+
+            Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.4 }
+
+            Item {
+                width: parent.width
+                height: 88
+
+                Row {
+                    anchors.right:          parent.right
+                    anchors.rightMargin:    24
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 8
+
+                    Rectangle {
+                        width: 120; height: 36; radius: 6
+                        color: recoverDiscardHover.containsMouse
+                                   ? Qt.rgba(ThemeManager.borderColor.r,
+                                             ThemeManager.borderColor.g,
+                                             ThemeManager.borderColor.b, 0.25)
+                                   : "transparent"
+                        border.color: ThemeManager.borderColor
+                        border.width: 1
+                        Behavior on color { ColorAnimation { duration: 100 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text:           "Discard"
+                            color:          ThemeManager.textSecondaryColor
+                            font.pixelSize: 12
+                        }
+                        MouseArea {
+                            id: recoverDiscardHover
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape:  Qt.PointingHandCursor
+                            onClicked: {
+                                const name = recoverAutosaveDialog.pendingName
+                                WorkspaceManager.clearAutosave(name)
+                                recoverAutosaveDialog.close()
+                                // Still honor the user's intent to open the workspace
+                                root.m_suppressConnectionDraw = true
+                                viewPort.loadWorkspace(name)
+                                root.m_suppressConnectionDraw = false
+                                GlobalProperties.lastWorkspace = name
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        width: 120; height: 36; radius: 6
+                        color: recoverLoadHover.containsMouse
+                                   ? Qt.lighter(ThemeManager.primaryColor, 1.1)
+                                   : ThemeManager.primaryColor
+                        Behavior on color { ColorAnimation { duration: 100 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text:           "Recover"
+                            color:          "white"
+                            font.pixelSize: 12
+                            font.bold:      true
+                        }
+                        MouseArea {
+                            id: recoverLoadHover
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape:  Qt.PointingHandCursor
+                            onClicked: {
+                                const name = recoverAutosaveDialog.pendingName
+                                root.m_suppressConnectionDraw = true
+                                WorkspaceManager.loadAutosave(name)
+                                root.m_suppressConnectionDraw = false
+                                GlobalProperties.lastWorkspace = name
+                                ToastManager.show("Autosave recovered", "success")
+                                recoverAutosaveDialog.close()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Centralized workspace open — checks for newer autosave first.
+    // If a sidecar autosave exists and is newer than the saved file, prompts
+    // the user to recover; otherwise loads the workspace directly.
+    function _openWorkspaceWithAutosave(name) {
+        if (!name) return
+        if (WorkspaceManager.hasAutosave(name)) {
+            recoverAutosaveDialog.pendingName = name
+            recoverAutosaveDialog.open()
+        } else {
+            root.m_suppressConnectionDraw = true
+            viewPort.loadWorkspace(name)
+            root.m_suppressConnectionDraw = false
+            GlobalProperties.lastWorkspace = name
+        }
+    }
+
+    // ─── Autosave Timer (item 10) ────────────────────────────────────────────────
+    Timer {
+        id: autosaveTimer
+        interval: Math.max(1, GlobalProperties.autosaveIntervalMin) * 60 * 1000
+        repeat:   true
+        running:  GlobalProperties.autosaveEnabled
+                  && WorkspaceManager.currentWorkspace !== ""
+                  && !splashScreen.visible
+        onTriggered: {
+            if (!viewPort.isClean && WorkspaceManager.currentWorkspace !== "")
+                WorkspaceManager.saveAutosave()
+        }
     }
 
     Component.onCompleted: {
@@ -3180,6 +3954,8 @@ Rectangle {
         nodeCount:       nodes.model.count
         fpsCount:        viewPort.fpsCount
         showFps:         GlobalProperties.showFps
+        workspaceName:   WorkspaceManager.currentWorkspace
+        workspaceDirty:  !viewPort.isClean
     }
 
     // ── Loading Spinner Overlay ──────────────────────────────────────────────────

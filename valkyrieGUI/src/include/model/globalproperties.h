@@ -37,6 +37,10 @@ class GlobalProperties : public QObject
     Q_PROPERTY(bool    snapResizeEnabled READ snapResizeEnabled WRITE setSnapResizeEnabled NOTIFY snapResizeEnabledChanged)
     Q_PROPERTY(QString snapGuideColor    READ snapGuideColor    WRITE setSnapGuideColor    NOTIFY snapGuideColorChanged)
 
+    // ── Autosave ──────────────────────────────────────────────────────────────
+    Q_PROPERTY(bool    autosaveEnabled     READ autosaveEnabled     WRITE setAutosaveEnabled     NOTIFY autosaveEnabledChanged)
+    Q_PROPERTY(int     autosaveIntervalMin READ autosaveIntervalMin WRITE setAutosaveIntervalMin NOTIFY autosaveIntervalMinChanged)
+
 public:
     static GlobalProperties* instance();
     static QObject* qmlSingletonProvider(QQmlEngine*, QJSEngine*);
@@ -65,6 +69,8 @@ public:
     bool    snapShowCoords()     const;
     bool    snapResizeEnabled()  const;
     QString snapGuideColor()     const;
+    bool    autosaveEnabled()    const;
+    int     autosaveIntervalMin() const;
 
     // ── Setters ───────────────────────────────────────────────────────────────
     void setDebugMode(bool value);
@@ -90,6 +96,8 @@ public:
     void setSnapShowCoords(bool value);
     void setSnapResizeEnabled(bool value);
     void setSnapGuideColor(const QString& color);
+    void setAutosaveEnabled(bool value);
+    void setAutosaveIntervalMin(int value);
 
     Q_INVOKABLE void saveProperties();
     Q_INVOKABLE void loadProperties();
@@ -130,6 +138,8 @@ signals:
     void snapShowCoordsChanged();
     void snapResizeEnabledChanged();
     void snapGuideColorChanged();
+    void autosaveEnabledChanged();
+    void autosaveIntervalMinChanged();
 
 private:
     explicit GlobalProperties(QObject* parent = nullptr);
@@ -166,6 +176,10 @@ private:
     bool    m_snapShowCoords     = true;
     bool    m_snapResizeEnabled  = false;
     QString m_snapGuideColor     = "#00e676";
+
+    // ── Autosave members ──────────────────────────────────────────────────────
+    bool    m_autosaveEnabled     = false;
+    int     m_autosaveIntervalMin = 5;
 };
 
 #endif // GLOBALPROPERTIES_H

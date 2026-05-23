@@ -88,14 +88,19 @@ void GlobalProperties::saveProperties() {
     snapObj["resizeEnabled"] = m_snapResizeEnabled;
     snapObj["guideColor"]    = m_snapGuideColor;
 
+    QJsonObject autosaveObj;
+    autosaveObj["enabled"]     = m_autosaveEnabled;
+    autosaveObj["intervalMin"] = m_autosaveIntervalMin;
+
     QJsonObject root;
-    root["version"] = 1;
-    root["debug"]   = debugObj;
-    root["theme"]   = themeObj;
-    root["grid"]    = gridObj;
-    root["session"] = sessionObj;
-    root["ui"]      = uiObj;
-    root["snap"]    = snapObj;
+    root["version"]  = 1;
+    root["debug"]    = debugObj;
+    root["theme"]    = themeObj;
+    root["grid"]     = gridObj;
+    root["session"]  = sessionObj;
+    root["ui"]       = uiObj;
+    root["snap"]     = snapObj;
+    root["autosave"] = autosaveObj;
 
     QFile file(settingsFilePath());
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
@@ -146,6 +151,10 @@ void GlobalProperties::loadProperties() {
     m_snapShowCoords     = snapObj["showCoords"].toBool(true);
     m_snapResizeEnabled  = snapObj["resizeEnabled"].toBool(false);
     m_snapGuideColor     = snapObj["guideColor"].toString("#00e676");
+
+    const QJsonObject autosaveObj = root["autosave"].toObject();
+    m_autosaveEnabled     = autosaveObj["enabled"].toBool(false);
+    m_autosaveIntervalMin = autosaveObj["intervalMin"].toInt(5);
 }
 
 // ── Getters ───────────────────────────────────────────────────────────────────
@@ -173,6 +182,8 @@ bool    GlobalProperties::snapToNodes()       const { return m_snapToNodes; }
 bool    GlobalProperties::snapShowCoords()    const { return m_snapShowCoords; }
 bool    GlobalProperties::snapResizeEnabled() const { return m_snapResizeEnabled; }
 QString GlobalProperties::snapGuideColor()    const { return m_snapGuideColor; }
+bool    GlobalProperties::autosaveEnabled()    const { return m_autosaveEnabled; }
+int     GlobalProperties::autosaveIntervalMin() const { return m_autosaveIntervalMin; }
 
 // ── Setters ───────────────────────────────────────────────────────────────────
 
@@ -258,4 +269,11 @@ void GlobalProperties::setSnapResizeEnabled(bool value) {
 }
 void GlobalProperties::setSnapGuideColor(const QString& color) {
     if (m_snapGuideColor != color) { m_snapGuideColor = color; saveProperties(); emit snapGuideColorChanged(); }
+}
+void GlobalProperties::setAutosaveEnabled(bool value) {
+    if (m_autosaveEnabled != value) { m_autosaveEnabled = value; saveProperties(); emit autosaveEnabledChanged(); }
+}
+void GlobalProperties::setAutosaveIntervalMin(int value) {
+    if (value < 1) value = 1;
+    if (m_autosaveIntervalMin != value) { m_autosaveIntervalMin = value; saveProperties(); emit autosaveIntervalMinChanged(); }
 }

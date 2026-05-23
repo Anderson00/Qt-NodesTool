@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QStringList>
+#include <QVariantMap>
 
 class ViewPortWindow;
 class QQmlEngine;
@@ -29,17 +30,29 @@ public slots:
     bool deleteWorkspace(const QString& name);
     bool renameWorkspace(const QString& oldName, const QString& newName);
     void refreshWorkspaceList();
-    Q_INVOKABLE void newWorkspace();
+    Q_INVOKABLE void    newWorkspace();
+    Q_INVOKABLE bool    duplicateWorkspace(const QString& name);
+    Q_INVOKABLE QVariantMap getWorkspaceInfo(const QString& name) const;
+    Q_INVOKABLE bool    exportWorkspace(const QString& name, const QString& filePath);
+    Q_INVOKABLE bool    importWorkspace(const QString& filePath);
+    Q_INVOKABLE bool    saveAutosave();
+    Q_INVOKABLE bool    hasAutosave(const QString& name) const;
+    Q_INVOKABLE bool    loadAutosave(const QString& name);
+    Q_INVOKABLE bool    clearAutosave(const QString& name);
 
 signals:
     void workspaceListChanged();
     void currentWorkspaceChanged();
     void workspaceLoaded(const QString& name);
+    void workspaceRenamed(const QString& oldName, const QString& newName);
+    void workspaceDuplicated(const QString& newName);
 
 private:
     explicit WorkspaceManager(QObject* parent = nullptr);
     QString workspacesDir() const;
     QString workspacePath(const QString& name) const;
+    QString autosavePath(const QString& name) const;
+    QString uniqueCopyName(const QString& base) const;
 
     ViewPortWindow* m_viewPort = nullptr;
     QStringList     m_workspaceList;
