@@ -97,6 +97,21 @@ void MapViewer::setEndPoint(double lat, double lng)
     emit internalMarkersChanged();
 }
 
+void MapViewer::removeMarkerAt(int index)
+{
+    if (index < 0 || index >= m_markers.size()) return;
+    m_markers.removeAt(index);
+    emit markerCountChanged();
+    emit internalMarkersChanged();
+}
+
+void MapViewer::updateMarkerLabel(int index, QString label)
+{
+    if (index < 0 || index >= m_markers.size()) return;
+    m_markers[index].label = label;
+    emit internalMarkersChanged();
+}
+
 // ── Invokables ────────────────────────────────────────────────────────────────
 
 QVariantList MapViewer::getMarkers() const

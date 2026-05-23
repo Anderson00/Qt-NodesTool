@@ -51,6 +51,8 @@ public slots:
     void clearAll();
     void setStartPoint(double lat, double lng);
     void setEndPoint(double lat, double lng);
+    void removeMarkerAt(int index);
+    void updateMarkerLabel(int index, QString label);
 
 signals:
     // node outputs
