@@ -1,4 +1,4 @@
-/import QtQuick 2.12
+import QtQuick 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Controls.Material 2.12
 import QtQuick.Layouts 1.0
@@ -1485,27 +1485,40 @@ Rectangle {
                             function onHeightChanged() { circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0) }
                         }
 
+                        // Pulse animation (width oscillating)
+                        SequentialAnimation {
+                            id: pulseAnim
+                            property real currentWidth: 2
+                            running: GlobalProperties.wireAnim === "pulse"
+                            loops: Animation.Infinite
+                            NumberAnimation { target: pulseAnim; property: "currentWidth"; from: 2; to: 4; duration: 400; easing.type: Easing.InOutQuad }
+                            NumberAnimation { target: pulseAnim; property: "currentWidth"; from: 4; to: 2; duration: 400; easing.type: Easing.InOutQuad }
+                        }
+
                         ShapePath {
                             id: shapepath
                             strokeColor: model.circleConn.color
-                            strokeWidth: 2
+                            strokeWidth: GlobalProperties.wireAnim === "pulse" ? pulseAnim.currentWidth : 2
                             fillColor: "transparent"
                             capStyle: ShapePath.RoundCap
-                            strokeStyle: ShapePath.DashLine
-                            dashPattern: [8, 4]
-
-                            // Marching ants — animate ShapePath.dashOffset directly
-                            // so the renderer marks the path dirty each frame.
-                            NumberAnimation on dashOffset {
-                                from: 0
-                                to: -12
-                                duration: 400
-                                loops: Animation.Infinite
-                                running: true
-                            }
+                            
+                            strokeStyle: GlobalProperties.wireDash === "solid" ? ShapePath.SolidLine : ShapePath.DashLine
+                            dashPattern: GlobalProperties.wireDash === "dotted" ? [1, 6] : [8, 4]
 
                             readonly property bool srcIsOut: model.isSourceOutput !== undefined ? model.isSourceOutput : true
                             readonly property bool tgtIsOut: model.isRestored ? false : !srcIsOut
+
+                            // Flow animation (marching ants flowing towards input)
+                            NumberAnimation on dashOffset {
+                                // If drawn left-to-right (srcIsOut=true), moving offset negative pushes pattern towards target.
+                                // If drawn right-to-left (srcIsOut=false), moving offset positive pushes pattern towards target.
+                                property real targetOffset: shapepath.srcIsOut ? -12 : 12
+                                from: 0
+                                to: targetOffset
+                                duration: 400
+                                loops: Animation.Infinite
+                                running: GlobalProperties.wireAnim === "flow"
+                            }
 
                             startX: srcIsOut ? circleConnPoint.x + model.circleConn.width : circleConnPoint.x
                             startY: circleConnPoint.y + model.circleConn.height / 2
@@ -1523,9 +1536,10 @@ Rectangle {
                                     ? circleConnPoint2.y + circleConn2.height / 2
                                     : (mouseAreaGlobal.mouseY - mycanvas.y) / zoomScale
 
-                                // Control points: horizontal tangents from each endpoint.
-                                // Offset proportional to horizontal distance for a natural S-curve.
-                                readonly property real dx: Math.abs(ex - shapepath.startX) * 0.5 + 40
+                                // For straight lines, set dx = 0 so control points fall exactly on endpoints
+                                readonly property real dx: GlobalProperties.wireStyle === "bezier" 
+                                    ? Math.abs(ex - shapepath.startX) * 0.5 + 40 
+                                    : 0
 
                                 x: ex
                                 y: ey

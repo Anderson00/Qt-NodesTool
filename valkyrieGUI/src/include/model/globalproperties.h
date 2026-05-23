@@ -22,6 +22,9 @@ class GlobalProperties : public QObject
     Q_PROPERTY(QString gridPattern    READ gridPattern    WRITE setGridPattern    NOTIFY gridPatternChanged)
     Q_PROPERTY(QString nodesListPosition READ nodesListPosition WRITE setNodesListPosition NOTIFY nodesListPositionChanged)
     Q_PROPERTY(QString connectionStyle   READ connectionStyle   WRITE setConnectionStyle   NOTIFY connectionStyleChanged)
+    Q_PROPERTY(QString wireStyle         READ wireStyle         WRITE setWireStyle         NOTIFY wireStyleChanged)
+    Q_PROPERTY(QString wireDash          READ wireDash          WRITE setWireDash          NOTIFY wireDashChanged)
+    Q_PROPERTY(QString wireAnim          READ wireAnim          WRITE setWireAnim          NOTIFY wireAnimChanged)
 
     // ── Snap ─────────────────────────────────────────────────────────────────
     Q_PROPERTY(bool    snapEnabled       READ snapEnabled       WRITE setSnapEnabled       NOTIFY snapEnabledChanged)
@@ -49,6 +52,9 @@ public:
     QString gridPattern()        const;
     QString nodesListPosition()  const;
     QString connectionStyle()    const;
+    QString wireStyle()          const;
+    QString wireDash()           const;
+    QString wireAnim()           const;
 
     bool    snapEnabled()        const;
     int     snapGridSize()       const;
@@ -71,6 +77,9 @@ public:
     void setGridPattern(const QString& pattern);
     void setNodesListPosition(const QString& position);
     void setConnectionStyle(const QString& style);
+    void setWireStyle(const QString& style);
+    void setWireDash(const QString& dash);
+    void setWireAnim(const QString& anim);
 
     void setSnapEnabled(bool value);
     void setSnapGridSize(int value);
@@ -108,6 +117,9 @@ signals:
     void gridPatternChanged();
     void nodesListPositionChanged();
     void connectionStyleChanged();
+    void wireStyleChanged();
+    void wireDashChanged();
+    void wireAnimChanged();
 
     void snapEnabledChanged();
     void snapGridSizeChanged();
@@ -140,6 +152,9 @@ private:
     QString m_gridPattern        = "dots";
     QString m_nodesListPosition  = "bottom-left";
     QString m_connectionStyle    = "pills";
+    QString m_wireStyle          = "bezier";
+    QString m_wireDash           = "dashed";
+    QString m_wireAnim           = "flow";
 
     // ── Snap members ──────────────────────────────────────────────────────────
     bool    m_snapEnabled        = false;

@@ -73,6 +73,9 @@ void GlobalProperties::saveProperties() {
     QJsonObject uiObj;
     uiObj["nodesListPosition"] = m_nodesListPosition;
     uiObj["connectionStyle"]   = m_connectionStyle;
+    uiObj["wireStyle"]         = m_wireStyle;
+    uiObj["wireDash"]          = m_wireDash;
+    uiObj["wireAnim"]          = m_wireAnim;
 
     QJsonObject snapObj;
     snapObj["enabled"]       = m_snapEnabled;
@@ -130,6 +133,9 @@ void GlobalProperties::loadProperties() {
     m_lastPresetId       = root["session"].toObject()["lastPresetId"].toString();
     m_nodesListPosition  = uiObj["nodesListPosition"].toString("bottom-left");
     m_connectionStyle    = uiObj["connectionStyle"].toString("pills");
+    m_wireStyle          = uiObj["wireStyle"].toString("bezier");
+    m_wireDash           = uiObj["wireDash"].toString("dashed");
+    m_wireAnim           = uiObj["wireAnim"].toString("flow");
 
     m_snapEnabled        = snapObj["enabled"].toBool(false);
     m_snapGridSize       = snapObj["gridSize"].toInt(20);
@@ -154,6 +160,9 @@ int     GlobalProperties::minWgrid()          const { return m_minWgrid; }
 QString GlobalProperties::gridPattern()       const { return m_gridPattern; }
 QString GlobalProperties::nodesListPosition() const { return m_nodesListPosition; }
 QString GlobalProperties::connectionStyle()   const { return m_connectionStyle; }
+QString GlobalProperties::wireStyle()         const { return m_wireStyle; }
+QString GlobalProperties::wireDash()          const { return m_wireDash; }
+QString GlobalProperties::wireAnim()          const { return m_wireAnim; }
 
 bool    GlobalProperties::snapEnabled()       const { return m_snapEnabled; }
 int     GlobalProperties::snapGridSize()      const { return m_snapGridSize; }
@@ -212,6 +221,15 @@ void GlobalProperties::setNodesListPosition(const QString& position) {
 }
 void GlobalProperties::setConnectionStyle(const QString& style) {
     if (m_connectionStyle != style) { m_connectionStyle = style; saveProperties(); emit connectionStyleChanged(); }
+}
+void GlobalProperties::setWireStyle(const QString& style) {
+    if (m_wireStyle != style) { m_wireStyle = style; saveProperties(); emit wireStyleChanged(); }
+}
+void GlobalProperties::setWireDash(const QString& dash) {
+    if (m_wireDash != dash) { m_wireDash = dash; saveProperties(); emit wireDashChanged(); }
+}
+void GlobalProperties::setWireAnim(const QString& anim) {
+    if (m_wireAnim != anim) { m_wireAnim = anim; saveProperties(); emit wireAnimChanged(); }
 }
 
 void GlobalProperties::setSnapEnabled(bool value) {

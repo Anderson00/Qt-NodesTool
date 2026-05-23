@@ -1326,6 +1326,151 @@ Popup {
                     }
 
                     Item { width: 1; height: 20 }
+                    Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
+
+                    // ── WIRE SETTINGS ───────────────────────────────────────────
+                    SectionLabel { text: "WIRE SETTINGS" }
+
+                    // Wire Style (Bezier / Straight)
+                    RowLayout {
+                        width: parent.width; height: 44; spacing: 8
+                        Text {
+                            Layout.fillWidth: true
+                            text: "Line Style"
+                            font.pixelSize: 12; color: ThemeManager.textColor
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        readonly property var _wireStyles: [
+                            { id: "bezier", label: "Bezier", desc: "Smooth curves" },
+                            { id: "straight", label: "Straight", desc: "Linear paths" }
+                        ]
+
+                        Repeater {
+                            model: parent._wireStyles
+                            delegate: Rectangle {
+                                readonly property bool active: GlobalProperties.wireStyle === modelData.id
+                                width: 82; height: 34; radius: 6
+                                color: active
+                                    ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.18)
+                                    : ThemeManager.foregroundColor
+                                border.width: active ? 2 : 1
+                                border.color: active ? ThemeManager.primaryColor : ThemeManager.borderColor
+                                Behavior on color { ColorAnimation { duration: 110 } }
+
+                                Column {
+                                    anchors.centerIn: parent; spacing: 2
+                                    Text {
+                                        text: modelData.label; font.pixelSize: 11; font.bold: active
+                                        color: active ? ThemeManager.primaryColor : ThemeManager.textColor
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        Behavior on color { ColorAnimation { duration: 110 } }
+                                    }
+                                    Text {
+                                        text: modelData.desc; font.pixelSize: 9
+                                        color: ThemeManager.textSecondaryColor
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent; hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: GlobalProperties.wireStyle = modelData.id
+                                }
+                            }
+                        }
+                    }
+
+                    // Dash Style (Dashed / Solid / Dotted)
+                    RowLayout {
+                        width: parent.width; height: 44; spacing: 8
+                        Text {
+                            Layout.fillWidth: true
+                            text: "Dash Style"
+                            font.pixelSize: 12; color: ThemeManager.textColor
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        readonly property var _wireDashes: [
+                            { id: "dashed", label: "Dashed" },
+                            { id: "solid", label: "Solid" },
+                            { id: "dotted", label: "Dotted" }
+                        ]
+
+                        Repeater {
+                            model: parent._wireDashes
+                            delegate: Rectangle {
+                                readonly property bool active: GlobalProperties.wireDash === modelData.id
+                                width: 60; height: 30; radius: 6
+                                color: active
+                                    ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.18)
+                                    : ThemeManager.foregroundColor
+                                border.width: active ? 2 : 1
+                                border.color: active ? ThemeManager.primaryColor : ThemeManager.borderColor
+                                Behavior on color { ColorAnimation { duration: 110 } }
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: modelData.label; font.pixelSize: 11; font.bold: active
+                                    color: active ? ThemeManager.primaryColor : ThemeManager.textColor
+                                    Behavior on color { ColorAnimation { duration: 110 } }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent; hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: GlobalProperties.wireDash = modelData.id
+                                }
+                            }
+                        }
+                    }
+
+                    // Animation Style (Flow / Pulse / None)
+                    RowLayout {
+                        width: parent.width; height: 44; spacing: 8
+                        Text {
+                            Layout.fillWidth: true
+                            text: "Animation Style"
+                            font.pixelSize: 12; color: ThemeManager.textColor
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        readonly property var _wireAnims: [
+                            { id: "flow", label: "Flow" },
+                            { id: "pulse", label: "Pulse" },
+                            { id: "none", label: "None" }
+                        ]
+
+                        Repeater {
+                            model: parent._wireAnims
+                            delegate: Rectangle {
+                                readonly property bool active: GlobalProperties.wireAnim === modelData.id
+                                width: 60; height: 30; radius: 6
+                                color: active
+                                    ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.18)
+                                    : ThemeManager.foregroundColor
+                                border.width: active ? 2 : 1
+                                border.color: active ? ThemeManager.primaryColor : ThemeManager.borderColor
+                                Behavior on color { ColorAnimation { duration: 110 } }
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: modelData.label; font.pixelSize: 11; font.bold: active
+                                    color: active ? ThemeManager.primaryColor : ThemeManager.textColor
+                                    Behavior on color { ColorAnimation { duration: 110 } }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent; hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: GlobalProperties.wireAnim = modelData.id
+                                }
+                            }
+                        }
+                    }
+
+                    Item { width: 1; height: 20 }
                 }
             }
 
