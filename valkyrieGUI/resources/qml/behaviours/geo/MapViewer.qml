@@ -11,128 +11,165 @@ Item {
     property var behaviourObject
 
     // ── Map state ─────────────────────────────────────────────────────────────
-    property double centerLat: behaviourObject ? behaviourObject.centerLat : 48.8566
-    property double centerLng: behaviourObject ? behaviourObject.centerLng : 2.3522
-    property int    zoom:      behaviourObject ? behaviourObject.zoom      : 4
-    property var    markers:   []
-    property var    trace:     []
+    property double centerLat:  behaviourObject ? behaviourObject.centerLat : 48.8566
+    property double centerLng:  behaviourObject ? behaviourObject.centerLng : 2.3522
+    property int    zoom:       behaviourObject ? behaviourObject.zoom      : 4
+    property var    markers:    []
+    property var    trace:      []
+    property var    circles:    []
+    property var    liveMarker: null   // null or { lat, lng, label, breadcrumb[] }
 
-    // ── UI state ──────────────────────────────────────────────────────────────
+    // ── UI mode flags ─────────────────────────────────────────────────────────
     property bool   addMarkerMode:    false
-    property string mapStyle:         "osm"   // osm | carto-light | carto-dark | topo
+    property bool   measureMode:      false
+    property var    measurePts:       []   // array of {lat,lng} — 0, 1 or 2 points
+    property double measureCurLat:    0
+    property double measureCurLng:    0
+
+    // ── Hover / interaction ───────────────────────────────────────────────────
     property int    hoveredMarkerIdx: -1
     property double hoverLat:         0
     property double hoverLng:         0
 
-    // ── Drag state ────────────────────────────────────────────────────────────
+    // ── Drag ─────────────────────────────────────────────────────────────────
     property real dragStartX:   0
     property real dragStartY:   0
     property real dragStartLat: 0
     property real dragStartLng: 0
     property bool isDragging:   false
 
-    // ── Scale bar (auto-updates on zoom / lat change) ─────────────────────────
-    property var scaleInfo: {
-        var metersPerPx = (Math.cos(centerLat * Math.PI / 180) * 2 * Math.PI * 6378137)
-                          / (Math.pow(2, zoom) * 256)
-        var target = metersPerPx * 80
-        var steps  = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 50000, 100000]
-        var best = steps[0]
-        for (var i = 0; i < steps.length; i++) { best = steps[i]; if (steps[i] >= target) break }
-        return { px: Math.round(best / metersPerPx), label: best >= 1000 ? (best / 1000) + " km" : best + " m" }
-    }
-
-    // ── Tile URL factory ──────────────────────────────────────────────────────
-    function tileUrl(z, x, y) {
-        switch (mapStyle) {
-        case "carto-light": return "https://basemaps.cartocdn.com/rastertiles/voyager/" + z + "/" + x + "/" + y + ".png"
-        case "carto-dark":  return "https://basemaps.cartocdn.com/dark_all/"            + z + "/" + x + "/" + y + ".png"
-        case "topo":        return "https://tile.opentopomap.org/"                      + z + "/" + x + "/" + y + ".png"
-        default:            return "https://tile.openstreetmap.org/"                    + z + "/" + x + "/" + y + ".png"
+    // ── Live pulse animation ──────────────────────────────────────────────────
+    property real pulsePhase: 0
+    Timer {
+        id: pulseTimer
+        interval: 55; repeat: true; running: root.liveMarker !== null
+        onTriggered: {
+            root.pulsePhase = (root.pulsePhase + 0.04) % 1.0
+            overlayCanvas.requestPaint()
         }
     }
 
-    // ── Projection helpers ────────────────────────────────────────────────────
-    function lon2tile(lng, z) {
-        return Math.floor((lng + 180) / 360 * Math.pow(2, z))
+    // ── Map styles ────────────────────────────────────────────────────────────
+    property string mapStyle: "osm"
+    readonly property var styleList: [
+        { id: "osm",            label: "Streets",       dark: false },
+        { id: "carto-light",    label: "Voyager",       dark: false },
+        { id: "carto-positron", label: "Positron",      dark: false },
+        { id: "carto-dark",     label: "Dark",          dark: true  },
+        { id: "esri-satellite", label: "Satélite",      dark: true  },
+        { id: "esri-streets",   label: "Esri Streets",  dark: false },
+        { id: "topo",           label: "Topo",          dark: false },
+        { id: "osm-hot",        label: "Humanitário",   dark: false },
+        { id: "wikimedia",      label: "Wikimedia",     dark: false }
+    ]
+    property bool isDark: mapStyle === "carto-dark" || mapStyle === "esri-satellite"
+
+    // ── Scale bar ─────────────────────────────────────────────────────────────
+    property var scaleInfo: {
+        var mpx = (Math.cos(centerLat * Math.PI / 180) * 2 * Math.PI * 6378137) / (Math.pow(2, zoom) * 256)
+        var t   = mpx * 80
+        var ss  = [1,2,5,10,20,50,100,200,500,1000,2000,5000,10000,50000,100000]
+        var b = ss[0]
+        for (var i = 0; i < ss.length; i++) { b = ss[i]; if (ss[i] >= t) break }
+        return { px: Math.round(b / mpx), label: b >= 1000 ? (b/1000) + " km" : b + " m" }
     }
+
+    // ── Tile URL ──────────────────────────────────────────────────────────────
+    function tileUrl(z, x, y) {
+        switch (mapStyle) {
+        case "carto-light":    return "https://basemaps.cartocdn.com/rastertiles/voyager/"  + z+"/"+x+"/"+y+".png"
+        case "carto-positron": return "https://basemaps.cartocdn.com/light_all/"            + z+"/"+x+"/"+y+".png"
+        case "carto-dark":     return "https://basemaps.cartocdn.com/dark_all/"             + z+"/"+x+"/"+y+".png"
+        case "topo":           return "https://tile.opentopomap.org/"                       + z+"/"+x+"/"+y+".png"
+        // Esri uses z/y/x order (not z/x/y)
+        case "esri-satellite": return "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/"    +z+"/"+y+"/"+x
+        case "esri-streets":   return "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/" +z+"/"+y+"/"+x
+        case "osm-hot":        return "https://tile.openstreetmap.fr/hot/"                  + z+"/"+x+"/"+y+".png"
+        case "wikimedia":      return "https://maps.wikimedia.org/osm-intl/"                + z+"/"+x+"/"+y+".png"
+        default:               return "https://tile.openstreetmap.org/"                     + z+"/"+x+"/"+y+".png"
+        }
+    }
+    function attribution() {
+        switch (mapStyle) {
+        case "esri-satellite":
+        case "esri-streets":   return "© Esri"
+        case "wikimedia":      return "© Wikimedia | © OpenStreetMap"
+        case "osm-hot":        return "© OpenStreetMap | HOT"
+        default:               return "© OpenStreetMap contributors"
+        }
+    }
+    function bgColor() {
+        if (mapStyle === "esri-satellite") return "#080808"
+        if (mapStyle === "carto-dark")     return "#1a1a2e"
+        return "#c8dff0"
+    }
+
+    // ── Projection ────────────────────────────────────────────────────────────
+    function lon2tile(lng, z) { return Math.floor((lng + 180) / 360 * Math.pow(2, z)) }
     function lat2tile(lat, z) {
-        return Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, z))
+        return Math.floor((1 - Math.log(Math.tan(lat*Math.PI/180) + 1/Math.cos(lat*Math.PI/180)) / Math.PI) / 2 * Math.pow(2, z))
     }
-
-    // ── World-space pixel of a lat/lng relative to map centre ─────────────────
-    //    BUG FIX: uses mapClip.width/height as reference (consistent with
-    //    pixelToLatLng and the tile origin calculations in fullRefresh)
     function latLngToPixel(lat, lng) {
-        var ts    = 256
-        var scale = Math.pow(2, zoom) * ts
-        var px    = (lng + 180) / 360 * scale
-        var pxC   = (centerLng + 180) / 360 * scale
-        var py    = (1 - Math.log(Math.tan(Math.PI / 4 + lat       * Math.PI / 360)) / Math.PI) / 2 * scale
-        var pyC   = (1 - Math.log(Math.tan(Math.PI / 4 + centerLat * Math.PI / 360)) / Math.PI) / 2 * scale
-        return Qt.point(mapClip.width  / 2 + (px - pxC),
-                        mapClip.height / 2 + (py - pyC))
+        var ts = 256, scale = Math.pow(2, zoom) * ts
+        var px  = (lng + 180) / 360 * scale,  pxC = (centerLng + 180) / 360 * scale
+        var py  = (1 - Math.log(Math.tan(Math.PI/4 + lat       * Math.PI/360)) / Math.PI) / 2 * scale
+        var pyC = (1 - Math.log(Math.tan(Math.PI/4 + centerLat * Math.PI/360)) / Math.PI) / 2 * scale
+        return Qt.point(mapClip.width/2 + (px - pxC), mapClip.height/2 + (py - pyC))
     }
-
-    function pixelToLatLng(screenX, screenY) {
-        var ts    = 256
-        var scale = Math.pow(2, zoom) * ts
-        var dx    = screenX - mapClip.width  / 2
-        var dy    = screenY - mapClip.height / 2
-        var lng   = centerLng + dx / scale * 360
-        var cPy   = (1 - Math.log(Math.tan(Math.PI / 4 + centerLat * Math.PI / 360)) / Math.PI) / 2
-        var nPy   = Math.max(0.001, Math.min(0.999, cPy + dy / scale))
-        var lat   = 180 / Math.PI * (2 * Math.atan(Math.exp((1 - 2 * nPy) * Math.PI)) - Math.PI / 2)
-        return Qt.point(lat, lng)   // .x = lat, .y = lng
+    function pixelToLatLng(sx, sy) {
+        var ts = 256, scale = Math.pow(2, zoom) * ts
+        var dx = sx - mapClip.width/2, dy = sy - mapClip.height/2
+        var lng = centerLng + dx / scale * 360
+        var cPy = (1 - Math.log(Math.tan(Math.PI/4 + centerLat * Math.PI/360)) / Math.PI) / 2
+        var nPy = Math.max(0.001, Math.min(0.999, cPy + dy / scale))
+        var lat = 180/Math.PI * (2*Math.atan(Math.exp((1-2*nPy)*Math.PI)) - Math.PI/2)
+        return Qt.point(lat, lng)
     }
-
-    // ── Find nearest visible marker (returns -1 if none within threshold px) ──
-    function findNearestMarkerIdx(mx, my, threshold) {
-        var best     = -1
-        var bestDist = threshold * threshold
+    function metersToPixels(lat, meters) {
+        var mpx = (Math.cos(lat * Math.PI/180) * 2 * Math.PI * 6378137) / (Math.pow(2, zoom) * 256)
+        return meters / mpx
+    }
+    function haversineKm(lat1, lng1, lat2, lng2) {
+        var R = 6371
+        var dLat = (lat2 - lat1) * Math.PI/180, dLng = (lng2 - lng1) * Math.PI/180
+        var a = Math.sin(dLat/2)*Math.sin(dLat/2)
+              + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2)
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+    }
+    function formatDist(km) {
+        if (km < 1) return Math.round(km * 1000) + " m"
+        return km.toFixed(2) + " km"
+    }
+    function findNearestMarkerIdx(mx, my, thr) {
+        var best = -1, bestD = thr * thr
         for (var i = 0; i < root.markers.length; i++) {
-            var mp   = root.latLngToPixel(root.markers[i].lat, root.markers[i].lng)
-            // test against circle centre (pin is drawn at mp.y - 11)
-            var dist = (mx - mp.x) * (mx - mp.x) + (my - (mp.y - 11)) * (my - (mp.y - 11))
-            if (dist < bestDist) { bestDist = dist; best = i }
+            var mp = root.latLngToPixel(root.markers[i].lat, root.markers[i].lng)
+            var d  = (mx - mp.x)*(mx - mp.x) + (my - (mp.y-11))*(my - (mp.y-11))
+            if (d < bestD) { bestD = d; best = i }
         }
         return best
     }
 
-    // ── C++ signal bridge ─────────────────────────────────────────────────────
+    // ── C++ bridge ────────────────────────────────────────────────────────────
     Connections {
         target: behaviourObject
-        function onInternalMarkersChanged() {
-            if (behaviourObject) root.markers = behaviourObject.getMarkers()
-            root.hoveredMarkerIdx = -1
-            overlayCanvas.requestPaint()
-        }
-        function onInternalTraceChanged() {
-            if (behaviourObject) root.trace = behaviourObject.getTrace()
-            overlayCanvas.requestPaint()
-        }
-        function onInternalCenterChanged(lat, lng, z) {
-            root.centerLat = lat; root.centerLng = lng; root.zoom = z
-            tileLayer.fullRefresh(); overlayCanvas.requestPaint()
-        }
-        function onInternalClear() {
-            root.markers = []; root.trace = []
-            root.hoveredMarkerIdx = -1
-            tileLayer.fullRefresh(); overlayCanvas.requestPaint()
-        }
+        function onInternalMarkersChanged()         { if (behaviourObject) root.markers = behaviourObject.getMarkers(); root.hoveredMarkerIdx = -1; overlayCanvas.requestPaint() }
+        function onInternalTraceChanged()           { if (behaviourObject) root.trace   = behaviourObject.getTrace();   overlayCanvas.requestPaint() }
+        function onInternalCenterChanged(lat,lng,z) { root.centerLat=lat; root.centerLng=lng; root.zoom=z; tileLayer.fullRefresh(); overlayCanvas.requestPaint() }
+        function onInternalClear()                  { root.markers=[]; root.trace=[]; root.liveMarker=null; root.circles=[]; tileLayer.fullRefresh(); overlayCanvas.requestPaint() }
+        function onInternalLiveChanged()            { root.liveMarker = behaviourObject && behaviourObject.hasLiveMarker ? behaviourObject.getLiveMarker() : null; overlayCanvas.requestPaint() }
+        function onInternalCirclesChanged()         { if (behaviourObject) root.circles = behaviourObject.getCircles(); overlayCanvas.requestPaint() }
+        function onInternalGeofenceConfigChanged()  { overlayCanvas.requestPaint() }
     }
 
     Component.onCompleted: tileLayer.fullRefresh()
 
-    // ── Root layout ───────────────────────────────────────────────────────────
-    ColumnLayout {
-        anchors.fill: parent
-        spacing: 0
+    // ═════════════════════════════════════════════════════════════════════════
+    ColumnLayout { anchors.fill: parent; spacing: 0
 
         // ── Toolbar ───────────────────────────────────────────────────────────
         Rectangle {
-            Layout.fillWidth: true
-            height: 36
+            Layout.fillWidth: true; height: 36
             color: ThemeManager.surfaceColor
             Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: ThemeManager.borderColor }
 
@@ -143,390 +180,396 @@ Item {
                 Text { text: "Map"; color: ThemeManager.textColor; font.pixelSize: 11; font.bold: true }
                 Rectangle { width: 1; height: 20; color: ThemeManager.borderColor; opacity: 0.5 }
 
-                // Map-style selector
-                Repeater {
-                    model: [
-                        { id: "osm",         label: "Streets" },
-                        { id: "carto-light", label: "Light"   },
-                        { id: "carto-dark",  label: "Dark"    },
-                        { id: "topo",        label: "Topo"    }
-                    ]
-                    delegate: Rectangle {
-                        required property var modelData
-                        property bool active: root.mapStyle === modelData.id
-                        width: styleLabel.width + 14; height: 22; radius: 4
-                        color: active ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.15) : "transparent"
-                        border.color: active ? ThemeManager.primaryColor : "transparent"; border.width: 1
+                // ── Map style ComboBox ─────────────────────────────────────────
+                Rectangle {
+                    id: styleCombo
+                    width: styleComboText.width + 24; height: 24; radius: 4
+                    color: stylePopup.visible ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.12) : "transparent"
+                    border.color: stylePopup.visible ? ThemeManager.primaryColor : ThemeManager.borderColor; border.width: 1
+
+                    RowLayout {
+                        anchors { fill: parent; leftMargin: 7; rightMargin: 5 }
+                        spacing: 4
                         Text {
-                            id: styleLabel
-                            anchors.centerIn: parent
-                            text: modelData.label
-                            color: active ? ThemeManager.primaryColor : ThemeManager.textSecondaryColor
-                            font.pixelSize: 10
+                            id: styleComboText
+                            text: {
+                                for (var i = 0; i < root.styleList.length; i++)
+                                    if (root.styleList[i].id === root.mapStyle) return root.styleList[i].label
+                                return root.mapStyle
+                            }
+                            color: ThemeManager.textColor; font.pixelSize: 10
                         }
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: { root.mapStyle = modelData.id; tileLayer.fullRefresh() }
+                        Text { text: "▾"; color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: stylePopup.visible = !stylePopup.visible
+                    }
+
+                    // Dropdown popup
+                    Rectangle {
+                        id: stylePopup
+                        visible: false
+                        z: 500
+                        anchors { top: parent.bottom; left: parent.left; topMargin: 2 }
+                        width: 130; height: styleCol.implicitHeight + 8; radius: 6
+                        color: ThemeManager.surfaceColor
+                        border.color: ThemeManager.borderColor; border.width: 1
+                        Column {
+                            id: styleCol
+                            anchors { fill: parent; margins: 4 }
+                            spacing: 1
+                            Repeater {
+                                model: root.styleList
+                                delegate: Rectangle {
+                                    required property var modelData
+                                    width: parent.width; height: 22; radius: 3
+                                    color: root.mapStyle === modelData.id
+                                           ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.15)
+                                           : (styleItemHov.containsMouse ? Qt.rgba(0.5,0.5,0.5,0.08) : "transparent")
+                                    Text {
+                                        anchors { verticalCenter: parent.verticalCenter; left: parent.left; leftMargin: 7 }
+                                        text: modelData.label
+                                        color: root.mapStyle === modelData.id ? ThemeManager.primaryColor : ThemeManager.textColor
+                                        font.pixelSize: 10
+                                    }
+                                    MouseArea {
+                                        id: styleItemHov; anchors.fill: parent; hoverEnabled: true
+                                        onClicked: { root.mapStyle = modelData.id; stylePopup.visible = false; tileLayer.fullRefresh() }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
 
                 Rectangle { width: 1; height: 20; color: ThemeManager.borderColor; opacity: 0.5 }
 
-                // Add-marker toggle
+                // + Marker
                 Rectangle {
-                    width: markerBtnLabel.width + 22; height: 22; radius: 4
-                    color: root.addMarkerMode ? Qt.rgba(0.13, 0.79, 0.26, 0.18) : "transparent"
+                    width: mkrBtn.width + 16; height: 24; radius: 4
+                    color:  root.addMarkerMode ? Qt.rgba(0.13,0.79,0.26,0.15) : "transparent"
                     border.color: root.addMarkerMode ? "#22c55e" : ThemeManager.borderColor; border.width: 1
-                    Text {
-                        id: markerBtnLabel
-                        anchors.centerIn: parent
-                        text: root.addMarkerMode ? "✕ Cancelar" : "+ Marker"
-                        color: root.addMarkerMode ? "#22c55e" : ThemeManager.textSecondaryColor
-                        font.pixelSize: 10
-                    }
-                    MouseArea { anchors.fill: parent; onClicked: root.addMarkerMode = !root.addMarkerMode }
+                    Text { id: mkrBtn; anchors.centerIn: parent; text: root.addMarkerMode ? "✕ Cancel" : "+ Marker"
+                           color: root.addMarkerMode ? "#22c55e" : ThemeManager.textSecondaryColor; font.pixelSize: 10 }
+                    MouseArea { anchors.fill: parent; onClicked: { root.addMarkerMode = !root.addMarkerMode; root.measureMode = false } }
+                }
+
+                // Measure distance
+                Rectangle {
+                    width: msrBtn.width + 16; height: 24; radius: 4
+                    color:  root.measureMode ? Qt.rgba(0.93,0.65,0.14,0.15) : "transparent"
+                    border.color: root.measureMode ? "#f59e0b" : ThemeManager.borderColor; border.width: 1
+                    Text { id: msrBtn; anchors.centerIn: parent; text: "⟵ Medir"
+                           color: root.measureMode ? "#f59e0b" : ThemeManager.textSecondaryColor; font.pixelSize: 10 }
+                    MouseArea { anchors.fill: parent; onClicked: { root.measureMode = !root.measureMode; root.addMarkerMode = false; root.measurePts = [] } }
                 }
 
                 Item { Layout.fillWidth: true }
 
-                // Zoom controls
+                // Zoom -
                 Rectangle {
                     width: 24; height: 24; radius: 4
-                    color: zmHov.containsMouse ? Qt.rgba(0.5, 0.5, 0.5, 0.12) : "transparent"
-                    border.color: ThemeManager.borderColor
+                    color: zmH.containsMouse ? Qt.rgba(0.5,0.5,0.5,0.12) : "transparent"; border.color: ThemeManager.borderColor
                     Text { anchors.centerIn: parent; text: "−"; color: ThemeManager.textColor; font.pixelSize: 16; font.bold: true }
-                    MouseArea {
-                        id: zmHov; anchors.fill: parent; hoverEnabled: true
-                        onClicked: if (root.zoom > 1) { root.zoom--; tileLayer.fullRefresh(); overlayCanvas.requestPaint() }
-                    }
+                    MouseArea { id: zmH; anchors.fill: parent; hoverEnabled: true
+                        onClicked: if (root.zoom > 1) { root.zoom--; tileLayer.fullRefresh(); overlayCanvas.requestPaint() } }
                 }
                 Text { text: root.zoom; color: ThemeManager.textColor; font.pixelSize: 11; width: 20; horizontalAlignment: Text.AlignHCenter }
+                // Zoom +
                 Rectangle {
                     width: 24; height: 24; radius: 4
-                    color: zpHov.containsMouse ? Qt.rgba(0.5, 0.5, 0.5, 0.12) : "transparent"
-                    border.color: ThemeManager.borderColor
+                    color: zpH.containsMouse ? Qt.rgba(0.5,0.5,0.5,0.12) : "transparent"; border.color: ThemeManager.borderColor
                     Text { anchors.centerIn: parent; text: "+"; color: ThemeManager.textColor; font.pixelSize: 16; font.bold: true }
-                    MouseArea {
-                        id: zpHov; anchors.fill: parent; hoverEnabled: true
-                        onClicked: if (root.zoom < 19) { root.zoom++; tileLayer.fullRefresh(); overlayCanvas.requestPaint() }
-                    }
+                    MouseArea { id: zpH; anchors.fill: parent; hoverEnabled: true
+                        onClicked: if (root.zoom < 19) { root.zoom++; tileLayer.fullRefresh(); overlayCanvas.requestPaint() } }
                 }
 
                 Rectangle { width: 1; height: 20; color: ThemeManager.borderColor; opacity: 0.5 }
 
                 Rectangle {
-                    width: 40; height: 22; radius: 4
-                    color: clrHov.containsMouse ? Qt.rgba(0.5, 0.5, 0.5, 0.12) : "transparent"
-                    border.color: ThemeManager.borderColor
+                    width: 40; height: 24; radius: 4
+                    color: clH.containsMouse ? Qt.rgba(0.5,0.5,0.5,0.12) : "transparent"; border.color: ThemeManager.borderColor
                     Text { anchors.centerIn: parent; text: "Clear"; color: ThemeManager.textSecondaryColor; font.pixelSize: 10 }
-                    MouseArea {
-                        id: clrHov; anchors.fill: parent; hoverEnabled: true
-                        onClicked: if (behaviourObject) behaviourObject.clearAll()
-                    }
+                    MouseArea { id: clH; anchors.fill: parent; hoverEnabled: true; onClicked: if (behaviourObject) behaviourObject.clearAll() }
                 }
             }
         }
 
-        // ── Map area ──────────────────────────────────────────────────────────
+        // ── Map clip area ─────────────────────────────────────────────────────
         Rectangle {
             id: mapClip
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            color: root.mapStyle === "carto-dark" ? "#1a1a2e" : "#c8dff0"
-            clip: true
-            focus: true
+            Layout.fillWidth: true; Layout.fillHeight: true
+            color: root.bgColor()
+            clip: true; focus: true
 
-            // Keyboard navigation (arrow keys + WASD + +/-)
-            Keys.onPressed: function(event) {
-                var step  = 40
-                var ts    = 256
-                var scale = Math.pow(2, root.zoom) * ts
-
-                function shiftLat(dy) {
-                    var cpy = (1 - Math.log(Math.tan(Math.PI/4 + root.centerLat*Math.PI/360))/Math.PI)/2
-                    var npy = Math.max(0.001, Math.min(0.999, cpy + dy / scale))
+            Keys.onPressed: function(ev) {
+                var step = 40, ts = 256, sc = Math.pow(2, root.zoom) * ts
+                function sLat(dy) {
+                    var cpy = (1-Math.log(Math.tan(Math.PI/4+root.centerLat*Math.PI/360))/Math.PI)/2
+                    var npy = Math.max(0.001, Math.min(0.999, cpy + dy/sc))
                     root.centerLat = 180/Math.PI*(2*Math.atan(Math.exp((1-2*npy)*Math.PI))-Math.PI/2)
                 }
-
-                if (event.key === Qt.Key_Left  || event.key === Qt.Key_A) { root.centerLng -= step / scale * 360;  tileLayer.fullRefresh(); overlayCanvas.requestPaint() }
-                if (event.key === Qt.Key_Right || event.key === Qt.Key_D) { root.centerLng += step / scale * 360;  tileLayer.fullRefresh(); overlayCanvas.requestPaint() }
-                if (event.key === Qt.Key_Up    || event.key === Qt.Key_W) { shiftLat(-step); tileLayer.fullRefresh(); overlayCanvas.requestPaint() }
-                if (event.key === Qt.Key_Down  || event.key === Qt.Key_S) { shiftLat( step); tileLayer.fullRefresh(); overlayCanvas.requestPaint() }
-                if (event.key === Qt.Key_Plus  || event.key === Qt.Key_Equal) {
-                    if (root.zoom < 19) { root.zoom++; tileLayer.fullRefresh(); overlayCanvas.requestPaint() }
-                }
-                if (event.key === Qt.Key_Minus) {
-                    if (root.zoom > 1)  { root.zoom--; tileLayer.fullRefresh(); overlayCanvas.requestPaint() }
-                }
+                if (ev.key===Qt.Key_Left  ||ev.key===Qt.Key_A) { root.centerLng-=step/sc*360; tileLayer.fullRefresh(); overlayCanvas.requestPaint() }
+                if (ev.key===Qt.Key_Right ||ev.key===Qt.Key_D) { root.centerLng+=step/sc*360; tileLayer.fullRefresh(); overlayCanvas.requestPaint() }
+                if (ev.key===Qt.Key_Up    ||ev.key===Qt.Key_W) { sLat(-step); tileLayer.fullRefresh(); overlayCanvas.requestPaint() }
+                if (ev.key===Qt.Key_Down  ||ev.key===Qt.Key_S) { sLat( step); tileLayer.fullRefresh(); overlayCanvas.requestPaint() }
+                if (ev.key===Qt.Key_Plus  ||ev.key===Qt.Key_Equal) { if (root.zoom<19){root.zoom++;tileLayer.fullRefresh();overlayCanvas.requestPaint()} }
+                if (ev.key===Qt.Key_Minus)                         { if (root.zoom>1) {root.zoom--;tileLayer.fullRefresh();overlayCanvas.requestPaint()} }
+                if (ev.key===Qt.Key_Escape) { root.measureMode=false; root.measurePts=[]; root.addMarkerMode=false; overlayCanvas.requestPaint() }
             }
 
-            // ── Tile layer (double-buffered) ──────────────────────────────────
-            //
-            //  FIX: prevLayer / currLayer no longer use anchors.fill because
-            //  setting .x/.y on anchored items causes anchor conflicts in QML
-            //  (the anchor binding may override the explicit value, making the
-            //  tile layer not translate — which desynchronises markers).
-            //  Instead we keep width/height bound to parent and use a
-            //  transform: Translate so positional panning is clean.
-            //
+            // ── Tile layer (FIX: Translate instead of x/y on anchored items) ──
             Item {
-                id: tileLayer
-                anchors.fill: parent
-
-                Item {
-                    id: prevLayer
-                    width: parent.width; height: parent.height
-                    transform: Translate { id: prevTranslate }
-                }
-                Item {
-                    id: currLayer
-                    width: parent.width; height: parent.height
-                    transform: Translate { id: currTranslate }
-                }
-
+                id: tileLayer; anchors.fill: parent
+                Item { id: prevLayer; width: parent.width; height: parent.height; transform: Translate { id: prevTx } }
+                Item { id: currLayer; width: parent.width; height: parent.height; transform: Translate { id: currTx } }
                 property var prevTiles: []
                 property var currTiles: []
 
-                Timer {
-                    id: prevCleanup
-                    interval: 900
-                    onTriggered: {
-                        for (var i = 0; i < tileLayer.prevTiles.length; i++) tileLayer.prevTiles[i].destroy()
-                        tileLayer.prevTiles = []
-                    }
-                }
+                Timer { id: prevClean; interval: 900
+                    onTriggered: { for (var i=0;i<tileLayer.prevTiles.length;i++) tileLayer.prevTiles[i].destroy(); tileLayer.prevTiles=[] } }
 
-                // Pan: translate both layers immediately — no tile re-load during drag
-                function panBy(dx, dy) {
-                    currTranslate.x = dx; currTranslate.y = dy
-                    prevTranslate.x = dx; prevTranslate.y = dy
-                }
+                function panBy(dx, dy) { currTx.x=dx; currTx.y=dy; prevTx.x=dx; prevTx.y=dy }
 
-                // Full tile reload at current centerLat/Lng/zoom
                 function fullRefresh() {
-                    // Reset any live pan translation first
-                    currTranslate.x = 0; currTranslate.y = 0
-                    prevTranslate.x = 0; prevTranslate.y = 0
-
-                    // Swap buffers: current → previous (stays visible while new loads)
-                    prevCleanup.stop()
-                    for (var k = 0; k < prevTiles.length; k++) prevTiles[k].destroy()
-                    prevTiles = currTiles
-                    for (var j = 0; j < prevTiles.length; j++) prevTiles[j].parent = prevLayer
-                    currTiles = []
-                    prevCleanup.restart()
-
-                    var ts      = 256
-                    var maxTile = Math.pow(2, root.zoom)
-                    var cTX     = root.lon2tile(root.centerLng, root.zoom)
-                    var cTY     = root.lat2tile(root.centerLat, root.zoom)
-                    var tilesW  = Math.ceil(currLayer.width  / ts) + 3
-                    var tilesH  = Math.ceil(currLayer.height / ts) + 3
-
-                    // Sub-tile offset of the centre coordinate within tile (cTX, cTY)
-                    var totalPxX = (root.centerLng + 180) / 360 * maxTile * ts
-                    var subX     = totalPxX - cTX * ts
-                    var cPy      = (1 - Math.log(Math.tan(Math.PI / 4 + root.centerLat * Math.PI / 360)) / Math.PI) / 2
-                    var subY     = cPy * maxTile * ts - cTY * ts
-
-                    // Screen pixel where tile (cTX, cTY) origin should be placed
-                    var originX = currLayer.width  / 2 - subX
-                    var originY = currLayer.height / 2 - subY
-
-                    for (var dx = -Math.floor(tilesW / 2) - 1; dx <= Math.ceil(tilesW / 2) + 1; dx++) {
-                        for (var dy = -Math.floor(tilesH / 2) - 1; dy <= Math.ceil(tilesH / 2) + 1; dy++) {
-                            var tx = ((cTX + dx) % maxTile + maxTile) % maxTile
-                            var ty = cTY + dy
-                            if (ty < 0 || ty >= maxTile) continue
-                            var obj = tileComp.createObject(currLayer, {
-                                x:      originX + dx * ts,
-                                y:      originY + dy * ts,
-                                source: root.tileUrl(root.zoom, tx, ty)
-                            })
+                    currTx.x=0; currTx.y=0; prevTx.x=0; prevTx.y=0
+                    prevClean.stop()
+                    for (var k=0;k<prevTiles.length;k++) prevTiles[k].destroy()
+                    prevTiles=currTiles
+                    for (var j=0;j<prevTiles.length;j++) prevTiles[j].parent=prevLayer
+                    currTiles=[]; prevClean.restart()
+                    var ts=256, mx=Math.pow(2,root.zoom)
+                    var cTX=root.lon2tile(root.centerLng,root.zoom), cTY=root.lat2tile(root.centerLat,root.zoom)
+                    var tiW=Math.ceil(currLayer.width/ts)+3, tiH=Math.ceil(currLayer.height/ts)+3
+                    var tpx=(root.centerLng+180)/360*mx*ts, subX=tpx-cTX*ts
+                    var cPy=(1-Math.log(Math.tan(Math.PI/4+root.centerLat*Math.PI/360))/Math.PI)/2
+                    var subY=cPy*mx*ts-cTY*ts
+                    var oX=currLayer.width/2-subX, oY=currLayer.height/2-subY
+                    for (var dx=-Math.floor(tiW/2)-1;dx<=Math.ceil(tiW/2)+1;dx++) {
+                        for (var dy=-Math.floor(tiH/2)-1;dy<=Math.ceil(tiH/2)+1;dy++) {
+                            var tx=((cTX+dx)%mx+mx)%mx, ty=cTY+dy
+                            if (ty<0||ty>=mx) continue
+                            var obj=tileComp.createObject(currLayer,{x:oX+dx*ts,y:oY+dy*ts,source:root.tileUrl(root.zoom,tx,ty)})
                             if (obj) currTiles.push(obj)
                         }
                     }
                 }
-
-                Component {
-                    id: tileComp
-                    Image {
-                        width: 256; height: 256
-                        fillMode: Image.Stretch
-                        cache: true; smooth: true; asynchronous: true
-                        opacity: 0
-                        Behavior on opacity { NumberAnimation { duration: 140 } }
-                        onStatusChanged: if (status === Image.Ready) opacity = 1
-                    }
+                Component { id: tileComp
+                    Image { width:256; height:256; fillMode:Image.Stretch; cache:true; smooth:true; asynchronous:true
+                        opacity:0; Behavior on opacity{NumberAnimation{duration:140}}
+                        onStatusChanged: if (status===Image.Ready) opacity=1 }
                 }
             }
 
-            // ── Overlay canvas (markers + trace) ──────────────────────────────
+            // ── Canvas overlay ────────────────────────────────────────────────
             Canvas {
-                id: overlayCanvas
-                anchors.fill: parent
-
+                id: overlayCanvas; anchors.fill: parent
                 onPaint: {
                     var ctx = getContext("2d")
                     ctx.clearRect(0, 0, width, height)
 
-                    // ── GPS trace ──────────────────────────────────────────────
+                    // ── Circles ────────────────────────────────────────────────
+                    for (var ci = 0; ci < root.circles.length; ci++) {
+                        var c   = root.circles[ci]
+                        var cp  = root.latLngToPixel(c.lat, c.lng)
+                        var rPx = root.metersToPixels(c.lat, c.radiusMeters)
+                        var cc  = c.color || "#3b82f6"
+                        // filled area
+                        ctx.beginPath(); ctx.arc(cp.x, cp.y, rPx, 0, 2*Math.PI)
+                        ctx.fillStyle = cc + "2a"; ctx.fill()
+                        ctx.strokeStyle = cc; ctx.lineWidth = 2; ctx.stroke()
+                        // centre dot
+                        ctx.beginPath(); ctx.arc(cp.x, cp.y, 4, 0, 2*Math.PI)
+                        ctx.fillStyle = cc; ctx.fill()
+                        // label
+                        if (c.label) {
+                            ctx.font = "bold 10px sans-serif"; ctx.textAlign = "center"
+                            ctx.fillStyle = root.isDark ? "rgba(0,0,0,0.75)" : "rgba(255,255,255,0.88)"
+                            var ltw = ctx.measureText(c.label).width
+                            ctx.beginPath()
+                            if (ctx.roundRect) ctx.roundRect(cp.x-ltw/2-4, cp.y-rPx-18, ltw+8, 15, 3)
+                            else ctx.rect(cp.x-ltw/2-4, cp.y-rPx-18, ltw+8, 15)
+                            ctx.fill()
+                            ctx.fillStyle = cc; ctx.fillText(c.label, cp.x, cp.y-rPx-7); ctx.textAlign="left"
+                        }
+                    }
+
+                    // ── Geofence circle (dashed, coloured by state) ────────────
+                    if (behaviourObject && behaviourObject.hasGeofence) {
+                        var gp   = root.latLngToPixel(behaviourObject.geofenceLat, behaviourObject.geofenceLng)
+                        var grPx = root.metersToPixels(behaviourObject.geofenceLat, behaviourObject.geofenceRadius)
+                        var gCol = behaviourObject.inGeofence ? "#22c55e" : "#f59e0b"
+                        ctx.save()
+                        ctx.setLineDash([8, 5])
+                        ctx.beginPath(); ctx.arc(gp.x, gp.y, grPx, 0, 2*Math.PI)
+                        ctx.strokeStyle = gCol; ctx.lineWidth = 2.5; ctx.stroke()
+                        ctx.fillStyle   = gCol + "18"; ctx.fill()
+                        ctx.restore()
+                        // state badge
+                        ctx.font = "bold 9px sans-serif"; ctx.textAlign = "center"
+                        var badgeTxt = behaviourObject.inGeofence ? "● DENTRO" : "○ FORA"
+                        ctx.fillStyle = root.isDark ? "rgba(0,0,0,0.75)" : "rgba(255,255,255,0.88)"
+                        var btw = ctx.measureText(badgeTxt).width
+                        ctx.beginPath()
+                        if (ctx.roundRect) ctx.roundRect(gp.x-btw/2-5, gp.y-grPx-20, btw+10, 16, 4)
+                        else ctx.rect(gp.x-btw/2-5, gp.y-grPx-20, btw+10, 16)
+                        ctx.fill()
+                        ctx.fillStyle = gCol; ctx.fillText(badgeTxt, gp.x, gp.y-grPx-8); ctx.textAlign="left"
+                    }
+
+                    // ── GPS Trace ──────────────────────────────────────────────
                     var tr = root.trace
                     if (tr.length > 1) {
-                        ctx.beginPath()
-                        ctx.strokeStyle = "#3b82f6"
-                        ctx.lineWidth   = 3
-                        ctx.lineJoin    = "round"
-                        ctx.lineCap     = "round"
-                        var p0 = root.latLngToPixel(tr[0].lat, tr[0].lng)
-                        ctx.moveTo(p0.x, p0.y)
-                        for (var i = 1; i < tr.length; i++) {
-                            var pi = root.latLngToPixel(tr[i].lat, tr[i].lng)
-                            ctx.lineTo(pi.x, pi.y)
-                        }
+                        ctx.beginPath(); ctx.strokeStyle="#3b82f6"; ctx.lineWidth=3; ctx.lineJoin="round"; ctx.lineCap="round"
+                        var p0=root.latLngToPixel(tr[0].lat,tr[0].lng); ctx.moveTo(p0.x,p0.y)
+                        for (var ti=1;ti<tr.length;ti++){var pi=root.latLngToPixel(tr[ti].lat,tr[ti].lng); ctx.lineTo(pi.x,pi.y)}
                         ctx.stroke()
+                        var pFirst=root.latLngToPixel(tr[0].lat,tr[0].lng)
+                        ctx.beginPath();ctx.arc(pFirst.x,pFirst.y,5,0,2*Math.PI);ctx.fillStyle="#22c55e";ctx.fill()
+                        var pLast=root.latLngToPixel(tr[tr.length-1].lat,tr[tr.length-1].lng)
+                        ctx.beginPath();ctx.arc(pLast.x,pLast.y,5,0,2*Math.PI);ctx.fillStyle="#ef4444";ctx.fill()
+                    }
 
-                        // Start / end dots on the trace
-                        var pFirst = root.latLngToPixel(tr[0].lat, tr[0].lng)
-                        ctx.beginPath(); ctx.arc(pFirst.x, pFirst.y, 5, 0, 2 * Math.PI)
-                        ctx.fillStyle = "#22c55e"; ctx.fill()
-                        var pLast = root.latLngToPixel(tr[tr.length - 1].lat, tr[tr.length - 1].lng)
-                        ctx.beginPath(); ctx.arc(pLast.x, pLast.y, 5, 0, 2 * Math.PI)
-                        ctx.fillStyle = "#ef4444"; ctx.fill()
+                    // ── Live marker breadcrumb trail ───────────────────────────
+                    var lm = root.liveMarker
+                    if (lm && lm.breadcrumb && lm.breadcrumb.length > 1) {
+                        var crumb = lm.breadcrumb
+                        for (var bi = 1; bi < crumb.length; bi++) {
+                            var alpha = bi / crumb.length * 0.55
+                            var bpA = root.latLngToPixel(crumb[bi-1].lat, crumb[bi-1].lng)
+                            var bpB = root.latLngToPixel(crumb[bi].lat, crumb[bi].lng)
+                            ctx.beginPath()
+                            ctx.strokeStyle = "rgba(16,185,129," + alpha + ")"
+                            ctx.lineWidth   = 2.5
+                            ctx.moveTo(bpA.x, bpA.y); ctx.lineTo(bpB.x, bpB.y)
+                            ctx.stroke()
+                        }
+                    }
+
+                    // ── Live marker (pulsating) ────────────────────────────────
+                    if (lm) {
+                        var lp  = root.latLngToPixel(lm.lat, lm.lng)
+                        // Expanding pulse rings
+                        for (var pi2=0; pi2<2; pi2++) {
+                            var phase = (root.pulsePhase + pi2 * 0.5) % 1.0
+                            var rr    = 10 + phase * 22
+                            var aa    = (1.0 - phase) * 0.5
+                            ctx.beginPath(); ctx.arc(lp.x, lp.y, rr, 0, 2*Math.PI)
+                            ctx.strokeStyle = "rgba(16,185,129," + aa + ")"; ctx.lineWidth = 2; ctx.stroke()
+                        }
+                        // Solid marker
+                        ctx.shadowColor = "rgba(0,0,0,0.45)"; ctx.shadowBlur = 6
+                        ctx.beginPath(); ctx.arc(lp.x, lp.y, 9, 0, 2*Math.PI)
+                        ctx.fillStyle = "#10b981"; ctx.fill()
+                        ctx.strokeStyle = "white"; ctx.lineWidth = 2; ctx.stroke()
+                        ctx.shadowBlur = 0
+                        ctx.beginPath(); ctx.arc(lp.x, lp.y, 3.5, 0, 2*Math.PI); ctx.fillStyle="white"; ctx.fill()
+                        // Label
+                        if (lm.label) {
+                            ctx.font="bold 10px sans-serif"
+                            var llw=ctx.measureText(lm.label).width
+                            ctx.fillStyle=root.isDark?"rgba(0,0,0,0.75)":"rgba(255,255,255,0.9)"
+                            ctx.beginPath()
+                            if (ctx.roundRect) ctx.roundRect(lp.x+13, lp.y-11, llw+8, 16, 3)
+                            else ctx.rect(lp.x+13, lp.y-11, llw+8, 16)
+                            ctx.fill(); ctx.fillStyle=root.isDark?"#e8e8e8":"#111"; ctx.fillText(lm.label, lp.x+17, lp.y+1)
+                        }
                     }
 
                     // ── Markers ────────────────────────────────────────────────
                     for (var j = 0; j < root.markers.length; j++) {
-                        var m        = root.markers[j]
-                        var mp       = root.latLngToPixel(m.lat, m.lng)
-                        var mc       = m.type === "start" ? "#22c55e"
-                                     : m.type === "end"   ? "#ef4444"
-                                     :                      "#6366f1"
-                        var hovered  = (j === root.hoveredMarkerIdx)
-                        var radius   = hovered ? 10 : 8
-
-                        // Hover glow ring
-                        if (hovered) {
-                            ctx.beginPath()
-                            ctx.arc(mp.x, mp.y - 11, 16, 0, 2 * Math.PI)
-                            ctx.fillStyle = Qt.rgba(0.38, 0.4, 0.95, 0.18)
-                            ctx.fill()
+                        var m       = root.markers[j]
+                        var mp      = root.latLngToPixel(m.lat, m.lng)
+                        var mc      = m.type==="start"?"#22c55e":m.type==="end"?"#ef4444":"#6366f1"
+                        var hov     = (j === root.hoveredMarkerIdx)
+                        var rad     = hov ? 10 : 8
+                        if (hov) {
+                            ctx.beginPath();ctx.arc(mp.x,mp.y-11,16,0,2*Math.PI)
+                            ctx.fillStyle="rgba(99,102,241,0.18)";ctx.fill()
                         }
-
-                        // Drop shadow
-                        ctx.shadowColor = "rgba(0,0,0,0.35)"
-                        ctx.shadowBlur  = 5
-
-                        // Pin circle
-                        ctx.beginPath()
-                        ctx.arc(mp.x, mp.y - 11, radius, 0, 2 * Math.PI)
-                        ctx.fillStyle   = mc
-                        ctx.fill()
-                        ctx.strokeStyle = "white"
-                        ctx.lineWidth   = 1.5
-                        ctx.stroke()
-
-                        ctx.shadowBlur = 0   // reset shadow for remaining draws
-
-                        // Inner dot
-                        ctx.beginPath()
-                        ctx.arc(mp.x, mp.y - 11, 3, 0, 2 * Math.PI)
-                        ctx.fillStyle = "white"
-                        ctx.fill()
-
-                        // Number badge (regular markers only)
-                        if (m.type === "marker") {
-                            ctx.font      = "bold 8px sans-serif"
-                            ctx.fillStyle = "white"
-                            ctx.textAlign = "center"
-                            ctx.fillText(j + 1, mp.x, mp.y - 7)
-                            ctx.textAlign = "left"
-                        }
-
-                        // Pin tail triangle
-                        var tailW = hovered ? 6 : 5
-                        ctx.beginPath()
-                        ctx.moveTo(mp.x - tailW, mp.y - 5)
-                        ctx.lineTo(mp.x,         mp.y)
-                        ctx.lineTo(mp.x + tailW, mp.y - 5)
-                        ctx.closePath()
-                        ctx.fillStyle = mc
-                        ctx.fill()
-
-                        // Label bubble
-                        if (m.label) {
-                            ctx.font = "bold 10px sans-serif"
-                            var lx  = mp.x + 14
-                            var ly  = mp.y - 14
-                            var tw  = ctx.measureText(m.label).width
-                            var bgC = root.mapStyle === "carto-dark" ? "rgba(20,20,20,0.75)"
-                                                                     : "rgba(255,255,255,0.88)"
-                            ctx.fillStyle = bgC
+                        ctx.shadowColor="rgba(0,0,0,0.35)";ctx.shadowBlur=5
+                        ctx.beginPath();ctx.arc(mp.x,mp.y-11,rad,0,2*Math.PI)
+                        ctx.fillStyle=mc;ctx.fill()
+                        ctx.strokeStyle="white";ctx.lineWidth=1.5;ctx.stroke()
+                        ctx.shadowBlur=0
+                        ctx.beginPath();ctx.arc(mp.x,mp.y-11,3,0,2*Math.PI);ctx.fillStyle="white";ctx.fill()
+                        if (m.type==="marker"){ctx.font="bold 8px sans-serif";ctx.fillStyle="white";ctx.textAlign="center";ctx.fillText(j+1,mp.x,mp.y-7);ctx.textAlign="left"}
+                        var tw2=hov?6:5
+                        ctx.beginPath();ctx.moveTo(mp.x-tw2,mp.y-5);ctx.lineTo(mp.x,mp.y);ctx.lineTo(mp.x+tw2,mp.y-5);ctx.closePath();ctx.fillStyle=mc;ctx.fill()
+                        if (m.label){
+                            ctx.font="bold 10px sans-serif"
+                            var lw=ctx.measureText(m.label).width
+                            ctx.fillStyle=root.isDark?"rgba(20,20,20,0.75)":"rgba(255,255,255,0.88)"
                             ctx.beginPath()
-                            if (ctx.roundRect) ctx.roundRect(lx - 3, ly - 11, tw + 8, 16, 3)
-                            else               ctx.rect(lx - 3, ly - 11, tw + 8, 16)
-                            ctx.fill()
-                            ctx.fillStyle = root.mapStyle === "carto-dark" ? "#e8e8e8" : "#111"
-                            ctx.fillText(m.label, lx, ly)
+                            if(ctx.roundRect)ctx.roundRect(mp.x+12,mp.y-25,lw+8,16,3)
+                            else ctx.rect(mp.x+12,mp.y-25,lw+8,16)
+                            ctx.fill();ctx.fillStyle=root.isDark?"#e8e8e8":"#111";ctx.fillText(m.label,mp.x+16,mp.y-13)
+                        }
+                        if (hov && m.type==="marker") {
+                            ctx.font="9px sans-serif"; var hint="⌦ RMB: remover"
+                            var htw=ctx.measureText(hint).width
+                            ctx.fillStyle=root.isDark?"rgba(20,20,20,0.82)":"rgba(255,255,255,0.90)"
+                            ctx.beginPath()
+                            if(ctx.roundRect)ctx.roundRect(mp.x-htw/2-5,mp.y-38,htw+10,15,3)
+                            else ctx.rect(mp.x-htw/2-5,mp.y-38,htw+10,15)
+                            ctx.fill();ctx.fillStyle=root.isDark?"#aaa":"#555";ctx.textAlign="center";ctx.fillText(hint,mp.x,mp.y-27);ctx.textAlign="left"
                         }
                     }
 
-                    // ── Hover "RMB: remover" hint ──────────────────────────────
-                    if (root.hoveredMarkerIdx >= 0 && !root.isDragging && !root.addMarkerMode) {
-                        var hm = root.markers[root.hoveredMarkerIdx]
-                        if (hm && hm.type === "marker") {
-                            var hmp  = root.latLngToPixel(hm.lat, hm.lng)
-                            var hint = "⌦ botão direito: remover"
-                            ctx.font  = "9px sans-serif"
-                            var htw  = ctx.measureText(hint).width
-                            var hbgC = root.mapStyle === "carto-dark" ? "rgba(20,20,20,0.82)" : "rgba(255,255,255,0.90)"
-                            ctx.fillStyle = hbgC
+                    // ── Distance measure ───────────────────────────────────────
+                    if (root.measureMode) {
+                        var pts = root.measurePts
+                        // Draw fixed points
+                        for (var pi3=0; pi3<pts.length; pi3++) {
+                            var pp = root.latLngToPixel(pts[pi3].lat, pts[pi3].lng)
+                            ctx.beginPath(); ctx.arc(pp.x, pp.y, 6, 0, 2*Math.PI)
+                            ctx.fillStyle="#f59e0b"; ctx.fill()
+                            ctx.strokeStyle="white"; ctx.lineWidth=1.5; ctx.stroke()
+                        }
+                        var hasRubber = pts.length === 1
+                        var hasFinal  = pts.length === 2
+
+                        var lineEnd   = hasFinal  ? root.latLngToPixel(pts[1].lat, pts[1].lng)
+                                      : hasRubber ? Qt.point(mapArea.mouseX, mapArea.mouseY)
+                                      : null
+
+                        if (lineEnd && pts.length >= 1) {
+                            var lineStart = root.latLngToPixel(pts[0].lat, pts[0].lng)
+                            ctx.save(); ctx.setLineDash([6,4])
+                            ctx.beginPath(); ctx.moveTo(lineStart.x, lineStart.y); ctx.lineTo(lineEnd.x, lineEnd.y)
+                            ctx.strokeStyle="#f59e0b"; ctx.lineWidth=2; ctx.stroke(); ctx.restore()
+
+                            var lat2 = hasFinal ? pts[1].lat : root.measureCurLat
+                            var lng2 = hasFinal ? pts[1].lng : root.measureCurLng
+                            var dist = root.haversineKm(pts[0].lat, pts[0].lng, lat2, lng2)
+                            var distTxt = root.formatDist(dist)
+                            var midX = (lineStart.x + lineEnd.x) / 2
+                            var midY = (lineStart.y + lineEnd.y) / 2 - 12
+                            ctx.font = "bold 11px sans-serif"
+                            var dtw = ctx.measureText(distTxt).width
+                            ctx.fillStyle = root.isDark ? "rgba(0,0,0,0.82)" : "rgba(255,255,255,0.92)"
                             ctx.beginPath()
-                            if (ctx.roundRect) ctx.roundRect(hmp.x - htw / 2 - 5, hmp.y - 37, htw + 10, 15, 3)
-                            else               ctx.rect(hmp.x - htw / 2 - 5, hmp.y - 37, htw + 10, 15)
+                            if(ctx.roundRect) ctx.roundRect(midX-dtw/2-6,midY-12,dtw+12,20,5)
+                            else ctx.rect(midX-dtw/2-6,midY-12,dtw+12,20)
                             ctx.fill()
-                            ctx.fillStyle = root.mapStyle === "carto-dark" ? "#aaa" : "#555"
-                            ctx.textAlign = "center"
-                            ctx.fillText(hint, hmp.x, hmp.y - 26)
-                            ctx.textAlign = "left"
+                            ctx.fillStyle="#f59e0b"; ctx.textAlign="center"; ctx.fillText(distTxt, midX, midY+4); ctx.textAlign="left"
                         }
                     }
 
-                    // ── Add-marker ghost cursor + coordinate tooltip ────────────
+                    // ── Add-marker ghost + coord tooltip ──────────────────────
                     if (root.addMarkerMode && mapArea.containsMouse) {
-                        var mx = mapArea.mouseX
-                        var my = mapArea.mouseY
-
-                        // Ghost pin
-                        ctx.beginPath()
-                        ctx.arc(mx, my - 11, 8, 0, 2 * Math.PI)
-                        ctx.fillStyle   = Qt.rgba(0.13, 0.79, 0.26, 0.45)
-                        ctx.fill()
-                        ctx.strokeStyle = "#22c55e"
-                        ctx.lineWidth   = 2
-                        ctx.stroke()
-                        ctx.beginPath()
-                        ctx.moveTo(mx - 5, my - 5); ctx.lineTo(mx, my); ctx.lineTo(mx + 5, my - 5)
-                        ctx.closePath()
-                        ctx.fillStyle = Qt.rgba(0.13, 0.79, 0.26, 0.45)
-                        ctx.fill()
-
-                        // Coordinate tooltip below cursor
-                        var coord  = root.pixelToLatLng(mx, my)
-                        var tip    = coord.x.toFixed(5) + ",  " + coord.y.toFixed(5)
-                        ctx.font   = "10px Consolas, monospace"
-                        var tipW   = ctx.measureText(tip).width
-                        var tipX   = Math.min(mx + 14, width  - tipW - 12)
-                        var tipY   = Math.min(my + 8,  height - 24)
-                        var tipBgC = root.mapStyle === "carto-dark" ? "rgba(10,10,10,0.80)" : "rgba(255,255,255,0.92)"
-                        ctx.fillStyle = tipBgC
-                        ctx.beginPath()
-                        if (ctx.roundRect) ctx.roundRect(tipX - 4, tipY, tipW + 8, 18, 4)
-                        else               ctx.rect(tipX - 4, tipY, tipW + 8, 18)
-                        ctx.fill()
-                        ctx.fillStyle = root.mapStyle === "carto-dark" ? "#ddd" : "#222"
-                        ctx.fillText(tip, tipX, tipY + 13)
+                        var gx=mapArea.mouseX, gy=mapArea.mouseY
+                        ctx.beginPath();ctx.arc(gx,gy-11,8,0,2*Math.PI)
+                        ctx.fillStyle="rgba(34,197,94,0.42)";ctx.fill();ctx.strokeStyle="#22c55e";ctx.lineWidth=2;ctx.stroke()
+                        ctx.beginPath();ctx.moveTo(gx-5,gy-5);ctx.lineTo(gx,gy);ctx.lineTo(gx+5,gy-5);ctx.closePath()
+                        ctx.fillStyle="rgba(34,197,94,0.42)";ctx.fill()
+                        var gc=root.pixelToLatLng(gx,gy), tip=gc.x.toFixed(5)+",  "+gc.y.toFixed(5)
+                        ctx.font="10px Consolas, monospace"
+                        var tw3=ctx.measureText(tip).width, tx3=Math.min(gx+14,width-tw3-12), ty3=Math.min(gy+8,height-24)
+                        ctx.fillStyle=root.isDark?"rgba(10,10,10,0.82)":"rgba(255,255,255,0.93)"
+                        ctx.beginPath();if(ctx.roundRect)ctx.roundRect(tx3-4,ty3,tw3+8,18,4);else ctx.rect(tx3-4,ty3,tw3+8,18);ctx.fill()
+                        ctx.fillStyle=root.isDark?"#ddd":"#222";ctx.fillText(tip,tx3,ty3+13)
                     }
                 }
             }
@@ -534,253 +577,173 @@ Item {
             // ── Scale bar ──────────────────────────────────────────────────────
             Item {
                 anchors { left: parent.left; bottom: parent.bottom; leftMargin: 10; bottomMargin: 6 }
-
                 Text {
-                    id: scaleLabel
-                    anchors { horizontalCenter: scaleBarRect.horizontalCenter; bottom: scaleBarRect.top; bottomMargin: 2 }
+                    id: scaleLbl; anchors { horizontalCenter: scaleRect.horizontalCenter; bottom: scaleRect.top; bottomMargin: 2 }
                     text: root.scaleInfo ? root.scaleInfo.label : ""
-                    color: root.mapStyle === "carto-dark" ? "white" : "#222"
-                    font.pixelSize: 9
-                    style: Text.Outline
-                    styleColor: root.mapStyle === "carto-dark" ? "#111" : "white"
+                    color: root.isDark ? "white" : "#222"; font.pixelSize: 9
+                    style: Text.Outline; styleColor: root.isDark ? "#111" : "white"
                 }
-
                 Rectangle {
-                    id: scaleBarRect
-                    anchors { bottom: parent.bottom; left: parent.left; bottomMargin: 12 }
-                    width:  root.scaleInfo ? Math.max(20, Math.min(root.scaleInfo.px, 120)) : 60
-                    height: 3
-                    color: root.mapStyle === "carto-dark" ? "white" : "#333"
-
-                    Rectangle { width: 1; height: 7; color: parent.color; anchors { left: parent.left;  verticalCenter: parent.verticalCenter } }
-                    Rectangle { width: 1; height: 7; color: parent.color; anchors { right: parent.right; verticalCenter: parent.verticalCenter } }
+                    id: scaleRect; anchors { bottom: parent.bottom; left: parent.left; bottomMargin: 12 }
+                    width: root.scaleInfo ? Math.max(20, Math.min(root.scaleInfo.px, 120)) : 60
+                    height: 3; color: root.isDark ? "white" : "#333"
+                    Rectangle { width:1; height:7; color:parent.color; anchors{left:parent.left; verticalCenter:parent.verticalCenter} }
+                    Rectangle { width:1; height:7; color:parent.color; anchors{right:parent.right;verticalCenter:parent.verticalCenter} }
                 }
             }
 
-            // ── OSM attribution (legally required) ────────────────────────────
+            // ── Attribution ────────────────────────────────────────────────────
             Text {
                 anchors { right: parent.right; bottom: parent.bottom; rightMargin: 5; bottomMargin: 3 }
-                text: root.mapStyle === "topo" ? "© OpenTopoMap | © OpenStreetMap"
-                                               : "© OpenStreetMap contributors"
-                color: root.mapStyle === "carto-dark" ? "rgba(200,200,200,0.55)" : "rgba(60,60,60,0.65)"
-                font.pixelSize: 8
+                text: root.attribution()
+                color: root.isDark ? "rgba(200,200,200,0.55)" : "rgba(60,60,60,0.65)"; font.pixelSize: 8
             }
 
-            // ── Add-marker mode banner ─────────────────────────────────────────
+            // ── Mode banners ───────────────────────────────────────────────────
             Rectangle {
                 anchors { top: parent.top; horizontalCenter: parent.horizontalCenter; topMargin: 8 }
-                visible: root.addMarkerMode
-                width: bannerText.width + 24; height: 26; radius: 13
-                color: "#22c55e"
+                visible: root.addMarkerMode; width: addBannerTxt.width+24; height: 26; radius: 13; color: "#22c55e"
+                Text { id: addBannerTxt; anchors.centerIn: parent; text: "Clique no mapa para posicionar o marcador"; color: "white"; font.pixelSize: 11; font.bold: true }
+            }
+            Rectangle {
+                anchors { top: parent.top; horizontalCenter: parent.horizontalCenter; topMargin: 8 }
+                visible: root.measureMode && !root.addMarkerMode; width: msrBannerTxt.width+24; height: 26; radius: 13; color: "#f59e0b"
                 Text {
-                    id: bannerText
-                    anchors.centerIn: parent
-                    text: "Clique no mapa para posicionar o marcador"
-                    color: "white"; font.pixelSize: 11; font.bold: true
+                    id: msrBannerTxt; anchors.centerIn: parent; color: "white"; font.pixelSize: 11; font.bold: true
+                    text: root.measurePts.length === 0 ? "Clique para definir ponto A"
+                        : root.measurePts.length === 1 ? "Clique para definir ponto B"
+                        :                                "Clique para nova medição · ESC limpa"
                 }
             }
 
             // ── Mouse area ────────────────────────────────────────────────────
             MouseArea {
-                id: mapArea
-                anchors.fill: parent
-                hoverEnabled: true
+                id: mapArea; anchors.fill: parent; hoverEnabled: true
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
-
-                // Cursor reflects interaction state
-                cursorShape: root.addMarkerMode        ? Qt.CrossCursor :
-                             root.isDragging           ? Qt.ClosedHandCursor :
-                             root.hoveredMarkerIdx >= 0 ? Qt.PointingHandCursor :
-                                                          Qt.OpenHandCursor
+                cursorShape: root.addMarkerMode         ? Qt.CrossCursor
+                           : root.measureMode           ? Qt.CrossCursor
+                           : root.isDragging            ? Qt.ClosedHandCursor
+                           : root.hoveredMarkerIdx >= 0 ? Qt.PointingHandCursor
+                           :                              Qt.OpenHandCursor
 
                 onPressed: function(mouse) {
-                    mapClip.forceActiveFocus()
+                    mapClip.forceActiveFocus(); stylePopup.visible = false
                     if (mouse.button !== Qt.LeftButton) return
-                    root.dragStartX   = mouse.x
-                    root.dragStartY   = mouse.y
-                    root.dragStartLat = root.centerLat
-                    root.dragStartLng = root.centerLng
-                    root.isDragging   = false
-                    markerPopup.visible = false
+                    root.dragStartX=mouse.x; root.dragStartY=mouse.y
+                    root.dragStartLat=root.centerLat; root.dragStartLng=root.centerLng
+                    root.isDragging=false; markerPopup.visible=false
                 }
 
                 onPositionChanged: function(mouse) {
-                    // Always track hover coord (shown in status bar)
                     var c = root.pixelToLatLng(mouse.x, mouse.y)
-                    root.hoverLat = c.x; root.hoverLng = c.y
+                    root.hoverLat=c.x; root.hoverLng=c.y
+                    root.measureCurLat=c.x; root.measureCurLng=c.y
 
-                    if (root.addMarkerMode) {
-                        overlayCanvas.requestPaint()
-                        return
-                    }
+                    if (root.addMarkerMode || root.measureMode) { overlayCanvas.requestPaint(); return }
 
-                    // Marker hover detection
-                    var prev = root.hoveredMarkerIdx
-                    root.hoveredMarkerIdx = root.findNearestMarkerIdx(mouse.x, mouse.y, 14)
-                    if (root.hoveredMarkerIdx !== prev) overlayCanvas.requestPaint()
+                    var prev=root.hoveredMarkerIdx
+                    root.hoveredMarkerIdx=root.findNearestMarkerIdx(mouse.x,mouse.y,14)
+                    if (root.hoveredMarkerIdx!==prev) overlayCanvas.requestPaint()
 
-                    if (!pressed || mouse.buttons !== Qt.LeftButton) return
-
-                    var dx = mouse.x - root.dragStartX
-                    var dy = mouse.y - root.dragStartY
-                    if (!root.isDragging && (Math.abs(dx) > 3 || Math.abs(dy) > 3))
-                        root.isDragging = true
-
+                    if (!pressed || mouse.buttons!==Qt.LeftButton) return
+                    var dx=mouse.x-root.dragStartX, dy=mouse.y-root.dragStartY
+                    if (!root.isDragging&&(Math.abs(dx)>3||Math.abs(dy)>3)) root.isDragging=true
                     if (root.isDragging) {
-                        tileLayer.panBy(dx, dy)
-
-                        // Update logical centre so overlay redraws markers in the right place
-                        var ts    = 256
-                        var scale = Math.pow(2, root.zoom) * ts
-                        root.centerLng = root.dragStartLng - dx / scale * 360
-                        var cPy = (1 - Math.log(Math.tan(Math.PI / 4 + root.dragStartLat * Math.PI / 360)) / Math.PI) / 2
-                        var nPy = Math.max(0.001, Math.min(0.999, cPy - dy / scale))
-                        root.centerLat = 180 / Math.PI * (2 * Math.atan(Math.exp((1 - 2 * nPy) * Math.PI)) - Math.PI / 2)
+                        tileLayer.panBy(dx,dy)
+                        var ts=256,sc=Math.pow(2,root.zoom)*ts
+                        root.centerLng=root.dragStartLng-dx/sc*360
+                        var cPy=(1-Math.log(Math.tan(Math.PI/4+root.dragStartLat*Math.PI/360))/Math.PI)/2
+                        var nPy=Math.max(0.001,Math.min(0.999,cPy-dy/sc))
+                        root.centerLat=180/Math.PI*(2*Math.atan(Math.exp((1-2*nPy)*Math.PI))-Math.PI/2)
                         overlayCanvas.requestPaint()
                     }
                 }
 
                 onReleased: function(mouse) {
                     if (mouse.button !== Qt.LeftButton) return
-                    if (root.isDragging) {
-                        // Pan finished — reload tiles at new centre
-                        tileLayer.fullRefresh()
-                        overlayCanvas.requestPaint()
-                    } else {
-                        // Simple click
+                    if (root.isDragging) { tileLayer.fullRefresh(); overlayCanvas.requestPaint() }
+                    else {
                         var coord = root.pixelToLatLng(mouse.x, mouse.y)
-                        if (root.addMarkerMode) {
-                            markerPopup.pendingLat = coord.x
-                            markerPopup.pendingLng = coord.y
-                            markerPopup.labelField.text = ""
-                            var px = Math.min(mouse.x + 8, mapClip.width  - markerPopup.width  - 8)
-                            var py = Math.min(mouse.y + 8, mapClip.height - markerPopup.height - 8)
-                            markerPopup.x = px; markerPopup.y = py
-                            markerPopup.visible = true
-                            markerPopup.labelField.forceActiveFocus()
+                        if (root.measureMode) {
+                            if (root.measurePts.length < 2)
+                                root.measurePts = root.measurePts.concat([{lat: coord.x, lng: coord.y}])
+                            else
+                                root.measurePts = [{lat: coord.x, lng: coord.y}]
+                            overlayCanvas.requestPaint()
+                        } else if (root.addMarkerMode) {
+                            markerPopup.pendingLat=coord.x; markerPopup.pendingLng=coord.y
+                            markerPopup.labelField.text=""
+                            var px=Math.min(mouse.x+8,mapClip.width-markerPopup.width-8)
+                            var py=Math.min(mouse.y+8,mapClip.height-markerPopup.height-8)
+                            markerPopup.x=px; markerPopup.y=py
+                            markerPopup.visible=true; markerPopup.labelField.forceActiveFocus()
                         } else if (behaviourObject) {
                             behaviourObject.mapClicked(coord.x, coord.y)
                         }
                     }
-                    root.isDragging = false
+                    root.isDragging=false
                 }
 
-                // Right-click on a regular marker → remove it
                 onClicked: function(mouse) {
                     if (mouse.button !== Qt.RightButton) return
-                    var idx = root.findNearestMarkerIdx(mouse.x, mouse.y, 16)
-                    if (idx >= 0 && behaviourObject) {
-                        var m = root.markers[idx]
-                        if (m && m.type === "marker") behaviourObject.removeMarkerAt(idx)
-                    }
+                    var idx=root.findNearestMarkerIdx(mouse.x,mouse.y,16)
+                    if (idx>=0&&behaviourObject&&root.markers[idx]&&root.markers[idx].type==="marker")
+                        behaviourObject.removeMarkerAt(idx)
                 }
 
-                // Zoom toward the cursor position (standard map behaviour)
                 onWheel: function(wheel) {
-                    var delta   = wheel.angleDelta.y > 0 ? 1 : -1
-                    var newZoom = Math.max(1, Math.min(19, root.zoom + delta))
-                    if (newZoom === root.zoom) return
-
-                    var ts       = 256
-                    var newScale = Math.pow(2, newZoom) * ts
-
-                    // Lat/lng currently under the cursor
-                    var cursorCoord = root.pixelToLatLng(wheel.x, wheel.y)
-
-                    // New centre: keep cursor coord fixed at (wheel.x, wheel.y)
-                    root.centerLng = cursorCoord.y - (wheel.x - mapClip.width  / 2) / newScale * 360
-
-                    var cursorPy    = (1 - Math.log(Math.tan(Math.PI / 4 + cursorCoord.x * Math.PI / 360)) / Math.PI) / 2
-                    var newCenterPy = Math.max(0.001, Math.min(0.999,
-                                         cursorPy - (wheel.y - mapClip.height / 2) / newScale))
-                    root.centerLat  = 180 / Math.PI * (2 * Math.atan(Math.exp((1 - 2 * newCenterPy) * Math.PI)) - Math.PI / 2)
-
-                    root.zoom = newZoom
-                    tileLayer.fullRefresh()
-                    overlayCanvas.requestPaint()
+                    var delta=wheel.angleDelta.y>0?1:-1
+                    var nz=Math.max(1,Math.min(19,root.zoom+delta))
+                    if (nz===root.zoom) return
+                    var ns=Math.pow(2,nz)*256
+                    var cc=root.pixelToLatLng(wheel.x,wheel.y)
+                    root.centerLng=cc.y-(wheel.x-mapClip.width/2)/ns*360
+                    var cpy=(1-Math.log(Math.tan(Math.PI/4+cc.x*Math.PI/360))/Math.PI)/2
+                    var ncpy=Math.max(0.001,Math.min(0.999,cpy-(wheel.y-mapClip.height/2)/ns))
+                    root.centerLat=180/Math.PI*(2*Math.atan(Math.exp((1-2*ncpy)*Math.PI))-Math.PI/2)
+                    root.zoom=nz; tileLayer.fullRefresh(); overlayCanvas.requestPaint()
                 }
 
-                onExited: {
-                    root.hoveredMarkerIdx = -1
-                    overlayCanvas.requestPaint()
-                }
+                onExited: { root.hoveredMarkerIdx=-1; overlayCanvas.requestPaint() }
             }
 
-            // ── Marker label popup ────────────────────────────────────────────
+            // ── Marker popup ──────────────────────────────────────────────────
             Rectangle {
-                id: markerPopup
-                visible: false
-                z: 200
+                id: markerPopup; visible: false; z: 200
                 width: 210; height: 72; radius: 8
-                color: ThemeManager.surfaceColor
-                border.color: "#22c55e"; border.width: 1.5
-
-                property real  pendingLat: 0
-                property real  pendingLng: 0
+                color: ThemeManager.surfaceColor; border.color: "#22c55e"; border.width: 1.5
+                property real  pendingLat: 0; property real  pendingLng: 0
                 property alias labelField: lblInput
-
-                Column {
-                    anchors { fill: parent; margins: 10 }
-                    spacing: 6
-
+                Column { anchors { fill: parent; margins: 10 } spacing: 6
                     Text { text: "Label do marcador (opcional)"; color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
-
-                    Row {
-                        spacing: 6; width: parent.width
-                        Rectangle {
-                            width: parent.width - 58; height: 24; radius: 4
-                            color: ThemeManager.backgroundColor
-                            border.color: ThemeManager.borderColor
-                            TextInput {
-                                id: lblInput
-                                anchors { fill: parent; leftMargin: 7; rightMargin: 7; topMargin: 4; bottomMargin: 4 }
+                    Row { spacing: 6; width: parent.width
+                        Rectangle { width: parent.width-58; height: 24; radius: 4; color: ThemeManager.backgroundColor; border.color: ThemeManager.borderColor
+                            TextInput { id: lblInput; anchors{fill:parent;leftMargin:7;rightMargin:7;topMargin:4;bottomMargin:4}
                                 color: ThemeManager.textColor; font.pixelSize: 11
-                                Keys.onReturnPressed: markerPopup.confirm()
-                                Keys.onEscapePressed: markerPopup.visible = false
-                            }
-                        }
-                        Rectangle {
-                            width: 52; height: 24; radius: 4; color: "#22c55e"
-                            Text { anchors.centerIn: parent; text: "Adicionar"; color: "white"; font.pixelSize: 9; font.bold: true }
-                            MouseArea { anchors.fill: parent; onClicked: markerPopup.confirm() }
-                        }
+                                Keys.onReturnPressed: markerPopup.confirm(); Keys.onEscapePressed: markerPopup.visible=false } }
+                        Rectangle { width:52;height:24;radius:4;color:"#22c55e"
+                            Text{anchors.centerIn:parent;text:"Adicionar";color:"white";font.pixelSize:9;font.bold:true}
+                            MouseArea{anchors.fill:parent;onClicked:markerPopup.confirm()} }
                     }
                 }
-
                 function confirm() {
-                    if (behaviourObject)
-                        behaviourObject.addMarker(pendingLat, pendingLng, lblInput.text || "")
-                    visible = false
-                    root.addMarkerMode = false
+                    if (behaviourObject) behaviourObject.addMarker(pendingLat, pendingLng, lblInput.text || "")
+                    visible=false; root.addMarkerMode=false
                 }
             }
         }
 
         // ── Status bar ────────────────────────────────────────────────────────
         Rectangle {
-            Layout.fillWidth: true; height: 22
-            color: ThemeManager.surfaceColor
+            Layout.fillWidth: true; height: 22; color: ThemeManager.surfaceColor
             Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: ThemeManager.borderColor }
-
-            RowLayout {
-                anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
-                spacing: 12
-
-                Text {
-                    text: (behaviourObject ? behaviourObject.markerCount : 0) + " marcadores"
-                    color: ThemeManager.textSecondaryColor; font.pixelSize: 10
-                }
-                Text {
-                    text: (behaviourObject ? behaviourObject.traceLength : 0) + " pts rastreio"
-                    color: ThemeManager.textSecondaryColor; font.pixelSize: 10
-                }
+            RowLayout { anchors { fill: parent; leftMargin: 10; rightMargin: 10 } spacing: 12
+                Text { text: (behaviourObject ? behaviourObject.markerCount : 0) + " marcadores"; color: ThemeManager.textSecondaryColor; font.pixelSize: 10 }
+                Text { text: (behaviourObject ? behaviourObject.traceLength  : 0) + " pts rastreio"; color: ThemeManager.textSecondaryColor; font.pixelSize: 10 }
+                Text { visible: root.liveMarker !== null; text: "● Live"; color: "#10b981"; font.pixelSize: 10; font.bold: true }
+                Text { visible: behaviourObject && behaviourObject.hasGeofence; text: behaviourObject && behaviourObject.inGeofence ? "⬤ DENTRO" : "○ FORA"; color: behaviourObject && behaviourObject.inGeofence ? "#22c55e" : "#f59e0b"; font.pixelSize: 10; font.bold: true }
                 Item { Layout.fillWidth: true }
-                // Live cursor coordinates
-                Text {
-                    text: root.hoverLat.toFixed(5) + ",  " + root.hoverLng.toFixed(5)
-                    color: ThemeManager.textSecondaryColor; font.pixelSize: 10
-                    font.family: "Consolas, monospace"
-                }
+                Text { text: root.hoverLat.toFixed(5) + ",  " + root.hoverLng.toFixed(5); color: ThemeManager.textSecondaryColor; font.pixelSize: 10; font.family: "Consolas, monospace" }
             }
         }
     }
