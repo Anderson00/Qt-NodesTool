@@ -644,9 +644,10 @@ Rectangle {
                                 readonly property string style: GlobalProperties.connectionStyle
 
                                 // ── compatibility when dragging ──────────────────
+                                // Only highlight input ports on OTHER nodes (never the source node).
+                                // Compatible = dragging from output AND type check passes.
                                 readonly property bool _isCompatible: {
-                                    if (!root.isAnyPortDragging) return false
-                                    if (root.isSourceNode) return true
+                                    if (!root.isAnyPortDragging || root.isSourceNode) return false
                                     if (!root.draggingPortIsOutput) return false
                                     return viewPort.isPortCompatible(root.draggingPortSig, modelData.name)
                                 }
@@ -655,7 +656,7 @@ Rectangle {
                                 height: style === "list" ? 14 : 20
                                 radius: style === "list" ? 0 : 10
                                 color: style === "list" ? "transparent" : (inputMouse.containsMouse ? Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.25) : "transparent")
-                                border.width: style === "list" ? 0 : (_isCompatible ? 1 : 1)
+                                border.width: style === "list" ? 0 : 1
                                 border.color: style === "list" ? "transparent" : Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.4)
 
                                 // Dim incompatible input ports during drag
@@ -688,21 +689,20 @@ Rectangle {
 
                                     Rectangle {
                                         id: connInConnCircle
-                                        // Grow + bright border on compatible target ports
-                                        readonly property real _baseW: style === "list" ? 6 : 8
-                                        width:  inputArea._isCompatible && root.isAnyPortDragging ? _baseW + 4 : _baseW
+                                        // Size is FIXED — never changes during drag so circleConn
+                                        // mapToItem positions remain stable for connection line anchoring.
+                                        width:  style === "list" ? 6 : 8
                                         height: width
                                         radius: width / 2
                                         color:  stringToColour(extractParams(modelData.name))
                                         anchors.verticalCenter: parent.verticalCenter
+                                        // Visual highlight on compatible target: bright border only
                                         border.width: inputArea._isCompatible && root.isAnyPortDragging
                                                       ? 2
                                                       : (style === "list" ? 0 : 1)
                                         border.color: inputArea._isCompatible && root.isAnyPortDragging
                                                       ? Qt.lighter(stringToColour(extractParams(modelData.name)), 1.6)
                                                       : Qt.rgba(0,0,0,0.2)
-                                        Behavior on width  { NumberAnimation { duration: 140 } }
-                                        Behavior on border.width { NumberAnimation { duration: 140 } }
 
                                         // Pulsing glow ring on compatible port
                                         Rectangle {
@@ -766,13 +766,10 @@ Rectangle {
                                 readonly property string style: GlobalProperties.connectionStyle
 
                                 // ── compatibility when dragging ──────────────────
-                                // This output port is "compatible" when:
-                                //   dragging from input → this output can drive that input
-                                //   dragging from output → only the SOURCE port stays bright
+                                // Only highlight output ports on OTHER nodes (never source node).
+                                // Compatible = dragging from input AND type check passes.
                                 readonly property bool _isCompatible: {
-                                    if (!root.isAnyPortDragging) return false
-                                    if (root.isSourceNode && modelData.name === root.draggingPortSig) return true
-                                    if (root.isSourceNode) return false
+                                    if (!root.isAnyPortDragging || root.isSourceNode) return false
                                     if (root.draggingPortIsOutput) return false
                                     return viewPort.isPortCompatible(modelData.name, root.draggingPortSig)
                                 }
@@ -825,21 +822,20 @@ Rectangle {
                                     }
                                     Rectangle {
                                         id: connOutConnCircle
-                                        // Grow + bright border on compatible source/target ports
-                                        readonly property real _baseW: style === "list" ? 6 : 8
-                                        width:  outputArea._isCompatible && root.isAnyPortDragging ? _baseW + 4 : _baseW
+                                        // Size is FIXED — never changes during drag so circleConn
+                                        // mapToItem positions remain stable for connection line anchoring.
+                                        width:  style === "list" ? 6 : 8
                                         height: width
                                         radius: width / 2
                                         color:  stringToColour(extractParams(modelData.name))
                                         anchors.verticalCenter: parent.verticalCenter
+                                        // Visual highlight on compatible target: bright border only
                                         border.width: outputArea._isCompatible && root.isAnyPortDragging
                                                       ? 2
                                                       : (style === "list" ? 0 : 1)
                                         border.color: outputArea._isCompatible && root.isAnyPortDragging
                                                       ? Qt.lighter(stringToColour(extractParams(modelData.name)), 1.6)
                                                       : Qt.rgba(0,0,0,0.2)
-                                        Behavior on width  { NumberAnimation { duration: 140 } }
-                                        Behavior on border.width { NumberAnimation { duration: 140 } }
 
                                         // Pulsing glow ring on compatible port
                                         Rectangle {

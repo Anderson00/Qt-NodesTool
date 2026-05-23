@@ -1,4 +1,4 @@
-import QtQuick 2.12
+/import QtQuick 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Controls.Material 2.12
 import QtQuick.Layouts 1.0
@@ -471,10 +471,14 @@ Rectangle {
         function onConnectionRemoved(outputUuid, outputMethod, inputUuid, inputMethod) {
             for (var i = nodeConnections.model.count - 1; i >= 0; i--) {
                 var m = nodeConnections.model.get(i)
-                if (m.outputUuid === outputUuid && m.inputUuid === inputUuid &&
-                    m.methodSignature1 === outputMethod && m.methodSignature2 === inputMethod) {
-                    nodeConnections.model.remove(i)
-                    break
+                if (m.outputUuid === outputUuid && m.inputUuid === inputUuid) {
+                    var isSrcOut = m.isSourceOutput !== undefined ? m.isSourceOutput : true
+                    var expectedOutMethod = isSrcOut ? m.methodSignature1 : m.methodSignature2
+                    var expectedInMethod  = isSrcOut ? m.methodSignature2 : m.methodSignature1
+                    if (expectedOutMethod === outputMethod && expectedInMethod === inputMethod) {
+                        nodeConnections.model.remove(i)
+                        break
+                    }
                 }
             }
         }
@@ -883,17 +887,23 @@ Rectangle {
             if (vr) {
                 let conn = vr.connectionOnXYPosition(lp.x, lp.y)
                 if (conn) {
-                    // Capture everything needed BEFORE touching the model (model.get returns a live proxy)
+                    // Capture everything needed BEFORE touching the model
                     let n1        = nodeConnections.model.get(lastConnection)
-                    let outUuid   = viewPort.getUUIDFromBehaviour(n1['node'].behaviourObject)
-                    let outMethod = n1['methodSignature1']
-                    let inUuid    = viewPort.getUUIDFromBehaviour(node)
-                    let inMethod  = conn.name
+                    let n1Uuid    = viewPort.getUUIDFromBehaviour(n1['node'].behaviourObject)
+                    let n1Method  = n1['methodSignature1']
+                    let n2Uuid    = viewPort.getUUIDFromBehaviour(node)
+                    let n2Method  = conn.name
+
+                    let isSrcOut = n1['isSourceOutput'] !== undefined ? n1['isSourceOutput'] : true
+                    let outUuid   = isSrcOut ? n1Uuid : n2Uuid
+                    let outMethod = isSrcOut ? n1Method : n2Method
+                    let inUuid    = isSrcOut ? n2Uuid : n1Uuid
+                    let inMethod  = isSrcOut ? n2Method : n1Method
+
                     if (outUuid && inUuid && outMethod && inMethod) {
-                        // Store uuids in the model entry so onBehaviourRemoved/onConnectionRemoved can identify it
                         nodeConnections.model.set(lastConnection, {
                             outputUuid: outUuid, inputUuid: inUuid,
-                            methodSignature2: inMethod, node2: node
+                            methodSignature2: n2Method, node2: node
                         })
                         // Record undo; suppress visual redraw since we manually snap the line if valid
                         m_suppressConnectionDraw = true
@@ -1270,6 +1280,7 @@ Rectangle {
 
                     if (hitIndex !== -1) {
                         var connData = nodeConnections.model.get(hitIndex);
+                        var isSrcOut = connData.isSourceOutput !== undefined ? connData.isSourceOutput : true;
                         // Open radial menu
                         var globalPos = dragArea.mapToItem(root, mouse.x, mouse.y);
                         connMenu.originX = globalPos.x;
@@ -1277,8 +1288,8 @@ Rectangle {
                         connMenu.connectionIndex = hitIndex;
                         connMenu.outUuid = connData.outputUuid;
                         connMenu.inUuid = connData.inputUuid;
-                        connMenu.outMethod = connData.methodSignature1;
-                        connMenu.inMethod = connData.methodSignature2;
+                        connMenu.outMethod = isSrcOut ? connData.methodSignature1 : connData.methodSignature2;
+                        connMenu.inMethod = isSrcOut ? connData.methodSignature2 : connData.methodSignature1;
                         
                         // Extract names if available
                         connMenu.outNodeName = connData.node ? connData.node.title : "Nó Origem";
@@ -1493,14 +1504,21 @@ Rectangle {
                                 running: true
                             }
 
-                            startX: circleConnPoint.x + model.circleConn.width / 2
+                            readonly property bool srcIsOut: model.isSourceOutput !== undefined ? model.isSourceOutput : true
+                            readonly property bool tgtIsOut: model.isRestored ? false : !srcIsOut
+
+                            startX: srcIsOut ? circleConnPoint.x + model.circleConn.width : circleConnPoint.x
                             startY: circleConnPoint.y + model.circleConn.height / 2
 
                             PathCubic {
                                 id: cubicPath
-                                readonly property real ex: circleConn2
-                                    ? circleConnPoint2.x + circleConn2.width  / 2
-                                    : (mouseAreaGlobal.mouseX - mycanvas.x) / zoomScale
+                                readonly property real ex: {
+                                    if (circleConn2) {
+                                        return shapepath.tgtIsOut ? circleConnPoint2.x + circleConn2.width : circleConnPoint2.x
+                                    } else {
+                                        return (mouseAreaGlobal.mouseX - mycanvas.x) / zoomScale
+                                    }
+                                }
                                 readonly property real ey: circleConn2
                                     ? circleConnPoint2.y + circleConn2.height / 2
                                     : (mouseAreaGlobal.mouseY - mycanvas.y) / zoomScale
@@ -1511,9 +1529,9 @@ Rectangle {
 
                                 x: ex
                                 y: ey
-                                control1X: shapepath.startX + dx
+                                control1X: shapepath.startX + (shapepath.srcIsOut ? dx : -dx)
                                 control1Y: shapepath.startY
-                                control2X: ex - dx
+                                control2X: ex + (shapepath.tgtIsOut ? dx : -dx)
                                 control2Y: ey
                             }
                         }
@@ -1581,7 +1599,8 @@ Rectangle {
                                 circleConn: conn.circleConn, node2: this, methodSignature2: "",
                                 outputUuid: "", inputUuid: "",
                                 initCircleConn2: conn.circleConn, initViewRectConn2: this,
-                                isRestored: false
+                                isRestored: false,
+                                isSourceOutput: isOut
                             })
                             mouseAreaGlobal.enabled = true
                         }
@@ -2832,7 +2851,8 @@ Rectangle {
             methodSignature2:  inputMethod,
             initCircleConn2:   targetConn.circleConn,
             initViewRectConn2: targetRect,
-            isRestored:        true
+            isRestored:        true,
+            isSourceOutput:    true
         })
     }
 

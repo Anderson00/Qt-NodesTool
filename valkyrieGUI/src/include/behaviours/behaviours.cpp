@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <model/connectionmodel.h>
 #include "behaviours/typecoercions.h"
+#include "behaviours/typecoercions.h"
 
 Behaviours::Behaviours(QObject *parent) : QObject(parent)
 {
