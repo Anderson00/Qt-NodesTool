@@ -26,6 +26,7 @@ public:
 
 public slots:
     void send();
+    void trigger();
     Q_INVOKABLE void setEntry(const QString& key, const QString& value);
     Q_INVOKABLE void removeEntry(const QString& key);
     Q_INVOKABLE void clearDict();

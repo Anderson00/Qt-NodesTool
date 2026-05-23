@@ -25,6 +25,7 @@ public:
 
 public slots:
     void send();
+    void trigger();                    // INPUT PORT — aciona send() via conexão
     void setText(const QString& value);
     void setAutoSend(bool enabled);
 

@@ -26,6 +26,7 @@ public:
 
 public slots:
     void send();
+    void trigger();
     void setColorHex(const QString& hex);
     void setAutoSend(bool enabled);
 

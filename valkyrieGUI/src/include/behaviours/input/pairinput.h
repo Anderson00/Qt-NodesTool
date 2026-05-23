@@ -27,6 +27,7 @@ public:
 
 public slots:
     void send();
+    void trigger();
     void setXValue(double x);
     void setYValue(double y);
     void setAutoSend(bool enabled);

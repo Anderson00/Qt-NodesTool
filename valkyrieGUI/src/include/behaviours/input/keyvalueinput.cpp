@@ -1,13 +1,13 @@
 #include "keyvalueinput.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(KeyValueInput, "Key/Value Input", "Sends a labeled value pair to connected chart/data nodes", "input", 0, 4)
+REGISTER_BEHAVIOUR(KeyValueInput, "Key/Value Input", "Sends a labeled value pair to connected chart/data nodes", "input", 1, 4)
 
 KeyValueInput::KeyValueInput(QObject *parent) : Behaviours(parent)
 {
     this->setWidth(260);
-    this->setHeight(220);
-    this->setContentHeight(220);
+    this->setHeight(240);
+    this->setContentHeight(240);
     this->setQmlBodyUrl("qrc:/behaviours/input/KeyValueInput.qml");
     this->addInputOutputExclusion(QList<QString>({
         "send()",
@@ -34,7 +34,7 @@ QMap<QString, QVariant> KeyValueInput::static_infos()
         {"type",          Behaviours::Type::CPP},
         {"className",     "KeyValueInput"},
         {"desc",          "Sends a labeled value pair to connected nodes"},
-        {"inputs_count",  "0"},
+        {"inputs_count",  "1"},
         {"outputs_count", "4"}
     });
 }
@@ -80,6 +80,8 @@ void KeyValueInput::setAutoSend(bool enabled) {
 }
 
 // ── Core ─────────────────────────────────────────────────────────────────────
+
+void KeyValueInput::trigger() { send(); }
 
 void KeyValueInput::send() {
     emit outputLabelValue(m_keyText, m_valueNum);

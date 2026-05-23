@@ -68,23 +68,23 @@ Item {
             color: ThemeManager.textColor; opacity: 0.5
         }
 
-        // ── Auto + Send ───────────────────────────────────────────────────
+        // ── Auto-send toggle ──────────────────────────────────────────────
         RowLayout {
-            Layout.fillWidth: true
-            spacing: 6
-            Text { text: "Auto"; font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.6; Layout.alignment: Qt.AlignVCenter }
+            Layout.fillWidth: true; spacing: 6
+            Text { text: "Auto-send"; font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.6; Layout.alignment: Qt.AlignVCenter }
             CustomSwitch {
                 checked: behaviourObject ? behaviourObject.autoSend : false
                 onCheckedChanged: if (behaviourObject) behaviourObject.setAutoSend(checked)
                 Layout.alignment: Qt.AlignVCenter
             }
-            Item { Layout.fillWidth: true }
-            NewButton {
-                text: "Send"; variant: "filled"; iconSource: Icons.flash
-                backgroundColor: ThemeManager.primaryColor
-                Layout.preferredHeight: 28; Layout.preferredWidth: 70
-                onClicked: if (behaviourObject) behaviourObject.send()
-            }
+        }
+
+        // ── Send — full width ─────────────────────────────────────────────
+        NewButton {
+            Layout.fillWidth: true; Layout.preferredHeight: 36
+            text: "Send"; variant: "filled"; iconSource: Icons.flash
+            backgroundColor: ThemeManager.primaryColor
+            onClicked: if (behaviourObject) behaviourObject.send()
         }
     }
 }

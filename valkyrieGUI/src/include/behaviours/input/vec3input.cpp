@@ -1,13 +1,13 @@
 #include "vec3input.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(Vec3Input, "Vec3 Input", "Sends a 3D vector (X, Y, Z) with color-coded axes to connected nodes", "input", 0, 2)
+REGISTER_BEHAVIOUR(Vec3Input, "Vec3 Input", "Sends a 3D vector (X, Y, Z) with color-coded axes to connected nodes", "input", 1, 2)
 
 Vec3Input::Vec3Input(QObject *parent) : Behaviours(parent)
 {
     this->setWidth(260);
-    this->setHeight(240);
-    this->setContentHeight(240);
+    this->setHeight(260);
+    this->setContentHeight(260);
     this->setQmlBodyUrl("qrc:/behaviours/input/Vec3Input.qml");
     this->addInputOutputExclusion(QList<QString>({
         "send()",
@@ -34,7 +34,7 @@ QMap<QString, QVariant> Vec3Input::static_infos()
         {"type",          Behaviours::Type::CPP},
         {"className",     "Vec3Input"},
         {"desc",          "Sends a 3D vector with color-coded axes"},
-        {"inputs_count",  "0"},
+        {"inputs_count",  "1"},
         {"outputs_count", "2"}
     });
 }
@@ -80,6 +80,8 @@ void Vec3Input::setAutoSend(bool enabled) {
 }
 
 // ── Core ─────────────────────────────────────────────────────────────────────
+
+void Vec3Input::trigger() { send(); }
 
 void Vec3Input::send() {
     emit outputXYZ(m_vecX, m_vecY, m_vecZ);

@@ -31,6 +31,7 @@ public:
 
 public slots:
     void send();
+    void trigger();                    // INPUT PORT — aciona send() via conexão
     void setValue(double v);
     void setAutoSend(bool enabled);
     void setStepSize(double step);

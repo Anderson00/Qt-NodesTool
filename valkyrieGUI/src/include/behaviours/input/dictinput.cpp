@@ -2,7 +2,7 @@
 #include "behaviours/behaviourregistry.h"
 #include <QJsonDocument>
 
-REGISTER_BEHAVIOUR(DictInput, "Dict Input", "Builds and sends a key/value dictionary to connected nodes", "input", 0, 3)
+REGISTER_BEHAVIOUR(DictInput, "Dict Input", "Builds and sends a key/value dictionary to connected nodes", "input", 1, 3)
 
 DictInput::DictInput(QObject *parent) : Behaviours(parent)
 {
@@ -33,7 +33,7 @@ QMap<QString, QVariant> DictInput::static_infos()
         {"type",          Behaviours::Type::CPP},
         {"className",     "DictInput"},
         {"desc",          "Builds and sends a key/value dictionary"},
-        {"inputs_count",  "0"},
+        {"inputs_count",  "1"},
         {"outputs_count", "3"}
     });
 }
@@ -75,6 +75,8 @@ void DictInput::setAutoSend(bool enabled) {
 }
 
 // ── Core ─────────────────────────────────────────────────────────────────────
+
+void DictInput::trigger() { send(); }
 
 void DictInput::send() {
     QJsonObject obj;

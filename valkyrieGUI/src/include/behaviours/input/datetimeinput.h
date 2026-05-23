@@ -28,6 +28,7 @@ public:
 
 public slots:
     void send();
+    void trigger();
     void setDate(int year, int month, int day);
     void setTime(int hour, int minute, int second);
     void setFormat(const QString& fmt);

@@ -1,13 +1,13 @@
 #include "numberinput.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(NumberInput, "Number Input", "Sends a numeric value (double, int, bool or string) to connected nodes", "input", 0, 4)
+REGISTER_BEHAVIOUR(NumberInput, "Number Input", "Sends a numeric value (double, int, bool or string) to connected nodes", "input", 1, 4)
 
 NumberInput::NumberInput(QObject *parent) : Behaviours(parent)
 {
     this->setWidth(240);
-    this->setHeight(200);
-    this->setContentHeight(200);
+    this->setHeight(240);
+    this->setContentHeight(240);
     this->setQmlBodyUrl("qrc:/behaviours/input/NumberInput.qml");
     this->addInputOutputExclusion(QList<QString>({
         "send()",
@@ -36,7 +36,7 @@ QMap<QString, QVariant> NumberInput::static_infos()
         {"type",          Behaviours::Type::CPP},
         {"className",     "NumberInput"},
         {"desc",          "Sends a numeric value to connected nodes"},
-        {"inputs_count",  "0"},
+        {"inputs_count",  "1"},
         {"outputs_count", "4"}
     });
 }
@@ -89,6 +89,8 @@ void NumberInput::setMaxValue(double max) {
 }
 
 // ── Core ─────────────────────────────────────────────────────────────────────
+
+void NumberInput::trigger() { send(); }
 
 void NumberInput::send() {
     emit outputValue(m_value);

@@ -1,13 +1,13 @@
 #include "colorinput.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(ColorInput, "Color Input", "Sends a selected color as hex string or RGB values to connected nodes", "input", 0, 2)
+REGISTER_BEHAVIOUR(ColorInput, "Color Input", "Sends a selected color as hex string or RGB values to connected nodes", "input", 1, 2)
 
 ColorInput::ColorInput(QObject *parent) : Behaviours(parent)
 {
     this->setWidth(260);
-    this->setHeight(180);
-    this->setContentHeight(180);
+    this->setHeight(200);
+    this->setContentHeight(200);
     this->setQmlBodyUrl("qrc:/behaviours/input/ColorInput.qml");
     this->addInputOutputExclusion(QList<QString>({
         "send()",
@@ -30,7 +30,7 @@ QMap<QString, QVariant> ColorInput::static_infos()
         {"type",          Behaviours::Type::CPP},
         {"className",     "ColorInput"},
         {"desc",          "Sends a color as hex string or RGB values"},
-        {"inputs_count",  "0"},
+        {"inputs_count",  "1"},
         {"outputs_count", "2"}
     });
 }
@@ -59,6 +59,8 @@ void ColorInput::setAutoSend(bool enabled) {
 }
 
 // ── Core ─────────────────────────────────────────────────────────────────────
+
+void ColorInput::trigger() { send(); }
 
 void ColorInput::send() {
     QColor c(m_colorHex);

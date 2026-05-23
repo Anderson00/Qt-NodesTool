@@ -1,15 +1,15 @@
 #include "datetimeinput.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(DateTimeInput, "DateTime Input", "Sends a formatted date/time string or Unix timestamp to connected nodes", "input", 0, 2)
+REGISTER_BEHAVIOUR(DateTimeInput, "DateTime Input", "Sends a formatted date/time string or Unix timestamp to connected nodes", "input", 1, 2)
 
 DateTimeInput::DateTimeInput(QObject *parent) : Behaviours(parent)
 {
     m_dateTime = QDateTime::currentDateTime();
 
     this->setWidth(280);
-    this->setHeight(320);
-    this->setContentHeight(320);
+    this->setHeight(340);
+    this->setContentHeight(340);
     this->setQmlBodyUrl("qrc:/behaviours/input/DateTimeInput.qml");
     this->addInputOutputExclusion(QList<QString>({
         "send()",
@@ -35,7 +35,7 @@ QMap<QString, QVariant> DateTimeInput::static_infos()
         {"type",          Behaviours::Type::CPP},
         {"className",     "DateTimeInput"},
         {"desc",          "Sends a formatted date/time or Unix timestamp"},
-        {"inputs_count",  "0"},
+        {"inputs_count",  "1"},
         {"outputs_count", "2"}
     });
 }
@@ -82,6 +82,8 @@ void DateTimeInput::setAutoSend(bool enabled) {
 }
 
 // ── Core ─────────────────────────────────────────────────────────────────────
+
+void DateTimeInput::trigger() { send(); }
 
 void DateTimeInput::send() {
     emit outputString(m_dateTime.toString(m_format));

@@ -19,7 +19,7 @@ Item {
         // ── Main value display ────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 52
+            Layout.fillHeight: true
             radius: 6
             color: Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.08)
             border.width: 1
@@ -27,50 +27,48 @@ Item {
 
             RowLayout {
                 anchors.fill: parent
-                anchors.margins: 4
-                spacing: 2
+                anchors.margins: 6
+                spacing: 4
 
-                // Decrement button
+                // Decrement
                 Rectangle {
-                    width: 32; height: 36; radius: 4
+                    Layout.preferredWidth: 34; Layout.fillHeight: true; radius: 5
                     color: decMouse.containsMouse
-                           ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.2)
-                           : "transparent"
-                    Text {
-                        anchors.centerIn: parent
-                        text: "−"; font.pixelSize: 18; font.bold: true
-                        color: ThemeManager.primaryColor
-                    }
+                           ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.25)
+                           : Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.08)
+                    Behavior on color { ColorAnimation { duration: 100 } }
+                    Text { anchors.centerIn: parent; text: "−"; font.pixelSize: 20; font.bold: true; color: ThemeManager.primaryColor }
                     MouseArea {
                         id: decMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                         onClicked: if (behaviourObject) behaviourObject.setValue(behaviourObject.value - behaviourObject.stepSize)
                     }
                 }
 
-                // Value input
+                // Value input — centered in available space
                 TextInput {
                     Layout.fillWidth: true
+                    Layout.fillHeight: true
                     horizontalAlignment: TextInput.AlignHCenter
-                    verticalAlignment: TextInput.AlignVCenter
-                    font.pixelSize: 20; font.family: "Consolas"; font.bold: true
+                    verticalAlignment:   TextInput.AlignVCenter
+                    font.pixelSize: 22; font.family: "Consolas"; font.bold: true
                     color: ThemeManager.primaryColor
                     text: behaviourObject ? behaviourObject.value.toFixed(2) : "0.00"
                     selectByMouse: true
                     validator: DoubleValidator {}
-                    onAccepted: { var v = parseFloat(text); if (!isNaN(v) && behaviourObject) behaviourObject.setValue(v) }
+                    onAccepted: {
+                        var v = parseFloat(text)
+                        if (!isNaN(v) && behaviourObject) behaviourObject.setValue(v)
+                    }
                 }
 
-                // Increment button
+                // Increment
                 Rectangle {
-                    width: 32; height: 36; radius: 4
+                    Layout.preferredWidth: 34; Layout.fillHeight: true; radius: 5
                     color: incMouse.containsMouse
-                           ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.2)
-                           : "transparent"
-                    Text {
-                        anchors.centerIn: parent
-                        text: "+"; font.pixelSize: 18; font.bold: true
-                        color: ThemeManager.primaryColor
-                    }
+                           ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.25)
+                           : Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.08)
+                    Behavior on color { ColorAnimation { duration: 100 } }
+                    Text { anchors.centerIn: parent; text: "+"; font.pixelSize: 20; font.bold: true; color: ThemeManager.primaryColor }
                     MouseArea {
                         id: incMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                         onClicked: if (behaviourObject) behaviourObject.setValue(behaviourObject.value + behaviourObject.stepSize)
@@ -79,54 +77,68 @@ Item {
             }
         }
 
-        // ── Step / range row ──────────────────────────────────────────────
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 4
-
-            Text { text: "Step"; font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.5; Layout.alignment: Qt.AlignVCenter }
-            NumericInputField {
-                Layout.preferredWidth: 60; Layout.preferredHeight: 26
-                value: behaviourObject ? behaviourObject.stepSize : 1
-                decimals: 2
-                // onValueModified — NÃO usar onValueChanged: sobrescreve o handler
-                // interno que sincroniza o texto do campo
-                onValueModified: function(newValue) { if (behaviourObject) behaviourObject.setStepSize(newValue) }
-            }
-            Item { Layout.fillWidth: true }
-            Text { text: "Min"; font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.5; Layout.alignment: Qt.AlignVCenter }
-            NumericInputField {
-                Layout.preferredWidth: 55; Layout.preferredHeight: 26
-                value: behaviourObject ? behaviourObject.minValue : -1e9
-                decimals: 1
-                onValueModified: function(newValue) { if (behaviourObject) behaviourObject.setMinValue(newValue) }
-            }
-            Text { text: "Max"; font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.5; Layout.alignment: Qt.AlignVCenter }
-            NumericInputField {
-                Layout.preferredWidth: 55; Layout.preferredHeight: 26
-                value: behaviourObject ? behaviourObject.maxValue : 1e9
-                decimals: 1
-                onValueModified: function(newValue) { if (behaviourObject) behaviourObject.setMaxValue(newValue) }
-            }
-        }
-
-        // ── Auto-send + Send ──────────────────────────────────────────────
+        // ── Step ─────────────────────────────────────────────────────────
         RowLayout {
             Layout.fillWidth: true
             spacing: 6
-            Text { text: "Auto"; font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.6; Layout.alignment: Qt.AlignVCenter }
+            Text {
+                text: "Step"
+                font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.55
+                Layout.preferredWidth: 32; Layout.alignment: Qt.AlignVCenter
+            }
+            NumericInputField {
+                Layout.fillWidth: true; Layout.preferredHeight: 30
+                value: behaviourObject ? behaviourObject.stepSize : 1
+                decimals: 3; from: 0.001
+                onValueModified: function(v) { if (behaviourObject) behaviourObject.setStepSize(v) }
+            }
+        }
+
+        // ── Min / Max ─────────────────────────────────────────────────────
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 6
+            Text {
+                text: "Min"
+                font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.55
+                Layout.preferredWidth: 32; Layout.alignment: Qt.AlignVCenter
+            }
+            NumericInputField {
+                Layout.fillWidth: true; Layout.preferredHeight: 30
+                value: behaviourObject ? behaviourObject.minValue : -1e9
+                decimals: 2
+                onValueModified: function(v) { if (behaviourObject) behaviourObject.setMinValue(v) }
+            }
+            Text {
+                text: "Max"
+                font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.55
+                Layout.alignment: Qt.AlignVCenter
+            }
+            NumericInputField {
+                Layout.fillWidth: true; Layout.preferredHeight: 30
+                value: behaviourObject ? behaviourObject.maxValue : 1e9
+                decimals: 2
+                onValueModified: function(v) { if (behaviourObject) behaviourObject.setMaxValue(v) }
+            }
+        }
+
+        // ── Auto toggle ───────────────────────────────────────────────────
+        RowLayout {
+            Layout.fillWidth: true; spacing: 6
+            Text { text: "Auto-send"; font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.6; Layout.alignment: Qt.AlignVCenter }
             CustomSwitch {
                 checked: behaviourObject ? behaviourObject.autoSend : false
                 onCheckedChanged: if (behaviourObject) behaviourObject.setAutoSend(checked)
                 Layout.alignment: Qt.AlignVCenter
             }
-            Item { Layout.fillWidth: true }
-            NewButton {
-                text: "Send"; variant: "filled"; iconSource: Icons.flash
-                backgroundColor: ThemeManager.primaryColor
-                Layout.preferredHeight: 28; Layout.preferredWidth: 70
-                onClicked: if (behaviourObject) behaviourObject.send()
-            }
+        }
+
+        // ── Send button — full width ──────────────────────────────────────
+        NewButton {
+            Layout.fillWidth: true; Layout.preferredHeight: 36
+            text: "Send"; variant: "filled"; iconSource: Icons.flash
+            backgroundColor: ThemeManager.primaryColor
+            onClicked: if (behaviourObject) behaviourObject.send()
         }
     }
 }

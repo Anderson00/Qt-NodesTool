@@ -29,6 +29,7 @@ public:
 
 public slots:
     void send();
+    void trigger();
     void setKeyText(const QString& key);
     void setValueNum(double value);
     void setIndexNum(int index);

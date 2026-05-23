@@ -1,13 +1,13 @@
 #include "vec2input.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(Vec2Input, "Vec2 Input", "Sends a 2D vector (X, Y) with graphical arrow preview to connected nodes", "input", 0, 2)
+REGISTER_BEHAVIOUR(Vec2Input, "Vec2 Input", "Sends a 2D vector (X, Y) with graphical arrow preview to connected nodes", "input", 1, 2)
 
 Vec2Input::Vec2Input(QObject *parent) : Behaviours(parent)
 {
     this->setWidth(260);
-    this->setHeight(220);
-    this->setContentHeight(220);
+    this->setHeight(240);
+    this->setContentHeight(240);
     this->setQmlBodyUrl("qrc:/behaviours/input/Vec2Input.qml");
     this->addInputOutputExclusion(QList<QString>({
         "send()",
@@ -32,7 +32,7 @@ QMap<QString, QVariant> Vec2Input::static_infos()
         {"type",          Behaviours::Type::CPP},
         {"className",     "Vec2Input"},
         {"desc",          "Sends a 2D vector with graphical preview"},
-        {"inputs_count",  "0"},
+        {"inputs_count",  "1"},
         {"outputs_count", "2"}
     });
 }
@@ -69,6 +69,8 @@ void Vec2Input::setAutoSend(bool enabled) {
 }
 
 // ── Core ─────────────────────────────────────────────────────────────────────
+
+void Vec2Input::trigger() { send(); }
 
 void Vec2Input::send() {
     emit outputXY(m_vecX, m_vecY);

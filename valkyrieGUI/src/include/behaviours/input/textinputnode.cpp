@@ -1,13 +1,13 @@
 #include "textinputnode.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(TextInputNode, "Text Input", "Sends a user-defined text string to connected nodes", "input", 0, 1)
+REGISTER_BEHAVIOUR(TextInputNode, "Text Input", "Sends a user-defined text string to connected nodes", "input", 1, 1)
 
 TextInputNode::TextInputNode(QObject *parent) : Behaviours(parent)
 {
     this->setWidth(240);
-    this->setHeight(160);
-    this->setContentHeight(160);
+    this->setHeight(170);
+    this->setContentHeight(170);
     this->setQmlBodyUrl("qrc:/behaviours/input/TextInputNode.qml");
     this->addInputOutputExclusion(QList<QString>({
         "send()",
@@ -30,7 +30,7 @@ QMap<QString, QVariant> TextInputNode::static_infos()
         {"type",          Behaviours::Type::CPP},
         {"className",     "TextInputNode"},
         {"desc",          "Sends a user-defined text string to connected nodes"},
-        {"inputs_count",  "0"},
+        {"inputs_count",  "1"},
         {"outputs_count", "1"}
     });
 }
@@ -59,9 +59,8 @@ void TextInputNode::setAutoSend(bool enabled) {
 
 // ── Core ─────────────────────────────────────────────────────────────────────
 
-void TextInputNode::send() {
-    emit outputString(m_text);
-}
+void TextInputNode::send()    { emit outputString(m_text); }
+void TextInputNode::trigger() { send(); }
 
 // ── State persistence ────────────────────────────────────────────────────────
 

@@ -11,39 +11,68 @@ Item {
     anchors.fill: parent
     property var behaviourObject
 
-    // Track key/value pairs locally so Repeater can bind them
-    property var keyList: []
-    property var valueList: []
+    // ── Local model é a fonte de verdade da UI ────────────────────────────
+    // Não usamos Connections para dictChanged — evita rebuild e perda de foco.
+    // Sincronizamos do C++ apenas no carregamento inicial.
+    ListModel { id: pairsModel }
 
-    function rebuildLists() {
+    function loadFromDict() {
+        pairsModel.clear()
         if (!behaviourObject) return
-        var dict = behaviourObject.dict
-        var keys = Object.keys(dict)
-        keyList = keys
-        valueList = keys.map(function(k) { return dict[k] })
+        var d = behaviourObject.dict
+        var keys = Object.keys(d)
+        for (var i = 0; i < keys.length; i++)
+            pairsModel.append({ pkey: keys[i], pval: d[keys[i]] })
     }
 
-    Connections {
-        target: behaviourObject
-        function onDictChanged() { root.rebuildLists() }
+    onBehaviourObjectChanged: loadFromDict()
+    Component.onCompleted:    loadFromDict()
+
+    // Commit de edição de key: remove a key antiga, cria a nova
+    function commitKey(index, oldKey, newKey) {
+        if (oldKey === newKey) return
+        var val = pairsModel.get(index).pval
+        pairsModel.set(index, { pkey: newKey, pval: val })
+        if (behaviourObject) {
+            if (oldKey) behaviourObject.removeEntry(oldKey)
+            if (newKey) behaviourObject.setEntry(newKey, val)
+        }
     }
 
-    onBehaviourObjectChanged: rebuildLists()
+    // Commit de edição de value
+    function commitVal(index, key, newVal) {
+        pairsModel.set(index, { pkey: key, pval: newVal })
+        if (behaviourObject && key) behaviourObject.setEntry(key, newVal)
+    }
+
+    // Adiciona nova entrada
+    function addEntry() {
+        var key = "key" + (pairsModel.count + 1)
+        pairsModel.append({ pkey: key, pval: "" })
+        if (behaviourObject) behaviourObject.setEntry(key, "")
+    }
+
+    // Remove entrada por índice
+    function removeAt(index) {
+        var key = pairsModel.get(index).pkey
+        pairsModel.remove(index)
+        if (behaviourObject && key) behaviourObject.removeEntry(key)
+    }
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 8
         spacing: 6
 
-        // ── Header ────────────────────────────────────────────────────────
+        // ── Column headers ────────────────────────────────────────────────
         RowLayout {
             Layout.fillWidth: true
-            Text { text: "Key"; font.pixelSize: 10; font.bold: true; color: ThemeManager.textColor; opacity: 0.6; Layout.preferredWidth: 90 }
-            Text { text: "Value"; font.pixelSize: 10; font.bold: true; color: ThemeManager.textColor; opacity: 0.6; Layout.fillWidth: true }
-            Item { width: 28 }
+            Text { text: "Key";   font.pixelSize: 10; font.bold: true; color: ThemeManager.textColor; opacity: 0.55; Layout.preferredWidth: 90 }
+            Text { text: "Value"; font.pixelSize: 10; font.bold: true; color: ThemeManager.textColor; opacity: 0.55; Layout.fillWidth: true }
+            Item  { width: 30 }
         }
 
-        // ── Rows ──────────────────────────────────────────────────────────
+        // ── Rows (ListModel → delegates estáveis) ─────────────────────────
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -54,93 +83,100 @@ Item {
             clip: true
 
             ScrollView {
+                id: dictScroll
                 anchors.fill: parent
                 anchors.margins: 4
                 contentWidth: availableWidth
+                contentHeight: dictCol.implicitHeight
                 ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                clip: true
 
-                ColumnLayout {
-                    width: parent.width
+                Column {
+                    id: dictCol
+                    width: dictScroll.availableWidth
                     spacing: 3
 
                     Repeater {
-                        model: root.keyList.length
+                        model: pairsModel
                         delegate: RowLayout {
-                            width: parent.width
+                            id: rowItem
+                            width: dictCol.width
                             spacing: 4
-                            property string currentKey: root.keyList[index] || ""
+
+                            // Salva a key original ao iniciar edição
+                            property string savedKey: pkey
 
                             CustomTextField {
                                 Layout.fillWidth: false
-                                Layout.preferredWidth: 88; Layout.preferredHeight: 28
-                                text: root.keyList[index] || ""
-                                font.pixelSize: 11
+                                Layout.preferredWidth: 86
+                                Layout.preferredHeight: 30
+                                text: pkey
                                 placeholderText: "key"
-                                onEditingFinished: {
-                                    if (behaviourObject && text !== currentKey) {
-                                        behaviourObject.removeEntry(currentKey)
-                                        if (text) behaviourObject.setEntry(text, root.valueList[index] || "")
-                                    }
-                                }
+                                onActiveFocusChanged: if (activeFocus) rowItem.savedKey = text
+                                onEditingFinished:    root.commitKey(index, rowItem.savedKey, text)
                             }
                             CustomTextField {
-                                Layout.fillWidth: true; Layout.preferredHeight: 28
-                                text: root.valueList[index] || ""
-                                font.pixelSize: 11
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 30
+                                text: pval
                                 placeholderText: "value"
-                                onEditingFinished: if (behaviourObject) behaviourObject.setEntry(root.keyList[index], text)
+                                onEditingFinished: root.commitVal(index, pkey, text)
                             }
                             Rectangle {
-                                width: 24; height: 24; radius: 4
-                                color: delMouse.containsMouse ? "#FF1744" : Qt.rgba(1, 0.1, 0.2, 0.15)
+                                width: 26; height: 26; radius: 4
+                                color: delMa.containsMouse ? "#FF1744" : Qt.rgba(1, 0.1, 0.2, 0.18)
                                 Behavior on color { ColorAnimation { duration: 100 } }
-                                Text { anchors.centerIn: parent; text: "−"; font.pixelSize: 14; font.bold: true; color: "#FF5252" }
+                                Text { anchors.centerIn: parent; text: "−"; font.pixelSize: 15; font.bold: true; color: "#FF5252" }
                                 MouseArea {
-                                    id: delMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-                                    onClicked: if (behaviourObject) behaviourObject.removeEntry(root.keyList[index])
+                                    id: delMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.removeAt(index)
                                 }
                             }
-                        }
-                    }
-
-                    // ── Add row ───────────────────────────────────────────
-                    Rectangle {
-                        width: parent.width; height: 28; radius: 4
-                        color: addMouse.containsMouse
-                               ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.15)
-                               : Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.06)
-                        Behavior on color { ColorAnimation { duration: 100 } }
-                        RowLayout {
-                            anchors.centerIn: parent; spacing: 4
-                            Text { text: "+"; font.pixelSize: 14; font.bold: true; color: ThemeManager.primaryColor }
-                            Text { text: "Add entry"; font.pixelSize: 11; color: ThemeManager.primaryColor; opacity: 0.8 }
-                        }
-                        MouseArea {
-                            id: addMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-                            onClicked: if (behaviourObject) behaviourObject.setEntry("key" + (root.keyList.length + 1), "")
                         }
                     }
                 }
             }
         }
 
-        // ── Auto + Send ───────────────────────────────────────────────────
-        RowLayout {
+        // ── Add entry — sempre visível, fora do scroll ────────────────────
+        Rectangle {
             Layout.fillWidth: true
-            spacing: 6
-            Text { text: "Auto"; font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.6; Layout.alignment: Qt.AlignVCenter }
+            Layout.preferredHeight: 30
+            radius: 5
+            color: addMa.containsMouse
+                   ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.18)
+                   : Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.07)
+            border.width: 1
+            border.color: Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.25)
+            Behavior on color { ColorAnimation { duration: 100 } }
+            RowLayout {
+                anchors.centerIn: parent; spacing: 5
+                Text { text: "+"; font.pixelSize: 15; font.bold: true; color: ThemeManager.primaryColor }
+                Text { text: "Add entry"; font.pixelSize: 12; color: ThemeManager.primaryColor }
+            }
+            MouseArea {
+                id: addMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                onClicked: root.addEntry()
+            }
+        }
+
+        // ── Auto toggle ───────────────────────────────────────────────────
+        RowLayout {
+            Layout.fillWidth: true; spacing: 6
+            Text { text: "Auto-send"; font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.6; Layout.alignment: Qt.AlignVCenter }
             CustomSwitch {
                 checked: behaviourObject ? behaviourObject.autoSend : false
                 onCheckedChanged: if (behaviourObject) behaviourObject.setAutoSend(checked)
                 Layout.alignment: Qt.AlignVCenter
             }
-            Item { Layout.fillWidth: true }
-            NewButton {
-                text: "Send"; variant: "filled"; iconSource: Icons.flash
-                backgroundColor: ThemeManager.primaryColor
-                Layout.preferredHeight: 28; Layout.preferredWidth: 70
-                onClicked: if (behaviourObject) behaviourObject.send()
-            }
+        }
+
+        // ── Send — full width ─────────────────────────────────────────────
+        NewButton {
+            Layout.fillWidth: true; Layout.preferredHeight: 36
+            text: "Send"; variant: "filled"; iconSource: Icons.flash
+            backgroundColor: ThemeManager.primaryColor
+            onClicked: if (behaviourObject) behaviourObject.send()
         }
     }
 }

@@ -1,13 +1,13 @@
 #include "pairinput.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(PairInput, "Pair Input", "Sends an (X, Y) data point to connected nodes", "input", 0, 1)
+REGISTER_BEHAVIOUR(PairInput, "Pair Input", "Sends an (X, Y) data point to connected nodes", "input", 1, 1)
 
 PairInput::PairInput(QObject *parent) : Behaviours(parent)
 {
     this->setWidth(260);
-    this->setHeight(180);
-    this->setContentHeight(180);
+    this->setHeight(200);
+    this->setContentHeight(200);
     this->setQmlBodyUrl("qrc:/behaviours/input/PairInput.qml");
     this->addInputOutputExclusion(QList<QString>({
         "send()",
@@ -32,7 +32,7 @@ QMap<QString, QVariant> PairInput::static_infos()
         {"type",          Behaviours::Type::CPP},
         {"className",     "PairInput"},
         {"desc",          "Sends an (X, Y) data point to connected nodes"},
-        {"inputs_count",  "0"},
+        {"inputs_count",  "1"},
         {"outputs_count", "1"}
     });
 }
@@ -69,6 +69,8 @@ void PairInput::setAutoSend(bool enabled) {
 }
 
 // ── Core ─────────────────────────────────────────────────────────────────────
+
+void PairInput::trigger() { send(); }
 
 void PairInput::send() {
     emit outputXY(m_xValue, m_yValue);

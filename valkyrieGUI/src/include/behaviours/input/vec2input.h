@@ -28,6 +28,7 @@ public:
 
 public slots:
     void send();
+    void trigger();
     void setVecX(double x);
     void setVecY(double y);
     void setAutoSend(bool enabled);
