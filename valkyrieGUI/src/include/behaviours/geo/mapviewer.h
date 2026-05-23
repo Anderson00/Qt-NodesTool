@@ -83,6 +83,7 @@ public slots:
     void setEndPoint(double lat, double lng);
     void removeMarkerAt(int index);
     void updateMarkerLabel(int index, QString label);
+    void removeLastTracePoint();
     // Live tracking
     void setLiveMarker(double lat, double lng, QString label = "Live");
     void clearLiveMarker();

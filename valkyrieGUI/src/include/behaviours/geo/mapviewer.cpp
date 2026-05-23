@@ -110,6 +110,14 @@ void MapViewer::clearTrace()
     emit internalTraceChanged();
 }
 
+void MapViewer::removeLastTracePoint()
+{
+    if (m_trace.isEmpty()) return;
+    m_trace.removeLast();
+    emit traceLengthChanged();
+    emit internalTraceChanged();
+}
+
 // ── Live marker ───────────────────────────────────────────────────────────────
 
 void MapViewer::setLiveMarker(double lat, double lng, QString label)
