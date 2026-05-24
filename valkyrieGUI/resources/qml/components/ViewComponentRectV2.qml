@@ -5,6 +5,7 @@ import QtQuick.Controls.Material 2.12
 import Qt5Compat.GraphicalEffects
 import App.Theme 1.0
 import App.Properties 1.0
+import App.Desktop 1.0
 import App.Icons 1.0
 
 
@@ -13,6 +14,8 @@ Rectangle {
 
     // -- Public API --
     property var behaviourObject
+    property string nodeUuid: ""           // set by ViewPortWindow delegate
+    readonly property bool isPinnedNode: nodeUuid !== "" && DesktopManager.pinnedNodes.indexOf(nodeUuid) >= 0
 
     property var connectionsInput: []
     property var connectionsOutput: []
@@ -404,6 +407,9 @@ Rectangle {
     ResizeHandle { id: rH;  direction: "right";        handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
 
     // ============== Header ==============
+    // z: 5 lifts the entire header above the body `area` MouseArea (z:1) so
+    // header buttons (close, kebab, maximize) actually receive their clicks.
+    // Drag-by-title is preserved by the dedicated `headerDragArea` below.
     Rectangle {
         id: topHeaderRect
         anchors.left: root.left
@@ -416,7 +422,7 @@ Rectangle {
         radius: root.radius - 1
         antialiasing: true
         clip: true
-        z: 1
+        z: 5
         color: root.isSelected ? root.borderColor : root.color
 
         Rectangle {
@@ -434,15 +440,105 @@ Rectangle {
             anchors.rightMargin: 4
             spacing: 2
 
+            // Pinned indicator — node is visible on every desktop
             Text {
-                id: titleView
-                Layout.fillWidth: true
-                text: ""
-                font.pixelSize: 12
-                color: root.isSelected ? ThemeManager.backgroundColor
-                                  : ThemeManager.textColor
-                verticalAlignment: Text.AlignVCenter
-                elide: Text.ElideRight
+                visible: root.isPinnedNode
+                text: "📌"
+                font.pixelSize: 11
+                Layout.alignment: Qt.AlignVCenter
+            }
+
+            // Desktop membership dots — one tiny dot per desktop this node belongs to
+            Row {
+                spacing: 2
+                Layout.alignment: Qt.AlignVCenter
+                visible: !root.isPinnedNode && root.nodeUuid !== ""
+                Repeater {
+                    model: DesktopManager.desktopList
+                    Rectangle {
+                        width: 6; height: 6; radius: 3
+                        color: modelData.color
+                        opacity: DesktopManager.isNodeInDesktop(root.nodeUuid, modelData.id) ? 1.0 : 0.18
+                    }
+                }
+            }
+
+            // Title cell — also acts as a drag handle for the node. The header
+            // sits at z:5 above the body MouseArea, so we re-implement drag
+            // here. Buttons in this RowLayout are siblings of this Item, so
+            // they receive their own clicks without going through the drag MA.
+            Item {
+                id: titleCell
+                Layout.fillWidth:  true
+                Layout.fillHeight: true
+
+                Text {
+                    id: titleView
+                    anchors.fill: parent
+                    text: ""
+                    font.pixelSize: 12
+                    color: root.isSelected ? ThemeManager.backgroundColor
+                                      : ThemeManager.textColor
+                    verticalAlignment: Text.AlignVCenter
+                    elide: Text.ElideRight
+                }
+
+                MouseArea {
+                    id: headerDragArea
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    cursorShape: (pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor)
+
+                    property real _pressParentX: 0
+                    property real _pressParentY: 0
+                    property real _pressNodeX:   0
+                    property real _pressNodeY:   0
+
+                    onPressed: function(mouse) {
+                        if (mouse.button === Qt.RightButton) return
+                        var pt        = mapToItem(root.parent, mouse.x, mouse.y)
+                        _pressParentX = pt.x
+                        _pressParentY = pt.y
+                        _pressNodeX   = root.x
+                        _pressNodeY   = root.y
+                        root._pressX  = root.x
+                        root._pressY  = root.y
+                        root.isDragging = true
+                        root.nodePressed()
+                    }
+                    onPositionChanged: function(mouse) {
+                        if (!root.isDragging) return
+                        var pt   = mapToItem(root.parent, mouse.x, mouse.y)
+                        var newX = _pressNodeX + (pt.x - _pressParentX)
+                        var newY = _pressNodeY + (pt.y - _pressParentY)
+                        if (root.parent) {
+                            newX = Math.max(0, Math.min(root.parent.width  - root.width,  newX))
+                            newY = Math.max(0, Math.min(root.parent.height - root.height, newY))
+                        }
+                        if (root.snapEnabled) {
+                            if (root.viewportSnap) {
+                                var snapped = root.viewportSnap(newX, newY, root)
+                                newX = snapped.x; newY = snapped.y
+                            } else {
+                                newX = Math.round(newX / root.snapGridSize) * root.snapGridSize
+                                newY = Math.round(newY / root.snapGridSize) * root.snapGridSize
+                            }
+                        }
+                        root.x = newX; root.y = newY
+                        root.dragPositionChanged(newX, newY)
+                    }
+                    onReleased: function(mouse) {
+                        root.isDragging = false
+                        if (Math.abs(root.x - root._pressX) > 0.5 || Math.abs(root.y - root._pressY) > 0.5)
+                            root.nodeDragEnded(root._pressX, root._pressY, root.x, root.y)
+                    }
+                    onClicked: function(mouse) {
+                        root.focus = true
+                        if (mouse.button === Qt.RightButton) { contextMenu.popup(); return }
+                        if (Math.abs(root.x - root._pressX) <= 2 && Math.abs(root.y - root._pressY) <= 2)
+                            root.nodeClicked()
+                    }
+                }
             }
 
             NewButton {
@@ -514,6 +610,51 @@ Rectangle {
         MenuItem {
             text: qsTr("Back max")
             onTriggered: root._emitMenuAction("back-max")
+        }
+
+        MenuSeparator {}
+
+        // ── Pin / Unpin ─────────────────────────────────────────────────────
+        MenuItem {
+            text: root.isPinnedNode ? qsTr("Unpin from all desktops") : qsTr("Pin to all desktops")
+            enabled: root.nodeUuid !== ""
+            onTriggered: DesktopManager.toggleNodePinned(root.nodeUuid)
+        }
+
+        // ── Move to desktop submenu ─────────────────────────────────────────
+        Menu {
+            title: qsTr("Move to desktop")
+            enabled: root.nodeUuid !== "" && DesktopManager.desktopCount > 1
+
+            Repeater {
+                model: DesktopManager.desktopList
+                MenuItem {
+                    text: modelData.name + (DesktopManager.isNodeInDesktop(root.nodeUuid, modelData.id) ? "  ✓" : "")
+                    onTriggered: {
+                        // "Move" = replace membership with this desktop only
+                        DesktopManager.shareNodeAcrossDesktops(root.nodeUuid, [modelData.id])
+                    }
+                }
+            }
+        }
+
+        // ── Add to desktop submenu (share across multiple) ──────────────────
+        Menu {
+            title: qsTr("Also show on…")
+            enabled: root.nodeUuid !== "" && DesktopManager.desktopCount > 1
+
+            Repeater {
+                model: DesktopManager.desktopList
+                MenuItem {
+                    text: modelData.name + (DesktopManager.isNodeInDesktop(root.nodeUuid, modelData.id) ? "  ✓" : "")
+                    onTriggered: {
+                        if (DesktopManager.isNodeInDesktop(root.nodeUuid, modelData.id))
+                            DesktopManager.removeNodeFromDesktop(modelData.id, root.nodeUuid)
+                        else
+                            DesktopManager.addNodeToDesktop(modelData.id, root.nodeUuid)
+                    }
+                }
+            }
         }
     }
 

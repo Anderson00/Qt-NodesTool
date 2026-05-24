@@ -4,6 +4,7 @@
 #include "behaviours/typecoercions.h"
 #include "model/connectionmodel.h"
 #include "utils/workspacemanager.h"
+#include "utils/desktopmanager.h"
 #include "commands/nodeundocommands.h"
 #include "utils/toastmanager.h"
 #include <QUuid>
@@ -170,6 +171,10 @@ bool ViewPortWindow::addBehaviourWithUuid(const QString& path, const QJsonObject
         object->loadState(state);
 
     emit behaviourAdded(object);
+
+    // Assign this node to the active virtual desktop. Loading a workspace
+    // overrides this list via DesktopManager::deserialize() afterwards.
+    DesktopManager::instance()->registerNewNode(uuid);
     return true;
 }
 
@@ -200,6 +205,7 @@ bool ViewPortWindow::removeBehaviourFromUUID(const QString& uuid) {
 
 bool ViewPortWindow::removeBehaviourObject(Behaviours* object) {
     const QString key = object->uuid();
+    DesktopManager::instance()->unregisterNode(key);
     m_behaviours.remove(key);
     emit behaviourRemoved(object, key);  // notify QML before delete
     delete object;

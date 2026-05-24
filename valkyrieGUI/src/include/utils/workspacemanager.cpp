@@ -1,4 +1,5 @@
 #include "workspacemanager.h"
+#include "desktopmanager.h"
 #include "../viewportwindow.h"
 #include "../behaviours/behaviours.h"
 #include "../behaviours/connections.h"
@@ -87,6 +88,7 @@ void WorkspaceManager::newWorkspace()
         m_viewPort->clearBehaviours();
         m_viewPort->undoStack()->clear();
     }
+    DesktopManager::instance()->clearAll();
     m_currentWorkspace = "";
     emit currentWorkspaceChanged();
 }
@@ -174,11 +176,14 @@ bool WorkspaceManager::saveWorkspace(const QString& name)
     metadata["connectionCount"] = connections.size();
 
     QJsonObject root;
-    root["version"]     = WORKSPACE_VERSION;
-    root["metadata"]    = metadata;
-    root["nodes"]       = nodes;
-    root["connections"] = connections;
-    root["viewport"]    = viewport;
+    root["version"]      = WORKSPACE_VERSION;
+    root["metadata"]     = metadata;
+    root["nodes"]        = nodes;
+    root["connections"]  = connections;
+    root["viewport"]     = viewport;
+    root["desktops"]     = DesktopManager::instance()->serialize();
+    root["pinnedNodes"]  = DesktopManager::instance()->serializePinned();
+    root["currentDesktopId"] = DesktopManager::instance()->serializeCurrentDesktopId();
 
     QFile file(workspacePath(name));
 
@@ -262,6 +267,23 @@ bool WorkspaceManager::loadWorkspace(const QString& name)
 
     const QJsonObject vp = root["viewport"].toObject();
     m_viewPort->restoreViewport(vp["x"].toDouble(0), vp["y"].toDouble(0), vp["scale"].toDouble(1.0));
+
+    // Desktops (workspace schema v3+). Legacy projects without this block fall
+    // back to a single auto-created desktop containing every node.
+    if (root.contains("desktops")) {
+        DesktopManager::instance()->deserialize(
+            root.value("desktops").toArray(),
+            root.value("pinnedNodes").toArray(),
+            root.value("currentDesktopId").toString());
+    } else {
+        // Legacy: synthesize a single desktop containing every node we just loaded
+        DesktopManager::instance()->clearAll();
+        for (const QJsonValue& nv : nodeArr) {
+            const QString uuid = nv.toObject().value("uuid").toString();
+            if (!uuid.isEmpty())
+                DesktopManager::instance()->registerNewNode(uuid);
+        }
+    }
 
     qDebug() << "[WorkspaceManager] Workspace loaded successfully:" << name;
     emit workspaceLoaded(name);
@@ -471,11 +493,14 @@ bool WorkspaceManager::saveAutosave()
     metadata["autosave"]        = true;
 
     QJsonObject root;
-    root["version"]     = WORKSPACE_VERSION;
-    root["metadata"]    = metadata;
-    root["nodes"]       = nodes;
-    root["connections"] = connections;
-    root["viewport"]    = viewport;
+    root["version"]         = WORKSPACE_VERSION;
+    root["metadata"]        = metadata;
+    root["nodes"]           = nodes;
+    root["connections"]     = connections;
+    root["viewport"]        = viewport;
+    root["desktops"]        = DesktopManager::instance()->serialize();
+    root["pinnedNodes"]     = DesktopManager::instance()->serializePinned();
+    root["currentDesktopId"] = DesktopManager::instance()->serializeCurrentDesktopId();
 
     QFile file(autosavePath(m_currentWorkspace));
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
@@ -539,6 +564,20 @@ bool WorkspaceManager::loadAutosave(const QString& name)
 
     const QJsonObject vp = root["viewport"].toObject();
     m_viewPort->restoreViewport(vp["x"].toDouble(0), vp["y"].toDouble(0), vp["scale"].toDouble(1.0));
+
+    if (root.contains("desktops")) {
+        DesktopManager::instance()->deserialize(
+            root.value("desktops").toArray(),
+            root.value("pinnedNodes").toArray(),
+            root.value("currentDesktopId").toString());
+    } else {
+        DesktopManager::instance()->clearAll();
+        for (const QJsonValue& nv : nodeArr) {
+            const QString uuid = nv.toObject().value("uuid").toString();
+            if (!uuid.isEmpty())
+                DesktopManager::instance()->registerNewNode(uuid);
+        }
+    }
 
     if (m_currentWorkspace != name) {
         m_currentWorkspace = name;

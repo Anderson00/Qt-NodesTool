@@ -316,7 +316,9 @@ Rectangle {
                             hoverEnabled: true
                             cursorShape:  Qt.PointingHandCursor
                             onClicked: function(mouse) {
-                                cardMenu.popup()
+                                // Open menu right-aligned to the kebab button, just below it
+                                cardMenu.openAt(kebabBtn.x + kebabBtn.width - cardMenu.width,
+                                                kebabBtn.y + kebabBtn.height + 4)
                             }
                         }
                     }
@@ -330,48 +332,39 @@ Rectangle {
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
                         onClicked: function(mouse) {
                             if (mouse.button === Qt.RightButton) {
-                                cardMenu.popup()
+                                cardMenu.openAt(mouse.x, mouse.y)
                                 return
                             }
                             root.workspaceOpenRequested(card.workspaceName)
                         }
                     }
 
-                    // ── Context menu ──────────────────────────────────────────
-                    Menu {
+                    // ── Context menu (themed) ─────────────────────────────────
+                    ContextMenu {
                         id: cardMenu
-
-                        background: Rectangle {
-                            implicitWidth: 180
-                            color: ThemeManager.surfaceColor
-                            radius: 6
-                            border.color: ThemeManager.borderColor
-                            border.width: 1
-                        }
-
-                        MenuItem {
-                            text: "Open"
-                            onTriggered: root.workspaceOpenRequested(card.workspaceName)
-                        }
-                        MenuItem {
-                            text: "Rename…"
-                            onTriggered: root.workspaceRenameRequested(card.workspaceName)
-                        }
-                        MenuItem {
-                            text: "Duplicate"
-                            onTriggered: {
+                        items: [
+                            { label: "Open",       icon: "▶" },
+                            { label: "Rename…",    icon: "✎" },
+                            { label: "Duplicate",  icon: "⎘" },
+                            { label: "Export…",    icon: "↥" },
+                            { separator: true },
+                            { label: "Delete",     icon: "✕", danger: true }
+                        ]
+                        onItemSelected: function(idx, item) {
+                            switch (item.label) {
+                            case "Open":
+                                root.workspaceOpenRequested(card.workspaceName); break
+                            case "Rename…":
+                                root.workspaceRenameRequested(card.workspaceName); break
+                            case "Duplicate":
                                 const ok = WorkspaceManager.duplicateWorkspace(card.workspaceName)
                                 if (!ok) console.warn("Duplicate failed for", card.workspaceName)
+                                break
+                            case "Export…":
+                                root.workspaceExportRequested(card.workspaceName); break
+                            case "Delete":
+                                root.workspaceDeleteRequested(card.workspaceName); break
                             }
-                        }
-                        MenuItem {
-                            text: "Export…"
-                            onTriggered: root.workspaceExportRequested(card.workspaceName)
-                        }
-                        MenuSeparator {}
-                        MenuItem {
-                            text: "Delete"
-                            onTriggered: root.workspaceDeleteRequested(card.workspaceName)
                         }
                     }
                 }

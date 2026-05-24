@@ -30,6 +30,7 @@ set(PROJECT_SOURCES
     src/include/utils/xmlsavestate.h src/include/utils/xmlsavestate.cpp
     src/include/utils/nodeserialize.h src/include/utils/nodeserialize.cpp
     src/include/utils/workspacemanager.h src/include/utils/workspacemanager.cpp
+    src/include/utils/desktopmanager.h src/include/utils/desktopmanager.cpp
     src/include/utils/toastmanager.h src/include/utils/toastmanager.cpp
     src/include/utils/logmanager.h src/include/utils/logmanager.cpp
     src/include/utils/fastlinechart.h src/include/utils/fastlinechart.cpp

@@ -152,6 +152,9 @@
         <file alias="VisualizationWindow.qml">qml/components/viewport/VisualizationWindow.qml</file>
         <file alias="FullscreenVisualization.qml">qml/components/viewport/FullscreenVisualization.qml</file>
         <file alias="VisualizationPreview.qml">qml/components/viewport/VisualizationPreview.qml</file>
+        <file alias="DesktopBar.qml">qml/components/viewport/DesktopBar.qml</file>
+        <file alias="DesktopLimitWarning.qml">qml/components/viewport/DesktopLimitWarning.qml</file>
+        <file alias="DesktopOverview.qml">qml/components/viewport/DesktopOverview.qml</file>
     </qresource>
     <qresource prefix="/components/drawers">
         <file alias="NodesDrawer.qml">qml/components/drawers/NodesDrawer.qml</file>

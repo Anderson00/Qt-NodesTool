@@ -50,6 +50,7 @@ public:
 #include "model/nodevariable.h"
 #include "model/variablemanager.h"
 #include "utils/workspacemanager.h"
+#include "utils/desktopmanager.h"
 
 QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent),
     m_qml_url(qmlUrl)
@@ -95,6 +96,13 @@ QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent),
             1, 0,
             "WorkspaceManager",
             WorkspaceManager::qmlSingletonProvider
+            );
+
+        qmlRegisterSingletonType<DesktopManager>(
+            "App.Desktop",
+            1, 0,
+            "DesktopManager",
+            DesktopManager::qmlSingletonProvider
             );
 
         qmlRegisterSingletonType<VariableManager>(

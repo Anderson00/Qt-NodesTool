@@ -7,6 +7,7 @@ import QtQuick.Dialogs
 import App.Theme 1.0
 import App.Properties 1.0
 import App.Workspace 1.0
+import App.Desktop 1.0
 import App.Toast 1.0
 import App.Icons 1.0
 
@@ -376,6 +377,8 @@ Rectangle {
     property bool isAnimatingCenter: false
 
     property int topBarHeight: 48
+    property int desktopBarHeight: 36
+    readonly property int chromeTopHeight: topBarHeight + desktopBarHeight
     property string selectedPanel: ""
     property string currentProject: WorkspaceManager.currentWorkspace !== "" ? WorkspaceManager.currentWorkspace : "Untitled Project"
 
@@ -818,7 +821,7 @@ Rectangle {
         visible: nodeOnFocus !== null && nodeOnFocus !== undefined
         anchors.right: parent.right
         anchors.rightMargin: 8
-        anchors.top: topBar.bottom
+        anchors.top: desktopBar.bottom
         anchors.topMargin: historyPanel.visible ? historyPanel.height + 16 : 8
         z: 100
 
@@ -841,8 +844,8 @@ Rectangle {
         id: drawer
         modal: false
         interactive: false
-        topMargin: topBar.height
-        height: parent.height - topBar.height - statusBar.height
+        topMargin: chromeTopHeight
+        height: parent.height - chromeTopHeight - statusBar.height
 
         viewPortWindow: viewPort
         selectedObjectView: root.nodeOnFocus
@@ -865,7 +868,7 @@ Rectangle {
 
     MouseArea {
         id: mouseAreaGlobal
-        anchors.top: topBar.bottom
+        anchors.top: desktopBar.bottom
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
@@ -949,7 +952,7 @@ Rectangle {
 
     MouseArea {
         id: mouseZoom
-        anchors.top: topBar.bottom
+        anchors.top: desktopBar.bottom
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
@@ -1023,7 +1026,7 @@ Rectangle {
 
     Rectangle {
         id: containerCanvas
-        anchors.top: topBar.bottom
+        anchors.top: desktopBar.bottom
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
@@ -1431,6 +1434,28 @@ Rectangle {
                         property var circleConn2:      null
                         property var viewRectConn2:    null
 
+                        // ── Cross-desktop visibility ──────────────────────────
+                        // Hide the wire when either endpoint isn't on the active
+                        // desktop. The underlying C++ signal/slot stays connected;
+                        // only the visual line disappears.
+                        property int _desktopRefresh: 0
+                        Connections {
+                            target: DesktopManager
+                            function onCurrentDesktopChanged()  { shape._desktopRefresh++ }
+                            function onNodeDesktopMembershipChanged() { shape._desktopRefresh++ }
+                            function onPinnedNodesChanged()     { shape._desktopRefresh++ }
+                        }
+                        // In-progress (not yet attached) connections have empty
+                        // inputUuid — keep them visible while the user is dragging.
+                        function _endpointVisible(uuid) {
+                            return !uuid || uuid === "" || DesktopManager.isNodeVisibleOnCurrentDesktop(uuid)
+                        }
+                        visible: (_desktopRefresh >= 0)
+                                 && _endpointVisible(model.outputUuid)
+                                 && _endpointVisible(model.inputUuid)
+                        opacity: visible ? 1.0 : 0.0
+                        Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+
                         property real dashOffset: 0
 
                         // Exposed for hit testing
@@ -1576,7 +1601,33 @@ Rectangle {
                         viewportSnap:      root.computeSnap
                         viewportEdgeSnap:  root.computeEdgeSnap
 
-                        visible:           !model.isVisualization
+                        nodeUuid: model.uuid
+
+                        // Visible when not a visualization clone AND it belongs to
+                        // the active virtual desktop (or is pinned globally).
+                        // The `+ opacityRefresh * 0` trick forces the binding to
+                        // re-evaluate whenever opacityRefresh changes, since
+                        // Q_INVOKABLE calls don't auto-track dependencies.
+                        readonly property bool _belongsToCurrentDesktop:
+                            (opacityRefresh >= 0) &&
+                            (model.uuid === "" ||
+                             DesktopManager.isNodeVisibleOnCurrentDesktop(model.uuid))
+
+                        // Re-evaluate when current desktop or membership changes
+                        Connections {
+                            target: DesktopManager
+                            function onCurrentDesktopChanged() { viewComponentRectV2.opacityRefresh++ }
+                            function onNodeDesktopMembershipChanged(uuid) {
+                                if (uuid === model.uuid) viewComponentRectV2.opacityRefresh++
+                            }
+                            function onPinnedNodesChanged() { viewComponentRectV2.opacityRefresh++ }
+                        }
+                        // Bumped via Connections above to force re-evaluation of _belongsToCurrentDesktop
+                        property int opacityRefresh: 0
+
+                        visible:           !model.isVisualization && _belongsToCurrentDesktop && opacity > 0.01
+                        opacity:           _belongsToCurrentDesktop ? 1.0 : 0.0
+                        Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
 
                         // nodePressed fires on every mouse-down — select the node immediately
                         // unless it's already part of the current selection (preserves group).
@@ -1739,7 +1790,7 @@ Rectangle {
         z: 300
 
         x: root.width  - width  - 12
-        y: topBarHeight + 12
+        y: chromeTopHeight + 12
 
         cameraX:      root.cameraWorldX
         cameraY:      root.cameraWorldY
@@ -1825,7 +1876,7 @@ Rectangle {
         visible: root.snapEnabled && root.snapGuideX >= 0 && root.guideOpacity > 0
         anchors.top:       parent.top
         anchors.bottom:    parent.bottom
-        anchors.topMargin: root.topBarHeight
+        anchors.topMargin: root.chromeTopHeight
         x:       root.snapGuideX * root.zoomScale + mycanvas.x
         width:   1
         color:   GlobalProperties.snapGuideColor
@@ -1838,7 +1889,7 @@ Rectangle {
         visible: root.snapEnabled && root.snapGuideY >= 0 && root.guideOpacity > 0
         anchors.left:  parent.left
         anchors.right: parent.right
-        y:      root.topBarHeight + mycanvas.y + root.snapGuideY * root.zoomScale
+        y:      root.chromeTopHeight + mycanvas.y + root.snapGuideY * root.zoomScale
         height: 1
         color:   GlobalProperties.snapGuideColor
         opacity: root.guideOpacity
@@ -1850,7 +1901,7 @@ Rectangle {
         visible: root.snapEnabled && root.snapGuideX >= 0 && root.snapGuideY >= 0
                  && root.guideOpacity > 0
         x: root.snapGuideX * root.zoomScale + mycanvas.x - 5
-        y: root.topBarHeight + mycanvas.y + root.snapGuideY * root.zoomScale - 5
+        y: root.chromeTopHeight + mycanvas.y + root.snapGuideY * root.zoomScale - 5
         width: 10; height: 10; radius: 5
         color:   GlobalProperties.snapGuideColor
         opacity: root.guideOpacity
@@ -1872,7 +1923,7 @@ Rectangle {
                  && root.snapGuideX >= 0 && root.snapGuideY >= 0
                  && root.guideOpacity > 0
         x: root.snapGuideX * root.zoomScale + mycanvas.x + 10
-        y: root.topBarHeight + mycanvas.y + root.snapGuideY * root.zoomScale - 22
+        y: root.chromeTopHeight + mycanvas.y + root.snapGuideY * root.zoomScale - 22
         width:  coordBadgeText.implicitWidth + 14
         height: 18
         radius: 4
@@ -1897,7 +1948,7 @@ Rectangle {
         delegate: Rectangle {
             anchors.top:       parent.top
             anchors.bottom:    parent.bottom
-            anchors.topMargin: root.topBarHeight
+            anchors.topMargin: root.chromeTopHeight
             x:       modelData * root.zoomScale + mycanvas.x
             width:   1
             color:   "#448aff"
@@ -1912,7 +1963,7 @@ Rectangle {
         delegate: Rectangle {
             anchors.left:  parent.left
             anchors.right: parent.right
-            y:      root.topBarHeight + mycanvas.y + modelData * root.zoomScale
+            y:      root.chromeTopHeight + mycanvas.y + modelData * root.zoomScale
             height: 1
             color:  "#448aff"
             opacity: root.guideOpacity * 0.85
@@ -1957,7 +2008,7 @@ Rectangle {
             root.showVisualization = !root.showVisualization
             if (root.showVisualization) {
                 vizWindow.x = root.width  - vizWindow.width  - 12
-                vizWindow.y = topBarHeight + 12
+                vizWindow.y = chromeTopHeight + 12
             }
         }
         onSettingsRequested:    settingsPopup.open()
@@ -2011,6 +2062,181 @@ Rectangle {
         }
     }
 
+    // ─── Virtual Desktops Bar ───────────────────────────────────────────────────
+    DesktopBar {
+        id: desktopBar
+        anchors.top:    topBar.bottom
+        anchors.left:   parent.left
+        anchors.right:  parent.right
+        height:         root.desktopBarHeight
+        z: 199
+        visible: !splashScreen.visible
+    }
+
+    // ─── Desktop limit warning popup ────────────────────────────────────────────
+    DesktopLimitWarning {
+        id: desktopLimitWarning
+    }
+
+    // ─── Desktop overview (Ctrl+Tab) ────────────────────────────────────────────
+    DesktopOverview {
+        id: desktopOverview
+        nodes: nodes
+    }
+
+    // ─── Command Palette (Ctrl+P / Ctrl+Shift+P) ────────────────────────────────
+    CommandPalette {
+        id: commandPalette
+
+        // Built dynamically so the workspace/desktop lists stay current
+        function _buildCommands() {
+            var cmds = []
+
+            // ── Workspace actions ────────────────────────────────────────────
+            cmds.push({ label: "Save Workspace",          shortcut: "Ctrl+S",
+                        group: "Workspace",
+                        action: function() {
+                            if (WorkspaceManager.currentWorkspace !== "") {
+                                const ok = viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
+                                if (ok) WorkspaceManager.clearAutosave(WorkspaceManager.currentWorkspace)
+                                ToastManager.show(ok ? "Project saved" : "Save failed",
+                                                  ok ? "success" : "error")
+                            } else {
+                                saveNameField.text = ""
+                                saveWorkspaceDialog.open()
+                            }
+                        } })
+            cmds.push({ label: "Save Workspace As…",      shortcut: "Ctrl+Shift+S",
+                        group: "Workspace",
+                        action: function() {
+                            saveNameField.text = WorkspaceManager.currentWorkspace
+                            saveWorkspaceDialog.open()
+                        } })
+            cmds.push({ label: "Open Workspace…",         shortcut: "",
+                        group: "Workspace",
+                        action: function() { openWorkspaceDialog.open() } })
+            cmds.push({ label: "New Project",             shortcut: "",
+                        group: "Workspace",
+                        action: function() {
+                            if (!viewPort.isClean) confirmNewProjectDialog.open()
+                            else                   doNewProject()
+                        } })
+            cmds.push({ label: "Rename Workspace…",       shortcut: "",
+                        group: "Workspace",
+                        action: function() {
+                            if (WorkspaceManager.currentWorkspace !== "")
+                                renameWorkspaceDialog.openFor(WorkspaceManager.currentWorkspace)
+                            else
+                                ToastManager.show("No workspace to rename", "warning")
+                        } })
+            cmds.push({ label: "Back to Home",            shortcut: "",
+                        group: "Workspace",
+                        action: function() {
+                            if (!viewPort.isClean) confirmHomeDialog.open()
+                            else                   root._goHome()
+                        } })
+
+            // Open recent workspaces
+            const wsList = WorkspaceManager.workspaceList
+            for (var i = 0; i < wsList.length; i++) {
+                (function(name) {
+                    cmds.push({
+                        label: "Switch to workspace: " + name,
+                        group: "Open Workspace",
+                        action: function() { root._openWorkspaceWithAutosave(name) }
+                    })
+                })(wsList[i])
+            }
+
+            // ── Desktop actions ──────────────────────────────────────────────
+            cmds.push({ label: "New Desktop",             shortcut: "Ctrl+Shift+N",
+                        group: "Desktop",
+                        action: function() { DesktopManager.addDesktop("") } })
+            cmds.push({ label: "Next Desktop",            shortcut: "Ctrl+→",
+                        group: "Desktop",
+                        action: function() { DesktopManager.nextDesktop() } })
+            cmds.push({ label: "Previous Desktop",        shortcut: "Ctrl+←",
+                        group: "Desktop",
+                        action: function() { DesktopManager.previousDesktop() } })
+            cmds.push({ label: "Show Desktop Overview",   shortcut: "Ctrl+Tab",
+                        group: "Desktop",
+                        action: function() { desktopOverview.open() } })
+
+            // Switch to specific desktop by name
+            const dlist = DesktopManager.desktopList
+            for (var j = 0; j < dlist.length; j++) {
+                (function(d) {
+                    cmds.push({
+                        label: "Switch to desktop: " + d.name,
+                        group: "Switch Desktop",
+                        action: function() { DesktopManager.switchToDesktop(d.id) }
+                    })
+                })(dlist[j])
+            }
+
+            // ── View / tools ─────────────────────────────────────────────────
+            cmds.push({ label: "Open Settings…",          shortcut: "",
+                        group: "View",
+                        action: function() { settingsPopup.open() } })
+            cmds.push({ label: "Toggle Grid Snap",        shortcut: "G",
+                        group: "View",
+                        action: function() { GlobalProperties.snapEnabled = !GlobalProperties.snapEnabled } })
+
+            return cmds
+        }
+
+        onOpened: commandPalette.commands = _buildCommands()
+    }
+
+    Shortcut {
+        sequence: "Ctrl+P"
+        context:  Qt.ApplicationShortcut
+        onActivated: commandPalette.open()
+    }
+    Shortcut {
+        sequence: "Ctrl+Shift+P"
+        context:  Qt.ApplicationShortcut
+        onActivated: commandPalette.open()
+    }
+
+    Connections {
+        target: DesktopManager
+        function onDesktopLimitWarning(pendingName) {
+            desktopLimitWarning.pendingName = pendingName
+            desktopLimitWarning.open()
+        }
+
+        // Save the outgoing desktop's camera before the switch happens.
+        function onAboutToLeaveDesktop(id) {
+            if (!mycanvas.initialized) return
+            DesktopManager.setDesktopViewport(id, mycanvas.x, mycanvas.y, root.zoomScale)
+        }
+
+        // After switching, restore the new desktop's camera (if it has one
+        // saved). New / never-visited desktops keep the previous view as-is.
+        function onCurrentDesktopChanged() {
+            if (!mycanvas.initialized) return
+            const newId = DesktopManager.currentDesktopId
+            if (!newId) return
+            const vp = DesktopManager.getDesktopViewport(newId)
+            if (!vp || vp.scale === undefined) return
+            // Animate to the saved viewport — same anim used by F (focus)
+            desktopCameraAnim.stop()
+            desktopCameraAnimZoom.to = vp.scale
+            desktopCameraAnimX.to    = vp.x
+            desktopCameraAnimY.to    = vp.y
+            desktopCameraAnim.start()
+        }
+    }
+
+    // Smooth pan/zoom when switching desktops with a saved camera
+    ParallelAnimation {
+        id: desktopCameraAnim
+        NumberAnimation { id: desktopCameraAnimZoom; target: root;     property: "zoomScale"; duration: 280; easing.type: Easing.OutCubic }
+        NumberAnimation { id: desktopCameraAnimX;    target: mycanvas; property: "x";         duration: 280; easing.type: Easing.OutCubic }
+        NumberAnimation { id: desktopCameraAnimY;    target: mycanvas; property: "y";         duration: 280; easing.type: Easing.OutCubic }
+    }
+
     // ─── History Panel ──────────────────────────────────────────────────────────
     HistoryPanel {
         id: historyPanel
@@ -2018,7 +2244,7 @@ Rectangle {
         visible: topBar.historyPanelOpen
         z: 190
 
-        anchors.top:   topBar.bottom
+        anchors.top:   desktopBar.bottom
         anchors.right: parent.right
         anchors.topMargin:   8
         // drawer.position: 0.0 = closed/invisible, 1.0 = fully open.
@@ -2058,6 +2284,37 @@ Rectangle {
         onActivated: {
             saveNameField.text = WorkspaceManager.currentWorkspace
             saveWorkspaceDialog.open()
+        }
+    }
+
+    // ── Virtual desktop shortcuts ───────────────────────────────────────────────
+    Shortcut {
+        sequence: "Ctrl+Right"
+        context:  Qt.ApplicationShortcut
+        onActivated: DesktopManager.nextDesktop()
+    }
+    Shortcut {
+        sequence: "Ctrl+Left"
+        context:  Qt.ApplicationShortcut
+        onActivated: DesktopManager.previousDesktop()
+    }
+    Shortcut {
+        sequence: "Ctrl+Shift+N"
+        context:  Qt.ApplicationShortcut
+        onActivated: DesktopManager.addDesktop("")
+    }
+    Shortcut {
+        sequence: "Ctrl+Tab"
+        context:  Qt.ApplicationShortcut
+        onActivated: desktopOverview.open()
+    }
+    // Ctrl+1..9 jump to a specific desktop by index
+    Repeater {
+        model: 9
+        Shortcut {
+            sequence: "Ctrl+" + (index + 1)
+            context:  Qt.ApplicationShortcut
+            onActivated: DesktopManager.switchToDesktopByIndex(index)
         }
     }
     Shortcut {
@@ -2127,7 +2384,7 @@ Rectangle {
             root.showVisualization = !root.showVisualization
             if (root.showVisualization) {
                 vizWindow.x = root.width  - vizWindow.width  - 12
-                vizWindow.y = topBarHeight + 12
+                vizWindow.y = chromeTopHeight + 12
             }
         }
     }
@@ -2434,7 +2691,7 @@ Rectangle {
 
     // ─── Toast Display ──────────────────────────────────────────────────────────
     Toast {
-        anchors.top:           topBar.bottom
+        anchors.top:           desktopBar.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.topMargin:     16
         z: 9900
@@ -2455,7 +2712,9 @@ Rectangle {
         zoomScale: root.zoomScale
         statusBar: statusBar
         topBar: topBar
-        topLeftAnchor: topBar
+        // Anchor below the DesktopBar so top-positioned layouts don't get
+        // hidden behind it.
+        topLeftAnchor: desktopBar
         focusedNode: root.nodeOnFocus
         nodes: nodes
         onNodeSelected: function(nodeItem) {
@@ -3648,8 +3907,8 @@ Rectangle {
     Drawer {
         id: leftPanelDrawer
         width: 320
-        y: topBarHeight
-        height: parent.height - topBarHeight
+        y: chromeTopHeight
+        height: parent.height - chromeTopHeight
         edge: Qt.LeftEdge
         modal: false
         interactive: false
@@ -3772,7 +4031,7 @@ Rectangle {
     // Closes the drawer when the user clicks outside it.
     // mouse.accepted = false lets the click propagate to nodes/canvas underneath.
     MouseArea {
-        anchors.top:    topBar.bottom
+        anchors.top:    desktopBar.bottom
         anchors.bottom: parent.bottom
         anchors.right:  parent.right
         anchors.left:   parent.left
