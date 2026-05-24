@@ -6,18 +6,19 @@ import App.Theme 1.0
 
 Popup {
     id: root
-    width: 700
-    height: 520
+    x: 0
+    y: 0
+    width: parent.width
+    height: parent.height
     modal: true
+    dim: false // Prevents Qt from drawing a SECOND dark overlay behind us
     focus: true
-    anchors.centerIn: parent
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+    padding: 0
+    margins: 0
 
     background: Rectangle {
-        color: ThemeManager.backgroundColor
-        radius: 8
-        border.color: ThemeManager.borderColor
-        border.width: 1
+        color: Qt.rgba(ThemeManager.backgroundColor.r, ThemeManager.backgroundColor.g, ThemeManager.backgroundColor.b, 0.85)
     }
 
     // Keyboard shortcut to close it when pressing ? again or Esc
@@ -29,8 +30,8 @@ Popup {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 24
-        spacing: 16
+        anchors.margins: 64
+        spacing: 24
 
         RowLayout {
             Layout.fillWidth: true
@@ -58,25 +59,26 @@ Popup {
         }
 
         ScrollView {
+            id: scroll
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
-            ColumnLayout {
-                width: parent.width - 16
-                spacing: 24
+            Flow {
+                width: scroll.availableWidth
+                spacing: 64
 
                 // Helper component for sections
                 component ShortcutSection: ColumnLayout {
                     property string title
                     property var items: [] // array of {key: "...", desc: "..."}
-                    spacing: 12
-                    Layout.fillWidth: true
+                    spacing: 16
+                    width: 400
 
                     Text {
                         text: title
-                        font.pixelSize: 16
+                        font.pixelSize: 18
                         font.bold: true
                         color: ThemeManager.primaryColor
                     }
