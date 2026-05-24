@@ -171,7 +171,7 @@ Item {
                 spacing: 6
 
                 Repeater {
-                    model: ["all", "json", "txt"]
+                    model: ["all", "json", "txt", "py"]
                     delegate: Rectangle {
                         property bool active: modelData === "all"
                                               ? root.extensionFilter === ""
@@ -361,7 +361,7 @@ Item {
 
     function _fileIcon(name) {
         var ext = name.split('.').pop().toLowerCase()
-        if (ext === "json") return Icons.codeJson
+        if (ext === "json" || ext === "py") return Icons.codeJson
         if (ext === "txt")  return Icons.fileDocumentOutline
         if (ext === "vky")  return Icons.graphOutline
         return Icons.fileOutline

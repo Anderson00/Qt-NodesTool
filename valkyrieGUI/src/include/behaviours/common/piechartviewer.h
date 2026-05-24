@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QJsonObject>
+#include <QVariantList>
 #include <behaviours/behaviours.h>
 
 class PieChartViewer : public Behaviours
@@ -23,6 +24,8 @@ public slots:
     void setSliceValue(int index, double value);
     void clearSlices();
     void removeSlice(int index);
+    // Universal input — [label, value] or [value]
+    void setInputData(const QVariantList& data);
 
 signals:
     void internalAddSlice(const QString& label, double value);

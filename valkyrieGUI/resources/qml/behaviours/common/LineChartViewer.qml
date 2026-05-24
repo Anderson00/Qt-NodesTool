@@ -6,6 +6,7 @@ import Qt.labs.platform 1.1 as Platform
 
 import App.Theme 1.0
 import App.Widgets 1.0
+import App.Icons 1.0
 
 import '../../components'
 
@@ -570,8 +571,9 @@ Item {
                             Item { Layout.fillWidth: true }
 
                             // Per-series clear
-                            Text {
-                                text:"✕"; color:ThemeManager.dangerColor; font.pixelSize:12
+                            SvgIcon {
+                                source: Icons.close; color: ThemeManager.dangerColor
+                                width: 14; height: 14
                                 opacity: clrH.containsMouse?1.0:0.4; Layout.alignment:Qt.AlignVCenter
                                 AppToolTip { text:"Clear series"; visible: clrH.containsMouse; delay: 600 }
                                 MouseArea { id:clrH; anchors.fill:parent; hoverEnabled:true; cursorShape:Qt.PointingHandCursor

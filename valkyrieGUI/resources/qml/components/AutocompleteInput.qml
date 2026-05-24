@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import App.Theme 1.0
+import App.Icons 1.0
 
 // AutocompleteInput — TextField with a live-filtered suggestion dropdown.
 //
@@ -104,9 +105,10 @@ Item {
                 visible: root.showClearButton && input.text.length > 0
                 width: 16; height: 16; radius: 8
                 color: clearMa.containsMouse ? Qt.rgba(1, 1, 1, 0.15) : Qt.rgba(1, 1, 1, 0.08)
-                Text {
+                SvgIcon {
                     anchors.centerIn: parent
-                    text: "×"; font.pixelSize: 12; font.bold: true
+                    width: 10; height: 10
+                    source: Icons.close
                     color: ThemeManager.textSecondaryColor
                 }
                 MouseArea {

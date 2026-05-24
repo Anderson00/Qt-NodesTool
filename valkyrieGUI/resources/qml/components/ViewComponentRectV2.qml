@@ -5,6 +5,7 @@ import QtQuick.Controls.Material 2.12
 import Qt5Compat.GraphicalEffects
 import App.Theme 1.0
 import App.Properties 1.0
+import App.Desktop 1.0
 import App.Icons 1.0
 
 
@@ -13,6 +14,8 @@ Rectangle {
 
     // -- Public API --
     property var behaviourObject
+    property string nodeUuid: ""           // set by ViewPortWindow delegate
+    readonly property bool isPinnedNode: nodeUuid !== "" && DesktopManager.pinnedNodes.indexOf(nodeUuid) >= 0
 
     property var connectionsInput: []
     property var connectionsOutput: []
@@ -61,6 +64,52 @@ Rectangle {
     // Explicit selection state — set externally by ViewPortWindow via nodeOnFocus
     property bool isSelected: false
 
+    // ── Drag-connect highlight ────────────────────────────────────────────────
+    // Bound from ViewPortWindow delegate. When a port is being dragged,
+    // incompatible ports and nodes fade to near-invisible so only valid targets
+    // remain prominent.
+    property string draggingPortSig:      ""
+    property bool   draggingPortIsOutput: false
+
+    // Derived state — updated reactively whenever the dragging sig changes.
+    readonly property bool isAnyPortDragging: draggingPortSig !== ""
+
+    // True if this node contains the port that is being dragged (source node).
+    // Source node is never dimmed — the user just clicked from it.
+    readonly property bool isSourceNode: {
+        if (!isAnyPortDragging) return false
+        var sig = draggingPortSig
+        if (draggingPortIsOutput) {
+            for (var j = 0; j < connectionsOutput.length; j++)
+                if (connectionsOutput[j].name === sig) return true
+        } else {
+            for (var i = 0; i < connectionsInput.length; i++)
+                if (connectionsInput[i].name === sig) return true
+        }
+        return false
+    }
+
+    // True if at least one port on this node is compatible with the dragging port.
+    readonly property bool hasCompatiblePort: {
+        if (!isAnyPortDragging || isSourceNode) return true
+        var sig   = draggingPortSig
+        var isOut = draggingPortIsOutput
+        if (isOut) {
+            // dragging output → look for compatible INPUT ports
+            for (var i = 0; i < connectionsInput.length; i++) {
+                if (viewPort.isPortCompatible(sig, connectionsInput[i].name))
+                    return true
+            }
+        } else {
+            // dragging input → look for compatible OUTPUT ports
+            for (var j = 0; j < connectionsOutput.length; j++) {
+                if (viewPort.isPortCompatible(connectionsOutput[j].name, sig))
+                    return true
+            }
+        }
+        return false
+    }
+
     // -- Signals --
     signal connectionSocketClicked(conn: var)
 
@@ -83,6 +132,7 @@ Rectangle {
     property real _pressY: 0
 
     property bool isConnectionsMinimized: false
+    property bool _heightInitialized:    false
 
     signal backTotalClicked()
 
@@ -92,6 +142,10 @@ Rectangle {
     radius: 4
     border.width: 1
     border.color: root.borderColor
+
+    // Dim entire node when a connection is being dragged and no ports are compatible
+    opacity: isAnyPortDragging && !hasCompatiblePort ? 0.22 : 1.0
+    Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.InOutQuad } }
 
     // ============== Helpers ==============
     function stringToColour(str) {
@@ -153,6 +207,17 @@ Rectangle {
         if (behaviourObject) behaviourObject.height = root.height
     }
 
+    // Compute the correct total node height once the connections area has been
+    // laid out. Uses max(computed, stored) so user-resized heights are preserved.
+    function _initHeight() {
+        if (_heightInitialized) return
+        _heightInitialized = true
+        const connH    = connectionsBody.targetHeight
+        const computed = topHeaderRect.height + divider.height + connH + behaviourObject.contentHeight
+        root.height    = Math.max(root.minHeight, Math.max(computed, behaviourObject.height))
+        behaviourObject.height = root.height
+    }
+
     function _emitMenuAction(action) {
         menuActionTriggered(action)
         switch (action) {
@@ -171,15 +236,36 @@ Rectangle {
     Component.onCompleted: {
         root.title = Qt.binding(() => behaviourObject.title)
         root.bodySourceQML = Qt.binding(() => behaviourObject.qmlBodyUrl)
-        root.width  = behaviourObject.width  > 0 ? behaviourObject.width  : root.minWidth
-        root.height = behaviourObject.height > 0 ? behaviourObject.height
-                                                  : (behaviourObject.contentHeight + topHeaderRect.height +
-                                                     divider.height + connectionsBody.height)
+        root.width = behaviourObject.width > 0 ? behaviourObject.width : root.minWidth
         root.x = behaviourObject.x
         root.y = behaviourObject.y
         loadInputConns()
         loadOutputConns()
+
+        // Set a placeholder height immediately to avoid the node having 0 height
+        // on the first frame. _initHeight() corrects it once the connections
+        // area has finished its layout pass.
+        root.height = behaviourObject.height > 0
+                      ? behaviourObject.height
+                      : Math.max(root.minHeight,
+                                 topHeaderRect.height + divider.height + behaviourObject.contentHeight)
+
+        // Nodes with no ports can be finalised right away (connH stays 0).
+        if (connectionsInput.length === 0 && connectionsOutput.length === 0)
+            _initHeight()
+
         Qt.callLater(() => animEnabled = true)
+    }
+
+    // Fires once the connections Repeater has had a layout pass and
+    // connectionsBody.targetHeight reflects the actual port area height.
+    Connections {
+        id: connHeightWatcher
+        target: connectionsBody
+        enabled: !root._heightInitialized
+        function onTargetHeightChanged() {
+            if (connectionsBody.targetHeight > 0) root._initHeight()
+        }
     }
 
     onXChanged:      if ((isResizing || isDragging) && behaviourObject) behaviourObject.x = x
@@ -321,6 +407,9 @@ Rectangle {
     ResizeHandle { id: rH;  direction: "right";        handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
 
     // ============== Header ==============
+    // z: 5 lifts the entire header above the body `area` MouseArea (z:1) so
+    // header buttons (close, kebab, maximize) actually receive their clicks.
+    // Drag-by-title is preserved by the dedicated `headerDragArea` below.
     Rectangle {
         id: topHeaderRect
         anchors.left: root.left
@@ -333,7 +422,7 @@ Rectangle {
         radius: root.radius - 1
         antialiasing: true
         clip: true
-        z: 1
+        z: 5
         color: root.isSelected ? root.borderColor : root.color
 
         Rectangle {
@@ -351,22 +440,112 @@ Rectangle {
             anchors.rightMargin: 4
             spacing: 2
 
+            // Pinned indicator — node is visible on every desktop
             Text {
-                id: titleView
-                Layout.fillWidth: true
-                text: ""
-                font.pixelSize: 12
-                color: root.isSelected ? ThemeManager.backgroundColor
-                                  : ThemeManager.textColor
-                verticalAlignment: Text.AlignVCenter
-                elide: Text.ElideRight
+                visible: root.isPinnedNode
+                text: "📌"
+                font.pixelSize: 11
+                Layout.alignment: Qt.AlignVCenter
+            }
+
+            // Desktop membership dots — one tiny dot per desktop this node belongs to
+            Row {
+                spacing: 2
+                Layout.alignment: Qt.AlignVCenter
+                visible: !root.isPinnedNode && root.nodeUuid !== ""
+                Repeater {
+                    model: DesktopManager.desktopList
+                    Rectangle {
+                        width: 6; height: 6; radius: 3
+                        color: modelData.color
+                        opacity: DesktopManager.isNodeInDesktop(root.nodeUuid, modelData.id) ? 1.0 : 0.18
+                    }
+                }
+            }
+
+            // Title cell — also acts as a drag handle for the node. The header
+            // sits at z:5 above the body MouseArea, so we re-implement drag
+            // here. Buttons in this RowLayout are siblings of this Item, so
+            // they receive their own clicks without going through the drag MA.
+            Item {
+                id: titleCell
+                Layout.fillWidth:  true
+                Layout.fillHeight: true
+
+                Text {
+                    id: titleView
+                    anchors.fill: parent
+                    text: ""
+                    font.pixelSize: 12
+                    color: root.isSelected ? ThemeManager.backgroundColor
+                                      : ThemeManager.textColor
+                    verticalAlignment: Text.AlignVCenter
+                    elide: Text.ElideRight
+                }
+
+                MouseArea {
+                    id: headerDragArea
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    cursorShape: (pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor)
+
+                    property real _pressParentX: 0
+                    property real _pressParentY: 0
+                    property real _pressNodeX:   0
+                    property real _pressNodeY:   0
+
+                    onPressed: function(mouse) {
+                        if (mouse.button === Qt.RightButton) return
+                        var pt        = mapToItem(root.parent, mouse.x, mouse.y)
+                        _pressParentX = pt.x
+                        _pressParentY = pt.y
+                        _pressNodeX   = root.x
+                        _pressNodeY   = root.y
+                        root._pressX  = root.x
+                        root._pressY  = root.y
+                        root.isDragging = true
+                        root.nodePressed()
+                    }
+                    onPositionChanged: function(mouse) {
+                        if (!root.isDragging) return
+                        var pt   = mapToItem(root.parent, mouse.x, mouse.y)
+                        var newX = _pressNodeX + (pt.x - _pressParentX)
+                        var newY = _pressNodeY + (pt.y - _pressParentY)
+                        if (root.parent) {
+                            newX = Math.max(0, Math.min(root.parent.width  - root.width,  newX))
+                            newY = Math.max(0, Math.min(root.parent.height - root.height, newY))
+                        }
+                        if (root.snapEnabled) {
+                            if (root.viewportSnap) {
+                                var snapped = root.viewportSnap(newX, newY, root)
+                                newX = snapped.x; newY = snapped.y
+                            } else {
+                                newX = Math.round(newX / root.snapGridSize) * root.snapGridSize
+                                newY = Math.round(newY / root.snapGridSize) * root.snapGridSize
+                            }
+                        }
+                        root.x = newX; root.y = newY
+                        root.dragPositionChanged(newX, newY)
+                    }
+                    onReleased: function(mouse) {
+                        root.isDragging = false
+                        if (Math.abs(root.x - root._pressX) > 0.5 || Math.abs(root.y - root._pressY) > 0.5)
+                            root.nodeDragEnded(root._pressX, root._pressY, root.x, root.y)
+                    }
+                    onClicked: function(mouse) {
+                        root.focus = true
+                        if (mouse.button === Qt.RightButton) { contextMenu.popup(); return }
+                        if (Math.abs(root.x - root._pressX) <= 2 && Math.abs(root.y - root._pressY) <= 2)
+                            root.nodeClicked()
+                    }
+                }
             }
 
             NewButton {
                 Layout.preferredHeight: 34
                 Layout.preferredWidth: 28
                 textColor: titleView.color
-                text: "⋮"
+                iconSource: Icons.dotsVertical
                 iconSize: 14
                 variant: "text"
                 onClicked: contextMenu.popup()
@@ -431,6 +610,51 @@ Rectangle {
         MenuItem {
             text: qsTr("Back max")
             onTriggered: root._emitMenuAction("back-max")
+        }
+
+        MenuSeparator {}
+
+        // ── Pin / Unpin ─────────────────────────────────────────────────────
+        MenuItem {
+            text: root.isPinnedNode ? qsTr("Unpin from all desktops") : qsTr("Pin to all desktops")
+            enabled: root.nodeUuid !== ""
+            onTriggered: DesktopManager.toggleNodePinned(root.nodeUuid)
+        }
+
+        // ── Move to desktop submenu ─────────────────────────────────────────
+        Menu {
+            title: qsTr("Move to desktop")
+            enabled: root.nodeUuid !== "" && DesktopManager.desktopCount > 1
+
+            Repeater {
+                model: DesktopManager.desktopList
+                MenuItem {
+                    text: modelData.name + (DesktopManager.isNodeInDesktop(root.nodeUuid, modelData.id) ? "  ✓" : "")
+                    onTriggered: {
+                        // "Move" = replace membership with this desktop only
+                        DesktopManager.shareNodeAcrossDesktops(root.nodeUuid, [modelData.id])
+                    }
+                }
+            }
+        }
+
+        // ── Add to desktop submenu (share across multiple) ──────────────────
+        Menu {
+            title: qsTr("Also show on…")
+            enabled: root.nodeUuid !== "" && DesktopManager.desktopCount > 1
+
+            Repeater {
+                model: DesktopManager.desktopList
+                MenuItem {
+                    text: modelData.name + (DesktopManager.isNodeInDesktop(root.nodeUuid, modelData.id) ? "  ✓" : "")
+                    onTriggered: {
+                        if (DesktopManager.isNodeInDesktop(root.nodeUuid, modelData.id))
+                            DesktopManager.removeNodeFromDesktop(modelData.id, root.nodeUuid)
+                        else
+                            DesktopManager.addNodeToDesktop(modelData.id, root.nodeUuid)
+                    }
+                }
+            }
         }
     }
 
@@ -559,12 +783,29 @@ Rectangle {
                             Rectangle {
                                 id: inputArea
                                 readonly property string style: GlobalProperties.connectionStyle
+
+                                // ── compatibility when dragging ──────────────────
+                                // Only highlight input ports on OTHER nodes (never the source node).
+                                // Compatible = dragging from output AND type check passes.
+                                readonly property bool _isCompatible: {
+                                    if (!root.isAnyPortDragging || root.isSourceNode) return false
+                                    if (!root.draggingPortIsOutput) return false
+                                    return viewPort.isPortCompatible(root.draggingPortSig, modelData.name)
+                                }
+
                                 width: style === "list" ? columnLayoutInputConns.width : rowInput.implicitWidth + 16
                                 height: style === "list" ? 14 : 20
                                 radius: style === "list" ? 0 : 10
                                 color: style === "list" ? "transparent" : (inputMouse.containsMouse ? Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.25) : "transparent")
                                 border.width: style === "list" ? 0 : 1
                                 border.color: style === "list" ? "transparent" : Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.4)
+
+                                // Dim incompatible input ports during drag
+                                opacity: {
+                                    if (!root.isAnyPortDragging || root.isSourceNode) return 1.0
+                                    return _isCompatible ? 1.0 : 0.15
+                                }
+                                Behavior on opacity { NumberAnimation { duration: 140 } }
 
                                 Component.onCompleted: {
                                     connectionsInput[index].connArea = inputArea
@@ -589,13 +830,41 @@ Rectangle {
 
                                     Rectangle {
                                         id: connInConnCircle
-                                        width: style === "list" ? 6 : 8
+                                        // Size is FIXED — never changes during drag so circleConn
+                                        // mapToItem positions remain stable for connection line anchoring.
+                                        width:  style === "list" ? 6 : 8
                                         height: width
                                         radius: width / 2
-                                        color: stringToColour(extractParams(modelData.name))
+                                        color:  stringToColour(extractParams(modelData.name))
                                         anchors.verticalCenter: parent.verticalCenter
-                                        border.width: style === "list" ? 0 : 1
-                                        border.color: Qt.rgba(0,0,0,0.2)
+                                        // Visual highlight on compatible target: bright border only
+                                        border.width: inputArea._isCompatible && root.isAnyPortDragging
+                                                      ? 2
+                                                      : (style === "list" ? 0 : 1)
+                                        border.color: inputArea._isCompatible && root.isAnyPortDragging
+                                                      ? Qt.lighter(stringToColour(extractParams(modelData.name)), 1.6)
+                                                      : Qt.rgba(0,0,0,0.2)
+
+                                        // Pulsing glow ring on compatible port
+                                        Rectangle {
+                                            id: inputGlowRing
+                                            visible: inputArea._isCompatible && root.isAnyPortDragging
+                                            anchors.centerIn: parent
+                                            width:  parent.width  + 6
+                                            height: parent.height + 6
+                                            radius: width / 2
+                                            color:  "transparent"
+                                            border.width: 1.5
+                                            border.color: parent.color
+                                            opacity: 0.0
+
+                                            SequentialAnimation on opacity {
+                                                running: inputGlowRing.visible
+                                                loops:   Animation.Infinite
+                                                NumberAnimation { to: 0.75; duration: 550; easing.type: Easing.InOutSine }
+                                                NumberAnimation { to: 0.0;  duration: 550; easing.type: Easing.InOutSine }
+                                            }
+                                        }
                                     }
                                     Text {
                                         id: connInName
@@ -636,12 +905,33 @@ Rectangle {
                             Rectangle {
                                 id: outputArea
                                 readonly property string style: GlobalProperties.connectionStyle
+
+                                // ── compatibility when dragging ──────────────────
+                                // Only highlight output ports on OTHER nodes (never source node).
+                                // Compatible = dragging from input AND type check passes.
+                                readonly property bool _isCompatible: {
+                                    if (!root.isAnyPortDragging || root.isSourceNode) return false
+                                    if (root.draggingPortIsOutput) return false
+                                    return viewPort.isPortCompatible(modelData.name, root.draggingPortSig)
+                                }
+
                                 width: style === "list" ? columnLayoutOutputConns.width : rowOutput.implicitWidth + 16
                                 height: style === "list" ? 14 : 20
                                 radius: style === "list" ? 0 : 10
                                 color: style === "list" ? "transparent" : (outputMouse.containsMouse ? Qt.rgba(ThemeManager.successColor.r, ThemeManager.successColor.g, ThemeManager.successColor.b, 0.25) : "transparent")
                                 border.width: style === "list" ? 0 : 1
                                 border.color: style === "list" ? "transparent" : Qt.rgba(ThemeManager.successColor.r, ThemeManager.successColor.g, ThemeManager.successColor.b, 0.4)
+
+                                // Dim incompatible output ports during drag
+                                opacity: {
+                                    if (!root.isAnyPortDragging) return 1.0
+                                    if (root.isSourceNode) {
+                                        // Source port (being dragged) stays fully bright
+                                        return modelData.name === root.draggingPortSig ? 1.0 : 0.25
+                                    }
+                                    return _isCompatible ? 1.0 : 0.15
+                                }
+                                Behavior on opacity { NumberAnimation { duration: 140 } }
 
                                 Component.onCompleted: {
                                     connectionsOutput[index].connArea = outputArea
@@ -673,13 +963,41 @@ Rectangle {
                                     }
                                     Rectangle {
                                         id: connOutConnCircle
-                                        width: style === "list" ? 6 : 8
+                                        // Size is FIXED — never changes during drag so circleConn
+                                        // mapToItem positions remain stable for connection line anchoring.
+                                        width:  style === "list" ? 6 : 8
                                         height: width
                                         radius: width / 2
-                                        color: stringToColour(extractParams(modelData.name))
+                                        color:  stringToColour(extractParams(modelData.name))
                                         anchors.verticalCenter: parent.verticalCenter
-                                        border.width: style === "list" ? 0 : 1
-                                        border.color: Qt.rgba(0,0,0,0.2)
+                                        // Visual highlight on compatible target: bright border only
+                                        border.width: outputArea._isCompatible && root.isAnyPortDragging
+                                                      ? 2
+                                                      : (style === "list" ? 0 : 1)
+                                        border.color: outputArea._isCompatible && root.isAnyPortDragging
+                                                      ? Qt.lighter(stringToColour(extractParams(modelData.name)), 1.6)
+                                                      : Qt.rgba(0,0,0,0.2)
+
+                                        // Pulsing glow ring on compatible port
+                                        Rectangle {
+                                            id: outputGlowRing
+                                            visible: outputArea._isCompatible && root.isAnyPortDragging
+                                            anchors.centerIn: parent
+                                            width:  parent.width  + 6
+                                            height: parent.height + 6
+                                            radius: width / 2
+                                            color:  "transparent"
+                                            border.width: 1.5
+                                            border.color: parent.color
+                                            opacity: 0.0
+
+                                            SequentialAnimation on opacity {
+                                                running: outputGlowRing.visible
+                                                loops:   Animation.Infinite
+                                                NumberAnimation { to: 0.75; duration: 550; easing.type: Easing.InOutSine }
+                                                NumberAnimation { to: 0.0;  duration: 550; easing.type: Easing.InOutSine }
+                                            }
+                                        }
                                     }
                                 }
                             }

@@ -3,7 +3,7 @@
 #include <random>
 #include <cmath>
 
-REGISTER_BEHAVIOUR(RandomGeneratorViewer, "Random Generator", "Multi-mode random value generator with statistics", "common", 9, 4)
+REGISTER_BEHAVIOUR(RandomGeneratorViewer, "Random Generator", "Multi-mode random value generator with statistics", "Generators", 9, 4)
 
 // Thread-local RNG so we don't re-seed on every call
 static thread_local std::mt19937 s_rng(std::random_device{}());

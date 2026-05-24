@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import App.Theme 1.0
+import App.Icons 1.0
 
 // TimePicker — inline HH:MM:SS (or HH:MM) time picker with scroll drums.
 //
@@ -63,7 +64,7 @@ Item {
             Rectangle {
                 width: parent.width; height: 36; radius: root.radius
                 color: upArea.containsMouse ? Qt.rgba(1,1,1,0.06) : "transparent"
-                Text { anchors.centerIn: parent; text: "▲"; font.pixelSize: 10; color: ThemeManager.textSecondaryColor }
+                SvgIcon { anchors.centerIn: parent; width: 16; height: 16; source: Icons.chevronUp; color: ThemeManager.textSecondaryColor }
                 MouseArea { id: upArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: drum._inc() }
             }
 
@@ -89,7 +90,7 @@ Item {
                 anchors.bottom: parent.bottom
                 width: parent.width; height: 36; radius: root.radius
                 color: downArea.containsMouse ? Qt.rgba(1,1,1,0.06) : "transparent"
-                Text { anchors.centerIn: parent; text: "▼"; font.pixelSize: 10; color: ThemeManager.textSecondaryColor }
+                SvgIcon { anchors.centerIn: parent; width: 16; height: 16; source: Icons.chevronDown; color: ThemeManager.textSecondaryColor }
                 MouseArea { id: downArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: drum._dec() }
             }
         }

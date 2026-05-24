@@ -1,8 +1,10 @@
 #include "viewportwindow.h"
 #include "behaviours/behaviourregistry.h"
 #include "behaviours/connections.h"
+#include "behaviours/typecoercions.h"
 #include "model/connectionmodel.h"
 #include "utils/workspacemanager.h"
+#include "utils/desktopmanager.h"
 #include "commands/nodeundocommands.h"
 #include "utils/toastmanager.h"
 #include <QUuid>
@@ -169,7 +171,32 @@ bool ViewPortWindow::addBehaviourWithUuid(const QString& path, const QJsonObject
         object->loadState(state);
 
     emit behaviourAdded(object);
+
+    // Assign this node to the active virtual desktop. Loading a workspace
+    // overrides this list via DesktopManager::deserialize() afterwards.
+    DesktopManager::instance()->registerNewNode(uuid);
     return true;
+}
+
+bool ViewPortWindow::addPythonNodeWithScript(const QString& filePath, double x, double y) {
+    QFile f(filePath);
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return false;
+    }
+    QString content = QString::fromUtf8(f.readAll());
+    
+    QJsonObject state;
+    state["script"] = content;
+    
+    QJsonObject infos;
+    infos["name"] = QFileInfo(filePath).fileName();
+    infos["type"] = Behaviours::CPP; // pythonbehaviour is registered as CPP type historically
+    infos["className"] = "PythonBehaviour";
+    infos["desc"] = "Loaded from " + QFileInfo(filePath).fileName();
+    
+    const QString uuid = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    
+    return addBehaviourWithUuid("qrc:/behaviours/script/PythonScriptViewer.qml", infos, uuid, x, y, 360, 280, infos["name"].toString(), state);
 }
 
 bool ViewPortWindow::removeBehaviourFromUUID(const QString& uuid) {
@@ -178,6 +205,7 @@ bool ViewPortWindow::removeBehaviourFromUUID(const QString& uuid) {
 
 bool ViewPortWindow::removeBehaviourObject(Behaviours* object) {
     const QString key = object->uuid();
+    DesktopManager::instance()->unregisterNode(key);
     m_behaviours.remove(key);
     emit behaviourRemoved(object, key);  // notify QML before delete
     delete object;
@@ -418,4 +446,17 @@ void ViewPortWindow::takeScreenshot(const QString& filePath) {
     QImage image = view()->grabWindow();
     QPixmap screenshot = QPixmap::fromImage(image);
     screenshot.save(filePath);
+}
+
+bool ViewPortWindow::isPortCompatible(const QString& srcSig, const QString& dstSig) const
+{
+    const QByteArray src = srcSig.toUtf8();
+    const QByteArray dst = dstSig.toUtf8();
+    // Exact type match (Qt checks parameter types including base-class coercions)
+    if (QMetaObject::checkConnectArgs(src.constData(), dst.constData()))
+        return true;
+    // Registered coercion relay pair
+    const QByteArray srcP = TypeCoercions::extractParams(src);
+    const QByteArray dstP = TypeCoercions::extractParams(dst);
+    return TypeCoercions::isCoercible(srcP, dstP);
 }

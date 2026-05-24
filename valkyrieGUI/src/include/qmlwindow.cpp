@@ -7,7 +7,41 @@
 #include <QtQml/QQmlApplicationEngine>
 #include <QtQml/QQmlContext>
 #include <QtQml/QQmlComponent>
+#include <QtQml/QQmlNetworkAccessManagerFactory>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
 #include <QUuid>
+
+// Intercepts all QML network requests and sets a proper User-Agent so that
+// tile servers (OSM, CartoDB, etc.) do not block the app.
+namespace {
+
+class ValkyrieNetworkManager : public QNetworkAccessManager {
+public:
+    explicit ValkyrieNetworkManager(QObject *parent = nullptr)
+        : QNetworkAccessManager(parent) {}
+
+protected:
+    QNetworkReply *createRequest(Operation op,
+                                 const QNetworkRequest &req,
+                                 QIODevice *data) override
+    {
+        QNetworkRequest modified = req;
+        modified.setHeader(QNetworkRequest::UserAgentHeader,
+                           QByteArray("Valkyrie/1.0 (Qt debug tool; https://github.com/your-repo)"));
+        return QNetworkAccessManager::createRequest(op, modified, data);
+    }
+};
+
+class ValkyrieNetworkFactory : public QQmlNetworkAccessManagerFactory {
+public:
+    QNetworkAccessManager *create(QObject *parent) override {
+        return new ValkyrieNetworkManager(parent);
+    }
+};
+
+} // namespace
 #include "model/thememanager.h"
 #include "model/subtheme.h"
 #include "model/globalproperties.h"
@@ -16,11 +50,16 @@
 #include "model/nodevariable.h"
 #include "model/variablemanager.h"
 #include "utils/workspacemanager.h"
+#include "utils/desktopmanager.h"
 
 QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent),
     m_qml_url(qmlUrl)
 {
     this->m_view = new QQuickView(this->windowHandle());
+
+    // Must be set before any QML is loaded so tile/network requests get the UA.
+    static ValkyrieNetworkFactory s_networkFactory;
+    this->m_view->engine()->setNetworkAccessManagerFactory(&s_networkFactory);
 
     if(qmlUrl.isValid()){
 
@@ -57,6 +96,13 @@ QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent),
             1, 0,
             "WorkspaceManager",
             WorkspaceManager::qmlSingletonProvider
+            );
+
+        qmlRegisterSingletonType<DesktopManager>(
+            "App.Desktop",
+            1, 0,
+            "DesktopManager",
+            DesktopManager::qmlSingletonProvider
             );
 
         qmlRegisterSingletonType<VariableManager>(

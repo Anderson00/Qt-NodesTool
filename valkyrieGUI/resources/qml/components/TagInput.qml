@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import App.Theme 1.0
+import App.Icons 1.0
 
 Item {
     id: root
@@ -81,11 +82,11 @@ Item {
                             width: 14; height: 14; radius: 7
                             color: "transparent"
                             anchors.verticalCenter: parent.verticalCenter
-                            Text {
+                            SvgIcon {
                                 anchors.centerIn: parent
-                                text: "×"
+                                width: 10; height: 10
+                                source: Icons.close
                                 color: ThemeManager.textColor
-                                font.pixelSize: 14
                             }
                             MouseArea {
                                 anchors.fill: parent

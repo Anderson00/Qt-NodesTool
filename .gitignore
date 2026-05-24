@@ -105,3 +105,6 @@ cmake-build-*/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Python Env
+python_env/

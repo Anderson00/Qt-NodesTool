@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import App.Theme 1.0
+import App.Icons 1.0
 
 // Chip — closeable/selectable pill label with optional icon.
 //
@@ -72,9 +73,10 @@ Item {
                 color: closeArea.containsMouse ? Qt.rgba(1,1,1,0.15) : "transparent"
                 anchors.verticalCenter: parent.verticalCenter
 
-                Text {
+                SvgIcon {
                     anchors.centerIn: parent
-                    text: "×"; font.pixelSize: 12; font.bold: true
+                    width: 10; height: 10
+                    source: Icons.close
                     color: Qt.rgba(root.textColor.r, root.textColor.g, root.textColor.b, 0.7)
                 }
 

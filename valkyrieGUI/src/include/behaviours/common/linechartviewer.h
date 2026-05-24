@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QTimer>
 #include <QVector>
+#include <QVariantList>
 #include <behaviours/behaviours.h>
 
 class LineChartViewer : public Behaviours
@@ -50,6 +51,13 @@ public slots:
     void setMaxPoints(int max);
     void setAutoScale(bool enabled);
     void setChartTitle(const QString &title);
+
+    // ── Universal data input ──────────────────────────────────────────────
+    // Accepts a QVariantList of 1–3 elements:
+    //   [y]             → appendYAutoIncrementX(y)
+    //   [x, y]          → appendXY(x, y)
+    //   [series, x, y]  → appendXYToSeries(series, x, y)
+    void setInputData(const QVariantList& data);
 
     // ── QML batch helper ──────────────────────────────────────────────────
     // QML's LineSeries only exposes single-point replace overloads.

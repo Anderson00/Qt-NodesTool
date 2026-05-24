@@ -92,6 +92,31 @@ QVariant VariableManager::getValue(const QString& id) const {
     return v ? QVariant(v->value()) : QVariant();
 }
 
+QVariant VariableManager::getTypedValue(const QString& id) const {
+    NodeVariable* v = variableById(id);
+    return v ? v->parsedValue() : QVariant();
+}
+
+NodeVariable* VariableManager::addInt(const QString& name, int value, bool readOnly) {
+    return addVariable(name, "INT", QString::number(value), readOnly);
+}
+
+NodeVariable* VariableManager::addList(const QString& name, const QString& jsonArray, bool readOnly) {
+    return addVariable(name, "LIST", jsonArray, readOnly);
+}
+
+NodeVariable* VariableManager::addDict(const QString& name, const QString& jsonObject, bool readOnly) {
+    return addVariable(name, "DICT", jsonObject, readOnly);
+}
+
+NodeVariable* VariableManager::addVec2(const QString& name, double x, double y, bool readOnly) {
+    return addVariable(name, "VEC2", QString("%1,%2").arg(x).arg(y), readOnly);
+}
+
+NodeVariable* VariableManager::addVec3(const QString& name, double x, double y, double z, bool readOnly) {
+    return addVariable(name, "VEC3", QString("%1,%2,%3").arg(x).arg(y).arg(z), readOnly);
+}
+
 void VariableManager::saveToFile() {
     QJsonArray arr;
     for (const NodeVariable* v : qAsConst(m_variables))

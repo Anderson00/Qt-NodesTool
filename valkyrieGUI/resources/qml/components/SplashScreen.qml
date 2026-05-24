@@ -23,6 +23,10 @@ Rectangle {
 
     signal newProjectRequested()
     signal openProjectRequested()
+    signal workspaceOpenRequested(string name)
+    signal workspaceRenameRequested(string name)
+    signal workspaceExportRequested(string name)
+    signal workspaceDeleteRequested(string name)
 
     // ── Left panel ────────────────────────────────────────────────────────────
     Rectangle {
@@ -121,9 +125,7 @@ Rectangle {
                 visible: GlobalProperties.lastWorkspace !== ""
                 icon:    Icons.restore
                 label:   "Continue  \"" + GlobalProperties.lastWorkspace + "\""
-                onClicked: {
-                    viewPort.loadWorkspace(GlobalProperties.lastWorkspace)
-                }
+                onClicked: root.workspaceOpenRequested(GlobalProperties.lastWorkspace)
             }
         }
 
@@ -217,6 +219,7 @@ Rectangle {
                 delegate: Rectangle {
                     id: card
                     readonly property bool isLast: modelData === GlobalProperties.lastWorkspace
+                    readonly property string workspaceName: modelData
 
                     width:  parent ? parent.width : 0
                     height: 60
@@ -263,7 +266,7 @@ Rectangle {
                             spacing: 3
 
                             Text {
-                                text:  modelData
+                                text:  card.workspaceName
                                 color: cardMouse.containsMouse || card.isLast
                                            ? ThemeManager.primaryColor
                                            : ThemeManager.textColor
@@ -283,25 +286,85 @@ Rectangle {
                         }
                     }
 
-                    ColorIcon {
-                        source:  Icons.chevronRight
-                        color:   ThemeManager.primaryColor
-                        width:   14; height: 14
+                    // Three-dots menu trigger — visible on hover
+                    Rectangle {
+                        id: kebabBtn
+                        width: 26; height: 26; radius: 13
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.right:          parent.right
                         anchors.rightMargin:    12
-                        opacity: cardMouse.containsMouse ? 0.8 : (card.isLast ? 0.3 : 0)
+                        opacity: cardMouse.containsMouse || kebabHover.containsMouse ? 1.0 : 0.0
+                        color: kebabHover.containsMouse
+                                   ? Qt.rgba(ThemeManager.primaryColor.r,
+                                             ThemeManager.primaryColor.g,
+                                             ThemeManager.primaryColor.b, 0.16)
+                                   : "transparent"
                         Behavior on opacity { NumberAnimation { duration: 120 } }
+                        Behavior on color   { ColorAnimation   { duration: 100 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "⋮"
+                            font.pixelSize: 18
+                            font.bold: true
+                            color: ThemeManager.primaryColor
+                        }
+
+                        MouseArea {
+                            id: kebabHover
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape:  Qt.PointingHandCursor
+                            onClicked: function(mouse) {
+                                // Open menu right-aligned to the kebab button, just below it
+                                cardMenu.openAt(kebabBtn.x + kebabBtn.width - cardMenu.width,
+                                                kebabBtn.y + kebabBtn.height + 4)
+                            }
+                        }
                     }
 
                     MouseArea {
                         id: cardMouse
                         anchors.fill: parent
+                        anchors.rightMargin: 44  // leave room for the kebab button
                         hoverEnabled: true
                         cursorShape:  Qt.PointingHandCursor
-                        onClicked: {
-                            viewPort.loadWorkspace(modelData)
-                            GlobalProperties.lastWorkspace = modelData
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        onClicked: function(mouse) {
+                            if (mouse.button === Qt.RightButton) {
+                                cardMenu.openAt(mouse.x, mouse.y)
+                                return
+                            }
+                            root.workspaceOpenRequested(card.workspaceName)
+                        }
+                    }
+
+                    // ── Context menu (themed) ─────────────────────────────────
+                    ContextMenu {
+                        id: cardMenu
+                        items: [
+                            { label: "Open",       icon: "▶" },
+                            { label: "Rename…",    icon: "✎" },
+                            { label: "Duplicate",  icon: "⎘" },
+                            { label: "Export…",    icon: "↥" },
+                            { separator: true },
+                            { label: "Delete",     icon: "✕", danger: true }
+                        ]
+                        onItemSelected: function(idx, item) {
+                            switch (item.label) {
+                            case "Open":
+                                root.workspaceOpenRequested(card.workspaceName); break
+                            case "Rename…":
+                                root.workspaceRenameRequested(card.workspaceName); break
+                            case "Duplicate":
+                                const ok = WorkspaceManager.duplicateWorkspace(card.workspaceName)
+                                if (!ok) console.warn("Duplicate failed for", card.workspaceName)
+                                break
+                            case "Export…":
+                                root.workspaceExportRequested(card.workspaceName); break
+                            case "Delete":
+                                root.workspaceDeleteRequested(card.workspaceName); break
+                            }
                         }
                     }
                 }

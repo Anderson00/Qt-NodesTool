@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QJsonObject>
+#include <QVariantList>
 #include <behaviours/behaviours.h>
 
 class GaugeViewer : public Behaviours
@@ -34,6 +35,8 @@ public:
 public slots:
     void setInputValue(double value);
     void setMin(double v);
+    // Universal input — [value] or [value, min, max]
+    void setInputData(const QVariantList& data);
     void setMax(double v);
     void setWarn(double v);
     void setCrit(double v);

@@ -9,9 +9,7 @@
         <file alias="LineChartViewer.qml">qml/behaviours/common/LineChartViewer.qml</file>
         <file alias="RandomGeneratorViewer.qml">qml/behaviours/common/RandomGeneratorViewer.qml</file>
         <file alias="ComponentsViewer.qml">qml/behaviours/common/ComponentsViewer.qml</file>
-        <file alias="ConstantValue.qml">qml/behaviours/common/ConstantValue.qml</file>
         <file alias="TextDisplay.qml">qml/behaviours/common/TextDisplay.qml</file>
-        <file alias="TimerNode.qml">qml/behaviours/common/TimerNode.qml</file>
         <file alias="Counter.qml">qml/behaviours/common/Counter.qml</file>
         <file alias="PieChartViewer.qml">qml/behaviours/common/PieChartViewer.qml</file>
         <file alias="BarChartViewer.qml">qml/behaviours/common/BarChartViewer.qml</file>
@@ -25,6 +23,7 @@
         <file alias="Clamp.qml">qml/behaviours/math/Clamp.qml</file>
         <file alias="MapRange.qml">qml/behaviours/math/MapRange.qml</file>
         <file alias="Filter.qml">qml/behaviours/math/Filter.qml</file>
+        <file alias="ExpressionEvaluator.qml">qml/behaviours/math/ExpressionEvaluator.qml</file>
     </qresource>
     <qresource prefix="/behaviours/logic">
         <file alias="Comparison.qml">qml/behaviours/logic/Comparison.qml</file>
@@ -56,6 +55,7 @@
         <file alias="CustomSwitch.qml">qml/components/CustomSwitch.qml</file>
         <file alias="CustomComboBox.qml">qml/components/CustomComboBox.qml</file>
         <file alias="NumberSpinBox.qml">qml/components/NumberSpinBox.qml</file>
+        <file alias="VerticalSpinBox.qml">qml/components/VerticalSpinBox.qml</file>
         <file alias="NumericInputField.qml">qml/components/NumericInputField.qml</file>
         <file alias="PasswordField.qml">qml/components/PasswordField.qml</file>
         <file alias="ColorPicker.qml">qml/components/ColorPicker.qml</file>
@@ -64,6 +64,7 @@
         <file alias="SearchableSelect.qml">qml/components/SearchableSelect.qml</file>
         <file alias="CustomDatePicker.qml">qml/components/CustomDatePicker.qml</file>
         <file alias="ResizeHandle.qml">qml/components/ResizeHandle.qml</file>
+        <file alias="FabButton.qml">qml/components/FabButton.qml</file>
         <file alias="SettingsPopup.qml">qml/components/SettingsPopup.qml</file>
         <file alias="SplashScreen.qml">qml/components/SplashScreen.qml</file>
         <file alias="Toast.qml">qml/components/Toast.qml</file>
@@ -99,7 +100,32 @@
         <file alias="LoadingSpinner.qml">qml/components/LoadingSpinner.qml</file>
         <file alias="SplitPane.qml">qml/components/SplitPane.qml</file>
         <file alias="CodeBlock.qml">qml/components/CodeBlock.qml</file>
+        <file alias="CodeEditor.qml">qml/components/CodeEditor.qml</file>
+        <file alias="VariableValueCard.qml">qml/components/VariableValueCard.qml</file>
+        <file alias="CalendarView.qml">qml/components/CalendarView.qml</file>
         <file alias="Kbd.qml">qml/components/Kbd.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/input">
+        <file alias="TextInputNode.qml">qml/behaviours/input/TextInputNode.qml</file>
+        <file alias="NumberInput.qml">qml/behaviours/input/NumberInput.qml</file>
+        <file alias="PairInput.qml">qml/behaviours/input/PairInput.qml</file>
+        <file alias="KeyValueInput.qml">qml/behaviours/input/KeyValueInput.qml</file>
+        <file alias="ArrayInput.qml">qml/behaviours/input/ArrayInput.qml</file>
+        <file alias="DateTimeInput.qml">qml/behaviours/input/DateTimeInput.qml</file>
+        <file alias="ColorInput.qml">qml/behaviours/input/ColorInput.qml</file>
+        <file alias="DictInput.qml">qml/behaviours/input/DictInput.qml</file>
+        <file alias="Vec2Input.qml">qml/behaviours/input/Vec2Input.qml</file>
+        <file alias="Vec3Input.qml">qml/behaviours/input/Vec3Input.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/converters">
+        <file alias="NumberCast.qml">qml/behaviours/converters/NumberCast.qml</file>
+        <file alias="PairAdapter.qml">qml/behaviours/converters/PairAdapter.qml</file>
+        <file alias="MergeNumbers.qml">qml/behaviours/converters/MergeNumbers.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/scheduling">
+        <file alias="IntervalTriggerViewer.qml">qml/behaviours/scheduling/IntervalTriggerViewer.qml</file>
+        <file alias="CronTriggerViewer.qml">qml/behaviours/scheduling/CronTriggerViewer.qml</file>
+        <file alias="ScriptSchedulerViewer.qml">qml/behaviours/scheduling/ScriptSchedulerViewer.qml</file>
     </qresource>
     <qresource prefix="/subwindows">
         <file alias="DebuggerMain.qml">qml/subwindows/DebuggerMain.qml</file>
@@ -126,6 +152,10 @@
         <file alias="VisualizationWindow.qml">qml/components/viewport/VisualizationWindow.qml</file>
         <file alias="FullscreenVisualization.qml">qml/components/viewport/FullscreenVisualization.qml</file>
         <file alias="VisualizationPreview.qml">qml/components/viewport/VisualizationPreview.qml</file>
+        <file alias="DesktopBar.qml">qml/components/viewport/DesktopBar.qml</file>
+        <file alias="DesktopLimitWarning.qml">qml/components/viewport/DesktopLimitWarning.qml</file>
+        <file alias="DesktopOverview.qml">qml/components/viewport/DesktopOverview.qml</file>
+        <file alias="ShortcutsHelpPopup.qml">qml/components/viewport/ShortcutsHelpPopup.qml</file>
     </qresource>
     <qresource prefix="/components/drawers">
         <file alias="NodesDrawer.qml">qml/components/drawers/NodesDrawer.qml</file>
@@ -134,5 +164,64 @@
     </qresource>
     <qresource prefix="/behaviours">
         <file alias="BaseBehaviour.qml">qml/behaviours/BaseBehaviour.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/networking">
+        <file alias="HttpRequester.qml">qml/behaviours/networking/HttpRequester.qml</file>
+        <file alias="WebSocketClient.qml">qml/behaviours/networking/WebSocketClient.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/geo">
+        <file alias="MapViewer.qml">qml/behaviours/geo/MapViewer.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/data">
+        <file alias="JSONParser.qml">qml/behaviours/data/JSONParser.qml</file>
+        <file alias="StatisticsAnalyzer.qml">qml/behaviours/data/StatisticsAnalyzer.qml</file>
+        <file alias="DataTableViewer.qml">qml/behaviours/data/DataTableViewer.qml</file>
+        <file alias="JsonTreeViewer.qml">qml/behaviours/data/JsonTreeViewer.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/io">
+        <file alias="FileWatcher.qml">qml/behaviours/io/FileWatcher.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/ai">
+        <file alias="AIQueryNode.qml">qml/behaviours/ai/AIQueryNode.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/visualization">
+        <file alias="HeatMapViewer.qml">qml/behaviours/visualization/HeatMapViewer.qml</file>
+        <file alias="RadarChartViewer.qml">qml/behaviours/visualization/RadarChartViewer.qml</file>
+        <file alias="NodeGraphViewer.qml">qml/behaviours/visualization/NodeGraphViewer.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/encoding">
+        <file alias="HashGenerator.qml">qml/behaviours/encoding/HashGenerator.qml</file>
+        <file alias="Base64Node.qml">qml/behaviours/encoding/Base64Node.qml</file>
+        <file alias="RegexProcessor.qml">qml/behaviours/encoding/RegexProcessor.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/database">
+        <file alias="SQLiteQuery.qml">qml/behaviours/database/SQLiteQuery.qml</file>
+        <file alias="CSVReaderWriter.qml">qml/behaviours/database/CSVReaderWriter.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/system">
+        <file alias="ProcessLauncher.qml">qml/behaviours/system/ProcessLauncher.qml</file>
+        <file alias="ClipboardNode.qml">qml/behaviours/system/ClipboardNode.qml</file>
+        <file alias="NetworkInterfaceInfo.qml">qml/behaviours/system/NetworkInterfaceInfo.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/transform">
+        <file alias="BufferAccumulator.qml">qml/behaviours/transform/BufferAccumulator.qml</file>
+        <file alias="RateLimiter.qml">qml/behaviours/transform/RateLimiter.qml</file>
+        <file alias="UnitConverter.qml">qml/behaviours/transform/UnitConverter.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/flow">
+        <file alias="FlowStartViewer.qml">qml/behaviours/flow/FlowStartViewer.qml</file>
+        <file alias="FlowBranchViewer.qml">qml/behaviours/flow/FlowBranchViewer.qml</file>
+        <file alias="FlowSwitchViewer.qml">qml/behaviours/flow/FlowSwitchViewer.qml</file>
+        <file alias="FlowSequenceViewer.qml">qml/behaviours/flow/FlowSequenceViewer.qml</file>
+        <file alias="FlowMergeViewer.qml">qml/behaviours/flow/FlowMergeViewer.qml</file>
+        <file alias="FlowDelayViewer.qml">qml/behaviours/flow/FlowDelayViewer.qml</file>
+        <file alias="FlowLoopViewer.qml">qml/behaviours/flow/FlowLoopViewer.qml</file>
+        <file alias="FlowEndViewer.qml">qml/behaviours/flow/FlowEndViewer.qml</file>
+    </qresource>
+    <qresource prefix="/behaviours/script">
+        <file alias="VariableReaderViewer.qml">qml/behaviours/script/VariableReaderViewer.qml</file>
+        <file alias="VariableWriterViewer.qml">qml/behaviours/script/VariableWriterViewer.qml</file>
+        <file alias="VariableMonitorViewer.qml">qml/behaviours/script/VariableMonitorViewer.qml</file>
+        <file alias="PythonScriptViewer.qml">qml/behaviours/script/PythonScriptViewer.qml</file>
     </qresource>
 </RCC>

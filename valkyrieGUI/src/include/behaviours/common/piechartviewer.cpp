@@ -1,7 +1,8 @@
 #include "piechartviewer.h"
 #include "behaviours/behaviourregistry.h"
+#include <QVariantList>
 
-REGISTER_BEHAVIOUR(PieChartViewer, "Pie Chart", "Interactive pie/donut chart with dynamic slices", "common", 0, 0)
+REGISTER_BEHAVIOUR(PieChartViewer, "Pie Chart", "Interactive pie/donut chart with dynamic slices", "Charts", 0, 0)
 
 PieChartViewer::PieChartViewer(QObject *parent) : Behaviours(parent)
 {
@@ -46,6 +47,16 @@ void PieChartViewer::clearSlices()
 void PieChartViewer::removeSlice(int index)
 {
     emit internalRemoveSlice(index);
+}
+
+void PieChartViewer::setInputData(const QVariantList& data)
+{
+    if (data.isEmpty()) return;
+    if (data.size() == 1) {
+        addSlice(QString(), data[0].toDouble());
+    } else {
+        addSlice(data[0].toString(), data[1].toDouble());
+    }
 }
 
 QJsonObject PieChartViewer::saveState() const

@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import App.Theme 1.0
+import App.Icons 1.0
 
 // MultiSelect — combobox-style dropdown with checkboxes; selected items shown as chips.
 //
@@ -101,9 +102,10 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         width: 16; height: 16
 
-                        Text {
+                        SvgIcon {
                             anchors.centerIn: parent
-                            text: "×"; font.pixelSize: 14; font.bold: true
+                            width: 12; height: 12
+                            source: Icons.close
                             color: Qt.rgba(ThemeManager.textColor.r,
                                            ThemeManager.textColor.g,
                                            ThemeManager.textColor.b, 0.7)

@@ -1,7 +1,8 @@
 #include "barchartviewer.h"
 #include "behaviours/behaviourregistry.h"
+#include <QVariantList>
 
-REGISTER_BEHAVIOUR(BarChartViewer, "Bar Chart", "Multi-series bar chart with auto-scaling Y axis", "common", 0, 0)
+REGISTER_BEHAVIOUR(BarChartViewer, "Bar Chart", "Multi-series bar chart with auto-scaling Y axis", "Charts", 0, 0)
 
 BarChartViewer::BarChartViewer(QObject *parent) : Behaviours(parent)
 {
@@ -41,6 +42,16 @@ void BarChartViewer::addSet(const QString& name)
 void BarChartViewer::clearChart()
 {
     emit internalClearChart();
+}
+
+void BarChartViewer::setInputData(const QVariantList& data)
+{
+    if (data.isEmpty()) return;
+    if (data.size() == 1) {
+        appendToSet(0, data[0].toDouble());
+    } else {
+        appendToSet(data[0].toInt(), data[1].toDouble());
+    }
 }
 
 QJsonObject BarChartViewer::saveState() const

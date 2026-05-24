@@ -3,6 +3,7 @@ import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 
 import App.Theme 1.0
+import App.Icons 1.0
 
 import '../../components'
 
@@ -112,14 +113,14 @@ Item {
                             Rectangle {
                                 width: 14; height: 11; radius: 2
                                 color: bu.containsMouse ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.2) : "transparent"
-                                Text { anchors.centerIn: parent; text: "▲"; font.pixelSize: 6; color: ThemeManager.textSecondaryColor }
+                                SvgIcon { anchors.centerIn: parent; width: 10; height: 10; source: Icons.chevronUp; color: ThemeManager.textSecondaryColor }
                                 MouseArea { id: bu; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                     onClicked: { root.baudIndex = Math.min(root.bauds.length - 1, root.baudIndex + 1); if (behaviourObject) behaviourObject.setBaud(root.bauds[root.baudIndex]) } }
                             }
                             Rectangle {
                                 width: 14; height: 11; radius: 2
                                 color: bd.containsMouse ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.2) : "transparent"
-                                Text { anchors.centerIn: parent; text: "▼"; font.pixelSize: 6; color: ThemeManager.textSecondaryColor }
+                                SvgIcon { anchors.centerIn: parent; width: 10; height: 10; source: Icons.chevronDown; color: ThemeManager.textSecondaryColor }
                                 MouseArea { id: bd; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                     onClicked: { root.baudIndex = Math.max(0, root.baudIndex - 1); if (behaviourObject) behaviourObject.setBaud(root.bauds[root.baudIndex]) } }
                             }

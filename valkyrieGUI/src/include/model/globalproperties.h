@@ -22,6 +22,9 @@ class GlobalProperties : public QObject
     Q_PROPERTY(QString gridPattern    READ gridPattern    WRITE setGridPattern    NOTIFY gridPatternChanged)
     Q_PROPERTY(QString nodesListPosition READ nodesListPosition WRITE setNodesListPosition NOTIFY nodesListPositionChanged)
     Q_PROPERTY(QString connectionStyle   READ connectionStyle   WRITE setConnectionStyle   NOTIFY connectionStyleChanged)
+    Q_PROPERTY(QString wireStyle         READ wireStyle         WRITE setWireStyle         NOTIFY wireStyleChanged)
+    Q_PROPERTY(QString wireDash          READ wireDash          WRITE setWireDash          NOTIFY wireDashChanged)
+    Q_PROPERTY(QString wireAnim          READ wireAnim          WRITE setWireAnim          NOTIFY wireAnimChanged)
 
     // ── Snap ─────────────────────────────────────────────────────────────────
     Q_PROPERTY(bool    snapEnabled       READ snapEnabled       WRITE setSnapEnabled       NOTIFY snapEnabledChanged)
@@ -33,6 +36,10 @@ class GlobalProperties : public QObject
     Q_PROPERTY(bool    snapShowCoords    READ snapShowCoords    WRITE setSnapShowCoords    NOTIFY snapShowCoordsChanged)
     Q_PROPERTY(bool    snapResizeEnabled READ snapResizeEnabled WRITE setSnapResizeEnabled NOTIFY snapResizeEnabledChanged)
     Q_PROPERTY(QString snapGuideColor    READ snapGuideColor    WRITE setSnapGuideColor    NOTIFY snapGuideColorChanged)
+
+    // ── Autosave ──────────────────────────────────────────────────────────────
+    Q_PROPERTY(bool    autosaveEnabled     READ autosaveEnabled     WRITE setAutosaveEnabled     NOTIFY autosaveEnabledChanged)
+    Q_PROPERTY(int     autosaveIntervalMin READ autosaveIntervalMin WRITE setAutosaveIntervalMin NOTIFY autosaveIntervalMinChanged)
 
 public:
     static GlobalProperties* instance();
@@ -49,6 +56,9 @@ public:
     QString gridPattern()        const;
     QString nodesListPosition()  const;
     QString connectionStyle()    const;
+    QString wireStyle()          const;
+    QString wireDash()           const;
+    QString wireAnim()           const;
 
     bool    snapEnabled()        const;
     int     snapGridSize()       const;
@@ -59,6 +69,8 @@ public:
     bool    snapShowCoords()     const;
     bool    snapResizeEnabled()  const;
     QString snapGuideColor()     const;
+    bool    autosaveEnabled()    const;
+    int     autosaveIntervalMin() const;
 
     // ── Setters ───────────────────────────────────────────────────────────────
     void setDebugMode(bool value);
@@ -71,6 +83,9 @@ public:
     void setGridPattern(const QString& pattern);
     void setNodesListPosition(const QString& position);
     void setConnectionStyle(const QString& style);
+    void setWireStyle(const QString& style);
+    void setWireDash(const QString& dash);
+    void setWireAnim(const QString& anim);
 
     void setSnapEnabled(bool value);
     void setSnapGridSize(int value);
@@ -81,6 +96,8 @@ public:
     void setSnapShowCoords(bool value);
     void setSnapResizeEnabled(bool value);
     void setSnapGuideColor(const QString& color);
+    void setAutosaveEnabled(bool value);
+    void setAutosaveIntervalMin(int value);
 
     Q_INVOKABLE void saveProperties();
     Q_INVOKABLE void loadProperties();
@@ -108,6 +125,9 @@ signals:
     void gridPatternChanged();
     void nodesListPositionChanged();
     void connectionStyleChanged();
+    void wireStyleChanged();
+    void wireDashChanged();
+    void wireAnimChanged();
 
     void snapEnabledChanged();
     void snapGridSizeChanged();
@@ -118,6 +138,8 @@ signals:
     void snapShowCoordsChanged();
     void snapResizeEnabledChanged();
     void snapGuideColorChanged();
+    void autosaveEnabledChanged();
+    void autosaveIntervalMinChanged();
 
 private:
     explicit GlobalProperties(QObject* parent = nullptr);
@@ -140,6 +162,9 @@ private:
     QString m_gridPattern        = "dots";
     QString m_nodesListPosition  = "bottom-left";
     QString m_connectionStyle    = "pills";
+    QString m_wireStyle          = "bezier";
+    QString m_wireDash           = "dashed";
+    QString m_wireAnim           = "flow";
 
     // ── Snap members ──────────────────────────────────────────────────────────
     bool    m_snapEnabled        = false;
@@ -151,6 +176,10 @@ private:
     bool    m_snapShowCoords     = true;
     bool    m_snapResizeEnabled  = false;
     QString m_snapGuideColor     = "#00e676";
+
+    // ── Autosave members ──────────────────────────────────────────────────────
+    bool    m_autosaveEnabled     = false;
+    int     m_autosaveIntervalMin = 5;
 };
 
 #endif // GLOBALPROPERTIES_H

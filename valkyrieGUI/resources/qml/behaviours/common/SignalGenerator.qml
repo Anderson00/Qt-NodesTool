@@ -22,7 +22,7 @@ Item {
     readonly property var waveNames:  ["Sine", "Square", "Triangle", "Sawtooth", "Noise"]
     readonly property var waveColors: ["#3498db","#e74c3c","#2ecc71","#f39c12","#9b59b6"]
 
-    // single helper — string ? color so Qt.rgba can use .r/.g/.b
+    // single helper string ? color so Qt.rgba can use .r/.g/.b
     property color _wc: waveColors[waveMode]
 
     property real _t:          0.0
@@ -267,7 +267,8 @@ Item {
             NewButton {
                 Layout.fillWidth: true; Layout.preferredHeight: 32
                 variant: "filled"
-                text: genTimer.running ? "¦ Stop" : "? Generate"
+                iconSource: genTimer.running ? Icons.stop : Icons.play
+                text: genTimer.running ? "Stop" : "Generate"
                 backgroundColor: genTimer.running
                                  ? ThemeManager.dangerColor
                                  : root.waveColors[root.waveMode]
@@ -300,7 +301,7 @@ Item {
 
             NewButton {
                 Layout.preferredWidth: 36; Layout.preferredHeight: 32
-                variant: "outlined"; text: "?"
+                variant: "outlined"; text: ""
                 backgroundColor: ThemeManager.textSecondaryColor
                 onClicked: resetChart()
             }

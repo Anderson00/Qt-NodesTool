@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QJsonObject>
+#include <QVariantList>
 #include <behaviours/behaviours.h>
 
 class TextDisplay : public Behaviours
@@ -30,6 +31,8 @@ public slots:
     void appendLine(QString line);
     void clear();
     void setMaxLines(int max);
+    // Universal input — joins all elements as a single line
+    void setInputData(const QVariantList& data);
 
 signals:
     void displayTextChanged();

@@ -27,9 +27,12 @@ Rectangle {
     signal cameraToggled()
     signal visualizationToggled()
     signal saveRequested()
+    signal saveAsRequested()
     signal openRequested()
     signal undoRequested()
     signal redoRequested()
+    signal homeRequested()
+    signal renameRequested(string newName)
 
     property bool canUndo:           false
     property bool canRedo:           false
@@ -62,14 +65,45 @@ Rectangle {
             spacing: 0
             Layout.alignment: Qt.AlignVCenter
 
-            Text {
-                text: "Valkyrie"
-                font.pixelSize: 14
-                font.bold: true
-                font.letterSpacing: 0.8
-                color: ThemeManager.primaryColor
+            // Valkyrie logo — clickable, returns to home (SplashScreen)
+            Item {
+                id: logoBtn
+                width:  logoText.implicitWidth
                 height: root.barHeight
-                verticalAlignment: Text.AlignVCenter
+
+                Text {
+                    id: logoText
+                    text: "Valkyrie"
+                    font.pixelSize: 14
+                    font.bold: true
+                    font.letterSpacing: 0.8
+                    color: ThemeManager.primaryColor
+                    opacity: logoHover.containsMouse ? 0.75 : 1.0
+                    anchors.verticalCenter: parent.verticalCenter
+                    Behavior on opacity { NumberAnimation { duration: 120 } }
+                }
+
+                // Subtle underline on hover
+                Rectangle {
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 12
+                    anchors.left:   logoText.left
+                    anchors.right:  logoText.right
+                    height: 1
+                    color:   ThemeManager.primaryColor
+                    opacity: logoHover.containsMouse ? 0.8 : 0.0
+                    Behavior on opacity { NumberAnimation { duration: 120 } }
+                }
+
+                MouseArea {
+                    id: logoHover
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape:  Qt.PointingHandCursor
+                    onClicked:    root.homeRequested()
+                }
+
+                AppToolTip { text: "Back to Home"; visible: logoHover.containsMouse; delay: 500 }
             }
 
             Item { width: 12; height: 1 }
@@ -83,15 +117,99 @@ Rectangle {
 
             Item { width: 12; height: 1 }
 
-            Text {
-                text: root.currentProject + (root.isDirty ? " •" : "")
-                font.pixelSize: 12
-                color:   root.isDirty ? ThemeManager.primaryColor : ThemeManager.textColor
-                opacity: root.isDirty ? 0.75 : 0.55
-                height:  root.barHeight
-                verticalAlignment: Text.AlignVCenter
-                Behavior on color   { ColorAnimation { duration: 150 } }
-                Behavior on opacity { NumberAnimation { duration: 150 } }
+            // Project name — view / edit mode toggle
+            Item {
+                id: projectNameWrap
+                property bool editing: false
+                width:  Math.max(80, (projectNameWrap.editing ? projectNameEdit.implicitWidth + 16 : projectNameView.implicitWidth + editIcon.width + 14))
+                height: root.barHeight
+
+                // View mode
+                Row {
+                    visible: !projectNameWrap.editing
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 6
+
+                    Text {
+                        id: projectNameView
+                        text: root.currentProject + (root.isDirty ? " •" : "")
+                        font.pixelSize: 12
+                        color:   root.isDirty ? ThemeManager.primaryColor : ThemeManager.textColor
+                        opacity: root.isDirty ? 0.75 : (projectNameHover.containsMouse ? 0.9 : 0.55)
+                        verticalAlignment: Text.AlignVCenter
+                        Behavior on color   { ColorAnimation { duration: 150 } }
+                        Behavior on opacity { NumberAnimation { duration: 150 } }
+                    }
+
+                    // Pencil icon — visible on hover, hint that name is editable
+                    ColorIcon {
+                        id: editIcon
+                        source: Icons.pencilOutline
+                        color:  ThemeManager.textColor
+                        width: 12; height: 12
+                        opacity: projectNameHover.containsMouse ? 0.7 : 0.0
+                        anchors.verticalCenter: parent.verticalCenter
+                        Behavior on opacity { NumberAnimation { duration: 120 } }
+                    }
+                }
+
+                // Edit mode
+                Rectangle {
+                    visible: projectNameWrap.editing
+                    anchors.fill: parent
+                    anchors.topMargin: 8
+                    anchors.bottomMargin: 8
+                    radius: 4
+                    color:  Qt.darker(ThemeManager.backgroundColor, 1.6)
+                    border.color: ThemeManager.primaryColor
+                    border.width: 1
+
+                    TextInput {
+                        id: projectNameEdit
+                        anchors.fill:        parent
+                        anchors.leftMargin:  8
+                        anchors.rightMargin: 8
+                        verticalAlignment:   TextInput.AlignVCenter
+                        color:               ThemeManager.textColor
+                        font.pixelSize:      12
+                        selectByMouse:       true
+                        clip:                true
+
+                        function commit() {
+                            const newName = (projectNameEdit.text || "").trim()
+                            const oldName = root.currentProject
+                            if (newName !== "" && newName !== oldName)
+                                root.renameRequested(newName)
+                            projectNameWrap.editing = false
+                        }
+                        function cancel() { projectNameWrap.editing = false }
+
+                        Keys.onReturnPressed: commit()
+                        Keys.onEnterPressed:  commit()
+                        Keys.onEscapePressed: cancel()
+                        onActiveFocusChanged: if (!activeFocus && projectNameWrap.editing) commit()
+                    }
+                }
+
+                MouseArea {
+                    id: projectNameHover
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    enabled:      !projectNameWrap.editing
+                    cursorShape:  Qt.IBeamCursor
+                    onDoubleClicked: {
+                        projectNameEdit.text = root.currentProject
+                        projectNameWrap.editing = true
+                        projectNameEdit.selectAll()
+                        projectNameEdit.forceActiveFocus()
+                    }
+                }
+
+                AppToolTip {
+                    text: "Double-click to rename"
+                    visible: projectNameHover.containsMouse && !projectNameWrap.editing
+                    delay: 600
+                }
             }
         }
 
@@ -309,6 +427,14 @@ Rectangle {
                 onClicked: root.saveRequested()
                 Behavior on icon.color { ColorAnimation { duration: 150 } }
                 AppToolTip { text: "Save  (Ctrl+S)"; visible: parent.hovered }
+            }
+
+            AppBarButton {
+                icon.source: Icons.contentSaveOutline
+                icon.color:  ThemeManager.textColor
+                width: 40; height: 40
+                onClicked: root.saveAsRequested()
+                AppToolTip { text: "Save As…  (Ctrl+Shift+S)"; visible: parent.hovered }
             }
 
             AppBarButton {

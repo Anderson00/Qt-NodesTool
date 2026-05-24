@@ -24,6 +24,23 @@ Item {
 
     property bool gridMode: true
 
+    property bool isSearching: searchInput.text.trim().length > 0
+    property var allNodes: {
+        var list = []
+        for (var i = 0; i < root.categoryKeys.length; i++) {
+            var cat = root.categoryKeys[i]
+            var nodes = root.categoryData[cat]
+            if (nodes) {
+                for (var j = 0; j < nodes.length; j++) {
+                    var node = Object.assign({}, nodes[j])
+                    node._category = cat
+                    list.push(node)
+                }
+            }
+        }
+        return list
+    }
+
     readonly property var _icons: ({
         'Debug':   Icons.bug,
         'Plugins': Icons.codeBraces
@@ -228,6 +245,13 @@ Item {
 
                 Text {
                     text: {
+                        if (root.isSearching) {
+                             var q3 = searchInput.text.trim().toLowerCase()
+                             var cnt3 = root.allNodes.filter(function(n){
+                                 return n.name.toLowerCase().indexOf(q3) >= 0 || (n.desc && n.desc.toLowerCase().indexOf(q3) >= 0)
+                             }).length
+                             return cnt3 + " results found"
+                        }
                         if (root.navState === "root") {
                             var q = searchInput.text.toLowerCase()
                             var cnt = q
@@ -274,7 +298,7 @@ Item {
             ListView {
                 id: catList
                 anchors.fill: parent; clip: true
-                visible: root.navState === "root"
+                visible: root.navState === "root" && !root.isSearching
 
                 Contrl.ScrollBar.vertical: Contrl.ScrollBar {
                     contentItem: Rectangle {
@@ -377,10 +401,15 @@ Item {
             // ── CATEGORY: node cards ───────────────────────────────────────
             Item {
                 anchors.fill: parent
-                visible: root.navState === "category"
+                visible: root.navState === "category" || root.isSearching
 
                 property var filtered: {
-                    var q = searchInput.text.toLowerCase()
+                    var q = searchInput.text.trim().toLowerCase()
+                    if (root.isSearching) {
+                        return root.allNodes.filter(function(n){
+                            return n.name.toLowerCase().indexOf(q) >= 0 || (n.desc && n.desc.toLowerCase().indexOf(q) >= 0)
+                        })
+                    }
                     if (!q) return root.currentInfos
                     return root.currentInfos.filter(function(n){
                         return n.name.toLowerCase().indexOf(q) >= 0
@@ -465,21 +494,21 @@ Item {
                                 Item { Layout.fillHeight: true }
                                 Row {
                                     spacing: 6
-                                    Text {
-                                        text: "↑" + modelData.outputs_count
-                                        font.pixelSize: 9
-                                        color: ThemeManager.primaryColor; opacity: 0.8
+                                    Row {
+                                        spacing: 2
+                                        SvgIcon { width: 9; height: 9; source: Icons.chevronUp; color: ThemeManager.primaryColor; opacity: 0.8 }
+                                        Text { text: modelData.outputs_count; font.pixelSize: 9; color: ThemeManager.primaryColor; opacity: 0.8 }
                                     }
-                                    Text {
-                                        text: "↓" + modelData.inputs_count
-                                        font.pixelSize: 9
-                                        color: ThemeManager.textColor; opacity: 0.5
+                                    Row {
+                                        spacing: 2
+                                        SvgIcon { width: 9; height: 9; source: Icons.chevronDown; color: ThemeManager.textColor; opacity: 0.5 }
+                                        Text { text: modelData.inputs_count; font.pixelSize: 9; color: ThemeManager.textColor; opacity: 0.5 }
                                     }
                                     Item { Layout.fillWidth: true }
-                                    Text {
-                                        text: "drag →"
-                                        font.pixelSize: 8
-                                        color: ThemeManager.textColor; opacity: 0.22
+                                    Row {
+                                        spacing: 2
+                                        Text { text: "drag"; font.pixelSize: 8; color: ThemeManager.textColor; opacity: 0.22 }
+                                        SvgIcon { width: 8; height: 8; source: Icons.chevronRight; color: ThemeManager.textColor; opacity: 0.22 }
                                     }
                                 }
                             }
@@ -501,14 +530,24 @@ Item {
                                         color: ThemeManager.textColor; elide: Text.ElideRight
                                         width: parent.width
                                     }
-                                    Text {
-                                        text: "↑" + modelData.outputs_count + "  ↓" + modelData.inputs_count
-                                        font.pixelSize: 9; color: ThemeManager.textColor; opacity: 0.45
+                                    Row {
+                                        spacing: 6
+                                        Row {
+                                            spacing: 2
+                                            SvgIcon { width: 9; height: 9; source: Icons.chevronUp; color: ThemeManager.textColor; opacity: 0.45 }
+                                            Text { text: modelData.outputs_count; font.pixelSize: 9; color: ThemeManager.textColor; opacity: 0.45 }
+                                        }
+                                        Row {
+                                            spacing: 2
+                                            SvgIcon { width: 9; height: 9; source: Icons.chevronDown; color: ThemeManager.textColor; opacity: 0.45 }
+                                            Text { text: modelData.inputs_count; font.pixelSize: 9; color: ThemeManager.textColor; opacity: 0.45 }
+                                        }
                                     }
                                 }
-                                Text {
-                                    text: "drag →"; font.pixelSize: 9
-                                    color: ThemeManager.primaryColor; opacity: 0.35
+                                Row {
+                                    spacing: 2
+                                    Text { text: "drag"; font.pixelSize: 9; color: ThemeManager.primaryColor; opacity: 0.35 }
+                                    SvgIcon { width: 9; height: 9; source: Icons.chevronRight; color: ThemeManager.primaryColor; opacity: 0.35 }
                                 }
                             }
 
@@ -539,7 +578,8 @@ Item {
                                     if ((dx * dx + dy * dy) > 64) {
                                         cardDelegate._dragging = true
                                         var lp = mapToItem(root, mouseX, mouseY)
-                                        root.dragStarted(root.currentCategory, modelData, lp.x, lp.y)
+                                        var cat = modelData._category !== undefined ? modelData._category : root.currentCategory
+                                        root.dragStarted(cat, modelData, lp.x, lp.y)
                                     }
                                 }
                                 if (cardDelegate._dragging) {

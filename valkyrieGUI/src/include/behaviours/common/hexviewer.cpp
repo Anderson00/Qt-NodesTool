@@ -2,7 +2,7 @@
 #include <QJsonArray>
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(HexViewer, "Hex Viewer", "Hex viewer", "common", 1, 0)
+REGISTER_BEHAVIOUR(HexViewer, "Hex Viewer", "Hex viewer", "Visualization", 1, 0)
 
 HexViewer::HexViewer(QObject *parent)
 {

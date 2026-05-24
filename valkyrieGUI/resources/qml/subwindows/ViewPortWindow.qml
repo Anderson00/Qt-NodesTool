@@ -3,9 +3,11 @@ import QtQuick.Controls 2.12
 import QtQuick.Controls.Material 2.12
 import QtQuick.Layouts 1.0
 import QtQuick.Shapes 1.15
+import QtQuick.Dialogs
 import App.Theme 1.0
 import App.Properties 1.0
 import App.Workspace 1.0
+import App.Desktop 1.0
 import App.Toast 1.0
 import App.Icons 1.0
 
@@ -30,6 +32,12 @@ Rectangle {
     property bool isConnecting: false
     property var shapeConn
     property bool m_suppressConnectionDraw: false
+
+    // ── Drag-connect highlight state ─────────────────────────────────────────
+    // Set when the user starts dragging a connection wire from a port.
+    // Broadcast to every ViewComponentRectV2 so incompatible ports can dim.
+    property string draggingPortSig:      ""    // method signature of the port being dragged
+    property bool   draggingPortIsOutput: false // true = dragging from an output (signal)
 
     //Behaviours properties
     property var nodeOnFocus
@@ -369,6 +377,8 @@ Rectangle {
     property bool isAnimatingCenter: false
 
     property int topBarHeight: 48
+    property int desktopBarHeight: 36
+    readonly property int chromeTopHeight: topBarHeight + desktopBarHeight
     property string selectedPanel: ""
     property string currentProject: WorkspaceManager.currentWorkspace !== "" ? WorkspaceManager.currentWorkspace : "Untitled Project"
 
@@ -465,10 +475,14 @@ Rectangle {
         function onConnectionRemoved(outputUuid, outputMethod, inputUuid, inputMethod) {
             for (var i = nodeConnections.model.count - 1; i >= 0; i--) {
                 var m = nodeConnections.model.get(i)
-                if (m.outputUuid === outputUuid && m.inputUuid === inputUuid &&
-                    m.methodSignature1 === outputMethod && m.methodSignature2 === inputMethod) {
-                    nodeConnections.model.remove(i)
-                    break
+                if (m.outputUuid === outputUuid && m.inputUuid === inputUuid) {
+                    var isSrcOut = m.isSourceOutput !== undefined ? m.isSourceOutput : true
+                    var expectedOutMethod = isSrcOut ? m.methodSignature1 : m.methodSignature2
+                    var expectedInMethod  = isSrcOut ? m.methodSignature2 : m.methodSignature1
+                    if (expectedOutMethod === outputMethod && expectedInMethod === inputMethod) {
+                        nodeConnections.model.remove(i)
+                        break
+                    }
                 }
             }
         }
@@ -545,7 +559,7 @@ Rectangle {
     function _setSelection(items) {
         for (var i = 0; i < nodes.model.count; i++) {
             var it = nodes.itemAt(i)
-            if (it) it.isSelected = false
+            if (it && it.visible) it.isSelected = false
         }
         selectedNodes = items.slice()
         for (var j = 0; j < selectedNodes.length; j++)
@@ -573,7 +587,7 @@ Rectangle {
     function _clearSelection() {
         for (var i = 0; i < nodes.model.count; i++) {
             var it = nodes.itemAt(i)
-            if (it) it.isSelected = false
+            if (it && it.visible) it.isSelected = false
         }
         selectedNodes = []
         nodeOnFocus = null
@@ -583,7 +597,7 @@ Rectangle {
         var toSelect = []
         for (var i = 0; i < nodes.model.count; i++) {
             var it = nodes.itemAt(i)
-            if (!it) continue
+            if (!it || !it.visible) continue
             if ((it.x + it.width) > rx1 && it.x < rx2 &&
                 (it.y + it.height) > ry1 && it.y < ry2)
                 toSelect.push(it)
@@ -756,6 +770,7 @@ Rectangle {
     function detectNodeByMousePosition(x: double, y: double) {
         for (let i = 0; i < nodes.model.count; i++) {
             let node = nodes.model.get(i)['object']
+            if (!node || !node.viewRect || !node.viewRect.visible) continue
             if ((x >= node.x && x <= node.x + node.width) &&
                 (y >= node.y && y <= node.y + node.height))
                 return node
@@ -771,6 +786,15 @@ Rectangle {
                 event.accepted = true
                 break
             case Qt.Key_Escape:
+                if (isConnecting) {
+                    isConnecting = false
+                    mouseAreaGlobal.enabled = false
+                    // Remove the pending (incomplete) connection line
+                    if (nodeConnections.model.count > 0)
+                        nodeConnections.model.remove(nodeConnections.model.count - 1)
+                }
+                root.draggingPortSig      = ""
+                root.draggingPortIsOutput = false
                 _clearSelection()
                 event.accepted = true
                 break
@@ -793,42 +817,24 @@ Rectangle {
         if (event.key === Qt.Key_Shift) isShiftHeld = false
     }
 
-    RoundButton {
+    FabButton {
         id: fabRightMenu
         visible: nodeOnFocus !== null && nodeOnFocus !== undefined
         anchors.right: parent.right
         anchors.rightMargin: 8
-        anchors.top: topBar.bottom
+        anchors.top: desktopBar.bottom
         anchors.topMargin: historyPanel.visible ? historyPanel.height + 16 : 8
         z: 100
+
+        iconSource: Icons.cog
+        iconColor: ThemeManager.primaryColor
 
         Behavior on anchors.topMargin {
             NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
         }
 
-        icon.source: Icons.cog
-        icon.color: ThemeManager.primaryColor
-        flat: false
-        
-        background: Rectangle {
-            implicitWidth: 40
-            implicitHeight: 40
-            radius: 20
-            color: fabRightMenu.pressed ? ThemeManager.secondaryColor : ThemeManager.surfaceColor
-            border.color: ThemeManager.borderColor
-            border.width: 1
-            layer.enabled: true
-            layer.effect: DropShadow {
-                transparentBorder: true
-                horizontalOffset: 0
-                verticalOffset: 2
-                radius: 4
-                color: Qt.rgba(0,0,0,0.3)
-            }
-        }
-
         onClicked: {
-            if(rightDrawerOpened)
+            if (rightDrawerOpened)
                 drawer.close()
             else
                 drawer.open()
@@ -839,8 +845,8 @@ Rectangle {
         id: drawer
         modal: false
         interactive: false
-        topMargin: topBar.height
-        height: parent.height - topBar.height - statusBar.height
+        topMargin: chromeTopHeight
+        height: parent.height - chromeTopHeight - statusBar.height
 
         viewPortWindow: viewPort
         selectedObjectView: root.nodeOnFocus
@@ -863,7 +869,7 @@ Rectangle {
 
     MouseArea {
         id: mouseAreaGlobal
-        anchors.top: topBar.bottom
+        anchors.top: desktopBar.bottom
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
@@ -886,17 +892,23 @@ Rectangle {
             if (vr) {
                 let conn = vr.connectionOnXYPosition(lp.x, lp.y)
                 if (conn) {
-                    // Capture everything needed BEFORE touching the model (model.get returns a live proxy)
+                    // Capture everything needed BEFORE touching the model
                     let n1        = nodeConnections.model.get(lastConnection)
-                    let outUuid   = viewPort.getUUIDFromBehaviour(n1['node'].behaviourObject)
-                    let outMethod = n1['methodSignature1']
-                    let inUuid    = viewPort.getUUIDFromBehaviour(node)
-                    let inMethod  = conn.name
+                    let n1Uuid    = viewPort.getUUIDFromBehaviour(n1['node'].behaviourObject)
+                    let n1Method  = n1['methodSignature1']
+                    let n2Uuid    = viewPort.getUUIDFromBehaviour(node)
+                    let n2Method  = conn.name
+
+                    let isSrcOut = n1['isSourceOutput'] !== undefined ? n1['isSourceOutput'] : true
+                    let outUuid   = isSrcOut ? n1Uuid : n2Uuid
+                    let outMethod = isSrcOut ? n1Method : n2Method
+                    let inUuid    = isSrcOut ? n2Uuid : n1Uuid
+                    let inMethod  = isSrcOut ? n2Method : n1Method
+
                     if (outUuid && inUuid && outMethod && inMethod) {
-                        // Store uuids in the model entry so onBehaviourRemoved/onConnectionRemoved can identify it
                         nodeConnections.model.set(lastConnection, {
                             outputUuid: outUuid, inputUuid: inUuid,
-                            methodSignature2: inMethod, node2: node
+                            methodSignature2: n2Method, node2: node
                         })
                         // Record undo; suppress visual redraw since we manually snap the line if valid
                         m_suppressConnectionDraw = true
@@ -922,6 +934,8 @@ Rectangle {
             }
 
             shapeConn = undefined
+            root.draggingPortSig      = ""
+            root.draggingPortIsOutput = false
             mouse.accepted = false
         }
 
@@ -939,7 +953,7 @@ Rectangle {
 
     MouseArea {
         id: mouseZoom
-        anchors.top: topBar.bottom
+        anchors.top: desktopBar.bottom
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
@@ -1013,7 +1027,7 @@ Rectangle {
 
     Rectangle {
         id: containerCanvas
-        anchors.top: topBar.bottom
+        anchors.top: desktopBar.bottom
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
@@ -1271,6 +1285,7 @@ Rectangle {
 
                     if (hitIndex !== -1) {
                         var connData = nodeConnections.model.get(hitIndex);
+                        var isSrcOut = connData.isSourceOutput !== undefined ? connData.isSourceOutput : true;
                         // Open radial menu
                         var globalPos = dragArea.mapToItem(root, mouse.x, mouse.y);
                         connMenu.originX = globalPos.x;
@@ -1278,8 +1293,8 @@ Rectangle {
                         connMenu.connectionIndex = hitIndex;
                         connMenu.outUuid = connData.outputUuid;
                         connMenu.inUuid = connData.inputUuid;
-                        connMenu.outMethod = connData.methodSignature1;
-                        connMenu.inMethod = connData.methodSignature2;
+                        connMenu.outMethod = isSrcOut ? connData.methodSignature1 : connData.methodSignature2;
+                        connMenu.inMethod = isSrcOut ? connData.methodSignature2 : connData.methodSignature1;
                         
                         // Extract names if available
                         connMenu.outNodeName = connData.node ? connData.node.title : "Nó Origem";
@@ -1420,6 +1435,38 @@ Rectangle {
                         property var circleConn2:      null
                         property var viewRectConn2:    null
 
+                        Timer {
+                            id: forceSyncTimer
+                            interval: 50
+                            repeat: false
+                            onTriggered: {
+                                if (model.circleConn) circleConnPoint = model.circleConn.mapToItem(shape.parent, 0, 0)
+                                if (circleConn2) circleConnPoint2 = circleConn2.mapToItem(shape.parent, 0, 0)
+                            }
+                        }
+
+                        // ── Cross-desktop visibility ──────────────────────────
+                        // Hide the wire when either endpoint isn't on the active
+                        // desktop. The underlying C++ signal/slot stays connected;
+                        // only the visual line disappears.
+                        property int _desktopRefresh: 0
+                        Connections {
+                            target: DesktopManager
+                            function onCurrentDesktopChanged()  { shape._desktopRefresh++; forceSyncTimer.restart() }
+                            function onNodeDesktopMembershipChanged() { shape._desktopRefresh++; forceSyncTimer.restart() }
+                            function onPinnedNodesChanged()     { shape._desktopRefresh++; forceSyncTimer.restart() }
+                        }
+                        // In-progress (not yet attached) connections have empty
+                        // inputUuid — keep them visible while the user is dragging.
+                        function _endpointVisible(uuid) {
+                            return !uuid || uuid === "" || DesktopManager.isNodeVisibleOnCurrentDesktop(uuid)
+                        }
+                        visible: (_desktopRefresh >= 0)
+                                 && _endpointVisible(model.outputUuid)
+                                 && _endpointVisible(model.inputUuid)
+                        opacity: visible ? 1.0 : 0.0
+                        Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+
                         property real dashOffset: 0
 
                         // Exposed for hit testing
@@ -1439,11 +1486,7 @@ Rectangle {
                                 circleConn2   = model.initCircleConn2
                                 viewRectConn2 = model.initViewRectConn2
                                 // Recompute positions after layout
-                                Qt.callLater(function() {
-                                    circleConnPoint  = model.circleConn.mapToItem(shape.parent, 0, 0)
-                                    if (circleConn2)
-                                        circleConnPoint2 = circleConn2.mapToItem(shape.parent, 0, 0)
-                                })
+                                forceSyncTimer.restart()
                             } else {
                                 // New in-progress connection drawn by user
                                 shapeConn = shape
@@ -1465,6 +1508,9 @@ Rectangle {
                             function onYChanged()      { circleConnPoint = model.circleConn.mapToItem(parent, 0, 0) }
                             function onWidthChanged()  { circleConnPoint = model.circleConn.mapToItem(parent, 0, 0) }
                             function onHeightChanged() { circleConnPoint = model.circleConn.mapToItem(parent, 0, 0) }
+                            function onVisibleChanged() {
+                                if (model.node.visible) forceSyncTimer.restart()
+                            }
                         }
 
                         Connections {
@@ -1473,48 +1519,72 @@ Rectangle {
                             function onYChanged()      { circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0) }
                             function onWidthChanged()  { circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0) }
                             function onHeightChanged() { circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0) }
+                            function onVisibleChanged() {
+                                if (viewRectConn2 && viewRectConn2.visible) forceSyncTimer.restart()
+                            }
+                        }
+
+                        // Pulse animation (width oscillating)
+                        SequentialAnimation {
+                            id: pulseAnim
+                            property real currentWidth: 2
+                            running: GlobalProperties.wireAnim === "pulse"
+                            loops: Animation.Infinite
+                            NumberAnimation { target: pulseAnim; property: "currentWidth"; from: 2; to: 4; duration: 400; easing.type: Easing.InOutQuad }
+                            NumberAnimation { target: pulseAnim; property: "currentWidth"; from: 4; to: 2; duration: 400; easing.type: Easing.InOutQuad }
                         }
 
                         ShapePath {
                             id: shapepath
                             strokeColor: model.circleConn.color
-                            strokeWidth: 2
+                            strokeWidth: GlobalProperties.wireAnim === "pulse" ? pulseAnim.currentWidth : 2
                             fillColor: "transparent"
                             capStyle: ShapePath.RoundCap
-                            strokeStyle: ShapePath.DashLine
-                            dashPattern: [8, 4]
+                            
+                            strokeStyle: GlobalProperties.wireDash === "solid" ? ShapePath.SolidLine : ShapePath.DashLine
+                            dashPattern: GlobalProperties.wireDash === "dotted" ? [1, 6] : [8, 4]
 
-                            // Marching ants — animate ShapePath.dashOffset directly
-                            // so the renderer marks the path dirty each frame.
+                            readonly property bool srcIsOut: model.isSourceOutput !== undefined ? model.isSourceOutput : true
+                            readonly property bool tgtIsOut: model.isRestored ? false : !srcIsOut
+
+                            // Flow animation (marching ants flowing towards input)
                             NumberAnimation on dashOffset {
+                                // If drawn left-to-right (srcIsOut=true), moving offset negative pushes pattern towards target.
+                                // If drawn right-to-left (srcIsOut=false), moving offset positive pushes pattern towards target.
+                                property real targetOffset: shapepath.srcIsOut ? -12 : 12
                                 from: 0
-                                to: -12
+                                to: targetOffset
                                 duration: 400
                                 loops: Animation.Infinite
-                                running: true
+                                running: GlobalProperties.wireAnim === "flow"
                             }
 
-                            startX: circleConnPoint.x + model.circleConn.width / 2
+                            startX: srcIsOut ? circleConnPoint.x + model.circleConn.width : circleConnPoint.x
                             startY: circleConnPoint.y + model.circleConn.height / 2
 
                             PathCubic {
                                 id: cubicPath
-                                readonly property real ex: circleConn2
-                                    ? circleConnPoint2.x + circleConn2.width  / 2
-                                    : (mouseAreaGlobal.mouseX - mycanvas.x) / zoomScale
+                                readonly property real ex: {
+                                    if (circleConn2) {
+                                        return shapepath.tgtIsOut ? circleConnPoint2.x + circleConn2.width : circleConnPoint2.x
+                                    } else {
+                                        return (mouseAreaGlobal.mouseX - mycanvas.x) / zoomScale
+                                    }
+                                }
                                 readonly property real ey: circleConn2
                                     ? circleConnPoint2.y + circleConn2.height / 2
                                     : (mouseAreaGlobal.mouseY - mycanvas.y) / zoomScale
 
-                                // Control points: horizontal tangents from each endpoint.
-                                // Offset proportional to horizontal distance for a natural S-curve.
-                                readonly property real dx: Math.abs(ex - shapepath.startX) * 0.5 + 40
+                                // For straight lines, set dx = 0 so control points fall exactly on endpoints
+                                readonly property real dx: GlobalProperties.wireStyle === "bezier" 
+                                    ? Math.abs(ex - shapepath.startX) * 0.5 + 40 
+                                    : 0
 
                                 x: ex
                                 y: ey
-                                control1X: shapepath.startX + dx
+                                control1X: shapepath.startX + (shapepath.srcIsOut ? dx : -dx)
                                 control1Y: shapepath.startY
-                                control2X: ex - dx
+                                control2X: ex + (shapepath.tgtIsOut ? dx : -dx)
                                 control2Y: ey
                             }
                         }
@@ -1544,7 +1614,33 @@ Rectangle {
                         viewportSnap:      root.computeSnap
                         viewportEdgeSnap:  root.computeEdgeSnap
 
-                        visible:           !model.isVisualization
+                        nodeUuid: model.uuid
+
+                        // Visible when not a visualization clone AND it belongs to
+                        // the active virtual desktop (or is pinned globally).
+                        // The `+ opacityRefresh * 0` trick forces the binding to
+                        // re-evaluate whenever opacityRefresh changes, since
+                        // Q_INVOKABLE calls don't auto-track dependencies.
+                        readonly property bool _belongsToCurrentDesktop:
+                            (opacityRefresh >= 0) &&
+                            (model.uuid === "" ||
+                             DesktopManager.isNodeVisibleOnCurrentDesktop(model.uuid))
+
+                        // Re-evaluate when current desktop or membership changes
+                        Connections {
+                            target: DesktopManager
+                            function onCurrentDesktopChanged() { viewComponentRectV2.opacityRefresh++ }
+                            function onNodeDesktopMembershipChanged(uuid) {
+                                if (uuid === model.uuid) viewComponentRectV2.opacityRefresh++
+                            }
+                            function onPinnedNodesChanged() { viewComponentRectV2.opacityRefresh++ }
+                        }
+                        // Bumped via Connections above to force re-evaluation of _belongsToCurrentDesktop
+                        property int opacityRefresh: 0
+
+                        visible:           !model.isVisualization && _belongsToCurrentDesktop && opacity > 0.01
+                        opacity:           _belongsToCurrentDesktop ? 1.0 : 0.0
+                        Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
 
                         // nodePressed fires on every mouse-down — select the node immediately
                         // unless it's already part of the current selection (preserves group).
@@ -1565,12 +1661,25 @@ Rectangle {
 
                         onConnectionSocketClicked: function(conn) {
                             isConnecting = true
+
+                            // Determine if the clicked port is an output (signal) or input (slot)
+                            var isOut = false
+                            for (var k = 0; k < viewComponentRectV2.connectionsOutput.length; k++) {
+                                if (viewComponentRectV2.connectionsOutput[k].name === conn.name) {
+                                    isOut = true
+                                    break
+                                }
+                            }
+                            root.draggingPortSig      = conn.name
+                            root.draggingPortIsOutput = isOut
+
                             nodeConnections.model.append({
                                 methodSignature1: conn.name, node: this,
                                 circleConn: conn.circleConn, node2: this, methodSignature2: "",
                                 outputUuid: "", inputUuid: "",
                                 initCircleConn2: conn.circleConn, initViewRectConn2: this,
-                                isRestored: false
+                                isRestored: false,
+                                isSourceOutput: isOut
                             })
                             mouseAreaGlobal.enabled = true
                         }
@@ -1578,6 +1687,9 @@ Rectangle {
                         borderColor:    ThemeManager.primaryColor
                         rootBodyColor:  "transparent"
                         behaviourObject: model.object
+
+                        draggingPortSig:      root.draggingPortSig
+                        draggingPortIsOutput: root.draggingPortIsOutput
 
                         Component.onCompleted: {
                             // New nodes appear on top of all existing ones.
@@ -1601,6 +1713,10 @@ Rectangle {
                                 var cy = (containerCanvas.height / 2 - mycanvas.y) / zoomScale
                                 viewComponentRectV2.x = cx - viewComponentRectV2.width  / 2
                                 viewComponentRectV2.y = cy - viewComponentRectV2.height / 2
+                                // Sync back to C++ so detectNodeByMousePosition() can find this node.
+                                // Without this, behaviourObject stays at (0,0) until the user drags.
+                                model.object.x = viewComponentRectV2.x
+                                model.object.y = viewComponentRectV2.y
                             }
                         }
 
@@ -1691,7 +1807,7 @@ Rectangle {
         z: 300
 
         x: root.width  - width  - 12
-        y: topBarHeight + 12
+        y: chromeTopHeight + 12
 
         cameraX:      root.cameraWorldX
         cameraY:      root.cameraWorldY
@@ -1777,7 +1893,7 @@ Rectangle {
         visible: root.snapEnabled && root.snapGuideX >= 0 && root.guideOpacity > 0
         anchors.top:       parent.top
         anchors.bottom:    parent.bottom
-        anchors.topMargin: root.topBarHeight
+        anchors.topMargin: root.chromeTopHeight
         x:       root.snapGuideX * root.zoomScale + mycanvas.x
         width:   1
         color:   GlobalProperties.snapGuideColor
@@ -1790,7 +1906,7 @@ Rectangle {
         visible: root.snapEnabled && root.snapGuideY >= 0 && root.guideOpacity > 0
         anchors.left:  parent.left
         anchors.right: parent.right
-        y:      root.topBarHeight + mycanvas.y + root.snapGuideY * root.zoomScale
+        y:      root.chromeTopHeight + mycanvas.y + root.snapGuideY * root.zoomScale
         height: 1
         color:   GlobalProperties.snapGuideColor
         opacity: root.guideOpacity
@@ -1802,7 +1918,7 @@ Rectangle {
         visible: root.snapEnabled && root.snapGuideX >= 0 && root.snapGuideY >= 0
                  && root.guideOpacity > 0
         x: root.snapGuideX * root.zoomScale + mycanvas.x - 5
-        y: root.topBarHeight + mycanvas.y + root.snapGuideY * root.zoomScale - 5
+        y: root.chromeTopHeight + mycanvas.y + root.snapGuideY * root.zoomScale - 5
         width: 10; height: 10; radius: 5
         color:   GlobalProperties.snapGuideColor
         opacity: root.guideOpacity
@@ -1824,7 +1940,7 @@ Rectangle {
                  && root.snapGuideX >= 0 && root.snapGuideY >= 0
                  && root.guideOpacity > 0
         x: root.snapGuideX * root.zoomScale + mycanvas.x + 10
-        y: root.topBarHeight + mycanvas.y + root.snapGuideY * root.zoomScale - 22
+        y: root.chromeTopHeight + mycanvas.y + root.snapGuideY * root.zoomScale - 22
         width:  coordBadgeText.implicitWidth + 14
         height: 18
         radius: 4
@@ -1849,7 +1965,7 @@ Rectangle {
         delegate: Rectangle {
             anchors.top:       parent.top
             anchors.bottom:    parent.bottom
-            anchors.topMargin: root.topBarHeight
+            anchors.topMargin: root.chromeTopHeight
             x:       modelData * root.zoomScale + mycanvas.x
             width:   1
             color:   "#448aff"
@@ -1864,7 +1980,7 @@ Rectangle {
         delegate: Rectangle {
             anchors.left:  parent.left
             anchors.right: parent.right
-            y:      root.topBarHeight + mycanvas.y + modelData * root.zoomScale
+            y:      root.chromeTopHeight + mycanvas.y + modelData * root.zoomScale
             height: 1
             color:  "#448aff"
             opacity: root.guideOpacity * 0.85
@@ -1909,7 +2025,7 @@ Rectangle {
             root.showVisualization = !root.showVisualization
             if (root.showVisualization) {
                 vizWindow.x = root.width  - vizWindow.width  - 12
-                vizWindow.y = topBarHeight + 12
+                vizWindow.y = chromeTopHeight + 12
             }
         }
         onSettingsRequested:    settingsPopup.open()
@@ -1920,21 +2036,222 @@ Rectangle {
         onSaveRequested: {
             if (WorkspaceManager.currentWorkspace !== "") {
                 const ok = viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
+                if (ok) WorkspaceManager.clearAutosave(WorkspaceManager.currentWorkspace)
                 ToastManager.show(ok ? "Project saved" : "Failed to save project",
                                   ok ? "success" : "error")
             } else {
                 saveWorkspaceDialog.open()
             }
         }
+        onSaveAsRequested: {
+            // Always prompt for a new name, regardless of dirty/current state
+            saveNameField.text = WorkspaceManager.currentWorkspace
+            saveWorkspaceDialog.open()
+        }
         onOpenRequested: openWorkspaceDialog.open()
         onUndoRequested: viewPort.undo()
         onRedoRequested: viewPort.redo()
+        onHomeRequested: {
+            if (!viewPort.isClean) confirmHomeDialog.open()
+            else                   root._goHome()
+        }
+        onRenameRequested: function(newName) {
+            const oldName = WorkspaceManager.currentWorkspace
+            if (oldName === "") {
+                // No saved workspace yet — just open the Save dialog with the new name
+                saveNameField.text = newName
+                saveWorkspaceDialog.open()
+                return
+            }
+            const ok = WorkspaceManager.renameWorkspace(oldName, newName)
+            if (ok) {
+                GlobalProperties.lastWorkspace = newName
+                ToastManager.show("Renamed to \"" + newName + "\"", "success")
+            } else {
+                ToastManager.show("Failed to rename (name may already exist)", "error")
+            }
+        }
         onScreenshotRequested: {
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
             const path = appDirPath + "/screenshots/screenshot_" + timestamp + ".png"
             viewPort.takeScreenshot(path)
             ToastManager.show("Screenshot saved", "success")
         }
+    }
+
+    // ─── Virtual Desktops Bar ───────────────────────────────────────────────────
+    DesktopBar {
+        id: desktopBar
+        anchors.top:    topBar.bottom
+        anchors.left:   parent.left
+        anchors.right:  parent.right
+        height:         root.desktopBarHeight
+        z: 199
+        visible: !splashScreen.visible
+    }
+
+    // ─── Desktop limit warning popup ────────────────────────────────────────────
+    DesktopLimitWarning {
+        id: desktopLimitWarning
+    }
+
+    // ─── Desktop overview (Ctrl+Tab) ────────────────────────────────────────────
+    DesktopOverview {
+        id: desktopOverview
+        nodes: nodes
+    }
+
+    // ─── Command Palette (Ctrl+P / Ctrl+Shift+P) ────────────────────────────────
+    CommandPalette {
+        id: commandPalette
+
+        // Built dynamically so the workspace/desktop lists stay current
+        function _buildCommands() {
+            var cmds = []
+
+            // ── Workspace actions ────────────────────────────────────────────
+            cmds.push({ label: "Save Workspace",          shortcut: "Ctrl+S",
+                        group: "Workspace",
+                        action: function() {
+                            if (WorkspaceManager.currentWorkspace !== "") {
+                                const ok = viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
+                                if (ok) WorkspaceManager.clearAutosave(WorkspaceManager.currentWorkspace)
+                                ToastManager.show(ok ? "Project saved" : "Save failed",
+                                                  ok ? "success" : "error")
+                            } else {
+                                saveNameField.text = ""
+                                saveWorkspaceDialog.open()
+                            }
+                        } })
+            cmds.push({ label: "Save Workspace As…",      shortcut: "Ctrl+Shift+S",
+                        group: "Workspace",
+                        action: function() {
+                            saveNameField.text = WorkspaceManager.currentWorkspace
+                            saveWorkspaceDialog.open()
+                        } })
+            cmds.push({ label: "Open Workspace…",         shortcut: "",
+                        group: "Workspace",
+                        action: function() { openWorkspaceDialog.open() } })
+            cmds.push({ label: "New Project",             shortcut: "",
+                        group: "Workspace",
+                        action: function() {
+                            if (!viewPort.isClean) confirmNewProjectDialog.open()
+                            else                   doNewProject()
+                        } })
+            cmds.push({ label: "Rename Workspace…",       shortcut: "",
+                        group: "Workspace",
+                        action: function() {
+                            if (WorkspaceManager.currentWorkspace !== "")
+                                renameWorkspaceDialog.openFor(WorkspaceManager.currentWorkspace)
+                            else
+                                ToastManager.show("No workspace to rename", "warning")
+                        } })
+            cmds.push({ label: "Back to Home",            shortcut: "",
+                        group: "Workspace",
+                        action: function() {
+                            if (!viewPort.isClean) confirmHomeDialog.open()
+                            else                   root._goHome()
+                        } })
+
+            // Open recent workspaces
+            const wsList = WorkspaceManager.workspaceList
+            for (var i = 0; i < wsList.length; i++) {
+                (function(name) {
+                    cmds.push({
+                        label: "Switch to workspace: " + name,
+                        group: "Open Workspace",
+                        action: function() { root._openWorkspaceWithAutosave(name) }
+                    })
+                })(wsList[i])
+            }
+
+            // ── Desktop actions ──────────────────────────────────────────────
+            cmds.push({ label: "New Desktop",             shortcut: "Ctrl+Shift+N",
+                        group: "Desktop",
+                        action: function() { DesktopManager.addDesktop("") } })
+            cmds.push({ label: "Next Desktop",            shortcut: "Ctrl+→",
+                        group: "Desktop",
+                        action: function() { DesktopManager.nextDesktop() } })
+            cmds.push({ label: "Previous Desktop",        shortcut: "Ctrl+←",
+                        group: "Desktop",
+                        action: function() { DesktopManager.previousDesktop() } })
+            cmds.push({ label: "Show Desktop Overview",   shortcut: "Ctrl+Tab",
+                        group: "Desktop",
+                        action: function() { desktopOverview.open() } })
+
+            // Switch to specific desktop by name
+            const dlist = DesktopManager.desktopList
+            for (var j = 0; j < dlist.length; j++) {
+                (function(d) {
+                    cmds.push({
+                        label: "Switch to desktop: " + d.name,
+                        group: "Switch Desktop",
+                        action: function() { DesktopManager.switchToDesktop(d.id) }
+                    })
+                })(dlist[j])
+            }
+
+            // ── View / tools ─────────────────────────────────────────────────
+            cmds.push({ label: "Open Settings…",          shortcut: "",
+                        group: "View",
+                        action: function() { settingsPopup.open() } })
+            cmds.push({ label: "Toggle Grid Snap",        shortcut: "G",
+                        group: "View",
+                        action: function() { GlobalProperties.snapEnabled = !GlobalProperties.snapEnabled } })
+
+            return cmds
+        }
+
+        onOpened: commandPalette.commands = _buildCommands()
+    }
+
+    Shortcut {
+        sequence: "Ctrl+P"
+        context:  Qt.ApplicationShortcut
+        onActivated: commandPalette.open()
+    }
+    Shortcut {
+        sequence: "Ctrl+Shift+P"
+        context:  Qt.ApplicationShortcut
+        onActivated: commandPalette.open()
+    }
+
+    Connections {
+        target: DesktopManager
+        function onDesktopLimitWarning(pendingName) {
+            desktopLimitWarning.pendingName = pendingName
+            desktopLimitWarning.open()
+        }
+
+        // Save the outgoing desktop's camera before the switch happens.
+        function onAboutToLeaveDesktop(id) {
+            if (!mycanvas.initialized) return
+            DesktopManager.setDesktopViewport(id, mycanvas.x, mycanvas.y, root.zoomScale)
+        }
+
+        // After switching, restore the new desktop's camera (if it has one
+        // saved). New / never-visited desktops keep the previous view as-is.
+        function onCurrentDesktopChanged() {
+            if (!mycanvas.initialized) return
+            const newId = DesktopManager.currentDesktopId
+            if (!newId) return
+            const vp = DesktopManager.getDesktopViewport(newId)
+            if (!vp || vp.scale === undefined) return
+            // Animate to the saved viewport — same anim used by F (focus)
+            desktopCameraAnim.stop()
+            desktopCameraAnimZoom.to = vp.scale
+            desktopCameraAnimX.to    = vp.x
+            desktopCameraAnimY.to    = vp.y
+            desktopCameraAnim.start()
+        }
+    }
+
+    // Smooth pan/zoom when switching desktops with a saved camera
+    ParallelAnimation {
+        id: desktopCameraAnim
+        NumberAnimation { id: desktopCameraAnimZoom; target: root;     property: "zoomScale"; duration: 280; easing.type: Easing.OutCubic }
+        NumberAnimation { id: desktopCameraAnimX;    target: mycanvas; property: "x";         duration: 280; easing.type: Easing.OutCubic }
+        NumberAnimation { id: desktopCameraAnimY;    target: mycanvas; property: "y";         duration: 280; easing.type: Easing.OutCubic }
     }
 
     // ─── History Panel ──────────────────────────────────────────────────────────
@@ -1944,7 +2261,7 @@ Rectangle {
         visible: topBar.historyPanelOpen
         z: 190
 
-        anchors.top:   topBar.bottom
+        anchors.top:   desktopBar.bottom
         anchors.right: parent.right
         anchors.topMargin:   8
         // drawer.position: 0.0 = closed/invisible, 1.0 = fully open.
@@ -1954,27 +2271,59 @@ Rectangle {
         onCloseRequested: topBar.historyPanelOpen = false
     }
 
-    Shortcut {
-        sequence: "Ctrl+Z"
-        context:  Qt.ApplicationShortcut
-        onActivated: viewPort.undo()
-    }
-    Shortcut {
-        sequence: "Ctrl+Y"
-        context:  Qt.ApplicationShortcut
-        onActivated: viewPort.redo()
-    }
+    // Ctrl+Z and Ctrl+Y are handled globally by C++ MainWindow (actionUndo/actionRedo)
+    // to avoid "Ambiguous shortcut overload" warnings.
     Shortcut {
         sequence: "Ctrl+S"
         context:  Qt.ApplicationShortcut
         onActivated: {
             if (WorkspaceManager.currentWorkspace !== "") {
                 const ok = viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
+                if (ok) WorkspaceManager.clearAutosave(WorkspaceManager.currentWorkspace)
                 ToastManager.show(ok ? "Project saved" : "Failed to save project",
                                   ok ? "success" : "error")
             } else {
                 saveWorkspaceDialog.open()
             }
+        }
+    }
+    Shortcut {
+        sequence: "Ctrl+Shift+S"
+        context:  Qt.ApplicationShortcut
+        onActivated: {
+            saveNameField.text = WorkspaceManager.currentWorkspace
+            saveWorkspaceDialog.open()
+        }
+    }
+
+    // ── Virtual desktop shortcuts ───────────────────────────────────────────────
+    Shortcut {
+        sequence: "Ctrl+Right"
+        context:  Qt.ApplicationShortcut
+        onActivated: DesktopManager.nextDesktop()
+    }
+    Shortcut {
+        sequence: "Ctrl+Left"
+        context:  Qt.ApplicationShortcut
+        onActivated: DesktopManager.previousDesktop()
+    }
+    Shortcut {
+        sequence: "Ctrl+Shift+N"
+        context:  Qt.ApplicationShortcut
+        onActivated: DesktopManager.addDesktop("")
+    }
+    Shortcut {
+        sequence: "Ctrl+Tab"
+        context:  Qt.ApplicationShortcut
+        onActivated: desktopOverview.open()
+    }
+    // Ctrl+1..9 jump to a specific desktop by index
+    Instantiator {
+        model: 9
+        Shortcut {
+            sequence: "Ctrl+" + (index + 1)
+            context:  Qt.ApplicationShortcut
+            onActivated: DesktopManager.switchToDesktopByIndex(index)
         }
     }
     Shortcut {
@@ -1999,7 +2348,7 @@ Rectangle {
             var all = []
             for (var i = 0; i < nodes.model.count; i++) {
                 var it = nodes.itemAt(i)
-                if (it) all.push(it)
+                if (it && it.visible) all.push(it)
             }
             root._setSelection(all)
         }
@@ -2044,7 +2393,7 @@ Rectangle {
             root.showVisualization = !root.showVisualization
             if (root.showVisualization) {
                 vizWindow.x = root.width  - vizWindow.width  - 12
-                vizWindow.y = topBarHeight + 12
+                vizWindow.y = chromeTopHeight + 12
             }
         }
     }
@@ -2063,6 +2412,16 @@ Rectangle {
                 }
             }
         }
+    }
+    Shortcut {
+        sequence: "Shift+?"
+        context:  Qt.ApplicationShortcut
+        onActivated: shortcutsHelpPopup.open()
+    }
+    Shortcut {
+        sequence: "Ctrl+/"
+        context:  Qt.ApplicationShortcut
+        onActivated: shortcutsHelpPopup.open()
     }
 
     // Smooth pan+zoom animation used by the F shortcut.
@@ -2107,6 +2466,246 @@ Rectangle {
         id: splashScreen
         onNewProjectRequested: { /* canvas is already empty — user can start and save later */ }
         onOpenProjectRequested: openWorkspaceDialog.open()
+        onWorkspaceOpenRequested: function(name) {
+            root._openWorkspaceWithAutosave(name)
+        }
+        onWorkspaceRenameRequested: function(name) {
+            renameWorkspaceDialog.openFor(name)
+        }
+        onWorkspaceExportRequested: function(name) {
+            exportWorkspaceDialog.pendingName = name
+            exportWorkspaceDialog.open()
+        }
+        onWorkspaceDeleteRequested: function(name) {
+            confirmDeleteDialog.openFor(name)
+        }
+    }
+
+    // ─── Shortcuts Help Overlay ─────────────────────────────────────────────────
+    ShortcutsHelpPopup {
+        id: shortcutsHelpPopup
+    }
+
+    // ─── Rename Workspace Dialog (from SplashScreen) ────────────────────────────
+    Popup {
+        id: renameWorkspaceDialog
+        width: 380
+        x: (parent.width  - width)  / 2
+        y: (parent.height - height) / 2
+        z: 1100
+        modal: true
+        padding: 0
+        closePolicy: Popup.CloseOnEscape
+
+        property string oldName: ""
+
+        function openFor(name) {
+            renameWorkspaceDialog.oldName = name
+            renameField.text = name
+            renameWorkspaceDialog.open()
+            Qt.callLater(function() { renameField.selectAll(); renameField.forceActiveFocus() })
+        }
+
+        background: Rectangle {
+            color:  ThemeManager.surfaceColor
+            radius: 10
+            border.color: Qt.rgba(ThemeManager.borderColor.r,
+                                  ThemeManager.borderColor.g,
+                                  ThemeManager.borderColor.b, 0.5)
+            border.width: 1
+        }
+
+        function doConfirm() {
+            const newName = renameField.text.trim()
+            if (newName === "" || newName === renameWorkspaceDialog.oldName) {
+                renameWorkspaceDialog.close()
+                return
+            }
+            const ok = WorkspaceManager.renameWorkspace(renameWorkspaceDialog.oldName, newName)
+            if (ok) {
+                if (GlobalProperties.lastWorkspace === renameWorkspaceDialog.oldName)
+                    GlobalProperties.lastWorkspace = newName
+                ToastManager.show("Renamed to \"" + newName + "\"", "success")
+            } else {
+                ToastManager.show("Rename failed (name may already exist)", "error")
+            }
+            renameWorkspaceDialog.close()
+        }
+
+        Column {
+            width: parent.width
+            spacing: 0
+
+            Item {
+                width: parent.width
+                height: 64
+                Row {
+                    anchors.left: parent.left; anchors.leftMargin: 24
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 14
+                    ColorIcon { source: Icons.pencilOutline; color: ThemeManager.primaryColor; width: 22; height: 22
+                                anchors.verticalCenter: parent.verticalCenter }
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2
+                        Text { text: "Rename Workspace"; font.pixelSize: 14; font.bold: true; color: ThemeManager.textColor }
+                        Text { text: "New name for \"" + renameWorkspaceDialog.oldName + "\""
+                               font.pixelSize: 11; color: ThemeManager.textSecondaryColor; elide: Text.ElideRight; width: 280 }
+                    }
+                }
+            }
+            Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.4 }
+
+            Item {
+                width: parent.width
+                height: 130
+
+                Column {
+                    x: 24; y: 24
+                    width: parent.width - 48
+                    spacing: 16
+
+                    Rectangle {
+                        width: parent.width; height: 40; radius: 6
+                        color: Qt.darker(ThemeManager.surfaceColor, 1.3)
+                        border.color: renameField.activeFocus ? ThemeManager.primaryColor : ThemeManager.borderColor
+                        border.width: renameField.activeFocus ? 1.5 : 1
+                        Behavior on border.color { ColorAnimation { duration: 120 } }
+
+                        TextInput {
+                            id: renameField
+                            anchors.fill: parent
+                            anchors.leftMargin: 12; anchors.rightMargin: 12
+                            verticalAlignment: TextInput.AlignVCenter
+                            color: ThemeManager.textColor
+                            font.pixelSize: 13
+                            selectByMouse: true
+                            Keys.onReturnPressed: renameWorkspaceDialog.doConfirm()
+                            Keys.onEnterPressed:  renameWorkspaceDialog.doConfirm()
+                            Keys.onEscapePressed: renameWorkspaceDialog.close()
+                        }
+                    }
+
+                    Row {
+                        anchors.right: parent.right
+                        spacing: 8
+                        Rectangle {
+                            width: 80; height: 36; radius: 6
+                            color: "transparent"
+                            border.color: ThemeManager.borderColor; border.width: 1
+                            Text { anchors.centerIn: parent; text: "Cancel"
+                                   color: ThemeManager.textSecondaryColor; font.pixelSize: 12 }
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                        hoverEnabled: true; onClicked: renameWorkspaceDialog.close() }
+                        }
+                        Rectangle {
+                            width: 90; height: 36; radius: 6
+                            color: ThemeManager.primaryColor
+                            Text { anchors.centerIn: parent; text: "Rename"
+                                   color: "white"; font.pixelSize: 12; font.bold: true }
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                        hoverEnabled: true; onClicked: renameWorkspaceDialog.doConfirm() }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ─── Confirm Delete Dialog ──────────────────────────────────────────────────
+    Popup {
+        id: confirmDeleteDialog
+        width: 360
+        x: (parent.width  - width)  / 2
+        y: (parent.height - height) / 2
+        z: 1100
+        modal: true
+        padding: 0
+        closePolicy: Popup.CloseOnEscape
+
+        property string pendingName: ""
+        function openFor(name) { pendingName = name; open() }
+
+        background: Rectangle {
+            color: ThemeManager.surfaceColor; radius: 10
+            border.color: Qt.rgba(ThemeManager.borderColor.r, ThemeManager.borderColor.g, ThemeManager.borderColor.b, 0.5)
+            border.width: 1
+        }
+
+        Column {
+            width: parent.width
+            spacing: 0
+            Item {
+                width: parent.width; height: 64
+                Row {
+                    anchors.left: parent.left; anchors.leftMargin: 24
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 14
+                    ColorIcon { source: Icons.alertOutline; color: ThemeManager.dangerColor; width: 22; height: 22
+                                anchors.verticalCenter: parent.verticalCenter }
+                    Text { text: "Delete Workspace?"; font.pixelSize: 14; font.bold: true
+                           color: ThemeManager.textColor; anchors.verticalCenter: parent.verticalCenter }
+                }
+            }
+            Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.4 }
+            Item {
+                width: parent.width; height: 140
+                Column {
+                    x: 24; y: 24
+                    width: parent.width - 48
+                    spacing: 20
+                    Text {
+                        width: parent.width
+                        text: "Permanently delete \"" + confirmDeleteDialog.pendingName + "\"? This action cannot be undone."
+                        color: ThemeManager.textSecondaryColor
+                        font.pixelSize: 13; lineHeight: 1.5; wrapMode: Text.WordWrap
+                    }
+                    Row {
+                        anchors.right: parent.right; spacing: 8
+                        Rectangle {
+                            width: 80; height: 36; radius: 6
+                            color: "transparent"; border.color: ThemeManager.borderColor; border.width: 1
+                            Text { anchors.centerIn: parent; text: "Cancel"
+                                   color: ThemeManager.textSecondaryColor; font.pixelSize: 12 }
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                        hoverEnabled: true; onClicked: confirmDeleteDialog.close() }
+                        }
+                        Rectangle {
+                            width: 90; height: 36; radius: 6
+                            color: ThemeManager.dangerColor
+                            Text { anchors.centerIn: parent; text: "Delete"
+                                   color: "white"; font.pixelSize: 12; font.bold: true }
+                            MouseArea {
+                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor; hoverEnabled: true
+                                onClicked: {
+                                    const name = confirmDeleteDialog.pendingName
+                                    const ok = WorkspaceManager.deleteWorkspace(name)
+                                    ToastManager.show(ok ? "Deleted \"" + name + "\"" : "Delete failed",
+                                                      ok ? "warning" : "error")
+                                    confirmDeleteDialog.close()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ─── Export Workspace File Dialog ───────────────────────────────────────────
+    FileDialog {
+        id: exportWorkspaceDialog
+        property string pendingName: ""
+        title: "Export Workspace"
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["Valkyrie Workspace (*.json)"]
+        defaultSuffix: "json"
+        currentFile: pendingName !== "" ? ("file:///" + pendingName + ".json") : ""
+        onAccepted: {
+            const ok = WorkspaceManager.exportWorkspace(pendingName, selectedFile.toString())
+            ToastManager.show(ok ? "Exported \"" + pendingName + "\"" : "Export failed",
+                              ok ? "success" : "error")
+        }
     }
 
     // ─── Settings Popup ─────────────────────────────────────────────────────────
@@ -2116,7 +2715,7 @@ Rectangle {
 
     // ─── Toast Display ──────────────────────────────────────────────────────────
     Toast {
-        anchors.top:           topBar.bottom
+        anchors.top:           desktopBar.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.topMargin:     16
         z: 9900
@@ -2137,7 +2736,9 @@ Rectangle {
         zoomScale: root.zoomScale
         statusBar: statusBar
         topBar: topBar
-        topLeftAnchor: topBar
+        // Anchor below the DesktopBar so top-positioned layouts don't get
+        // hidden behind it.
+        topLeftAnchor: desktopBar
         focusedNode: root.nodeOnFocus
         nodes: nodes
         onNodeSelected: function(nodeItem) {
@@ -2344,13 +2945,38 @@ Rectangle {
     // ─── Open Workspace Dialog ───────────────────────────────────────────────────
     Popup {
         id: openWorkspaceDialog
-        width: 420
+        width: 520
+        height: Math.min(parent ? parent.height - 80 : 560, 560)
         x: (parent.width  - width)  / 2
         y: (parent.height - height) / 2
         z: 1000
         modal: true
         padding: 0
         closePolicy: Popup.CloseOnEscape
+
+        property string searchText: ""
+        property string sortMode: "name"   // "name" | "modified"
+
+        onAboutToShow: {
+            searchText = ""
+            openSearchField.text = ""
+        }
+
+        function _filteredSortedList() {
+            const all = WorkspaceManager.workspaceList
+            const q = openWorkspaceDialog.searchText.toLowerCase()
+            let arr = q === "" ? all.slice() : all.filter(function(n) { return n.toLowerCase().indexOf(q) !== -1 })
+            if (openWorkspaceDialog.sortMode === "modified") {
+                arr.sort(function(a, b) {
+                    const ia = WorkspaceManager.getWorkspaceInfo(a)
+                    const ib = WorkspaceManager.getWorkspaceInfo(b)
+                    return (ib.modifiedAt || ib.fileModified || "").localeCompare(ia.modifiedAt || ia.fileModified || "")
+                })
+            } else {
+                arr.sort(function(a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()) })
+            }
+            return arr
+        }
 
         background: Rectangle {
             color:  ThemeManager.surfaceColor
@@ -2414,6 +3040,91 @@ Rectangle {
 
             Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.4 }
 
+            // ── Search + sort bar ──────────────────────────────────────────────
+            Item {
+                width: parent.width
+                height: 52
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin:  16
+                    anchors.rightMargin: 16
+                    spacing: 8
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 32
+                        radius: 6
+                        color: Qt.darker(ThemeManager.surfaceColor, 1.3)
+                        border.color: openSearchField.activeFocus ? ThemeManager.primaryColor : ThemeManager.borderColor
+                        border.width: openSearchField.activeFocus ? 1.5 : 1
+
+                        Row {
+                            anchors.fill: parent
+                            anchors.leftMargin: 8; anchors.rightMargin: 8
+                            spacing: 6
+                            ColorIcon {
+                                source: Icons.magnify
+                                color:  ThemeManager.textSecondaryColor
+                                width: 14; height: 14
+                                anchors.verticalCenter: parent.verticalCenter
+                                opacity: 0.7
+                            }
+                            TextInput {
+                                id: openSearchField
+                                width: parent.width - 24
+                                height: parent.height
+                                verticalAlignment: TextInput.AlignVCenter
+                                color: ThemeManager.textColor
+                                font.pixelSize: 12
+                                selectByMouse: true
+                                onTextChanged: openWorkspaceDialog.searchText = text
+                                Keys.onEscapePressed: text = ""
+
+                                Text {
+                                    visible: parent.text === ""
+                                    text: "Search workspaces…"
+                                    color: ThemeManager.textSecondaryColor
+                                    font.pixelSize: 12
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+                        }
+                    }
+
+                    Row {
+                        spacing: 4
+                        Repeater {
+                            model: [{ id: "name", label: "Name" }, { id: "modified", label: "Modified" }]
+                            delegate: Rectangle {
+                                readonly property bool active: openWorkspaceDialog.sortMode === modelData.id
+                                width: 70; height: 32; radius: 6
+                                color: active
+                                       ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.18)
+                                       : "transparent"
+                                border.color: active ? ThemeManager.primaryColor : ThemeManager.borderColor
+                                border.width: 1
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: modelData.label
+                                    font.pixelSize: 11
+                                    font.bold: active
+                                    color: active ? ThemeManager.primaryColor : ThemeManager.textSecondaryColor
+                                }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    hoverEnabled: true
+                                    onClicked: openWorkspaceDialog.sortMode = modelData.id
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.4 }
+
             // ── Body ───────────────────────────────────────────────────────────
             Item {
                 width: parent.width
@@ -2452,16 +3163,38 @@ Rectangle {
                         }
                     }
 
-                    // Workspace list
-                    Repeater {
-                        model: WorkspaceManager.workspaceList
+                    // Workspace list — bounded scrolling area
+                    ListView {
+                        id: openWorkspaceList
+                        width: parent.width
+                        // Cap list height so the dialog has room for the footer
+                        height: Math.min(380, Math.max(48, count * 60))
+                        clip: true
+                        spacing: 4
+                        boundsBehavior: Flickable.StopAtBounds
+                        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+
+                        // Recompute the filtered + sorted list when triggers change
+                        property var _items: openWorkspaceDialog._filteredSortedList()
+                        Connections {
+                            target: WorkspaceManager
+                            function onWorkspaceListChanged() { openWorkspaceList._items = openWorkspaceDialog._filteredSortedList() }
+                        }
+                        Connections {
+                            target: openWorkspaceDialog
+                            function onSearchTextChanged()  { openWorkspaceList._items = openWorkspaceDialog._filteredSortedList() }
+                            function onSortModeChanged()    { openWorkspaceList._items = openWorkspaceDialog._filteredSortedList() }
+                        }
+
+                        model: _items
 
                         delegate: Rectangle {
                             id: wsCard
                             readonly property bool isCurrent: modelData === WorkspaceManager.currentWorkspace
+                            readonly property var info: WorkspaceManager.getWorkspaceInfo(modelData)
 
-                            width:  parent ? parent.width : 0
-                            height: 48
+                            width:  ListView.view ? ListView.view.width : 0
+                            height: 56
                             radius: 6
                             color:  wsDel.containsMouse
                                         ? Qt.rgba(ThemeManager.dangerColor.r,
@@ -2499,16 +3232,36 @@ Rectangle {
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
 
-                                Text {
-                                    text:  modelData + (wsCard.isCurrent ? "  (current)" : "")
-                                    color: wsCard.isCurrent
-                                               ? ThemeManager.primaryColor
-                                               : wsItemMouse.containsMouse
-                                                     ? ThemeManager.textColor
-                                                     : ThemeManager.textSecondaryColor
-                                    font.pixelSize: 13
+                                Column {
                                     anchors.verticalCenter: parent.verticalCenter
-                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                    spacing: 2
+
+                                    Text {
+                                        text:  modelData + (wsCard.isCurrent ? "  (current)" : "")
+                                        color: wsCard.isCurrent
+                                                   ? ThemeManager.primaryColor
+                                                   : wsItemMouse.containsMouse
+                                                         ? ThemeManager.textColor
+                                                         : ThemeManager.textSecondaryColor
+                                        font.pixelSize: 13
+                                        Behavior on color { ColorAnimation { duration: 100 } }
+                                    }
+
+                                    Text {
+                                        // Show metadata: "N nodes · M conns · modified <iso>"
+                                        readonly property string modIso: (wsCard.info.modifiedAt || wsCard.info.fileModified || "")
+                                        // Display only YYYY-MM-DD HH:mm of the ISO timestamp
+                                        readonly property string modPretty: modIso.length >= 16
+                                                                            ? modIso.substring(0, 10) + " " + modIso.substring(11, 16)
+                                                                            : modIso
+                                        text: (wsCard.info.nodeCount || 0) + " nodes · "
+                                              + (wsCard.info.connectionCount || 0) + " conns"
+                                              + (modPretty !== "" ? "  ·  " + modPretty : "")
+                                              + (wsCard.info.hasAutosave ? "  ·  autosave available" : "")
+                                        font.pixelSize: 10
+                                        color: wsCard.info.hasAutosave ? ThemeManager.warningColor : ThemeManager.textSecondaryColor
+                                        opacity: 0.85
+                                    }
                                 }
                             }
 
@@ -2541,9 +3294,7 @@ Rectangle {
                                     hoverEnabled: true
                                     cursorShape:  Qt.PointingHandCursor
                                     onClicked: {
-                                        const name = modelData
-                                        WorkspaceManager.deleteWorkspace(name)
-                                        ToastManager.show("Deleted \"" + name + "\"", "warning")
+                                        confirmDeleteDialog.openFor(modelData)
                                     }
                                 }
                             }
@@ -2555,11 +3306,8 @@ Rectangle {
                                 hoverEnabled:   true
                                 cursorShape:    Qt.PointingHandCursor
                                 onClicked: {
-                                    root.m_suppressConnectionDraw = true
-                                    viewPort.loadWorkspace(modelData)
-                                    root.m_suppressConnectionDraw = false
-                                    GlobalProperties.lastWorkspace = modelData
                                     openWorkspaceDialog.close()
+                                    root._openWorkspaceWithAutosave(modelData)
                                 }
                             }
                         }
@@ -2753,6 +3501,362 @@ Rectangle {
         ToastManager.show("New project created", "success")
     }
 
+    // Return to the SplashScreen: clear any active workspace and reveal the splash.
+    function _goHome() {
+        splashScreen.dismissed = false
+        WorkspaceManager.newWorkspace()
+    }
+
+    // ─── Confirm "Go Home" when unsaved changes exist ───────────────────────────
+    Popup {
+        id: confirmHomeDialog
+        width: 360
+        x: (parent.width  - width)  / 2
+        y: (parent.height - height) / 2
+        z: 1000
+        modal: true
+        padding: 0
+        closePolicy: Popup.CloseOnEscape
+
+        background: Rectangle {
+            color:  ThemeManager.surfaceColor
+            radius: 10
+            border.color: Qt.rgba(ThemeManager.borderColor.r,
+                                  ThemeManager.borderColor.g,
+                                  ThemeManager.borderColor.b, 0.5)
+            border.width: 1
+        }
+
+        Column {
+            width: parent.width
+            spacing: 0
+
+            Item {
+                width: parent.width
+                height: 64
+
+                Row {
+                    anchors.left:           parent.left
+                    anchors.leftMargin:     24
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 14
+
+                    ColorIcon {
+                        source: Icons.alertOutline
+                        color:  "#ff9800"
+                        width: 22; height: 22
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Text {
+                        text:           "Back to Home"
+                        font.pixelSize: 14
+                        font.bold:      true
+                        color:          ThemeManager.textColor
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                AppBarButton {
+                    anchors.right:          parent.right
+                    anchors.rightMargin:    8
+                    anchors.verticalCenter: parent.verticalCenter
+                    icon.source: Icons.close
+                    icon.color:  ThemeManager.textSecondaryColor
+                    width: 36; height: 36
+                    onClicked: confirmHomeDialog.close()
+                }
+            }
+
+            Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.4 }
+
+            Item {
+                width: parent.width
+                height: confirmHomeBodyCol.implicitHeight + 48
+
+                Column {
+                    id: confirmHomeBodyCol
+                    x: 24; y: 24
+                    width: parent.width - 48
+                    spacing: 20
+
+                    Text {
+                        width: parent.width
+                        text: "This project has unsaved changes. They will be lost if you go back to the home screen."
+                        color:          ThemeManager.textSecondaryColor
+                        font.pixelSize: 13
+                        lineHeight:     1.5
+                        wrapMode:       Text.WordWrap
+                    }
+
+                    Row {
+                        anchors.right: parent.right
+                        spacing: 8
+
+                        Rectangle {
+                            width: 80; height: 36; radius: 6
+                            color: homeCancelHover.containsMouse
+                                       ? Qt.rgba(ThemeManager.borderColor.r,
+                                                 ThemeManager.borderColor.g,
+                                                 ThemeManager.borderColor.b, 0.25)
+                                       : "transparent"
+                            border.color: ThemeManager.borderColor
+                            border.width: 1
+                            Behavior on color { ColorAnimation { duration: 100 } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text:           "Cancel"
+                                color:          ThemeManager.textSecondaryColor
+                                font.pixelSize: 12
+                            }
+                            MouseArea {
+                                id: homeCancelHover
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape:  Qt.PointingHandCursor
+                                onClicked:    confirmHomeDialog.close()
+                            }
+                        }
+
+                        Rectangle {
+                            width: 100; height: 36; radius: 6
+                            color: homeSaveHover.containsMouse
+                                       ? Qt.lighter(ThemeManager.primaryColor, 1.1)
+                                       : ThemeManager.primaryColor
+                            Behavior on color { ColorAnimation { duration: 100 } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text:           "Save & Exit"
+                                color:          "white"
+                                font.pixelSize: 12
+                                font.bold:      true
+                            }
+                            MouseArea {
+                                id: homeSaveHover
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape:  Qt.PointingHandCursor
+                                onClicked: {
+                                    confirmHomeDialog.close()
+                                    if (WorkspaceManager.currentWorkspace !== "") {
+                                        viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
+                                        root._goHome()
+                                    } else {
+                                        saveWorkspaceDialog.open()
+                                    }
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            width: 120; height: 36; radius: 6
+                            color: homeDiscardHover.containsMouse
+                                       ? Qt.lighter(ThemeManager.dangerColor, 1.1)
+                                       : ThemeManager.dangerColor
+                            Behavior on color { ColorAnimation { duration: 100 } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text:           "Discard & Exit"
+                                color:          "white"
+                                font.pixelSize: 12
+                                font.bold:      true
+                            }
+                            MouseArea {
+                                id: homeDiscardHover
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape:  Qt.PointingHandCursor
+                                onClicked: {
+                                    confirmHomeDialog.close()
+                                    root._goHome()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ─── Autosave Recovery Dialog ────────────────────────────────────────────────
+    Popup {
+        id: recoverAutosaveDialog
+        width: 380
+        x: (parent.width  - width)  / 2
+        y: (parent.height - height) / 2
+        z: 1000
+        modal: true
+        padding: 0
+        closePolicy: Popup.NoAutoClose
+
+        property string pendingName: ""
+
+        background: Rectangle {
+            color:  ThemeManager.surfaceColor
+            radius: 10
+            border.color: Qt.rgba(ThemeManager.borderColor.r,
+                                  ThemeManager.borderColor.g,
+                                  ThemeManager.borderColor.b, 0.5)
+            border.width: 1
+        }
+
+        Column {
+            width: parent.width
+            spacing: 0
+
+            Item {
+                width: parent.width
+                height: 64
+
+                Row {
+                    anchors.left:           parent.left
+                    anchors.leftMargin:     24
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 14
+
+                    ColorIcon {
+                        source: Icons.restore
+                        color:  ThemeManager.primaryColor
+                        width: 22; height: 22
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2
+
+                        Text {
+                            text:           "Recover Autosave?"
+                            font.pixelSize: 14
+                            font.bold:      true
+                            color:          ThemeManager.textColor
+                        }
+                        Text {
+                            text:           "A newer autosave was found for \"" + recoverAutosaveDialog.pendingName + "\""
+                            font.pixelSize: 11
+                            color:          ThemeManager.textSecondaryColor
+                            elide:          Text.ElideRight
+                            width:          280
+                        }
+                    }
+                }
+            }
+
+            Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.4 }
+
+            Item {
+                width: parent.width
+                height: 88
+
+                Row {
+                    anchors.right:          parent.right
+                    anchors.rightMargin:    24
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 8
+
+                    Rectangle {
+                        width: 120; height: 36; radius: 6
+                        color: recoverDiscardHover.containsMouse
+                                   ? Qt.rgba(ThemeManager.borderColor.r,
+                                             ThemeManager.borderColor.g,
+                                             ThemeManager.borderColor.b, 0.25)
+                                   : "transparent"
+                        border.color: ThemeManager.borderColor
+                        border.width: 1
+                        Behavior on color { ColorAnimation { duration: 100 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text:           "Discard"
+                            color:          ThemeManager.textSecondaryColor
+                            font.pixelSize: 12
+                        }
+                        MouseArea {
+                            id: recoverDiscardHover
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape:  Qt.PointingHandCursor
+                            onClicked: {
+                                const name = recoverAutosaveDialog.pendingName
+                                WorkspaceManager.clearAutosave(name)
+                                recoverAutosaveDialog.close()
+                                // Still honor the user's intent to open the workspace
+                                root.m_suppressConnectionDraw = true
+                                viewPort.loadWorkspace(name)
+                                root.m_suppressConnectionDraw = false
+                                GlobalProperties.lastWorkspace = name
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        width: 120; height: 36; radius: 6
+                        color: recoverLoadHover.containsMouse
+                                   ? Qt.lighter(ThemeManager.primaryColor, 1.1)
+                                   : ThemeManager.primaryColor
+                        Behavior on color { ColorAnimation { duration: 100 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text:           "Recover"
+                            color:          "white"
+                            font.pixelSize: 12
+                            font.bold:      true
+                        }
+                        MouseArea {
+                            id: recoverLoadHover
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape:  Qt.PointingHandCursor
+                            onClicked: {
+                                const name = recoverAutosaveDialog.pendingName
+                                root.m_suppressConnectionDraw = true
+                                WorkspaceManager.loadAutosave(name)
+                                root.m_suppressConnectionDraw = false
+                                GlobalProperties.lastWorkspace = name
+                                ToastManager.show("Autosave recovered", "success")
+                                recoverAutosaveDialog.close()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Centralized workspace open — checks for newer autosave first.
+    // If a sidecar autosave exists and is newer than the saved file, prompts
+    // the user to recover; otherwise loads the workspace directly.
+    function _openWorkspaceWithAutosave(name) {
+        if (!name) return
+        if (WorkspaceManager.hasAutosave(name)) {
+            recoverAutosaveDialog.pendingName = name
+            recoverAutosaveDialog.open()
+        } else {
+            root.m_suppressConnectionDraw = true
+            viewPort.loadWorkspace(name)
+            root.m_suppressConnectionDraw = false
+            GlobalProperties.lastWorkspace = name
+        }
+    }
+
+    // ─── Autosave Timer (item 10) ────────────────────────────────────────────────
+    Timer {
+        id: autosaveTimer
+        interval: Math.max(1, GlobalProperties.autosaveIntervalMin) * 60 * 1000
+        repeat:   true
+        running:  GlobalProperties.autosaveEnabled
+                  && WorkspaceManager.currentWorkspace !== ""
+                  && !splashScreen.visible
+        onTriggered: {
+            if (!viewPort.isClean && WorkspaceManager.currentWorkspace !== "")
+                WorkspaceManager.saveAutosave()
+        }
+    }
+
     Component.onCompleted: {
         // Splash always appears — user selects the project to open.
         // No auto-load: recent projects are shown in the splash screen.
@@ -2818,7 +3922,8 @@ Rectangle {
             methodSignature2:  inputMethod,
             initCircleConn2:   targetConn.circleConn,
             initViewRectConn2: targetRect,
-            isRestored:        true
+            isRestored:        true,
+            isSourceOutput:    true
         })
     }
 
@@ -2826,8 +3931,8 @@ Rectangle {
     Drawer {
         id: leftPanelDrawer
         width: 320
-        y: topBarHeight
-        height: parent.height - topBarHeight
+        y: chromeTopHeight
+        height: parent.height - chromeTopHeight
         edge: Qt.LeftEdge
         modal: false
         interactive: false
@@ -2927,6 +4032,14 @@ Rectangle {
                     anchors.fill: parent
                     visible: selectedPanel === "explorer"
                     rootFolder: "file:///" + appDirPath
+                    onFileActivated: function(filePath) {
+                        if (filePath.endsWith(".py")) {
+                            var cleanPath = filePath.replace("file:///", "")
+                            var cx = ((viewPort.width / 2) - mycanvas.x) / zoomScale
+                            var cy = ((viewPort.height / 2) - mycanvas.y) / zoomScale
+                            viewPort.addPythonNodeWithScript(cleanPath, cx, cy)
+                        }
+                    }
                 }
 
                 VariablesDrawer {
@@ -2942,7 +4055,7 @@ Rectangle {
     // Closes the drawer when the user clicks outside it.
     // mouse.accepted = false lets the click propagate to nodes/canvas underneath.
     MouseArea {
-        anchors.top:    topBar.bottom
+        anchors.top:    desktopBar.bottom
         anchors.bottom: parent.bottom
         anchors.right:  parent.right
         anchors.left:   parent.left
@@ -2985,9 +4098,10 @@ Rectangle {
                     font.pixelSize: 12; font.bold: true
                     color: "white"; elide: Text.ElideRight
                 }
-                Text {
-                    text: "→ drop on canvas"
-                    font.pixelSize: 9; color: "white"; opacity: 0.7
+                Row {
+                    spacing: 3
+                    Text { text: "drop on canvas"; font.pixelSize: 9; color: "white"; opacity: 0.7 }
+                    SvgIcon { width: 9; height: 9; source: Icons.chevronRight; color: "white"; opacity: 0.7 }
                 }
             }
         }
@@ -3123,6 +4237,8 @@ Rectangle {
         nodeCount:       nodes.model.count
         fpsCount:        viewPort.fpsCount
         showFps:         GlobalProperties.showFps
+        workspaceName:   WorkspaceManager.currentWorkspace
+        workspaceDirty:  !viewPort.isClean
     }
 
     // ── Loading Spinner Overlay ──────────────────────────────────────────────────

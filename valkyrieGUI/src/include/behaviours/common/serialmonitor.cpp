@@ -1,7 +1,7 @@
 #include "serialmonitor.h"
 #include "behaviours/behaviourregistry.h"
 
-REGISTER_BEHAVIOUR(SerialMonitor, "Serial Monitor", "Terminal-style serial port monitor with send/receive log", "common", 0, 1)
+REGISTER_BEHAVIOUR(SerialMonitor, "Serial Monitor", "Terminal-style serial port monitor with send/receive log", "IO", 0, 1)
 
 SerialMonitor::SerialMonitor(QObject *parent) : Behaviours(parent)
 {

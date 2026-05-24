@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import App.Theme 1.0
+import App.Icons 1.0
 
 Item {
     id: root
@@ -145,9 +146,10 @@ Item {
                                ? Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.25)
                                : "transparent"
                         Behavior on color { ColorAnimation { duration: 80 } }
-                        Text {
+                        SvgIcon {
                             anchors.centerIn: parent
-                            text: "▲"; font.pixelSize: 8; font.bold: true
+                            width: 12; height: 12
+                            source: Icons.chevronUp
                             color: upMa.containsMouse ? root.accentColor : ThemeManager.textSecondaryColor
                         }
                         MouseArea {
@@ -162,9 +164,10 @@ Item {
                                ? Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.25)
                                : "transparent"
                         Behavior on color { ColorAnimation { duration: 80 } }
-                        Text {
+                        SvgIcon {
                             anchors.centerIn: parent
-                            text: "▼"; font.pixelSize: 8; font.bold: true
+                            width: 12; height: 12
+                            source: Icons.chevronDown
                             color: dnMa.containsMouse ? root.accentColor : ThemeManager.textSecondaryColor
                         }
                         MouseArea {

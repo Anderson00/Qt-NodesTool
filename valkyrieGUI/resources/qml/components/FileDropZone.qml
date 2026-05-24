@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Dialogs
 import App.Theme 1.0
+import App.Icons 1.0
 
 Item {
     id: root
@@ -62,11 +63,11 @@ Item {
             anchors.centerIn: parent
             spacing: 4
 
-            Text {
+            SvgIcon {
                 Layout.alignment: Qt.AlignHCenter
-                text: "⬆"
+                width: 32; height: 32
+                source: Icons.upload
                 color: dropArea.containsDrag ? root.accentColor : ThemeManager.textColor
-                font.pixelSize: 28
             }
             Text {
                 Layout.alignment: Qt.AlignHCenter

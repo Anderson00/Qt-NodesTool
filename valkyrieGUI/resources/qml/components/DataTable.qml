@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import App.Theme 1.0
+import App.Icons 1.0
 
 // DataTable — sortable, scrollable table with fixed headers.
 //
@@ -78,10 +79,11 @@ Item {
                                 color: ThemeManager.textColor; elide: Text.ElideRight
                                 verticalAlignment: Text.AlignVCenter
                             }
-                            Text {
+                            SvgIcon {
                                 visible: root.sortable && root._sortKey === modelData.key
-                                text: root._sortAsc ? "↑" : "↓"
-                                font.pixelSize: root.fontSize; color: ThemeManager.primaryColor
+                                width: root.fontSize + 2; height: root.fontSize + 2
+                                source: root._sortAsc ? Icons.chevronUp : Icons.chevronDown
+                                color: ThemeManager.primaryColor
                             }
                         }
                         MouseArea {

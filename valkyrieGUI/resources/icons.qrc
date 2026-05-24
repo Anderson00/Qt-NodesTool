@@ -89,5 +89,12 @@
         <file>bug.svg</file>
         <file>code-braces.svg</file>
         <file>folder.svg</file>
+        <file>dots-vertical.svg</file>
+        <file>flash.svg</file>
+        <file>timer-sand.svg</file>
+        <file>timer-outline.svg</file>
+        <file>pencil-outline.svg</file>
+        <file>clipboard-text-outline.svg</file>
+        <file>calendar-outline.svg</file>
     </qresource>
 </RCC>

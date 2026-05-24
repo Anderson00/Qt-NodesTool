@@ -1,7 +1,8 @@
 #include "textdisplay.h"
 #include "behaviours/behaviourregistry.h"
+#include <QVariantList>
 
-REGISTER_BEHAVIOUR(TextDisplay, "Text Display", "Console/log viewer — receives and displays text lines", "common", 3, 0)
+REGISTER_BEHAVIOUR(TextDisplay, "Text Display", "Console/log viewer — receives and displays text lines", "Visualization", 3, 0)
 
 TextDisplay::TextDisplay(QObject *parent) : Behaviours(parent)
 {
@@ -73,6 +74,14 @@ void TextDisplay::setMaxLines(int max) {
         emit displayTextChanged();
         emit lineCountChanged();
     }
+}
+
+void TextDisplay::setInputData(const QVariantList& data)
+{
+    QStringList parts;
+    for (const QVariant& v : data)
+        parts << v.toString();
+    appendLine(parts.join(", "));
 }
 
 void TextDisplay::trimLines() {

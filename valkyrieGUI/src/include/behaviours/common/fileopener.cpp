@@ -4,7 +4,7 @@
 #include <QDebug>
 #include <QFileDialog>
 
-REGISTER_BEHAVIOUR(FileOpener, "File Opener", "Open and manipulate files", "common", 0, 1)
+REGISTER_BEHAVIOUR(FileOpener, "File Opener", "Open and manipulate files", "IO", 0, 1)
 
 FileOpener::FileOpener(QObject *parent) : Behaviours(parent)
 {

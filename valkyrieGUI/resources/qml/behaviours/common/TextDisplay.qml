@@ -153,9 +153,10 @@ Item {
                                ThemeManager.primaryColor.g,
                                ThemeManager.primaryColor.b, 0.8)
 
-                Text {
+                SvgIcon {
                     anchors.centerIn: parent
-                    text: "↓"; font.pixelSize: 12; font.bold: true
+                    width: 14; height: 14
+                    source: Icons.chevronDown
                     color: ThemeManager.backgroundColor
                 }
                 MouseArea {
