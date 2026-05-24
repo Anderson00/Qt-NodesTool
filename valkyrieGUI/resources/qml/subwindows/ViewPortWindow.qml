@@ -2409,6 +2409,16 @@ Rectangle {
             }
         }
     }
+    Shortcut {
+        sequence: "Shift+?"
+        context:  Qt.ApplicationShortcut
+        onActivated: shortcutsHelpPopup.open()
+    }
+    Shortcut {
+        sequence: "Ctrl+/"
+        context:  Qt.ApplicationShortcut
+        onActivated: shortcutsHelpPopup.open()
+    }
 
     // Smooth pan+zoom animation used by the F shortcut.
     ParallelAnimation {
@@ -2465,6 +2475,11 @@ Rectangle {
         onWorkspaceDeleteRequested: function(name) {
             confirmDeleteDialog.openFor(name)
         }
+    }
+
+    // ─── Shortcuts Help Overlay ─────────────────────────────────────────────────
+    ShortcutsHelpPopup {
+        id: shortcutsHelpPopup
     }
 
     // ─── Rename Workspace Dialog (from SplashScreen) ────────────────────────────

@@ -1,5 +1,6 @@
 import QtQuick 2.12
 import QtQuick.Controls 2.12
+import QtQuick.Controls.Material 2.12
 import QtQuick.Layouts 1.0
 import App.Theme 1.0
 import App.Desktop 1.0
@@ -165,6 +166,9 @@ Rectangle {
                         // ── Context menu ──────────────────────────────────
                         Menu {
                             id: tabMenu
+                            Material.foreground: ThemeManager.textColor
+                            Material.background: ThemeManager.surfaceColor
+
                             // Capture this tab's identity so nested Repeater
                             // delegates don't shadow `modelData`.
                             readonly property string tabId:   modelData.id
@@ -194,6 +198,8 @@ Rectangle {
                             }
                             Menu {
                                 title: "Color"
+                                Material.foreground: ThemeManager.textColor
+                                Material.background: ThemeManager.surfaceColor
                                 Repeater {
                                     model: ["#4CAF50", "#2196F3", "#FF9800", "#9C27B0", "#F44336", "#00BCD4", "#FF5722", "#607D8B"]
                                     MenuItem {
