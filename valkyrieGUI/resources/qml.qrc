@@ -155,6 +155,7 @@
         <file alias="DesktopBar.qml">qml/components/viewport/DesktopBar.qml</file>
         <file alias="DesktopLimitWarning.qml">qml/components/viewport/DesktopLimitWarning.qml</file>
         <file alias="DesktopOverview.qml">qml/components/viewport/DesktopOverview.qml</file>
+        <file alias="ShortcutsHelpPopup.qml">qml/components/viewport/ShortcutsHelpPopup.qml</file>
     </qresource>
     <qresource prefix="/components/drawers">
         <file alias="NodesDrawer.qml">qml/components/drawers/NodesDrawer.qml</file>
