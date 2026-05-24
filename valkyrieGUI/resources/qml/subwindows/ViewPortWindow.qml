@@ -2271,16 +2271,8 @@ Rectangle {
         onCloseRequested: topBar.historyPanelOpen = false
     }
 
-    Shortcut {
-        sequence: "Ctrl+Z"
-        context:  Qt.ApplicationShortcut
-        onActivated: viewPort.undo()
-    }
-    Shortcut {
-        sequence: "Ctrl+Y"
-        context:  Qt.ApplicationShortcut
-        onActivated: viewPort.redo()
-    }
+    // Ctrl+Z and Ctrl+Y are handled globally by C++ MainWindow (actionUndo/actionRedo)
+    // to avoid "Ambiguous shortcut overload" warnings.
     Shortcut {
         sequence: "Ctrl+S"
         context:  Qt.ApplicationShortcut

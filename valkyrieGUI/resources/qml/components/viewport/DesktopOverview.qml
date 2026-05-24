@@ -95,6 +95,7 @@ Popup {
                         id: tile
                         readonly property bool isActive: modelData.id === DesktopManager.currentDesktopId
                         readonly property string desktopId: modelData.id
+                        readonly property color desktopColor: modelData.color
 
                         width: 280
                         height: 200
@@ -232,9 +233,9 @@ Popup {
                                         anchors.fill: parent
                                         radius: Math.min(width, height) * 0.15
                                         color: isPinned ? Qt.rgba(1, 1, 1, 0.32)
-                                                        : Qt.rgba(modelData ? 1 : 1, 1, 1, 0.18)
+                                                        : Qt.rgba(1, 1, 1, 0.18)
                                         border.width: 1
-                                        border.color: isPinned ? "#FFEB3B" : modelData.color
+                                        border.color: isPinned ? "#FFEB3B" : tile.desktopColor
                                     }
 
                                     // Tiny pin marker
