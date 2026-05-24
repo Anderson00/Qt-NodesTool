@@ -559,7 +559,7 @@ Rectangle {
     function _setSelection(items) {
         for (var i = 0; i < nodes.model.count; i++) {
             var it = nodes.itemAt(i)
-            if (it) it.isSelected = false
+            if (it && it.visible) it.isSelected = false
         }
         selectedNodes = items.slice()
         for (var j = 0; j < selectedNodes.length; j++)
@@ -587,7 +587,7 @@ Rectangle {
     function _clearSelection() {
         for (var i = 0; i < nodes.model.count; i++) {
             var it = nodes.itemAt(i)
-            if (it) it.isSelected = false
+            if (it && it.visible) it.isSelected = false
         }
         selectedNodes = []
         nodeOnFocus = null
@@ -597,7 +597,7 @@ Rectangle {
         var toSelect = []
         for (var i = 0; i < nodes.model.count; i++) {
             var it = nodes.itemAt(i)
-            if (!it) continue
+            if (!it || !it.visible) continue
             if ((it.x + it.width) > rx1 && it.x < rx2 &&
                 (it.y + it.height) > ry1 && it.y < ry2)
                 toSelect.push(it)
@@ -1435,6 +1435,16 @@ Rectangle {
                         property var circleConn2:      null
                         property var viewRectConn2:    null
 
+                        Timer {
+                            id: forceSyncTimer
+                            interval: 50
+                            repeat: false
+                            onTriggered: {
+                                if (model.circleConn) circleConnPoint = model.circleConn.mapToItem(shape.parent, 0, 0)
+                                if (circleConn2) circleConnPoint2 = circleConn2.mapToItem(shape.parent, 0, 0)
+                            }
+                        }
+
                         // ── Cross-desktop visibility ──────────────────────────
                         // Hide the wire when either endpoint isn't on the active
                         // desktop. The underlying C++ signal/slot stays connected;
@@ -1442,9 +1452,9 @@ Rectangle {
                         property int _desktopRefresh: 0
                         Connections {
                             target: DesktopManager
-                            function onCurrentDesktopChanged()  { shape._desktopRefresh++ }
-                            function onNodeDesktopMembershipChanged() { shape._desktopRefresh++ }
-                            function onPinnedNodesChanged()     { shape._desktopRefresh++ }
+                            function onCurrentDesktopChanged()  { shape._desktopRefresh++; forceSyncTimer.restart() }
+                            function onNodeDesktopMembershipChanged() { shape._desktopRefresh++; forceSyncTimer.restart() }
+                            function onPinnedNodesChanged()     { shape._desktopRefresh++; forceSyncTimer.restart() }
                         }
                         // In-progress (not yet attached) connections have empty
                         // inputUuid — keep them visible while the user is dragging.
@@ -1476,11 +1486,7 @@ Rectangle {
                                 circleConn2   = model.initCircleConn2
                                 viewRectConn2 = model.initViewRectConn2
                                 // Recompute positions after layout
-                                Qt.callLater(function() {
-                                    circleConnPoint  = model.circleConn.mapToItem(shape.parent, 0, 0)
-                                    if (circleConn2)
-                                        circleConnPoint2 = circleConn2.mapToItem(shape.parent, 0, 0)
-                                })
+                                forceSyncTimer.restart()
                             } else {
                                 // New in-progress connection drawn by user
                                 shapeConn = shape
@@ -1502,6 +1508,9 @@ Rectangle {
                             function onYChanged()      { circleConnPoint = model.circleConn.mapToItem(parent, 0, 0) }
                             function onWidthChanged()  { circleConnPoint = model.circleConn.mapToItem(parent, 0, 0) }
                             function onHeightChanged() { circleConnPoint = model.circleConn.mapToItem(parent, 0, 0) }
+                            function onVisibleChanged() {
+                                if (model.node.visible) forceSyncTimer.restart()
+                            }
                         }
 
                         Connections {
@@ -1510,6 +1519,9 @@ Rectangle {
                             function onYChanged()      { circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0) }
                             function onWidthChanged()  { circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0) }
                             function onHeightChanged() { circleConnPoint2 = circleConn2.mapToItem(parent, 0, 0) }
+                            function onVisibleChanged() {
+                                if (viewRectConn2 && viewRectConn2.visible) forceSyncTimer.restart()
+                            }
                         }
 
                         // Pulse animation (width oscillating)
@@ -2344,7 +2356,7 @@ Rectangle {
             var all = []
             for (var i = 0; i < nodes.model.count; i++) {
                 var it = nodes.itemAt(i)
-                if (it) all.push(it)
+                if (it && it.visible) all.push(it)
             }
             root._setSelection(all)
         }
