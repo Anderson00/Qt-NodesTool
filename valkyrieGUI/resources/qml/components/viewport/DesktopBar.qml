@@ -30,15 +30,21 @@ Rectangle {
         anchors.rightMargin: 8
         spacing: 4
 
+        Item { Layout.fillWidth: true }
+
         // ── Tabs (scrollable) ────────────────────────────────────────────────
         ScrollView {
-            Layout.fillWidth: true
+            id: tabsScroll
+            Layout.maximumWidth: root.width - 150
+            Layout.fillWidth: false
+            contentWidth: tabsRow.width
             Layout.fillHeight: true
             ScrollBar.horizontal.policy: ScrollBar.AsNeeded
             ScrollBar.vertical.policy:   ScrollBar.AlwaysOff
             clip: true
 
             Row {
+                id: tabsRow
                 spacing: 4
                 height: root.height
 
@@ -223,10 +229,13 @@ Rectangle {
 
             Text {
                 anchors.centerIn: parent
+                anchors.verticalCenterOffset: -2
                 text: "+"
-                font.pixelSize: 15
+                font.pixelSize: 18
                 font.bold: true
                 color: ThemeManager.primaryColor
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
 
             MouseArea {
@@ -249,5 +258,7 @@ Rectangle {
             Layout.alignment: Qt.AlignVCenter
             Layout.leftMargin: 6
         }
+
+        Item { Layout.fillWidth: true }
     }
 }

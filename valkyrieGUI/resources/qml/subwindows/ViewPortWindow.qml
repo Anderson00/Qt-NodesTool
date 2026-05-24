@@ -770,6 +770,7 @@ Rectangle {
     function detectNodeByMousePosition(x: double, y: double) {
         for (let i = 0; i < nodes.model.count; i++) {
             let node = nodes.model.get(i)['object']
+            if (!node || !node.viewRect || !node.viewRect.visible) continue
             if ((x >= node.x && x <= node.x + node.width) &&
                 (y >= node.y && y <= node.y + node.height))
                 return node
@@ -1700,6 +1701,10 @@ Rectangle {
                                 var cy = (containerCanvas.height / 2 - mycanvas.y) / zoomScale
                                 viewComponentRectV2.x = cx - viewComponentRectV2.width  / 2
                                 viewComponentRectV2.y = cy - viewComponentRectV2.height / 2
+                                // Sync back to C++ so detectNodeByMousePosition() can find this node.
+                                // Without this, behaviourObject stays at (0,0) until the user drags.
+                                model.object.x = viewComponentRectV2.x
+                                model.object.y = viewComponentRectV2.y
                             }
                         }
 
@@ -2309,7 +2314,7 @@ Rectangle {
         onActivated: desktopOverview.open()
     }
     // Ctrl+1..9 jump to a specific desktop by index
-    Repeater {
+    Instantiator {
         model: 9
         Shortcut {
             sequence: "Ctrl+" + (index + 1)
