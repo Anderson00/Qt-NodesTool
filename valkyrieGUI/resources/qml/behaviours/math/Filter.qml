@@ -123,16 +123,16 @@ Item {
 
                 Column {
                     spacing: 1
-                    Text { text: "Raw";      font.pixelSize: 8; color: ThemeManager.textSecondaryColor; anchors.horizontalCenter: parent.horizontalCenter }
+                    Text { text: qsTr("Raw");      font.pixelSize: 8; color: ThemeManager.textSecondaryColor; anchors.horizontalCenter: parent.horizontalCenter }
                     Text { text: root.rawValue.toFixed(4);  font.pixelSize: 14; font.family: "Consolas";
                            color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.6); anchors.horizontalCenter: parent.horizontalCenter }
                 }
 
-                Text { text: "?"; font.pixelSize: 14; color: root.modeColors[root.filterMode]; opacity: 0.7 }
+                Text { text: qsTr("?"); font.pixelSize: 14; color: root.modeColors[root.filterMode]; opacity: 0.7 }
 
                 Column {
                     spacing: 1
-                    Text { text: "Filtered"; font.pixelSize: 8; color: ThemeManager.textSecondaryColor; anchors.horizontalCenter: parent.horizontalCenter }
+                    Text { text: qsTr("Filtered"); font.pixelSize: 8; color: ThemeManager.textSecondaryColor; anchors.horizontalCenter: parent.horizontalCenter }
                     Text { text: root.filtValue.toFixed(6); font.pixelSize: 18; font.family: "Consolas"; font.bold: true;
                            color: root.modeColors[root.filterMode]; anchors.horizontalCenter: parent.horizontalCenter }
                 }
@@ -184,7 +184,7 @@ Item {
 
             RowLayout {
                 Layout.fillWidth: true; spacing: 6
-                Text { text: "Window"; font.pixelSize: 9; color: ThemeManager.textSecondaryColor; Layout.alignment: Qt.AlignVCenter }
+                Text { text: qsTr("Window"); font.pixelSize: 9; color: ThemeManager.textSecondaryColor; Layout.alignment: Qt.AlignVCenter }
                 NumberSpinBox {
                     Layout.fillWidth: true; from: 2; to: 200; stepSize: 1
                     value: root.windowSize; accentColor: root.modeColors[root.filterMode]
@@ -214,14 +214,14 @@ Item {
             Layout.fillWidth: true; spacing: 4
             NumericInputField {
                 Layout.fillWidth: true; implicitHeight: 34
-                label: "In"; value: root.rawValue
+                label: qsTr("In"); value: root.rawValue
                 from: -1e9; to: 1e9; stepSize: 1; decimals: 4
                 accentColor: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.5)
                 onValueModified: function(newValue) { processValue(newValue) }
             }
             NewButton {
                 Layout.preferredWidth: 56; Layout.preferredHeight: 34
-                variant: "outlined"; text: "Reset"
+                variant: "outlined"; text: qsTr("Reset")
                 backgroundColor: ThemeManager.textSecondaryColor
                 onClicked: { root.buffer = []; root.filtValue = root.rawValue; root.sampleN = 0 }
             }

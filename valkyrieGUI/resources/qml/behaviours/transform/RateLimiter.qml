@@ -59,7 +59,7 @@ Item {
 
         // -- Header --
         Text {
-            text: "Rate Limiter"
+            text: qsTr("Rate Limiter")
             font.pixelSize: 10
             font.bold: true
             color: ThemeManager.textColor
@@ -71,14 +71,14 @@ Item {
             spacing: 6
 
             Text {
-                text: "Mode"
+                text: qsTr("Mode")
                 font.pixelSize: 9
                 color: ThemeManager.textSecondaryColor
                 Layout.alignment: Qt.AlignVCenter
             }
 
             Chip {
-                label: "Throttle"
+                label: qsTr("Throttle")
                 closeable: false
                 selectable: true
                 selected: localMode === "throttle"
@@ -89,7 +89,7 @@ Item {
             }
 
             Chip {
-                label: "Debounce"
+                label: qsTr("Debounce")
                 closeable: false
                 selectable: true
                 selected: localMode === "debounce"
@@ -106,7 +106,7 @@ Item {
             spacing: 6
 
             Text {
-                text: "Interval (ms)"
+                text: qsTr("Interval (ms)")
                 font.pixelSize: 9
                 color: ThemeManager.textSecondaryColor
                 Layout.alignment: Qt.AlignVCenter
@@ -145,14 +145,14 @@ Item {
             }
 
             Text {
-                text: "Passed: " + localPassed
+                text: qsTr("Passed: ") + localPassed
                 font.pixelSize: 9
                 color: "#2ecc71"
                 Layout.alignment: Qt.AlignVCenter
             }
 
             Text {
-                text: "Dropped: " + localDropped
+                text: qsTr("Dropped: ") + localDropped
                 font.pixelSize: 9
                 color: "#e74c3c"
                 Layout.alignment: Qt.AlignVCenter
@@ -164,7 +164,7 @@ Item {
                 Layout.preferredWidth: 46
                 Layout.preferredHeight: 22
                 variant: "outlined"
-                text: "Reset"
+                text: qsTr("Reset")
                 onClicked: {
                     localPassed  = 0
                     localDropped = 0

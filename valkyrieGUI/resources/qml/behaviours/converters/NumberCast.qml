@@ -66,7 +66,7 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: 6
         Text {
-            text: "Auto-send"
+            text: qsTr("Auto-send")
             font.pixelSize: 11
             color: ThemeManager.textColor
             opacity: 0.6
@@ -83,7 +83,7 @@ ColumnLayout {
     NewButton {
         Layout.fillWidth: true
         Layout.preferredHeight: 36
-        text: "Cast"
+        text: qsTr("Cast")
         variant: "filled"
         iconSource: Icons.flash
         backgroundColor: ThemeManager.primaryColor

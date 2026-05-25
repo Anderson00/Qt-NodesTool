@@ -41,7 +41,7 @@ Item {
             CustomTextField {
                 id: pathField
                 Layout.fillWidth: true
-                placeholderText: "File or directory path..."
+                placeholderText: qsTr("File or directory path...")
                 text: behaviourObject ? behaviourObject.watchedPath : ""
                 onEditingFinished: behaviourObject.setPath(text)
             }
@@ -67,7 +67,7 @@ Item {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: behaviourObject.setPath(pathField.text)
                 }
-                AppToolTip { text: "Apply path"; visible: folderMouse.containsMouse; delay: 600 }
+                AppToolTip { text: qsTr("Apply path"); visible: folderMouse.containsMouse; delay: 600 }
             }
         }
 
@@ -91,14 +91,14 @@ Item {
 
             // Read button
             NewButton {
-                text: "Read"
+                text: qsTr("Read")
                 variant: "outlined"
                 onClicked: behaviourObject.readFile()
             }
 
             // Clear log button
             NewButton {
-                text: "Clear"
+                text: qsTr("Clear")
                 variant: "outlined"
                 onClicked: behaviourObject.internalClear()
             }

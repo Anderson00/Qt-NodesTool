@@ -28,10 +28,10 @@ Item {
 
             Repeater {
                 model: [
-                    {label: "Dias",    field: "days",    val: behaviourObject ? behaviourObject.days    : 0, max: 365},
-                    {label: "Horas",   field: "hours",   val: behaviourObject ? behaviourObject.hours   : 0, max: 23},
-                    {label: "Minutos", field: "minutes", val: behaviourObject ? behaviourObject.minutes : 1, max: 59},
-                    {label: "Segs",    field: "seconds", val: behaviourObject ? behaviourObject.seconds : 0, max: 59}
+                    {label: qsTr("Dias"),    field: "days",    val: behaviourObject ? behaviourObject.days    : 0, max: 365},
+                    {label: qsTr("Horas"),   field: "hours",   val: behaviourObject ? behaviourObject.hours   : 0, max: 23},
+                    {label: qsTr("Minutos"), field: "minutes", val: behaviourObject ? behaviourObject.minutes : 1, max: 59},
+                    {label: qsTr("Segs"),    field: "seconds", val: behaviourObject ? behaviourObject.seconds : 0, max: 59}
                 ]
 
                 ColumnLayout {
@@ -173,7 +173,7 @@ Item {
                 onCheckedChanged: if (behaviourObject) behaviourObject.fireImmediately = checked
             }
             Text {
-                text: "Disparar imediatamente ao iniciar"
+                text: qsTr("Disparar imediatamente ao iniciar")
                 color: ThemeManager.textSecondaryColor; font.pixelSize: 11
                 MouseArea { anchors.fill: parent; onClicked: fireImmCheck.toggle() }
             }

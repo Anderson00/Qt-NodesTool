@@ -180,7 +180,7 @@ Item {
         GridLayout {
             Layout.fillWidth: true; columns: 2; columnSpacing: 6; rowSpacing: 3
 
-            Text { text: "Min";  font.pixelSize: 9; color: ThemeManager.textSecondaryColor }
+            Text { text: qsTr("Min");  font.pixelSize: 9; color: ThemeManager.textSecondaryColor }
             NumericInputField {
                 Layout.fillWidth: true; implicitHeight: 30
                 value: root.gaugeMin; from: -1e9; to: 1e9; stepSize: 1; decimals: root.decimals
@@ -188,7 +188,7 @@ Item {
                 onValueModified: function(newValue) { root.gaugeMin = newValue }
             }
 
-            Text { text: "Max";  font.pixelSize: 9; color: ThemeManager.textSecondaryColor }
+            Text { text: qsTr("Max");  font.pixelSize: 9; color: ThemeManager.textSecondaryColor }
             NumericInputField {
                 Layout.fillWidth: true; implicitHeight: 30
                 value: root.gaugeMax; from: -1e9; to: 1e9; stepSize: 1; decimals: root.decimals
@@ -196,7 +196,7 @@ Item {
                 onValueModified: function(newValue) { root.gaugeMax = newValue }
             }
 
-            Text { text: "Warn"; font.pixelSize: 9; color: root.colorWarn }
+            Text { text: qsTr("Warn"); font.pixelSize: 9; color: root.colorWarn }
             NumericInputField {
                 Layout.fillWidth: true; implicitHeight: 30
                 value: root.warnThresh; from: root.gaugeMin; to: root.gaugeMax; stepSize: 1; decimals: root.decimals
@@ -204,7 +204,7 @@ Item {
                 onValueModified: function(newValue) { root.warnThresh = newValue }
             }
 
-            Text { text: "Crit"; font.pixelSize: 9; color: root.colorCrit }
+            Text { text: qsTr("Crit"); font.pixelSize: 9; color: root.colorCrit }
             NumericInputField {
                 Layout.fillWidth: true; implicitHeight: 30
                 value: root.critThresh; from: root.gaugeMin; to: root.gaugeMax; stepSize: 1; decimals: root.decimals

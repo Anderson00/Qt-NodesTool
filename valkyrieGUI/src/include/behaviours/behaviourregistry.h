@@ -8,6 +8,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QQmlEngine>
+#include <QCoreApplication>
 #include <functional>
 
 
@@ -28,14 +29,19 @@ struct BehaviourMeta {
     int     outputsCount = 0;
     std::function<Behaviours*()> factory;
 
-    /// Convert to the QJsonObject format expected by the NodesDrawer QML
+    /// Convert to the QJsonObject format expected by the NodesDrawer QML.
+    /// Display name, description and category are translated at query-time
+    /// using the currently active QTranslator (set by LanguageManager).
     QJsonObject toJson() const {
         QJsonObject obj;
-        obj["name"]          = displayName;
+        obj["name"]     = QCoreApplication::translate("BehaviourRegistry",
+                              displayName.toUtf8().constData());
         obj["className"]     = className;
         obj["type"]          = 0; // Behaviours::CPP
-        obj["desc"]          = description;
-        obj["category"]      = category;
+        obj["desc"]     = QCoreApplication::translate("BehaviourRegistry",
+                              description.toUtf8().constData());
+        obj["category"] = QCoreApplication::translate("BehaviourRegistry",
+                              category.toUtf8().constData());
         obj["inputs_count"]  = QString::number(inputsCount);
         obj["outputs_count"] = QString::number(outputsCount);
         return obj;
@@ -72,6 +78,10 @@ public:
 
     /// Get all unique category names.
     QStringList categories() const;
+
+    /// Invalidate the cached discovery result so the next discoverAll() call
+    /// rebuilds it with freshly translated strings.
+    void markDirty() { m_dirty = true; }
 
 public slots:
     /**

@@ -50,7 +50,7 @@ Item {
                 spacing: 6
 
                 Text {
-                    text: "SQLite Query"
+                    text: qsTr("SQLite Query")
                     color: ThemeManager.textColor
                     font.pixelSize: 11
                     font.bold: true
@@ -90,14 +90,14 @@ Item {
                 CustomTextField {
                     id: dbPathField
                     Layout.fillWidth: true
-                    placeholderText: "database.db path..."
+                    placeholderText: qsTr("database.db path...")
                     text: behaviourObject ? behaviourObject.dbPath : ""
                 }
                 NewButton {
                     Layout.preferredWidth: 52
                     Layout.fillHeight: true
                     variant: "filled"
-                    text: "Open"
+                    text: qsTr("Open")
                     backgroundColor: ThemeManager.primaryColor
                     onClicked: {
                         if (behaviourObject && dbPathField.text.trim() !== "")
@@ -135,7 +135,7 @@ Item {
                     font.pixelSize: 11
                     color: ThemeManager.textColor
                     background: null
-                    placeholderText: "SELECT * FROM table_name LIMIT 100;"
+                    placeholderText: qsTr("SELECT * FROM table_name LIMIT 100;")
                     placeholderTextColor: ThemeManager.textSecondaryColor
                     selectByMouse: true
                 }
@@ -154,7 +154,7 @@ Item {
                 Layout.preferredWidth: 80
                 Layout.fillHeight: true
                 variant: "filled"
-                text: "Execute"
+                text: qsTr("Execute")
                 backgroundColor: ThemeManager.primaryColor
                 enabled: behaviourObject && behaviourObject.isConnected
                 onClicked: {

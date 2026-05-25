@@ -129,7 +129,7 @@ Item {
                 spacing: 6
 
                 Text {
-                    text: "Node Graph"
+                    text: qsTr("Node Graph")
                     color: ThemeManager.textColor
                     font.pixelSize: 11
                     font.bold: true
@@ -359,7 +359,7 @@ Item {
                 anchors.left: parent.left
                 anchors.leftMargin: 8
                 anchors.verticalCenter: parent.verticalCenter
-                text: "Drag nodes • Dbl-click to pin • Layout: " + selectedLayout
+                text: qsTr("Drag nodes • Dbl-click to pin • Layout: ") + selectedLayout
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 8
             }

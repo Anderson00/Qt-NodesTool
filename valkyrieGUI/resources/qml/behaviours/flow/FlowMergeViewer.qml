@@ -37,7 +37,7 @@ Item {
                     anchors.centerIn: parent; spacing: 4
                     opacity: parent.isLast ? 1.0 : 0.45
                     Text {
-                        text: "Trigger " + modelData
+                        text: qsTr("Trigger ") + modelData
                         font.pixelSize: 11; font.bold: parent.parent.isLast; color: "#FF9800"
                     }
                     SvgIcon {
@@ -58,7 +58,7 @@ Item {
             color: Qt.rgba(1, 0.6, 0, 0.06); border.width: 1; border.color: Qt.rgba(1,0.6,0,0.2)
             RowLayout {
                 anchors.fill: parent; anchors.margins: 8
-                Text { text: "Total merges"; font.pixelSize: 11; color: ThemeManager.textSecondaryColor; Layout.fillWidth: true }
+                Text { text: qsTr("Total merges"); font.pixelSize: 11; color: ThemeManager.textSecondaryColor; Layout.fillWidth: true }
                 Text {
                     text: behaviourObject ? behaviourObject.mergeCount : "0"
                     font.pixelSize: 14; font.bold: true; font.family: "Consolas"; color: "#FF9800"

@@ -196,7 +196,7 @@ Rectangle {
             spacing: 6
             Text {
                 Layout.fillWidth: true
-                text: "Nodes  (" + (nodesModel ? nodesModel.count : 0) + ")"
+                text: qsTr("Nodes  (") + (nodesModel ? nodesModel.count : 0) + ")"
                 font.pixelSize: 11
                 font.bold: true
                 color: ThemeManager.primaryColor
@@ -265,16 +265,16 @@ Rectangle {
                                 anchors.verticalCenter: parent.verticalCenter
                                 width: 12; horizontalAlignment: Text.AlignHCenter
                             }
-                            Text { text: "📌"; font.pixelSize: 10; anchors.verticalCenter: parent.verticalCenter }
+                            Text { text: qsTr("📌"); font.pixelSize: 10; anchors.verticalCenter: parent.verticalCenter }
                             Text {
-                                text: "Pinned"
+                                text: qsTr("Pinned")
                                 font.pixelSize: 10
                                 font.bold: true
                                 color: ThemeManager.textColor
                                 anchors.verticalCenter: parent.verticalCenter
                             }
                             Text {
-                                text: "(" + DesktopManager.pinnedNodes.length + ")"
+                                text: qsTr("(") + DesktopManager.pinnedNodes.length + ")"
                                 font.pixelSize: 9
                                 color: ThemeManager.textSecondaryColor
                                 opacity: 0.6
@@ -368,7 +368,7 @@ Rectangle {
                                     elide: Text.ElideRight
                                 }
                                 Text {
-                                    text: "(" + section.desktop.nodeCount + ")"
+                                    text: qsTr("(") + section.desktop.nodeCount + ")"
                                     font.pixelSize: 9
                                     color: ThemeManager.textSecondaryColor
                                     opacity: 0.6
@@ -377,7 +377,7 @@ Rectangle {
                                 Item { width: 4; height: 1 }
                                 Text {
                                     visible: section.isCurrent
-                                    text: "·  active"
+                                    text: qsTr("·  active")
                                     font.pixelSize: 9
                                     color: section.desktop.color
                                     opacity: 0.7
@@ -432,7 +432,7 @@ Rectangle {
                             Text {
                                 visible: section.desktop.nodeCount === 0
                                 width:   parent.width
-                                text:    "  (no nodes)"
+                                text: qsTr("  (no nodes)")
                                 font.pixelSize: 9
                                 color:   ThemeManager.textSecondaryColor
                                 opacity: 0.5

@@ -72,7 +72,7 @@ Item {
 
         // -- Header --
         Text {
-            text: "Unit Converter"
+            text: qsTr("Unit Converter")
             font.pixelSize: 10
             font.bold: true
             color: ThemeManager.textColor
@@ -84,7 +84,7 @@ Item {
             spacing: 6
 
             Text {
-                text: "Category"
+                text: qsTr("Category")
                 font.pixelSize: 9
                 color: ThemeManager.textSecondaryColor
                 Layout.alignment: Qt.AlignVCenter
@@ -118,7 +118,7 @@ Item {
                 spacing: 2
 
                 Text {
-                    text: "From"
+                    text: qsTr("From")
                     font.pixelSize: 8
                     color: ThemeManager.textSecondaryColor
                 }
@@ -160,7 +160,7 @@ Item {
                 spacing: 2
 
                 Text {
-                    text: "To"
+                    text: qsTr("To")
                     font.pixelSize: 8
                     color: ThemeManager.textSecondaryColor
                 }
@@ -185,7 +185,7 @@ Item {
         NumericInputField {
             Layout.fillWidth: true
             implicitHeight: 36
-            label: "Value (" + root.localFrom + ")"
+            label: qsTr("Value (") + root.localFrom + ")"
             value: root.localValue
             from: -1e15
             to:    1e15

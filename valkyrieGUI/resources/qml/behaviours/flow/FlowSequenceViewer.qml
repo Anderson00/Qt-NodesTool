@@ -14,7 +14,7 @@ Item {
         anchors.fill: parent; anchors.margins: 8; spacing: 6
 
         Text {
-            text: "Fires steps 1 → 2 → 3 in order"
+            text: qsTr("Fires steps 1 → 2 → 3 in order")
             font.pixelSize: 10; color: ThemeManager.textSecondaryColor
             Layout.fillWidth: true; wrapMode: Text.WordWrap
         }
@@ -38,7 +38,7 @@ Item {
                         opacity: parent.parent.isActive ? 1.0 : 0.5
                     }
                     Text {
-                        text: "Step " + (index + 1)
+                        text: qsTr("Step ") + (index + 1)
                         font.pixelSize: 11; font.bold: parent.parent.isActive; color: "#FF9800"
                         opacity: parent.parent.isActive ? 1.0 : 0.5
                     }
@@ -62,7 +62,7 @@ Item {
             Behavior on color { ColorAnimation { duration: 100 } }
             RowLayout { anchors.centerIn: parent; spacing: 4
                 SvgIcon { width: 11; height: 11; source: Icons.play; color: "#FF9800" }
-                Text { text: "Run Sequence"; font.pixelSize: 11; font.bold: true; color: "#FF9800" }
+                Text { text: qsTr("Run Sequence"); font.pixelSize: 11; font.bold: true; color: "#FF9800" }
             }
             MouseArea { id: trigMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                 onClicked: if (behaviourObject) behaviourObject.trigger() }

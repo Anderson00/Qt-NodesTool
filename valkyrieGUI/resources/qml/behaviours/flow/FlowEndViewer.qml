@@ -38,7 +38,7 @@ Item {
                 }
                 Text {
                     Layout.alignment: Qt.AlignHCenter
-                    text: "times reached"
+                    text: qsTr("times reached")
                     font.pixelSize: 9; color: ThemeManager.textSecondaryColor
                 }
             }
@@ -50,7 +50,7 @@ Item {
             color: rstMa.containsMouse ? Qt.rgba(0.5,0.5,0.5,0.15) : Qt.rgba(0.5,0.5,0.5,0.06)
             border.width: 1; border.color: Qt.rgba(0.5,0.5,0.5,0.3)
             Behavior on color { ColorAnimation { duration: 100 } }
-            Text { anchors.centerIn: parent; text: "Reset counter"; font.pixelSize: 10; color: ThemeManager.textSecondaryColor }
+            Text { anchors.centerIn: parent; text: qsTr("Reset counter"); font.pixelSize: 10; color: ThemeManager.textSecondaryColor }
             MouseArea { id: rstMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                 onClicked: if (behaviourObject) behaviourObject.reset() }
         }

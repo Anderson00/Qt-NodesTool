@@ -30,7 +30,7 @@ Item {
 
         // ── Title ────────────────────────────────────────────────────────
         Text {
-            text: "File Opener"
+            text: qsTr("File Opener")
             color: ThemeManager.textColor
             font.pixelSize: 11
             font.bold: true
@@ -44,13 +44,13 @@ Item {
             CustomTextField {
                 id: rootPath
                 Layout.fillWidth: true
-                placeholderText: "Root path (default: .)"
+                placeholderText: qsTr("Root path (default: .)")
             }
 
             CustomTextField {
                 id: filterField
                 Layout.preferredWidth: 100
-                placeholderText: "Filter: *.exe"
+                placeholderText: qsTr("Filter: *.exe")
             }
 
             // Browse button
@@ -87,7 +87,7 @@ Item {
                         }
                     }
                 }
-                AppToolTip { text: "Browse for file"; visible: browseMouse.containsMouse; delay: 500 }
+                AppToolTip { text: qsTr("Browse for file"); visible: browseMouse.containsMouse; delay: 500 }
             }
         }
 
@@ -114,7 +114,7 @@ Item {
 
                 Text {
                     visible: fileUrl.text === ""
-                    text: "No file selected"
+                    text: qsTr("No file selected")
                     color: ThemeManager.textSecondaryColor
                     font: fileUrl.font
                     anchors.verticalCenter: parent.verticalCenter
@@ -147,7 +147,7 @@ Item {
 
                     Text {
                         visible: fileName.text === ""
-                        text: "Name"
+                        text: qsTr("Name")
                         color: ThemeManager.textSecondaryColor
                         font: fileName.font
                         anchors.verticalCenter: parent.verticalCenter
@@ -175,7 +175,7 @@ Item {
 
                     Text {
                         visible: fileSize.text === ""
-                        text: "Size"
+                        text: qsTr("Size")
                         color: ThemeManager.textSecondaryColor
                         font: fileSize.font
                         anchors.verticalCenter: parent.verticalCenter

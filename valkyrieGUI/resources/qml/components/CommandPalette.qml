@@ -97,7 +97,7 @@ Popup {
                     Text {
                         visible: !parent.text
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "Search commands…"; font.pixelSize: 15
+                        text: qsTr("Search commands…"); font.pixelSize: 15
                         color: ThemeManager.textSecondaryColor; opacity: 0.6
                     }
                 }
@@ -172,7 +172,7 @@ Popup {
             Rectangle { anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right; height: 1; color: ThemeManager.borderColor }
             Text {
                 anchors.centerIn: parent
-                text: "↑↓ navigate  ·  ↵ select  ·  Esc close"
+                text: qsTr("↑↓ navigate  ·  ↵ select  ·  Esc close")
                 font.pixelSize: 10; color: ThemeManager.textSecondaryColor; opacity: 0.6
             }
         }

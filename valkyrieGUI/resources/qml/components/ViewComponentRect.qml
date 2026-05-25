@@ -51,7 +51,7 @@ Rectangle {
             id: titleView
             Layout.fillWidth: true
 
-            text: "Titulo Janela"
+            text: qsTr("Titulo Janela")
             font.pixelSize: 8
             color: root.borderColor
 
@@ -97,7 +97,7 @@ Rectangle {
             }
         }
         Text {
-            text: "Testando"
+            text: qsTr("Testando")
             color: ThemeManager.textSecondaryColor
             anchors.centerIn: parent
         }

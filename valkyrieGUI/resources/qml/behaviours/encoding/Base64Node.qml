@@ -34,7 +34,7 @@ Item {
             spacing: 6
 
             Text {
-                text: "URL-safe encoding"
+                text: qsTr("URL-safe encoding")
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 11
             }
@@ -55,12 +55,12 @@ Item {
             CustomTextField {
                 id: encodeInputField
                 Layout.fillWidth: true
-                placeholderText: "Text to encode..."
+                placeholderText: qsTr("Text to encode...")
                 onAccepted: behaviourObject.encode(text)
             }
 
             NewButton {
-                text: "Encode"
+                text: qsTr("Encode")
                 variant: "filled"
                 onClicked: behaviourObject.encode(encodeInputField.text)
             }
@@ -85,7 +85,7 @@ Item {
                 selectByMouse: true
                 text: behaviourObject ? behaviourObject.lastEncoded : ""
                 clip: true
-                placeholderText: "Encoded result..."
+                placeholderText: qsTr("Encoded result...")
             }
         }
 
@@ -100,12 +100,12 @@ Item {
             CustomTextField {
                 id: decodeInputField
                 Layout.fillWidth: true
-                placeholderText: "Base64 to decode..."
+                placeholderText: qsTr("Base64 to decode...")
                 onAccepted: behaviourObject.decode(text)
             }
 
             NewButton {
-                text: "Decode"
+                text: qsTr("Decode")
                 variant: "outlined"
                 onClicked: behaviourObject.decode(decodeInputField.text)
             }
@@ -130,7 +130,7 @@ Item {
                 selectByMouse: true
                 text: behaviourObject ? behaviourObject.lastDecoded : ""
                 clip: true
-                placeholderText: "Decoded result..."
+                placeholderText: qsTr("Decoded result...")
             }
         }
     }

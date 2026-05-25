@@ -2110,7 +2110,7 @@ Rectangle {
             var cmds = []
 
             // ── Workspace actions ────────────────────────────────────────────
-            cmds.push({ label: "Save Workspace",          shortcut: "Ctrl+S",
+            cmds.push({ label: qsTr("Save Workspace"),          shortcut: "Ctrl+S",
                         group: "Workspace",
                         action: function() {
                             if (WorkspaceManager.currentWorkspace !== "") {
@@ -2123,22 +2123,22 @@ Rectangle {
                                 saveWorkspaceDialog.open()
                             }
                         } })
-            cmds.push({ label: "Save Workspace As…",      shortcut: "Ctrl+Shift+S",
+            cmds.push({ label: qsTr("Save Workspace As…"),      shortcut: "Ctrl+Shift+S",
                         group: "Workspace",
                         action: function() {
                             saveNameField.text = WorkspaceManager.currentWorkspace
                             saveWorkspaceDialog.open()
                         } })
-            cmds.push({ label: "Open Workspace…",         shortcut: "",
+            cmds.push({ label: qsTr("Open Workspace…"),         shortcut: "",
                         group: "Workspace",
                         action: function() { openWorkspaceDialog.open() } })
-            cmds.push({ label: "New Project",             shortcut: "",
+            cmds.push({ label: qsTr("New Project"),             shortcut: "",
                         group: "Workspace",
                         action: function() {
                             if (!viewPort.isClean) confirmNewProjectDialog.open()
                             else                   doNewProject()
                         } })
-            cmds.push({ label: "Rename Workspace…",       shortcut: "",
+            cmds.push({ label: qsTr("Rename Workspace…"),       shortcut: "",
                         group: "Workspace",
                         action: function() {
                             if (WorkspaceManager.currentWorkspace !== "")
@@ -2146,7 +2146,7 @@ Rectangle {
                             else
                                 ToastManager.show("No workspace to rename", "warning")
                         } })
-            cmds.push({ label: "Back to Home",            shortcut: "",
+            cmds.push({ label: qsTr("Back to Home"),            shortcut: "",
                         group: "Workspace",
                         action: function() {
                             if (!viewPort.isClean) confirmHomeDialog.open()
@@ -2158,7 +2158,7 @@ Rectangle {
             for (var i = 0; i < wsList.length; i++) {
                 (function(name) {
                     cmds.push({
-                        label: "Switch to workspace: " + name,
+                        label: qsTr("Switch to workspace: ") + name,
                         group: "Open Workspace",
                         action: function() { root._openWorkspaceWithAutosave(name) }
                     })
@@ -2166,16 +2166,16 @@ Rectangle {
             }
 
             // ── Desktop actions ──────────────────────────────────────────────
-            cmds.push({ label: "New Desktop",             shortcut: "Ctrl+Shift+N",
+            cmds.push({ label: qsTr("New Desktop"),             shortcut: "Ctrl+Shift+N",
                         group: "Desktop",
                         action: function() { DesktopManager.addDesktop("") } })
-            cmds.push({ label: "Next Desktop",            shortcut: "Ctrl+→",
+            cmds.push({ label: qsTr("Next Desktop"),            shortcut: "Ctrl+→",
                         group: "Desktop",
                         action: function() { DesktopManager.nextDesktop() } })
-            cmds.push({ label: "Previous Desktop",        shortcut: "Ctrl+←",
+            cmds.push({ label: qsTr("Previous Desktop"),        shortcut: "Ctrl+←",
                         group: "Desktop",
                         action: function() { DesktopManager.previousDesktop() } })
-            cmds.push({ label: "Show Desktop Overview",   shortcut: "Ctrl+Tab",
+            cmds.push({ label: qsTr("Show Desktop Overview"),   shortcut: "Ctrl+Tab",
                         group: "Desktop",
                         action: function() { desktopOverview.open() } })
 
@@ -2184,7 +2184,7 @@ Rectangle {
             for (var j = 0; j < dlist.length; j++) {
                 (function(d) {
                     cmds.push({
-                        label: "Switch to desktop: " + d.name,
+                        label: qsTr("Switch to desktop: ") + d.name,
                         group: "Switch Desktop",
                         action: function() { DesktopManager.switchToDesktop(d.id) }
                     })
@@ -2192,10 +2192,10 @@ Rectangle {
             }
 
             // ── View / tools ─────────────────────────────────────────────────
-            cmds.push({ label: "Open Settings…",          shortcut: "",
+            cmds.push({ label: qsTr("Open Settings…"),          shortcut: "",
                         group: "View",
                         action: function() { settingsPopup.open() } })
-            cmds.push({ label: "Toggle Grid Snap",        shortcut: "G",
+            cmds.push({ label: qsTr("Toggle Grid Snap"),        shortcut: "G",
                         group: "View",
                         action: function() { GlobalProperties.snapEnabled = !GlobalProperties.snapEnabled } })
 
@@ -2548,7 +2548,7 @@ Rectangle {
                     Column {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 2
-                        Text { text: "Rename Workspace"; font.pixelSize: 14; font.bold: true; color: ThemeManager.textColor }
+                        Text { text: qsTr("Rename Workspace"); font.pixelSize: 14; font.bold: true; color: ThemeManager.textColor }
                         Text { text: "New name for \"" + renameWorkspaceDialog.oldName + "\""
                                font.pixelSize: 11; color: ThemeManager.textSecondaryColor; elide: Text.ElideRight; width: 280 }
                     }
@@ -2593,7 +2593,7 @@ Rectangle {
                             width: 80; height: 36; radius: 6
                             color: "transparent"
                             border.color: ThemeManager.borderColor; border.width: 1
-                            Text { anchors.centerIn: parent; text: "Cancel"
+                            Text { anchors.centerIn: parent; text: qsTr("Cancel")
                                    color: ThemeManager.textSecondaryColor; font.pixelSize: 12 }
                             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
                                         hoverEnabled: true; onClicked: renameWorkspaceDialog.close() }
@@ -2601,7 +2601,7 @@ Rectangle {
                         Rectangle {
                             width: 90; height: 36; radius: 6
                             color: ThemeManager.primaryColor
-                            Text { anchors.centerIn: parent; text: "Rename"
+                            Text { anchors.centerIn: parent; text: qsTr("Rename")
                                    color: "white"; font.pixelSize: 12; font.bold: true }
                             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
                                         hoverEnabled: true; onClicked: renameWorkspaceDialog.doConfirm() }
@@ -2643,7 +2643,7 @@ Rectangle {
                     spacing: 14
                     ColorIcon { source: Icons.alertOutline; color: ThemeManager.dangerColor; width: 22; height: 22
                                 anchors.verticalCenter: parent.verticalCenter }
-                    Text { text: "Delete Workspace?"; font.pixelSize: 14; font.bold: true
+                    Text { text: qsTr("Delete Workspace?"); font.pixelSize: 14; font.bold: true
                            color: ThemeManager.textColor; anchors.verticalCenter: parent.verticalCenter }
                 }
             }
@@ -2665,7 +2665,7 @@ Rectangle {
                         Rectangle {
                             width: 80; height: 36; radius: 6
                             color: "transparent"; border.color: ThemeManager.borderColor; border.width: 1
-                            Text { anchors.centerIn: parent; text: "Cancel"
+                            Text { anchors.centerIn: parent; text: qsTr("Cancel")
                                    color: ThemeManager.textSecondaryColor; font.pixelSize: 12 }
                             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
                                         hoverEnabled: true; onClicked: confirmDeleteDialog.close() }
@@ -2673,7 +2673,7 @@ Rectangle {
                         Rectangle {
                             width: 90; height: 36; radius: 6
                             color: ThemeManager.dangerColor
-                            Text { anchors.centerIn: parent; text: "Delete"
+                            Text { anchors.centerIn: parent; text: qsTr("Delete")
                                    color: "white"; font.pixelSize: 12; font.bold: true }
                             MouseArea {
                                 anchors.fill: parent; cursorShape: Qt.PointingHandCursor; hoverEnabled: true
@@ -2696,7 +2696,7 @@ Rectangle {
     FileDialog {
         id: exportWorkspaceDialog
         property string pendingName: ""
-        title: "Export Workspace"
+        title: qsTr("Export Workspace")
         fileMode: FileDialog.SaveFile
         nameFilters: ["Valkyrie Workspace (*.json)"]
         defaultSuffix: "json"
@@ -2803,13 +2803,13 @@ Rectangle {
                         spacing: 2
 
                         Text {
-                            text:           "Save Project"
+                            text: qsTr("Save Project")
                             font.pixelSize: 14
                             font.bold:      true
                             color:          ThemeManager.textColor
                         }
                         Text {
-                            text:           "Enter a name for this workspace"
+                            text: qsTr("Enter a name for this workspace")
                             font.pixelSize: 11
                             color:          ThemeManager.textSecondaryColor
                         }
@@ -2870,7 +2870,7 @@ Rectangle {
 
                             Text {
                                 visible:        parent.text === ""
-                                text:           "Project name..."
+                                text: qsTr("Project name...")
                                 color:          ThemeManager.textSecondaryColor
                                 font.pixelSize: 13
                                 anchors.verticalCenter: parent.verticalCenter
@@ -2896,7 +2896,7 @@ Rectangle {
 
                             Text {
                                 anchors.centerIn: parent
-                                text:           "Cancel"
+                                text: qsTr("Cancel")
                                 color:          ThemeManager.textSecondaryColor
                                 font.pixelSize: 12
                             }
@@ -2923,7 +2923,7 @@ Rectangle {
 
                             Text {
                                 anchors.centerIn: parent
-                                text:           "Save"
+                                text: qsTr("Save")
                                 color:          "white"
                                 font.pixelSize: 12
                                 font.bold:      true
@@ -3014,13 +3014,13 @@ Rectangle {
                         spacing: 2
 
                         Text {
-                            text:           "Open Project"
+                            text: qsTr("Open Project")
                             font.pixelSize: 14
                             font.bold:      true
                             color:          ThemeManager.textColor
                         }
                         Text {
-                            text:           "Select a saved workspace"
+                            text: qsTr("Select a saved workspace")
                             font.pixelSize: 11
                             color:          ThemeManager.textSecondaryColor
                         }
@@ -3083,7 +3083,7 @@ Rectangle {
 
                                 Text {
                                     visible: parent.text === ""
-                                    text: "Search workspaces…"
+                                    text: qsTr("Search workspaces…")
                                     color: ThemeManager.textSecondaryColor
                                     font.pixelSize: 12
                                     anchors.verticalCenter: parent.verticalCenter
@@ -3095,7 +3095,7 @@ Rectangle {
                     Row {
                         spacing: 4
                         Repeater {
-                            model: [{ id: "name", label: "Name" }, { id: "modified", label: "Modified" }]
+                            model: [{ id: "name", label: qsTr("Name") }, { id: "modified", label: qsTr("Modified") }]
                             delegate: Rectangle {
                                 readonly property bool active: openWorkspaceDialog.sortMode === modelData.id
                                 width: 70; height: 32; radius: 6
@@ -3154,7 +3154,7 @@ Rectangle {
                                 opacity: 0.4
                             }
                             Text {
-                                text:           "No saved projects yet"
+                                text: qsTr("No saved projects yet")
                                 color:          ThemeManager.textSecondaryColor
                                 font.pixelSize: 12
                                 anchors.horizontalCenter: parent.horizontalCenter
@@ -3333,7 +3333,7 @@ Rectangle {
 
                             Text {
                                 anchors.centerIn: parent
-                                text:           "Cancel"
+                                text: qsTr("Cancel")
                                 color:          ThemeManager.textSecondaryColor
                                 font.pixelSize: 12
                             }
@@ -3394,7 +3394,7 @@ Rectangle {
                     }
 
                     Text {
-                        text:           "New Project"
+                        text: qsTr("New Project")
                         font.pixelSize: 14
                         font.bold:      true
                         color:          ThemeManager.textColor
@@ -3427,7 +3427,7 @@ Rectangle {
 
                     Text {
                         width: parent.width
-                        text: "This project has unsaved changes. They will be permanently lost if you create a new project."
+                        text: qsTr("This project has unsaved changes. They will be permanently lost if you create a new project.")
                         color:          ThemeManager.textSecondaryColor
                         font.pixelSize: 13
                         lineHeight:     1.5
@@ -3451,7 +3451,7 @@ Rectangle {
 
                             Text {
                                 anchors.centerIn: parent
-                                text:           "Cancel"
+                                text: qsTr("Cancel")
                                 color:          ThemeManager.textSecondaryColor
                                 font.pixelSize: 12
                             }
@@ -3473,7 +3473,7 @@ Rectangle {
 
                             Text {
                                 anchors.centerIn: parent
-                                text:           "Discard & New"
+                                text: qsTr("Discard & New")
                                 color:          "white"
                                 font.pixelSize: 12
                                 font.bold:      true
@@ -3549,7 +3549,7 @@ Rectangle {
                     }
 
                     Text {
-                        text:           "Back to Home"
+                        text: qsTr("Back to Home")
                         font.pixelSize: 14
                         font.bold:      true
                         color:          ThemeManager.textColor
@@ -3582,7 +3582,7 @@ Rectangle {
 
                     Text {
                         width: parent.width
-                        text: "This project has unsaved changes. They will be lost if you go back to the home screen."
+                        text: qsTr("This project has unsaved changes. They will be lost if you go back to the home screen.")
                         color:          ThemeManager.textSecondaryColor
                         font.pixelSize: 13
                         lineHeight:     1.5
@@ -3606,7 +3606,7 @@ Rectangle {
 
                             Text {
                                 anchors.centerIn: parent
-                                text:           "Cancel"
+                                text: qsTr("Cancel")
                                 color:          ThemeManager.textSecondaryColor
                                 font.pixelSize: 12
                             }
@@ -3628,7 +3628,7 @@ Rectangle {
 
                             Text {
                                 anchors.centerIn: parent
-                                text:           "Save & Exit"
+                                text: qsTr("Save & Exit")
                                 color:          "white"
                                 font.pixelSize: 12
                                 font.bold:      true
@@ -3659,7 +3659,7 @@ Rectangle {
 
                             Text {
                                 anchors.centerIn: parent
-                                text:           "Discard & Exit"
+                                text: qsTr("Discard & Exit")
                                 color:          "white"
                                 font.pixelSize: 12
                                 font.bold:      true
@@ -3729,7 +3729,7 @@ Rectangle {
                         spacing: 2
 
                         Text {
-                            text:           "Recover Autosave?"
+                            text: qsTr("Recover Autosave?")
                             font.pixelSize: 14
                             font.bold:      true
                             color:          ThemeManager.textColor
@@ -3770,7 +3770,7 @@ Rectangle {
 
                         Text {
                             anchors.centerIn: parent
-                            text:           "Discard"
+                            text: qsTr("Discard")
                             color:          ThemeManager.textSecondaryColor
                             font.pixelSize: 12
                         }
@@ -3801,7 +3801,7 @@ Rectangle {
 
                         Text {
                             anchors.centerIn: parent
-                            text:           "Recover"
+                            text: qsTr("Recover")
                             color:          "white"
                             font.pixelSize: 12
                             font.bold:      true
@@ -4100,7 +4100,7 @@ Rectangle {
                 }
                 Row {
                     spacing: 3
-                    Text { text: "drop on canvas"; font.pixelSize: 9; color: "white"; opacity: 0.7 }
+                    Text { text: qsTr("drop on canvas"); font.pixelSize: 9; color: "white"; opacity: 0.7 }
                     SvgIcon { width: 9; height: 9; source: Icons.chevronRight; color: "white"; opacity: 0.7 }
                 }
             }
@@ -4292,7 +4292,7 @@ Rectangle {
                     }
                 }
                 Text {
-                    text: "Clonando Nós..."
+                    text: qsTr("Clonando Nós...")
                     color: "white"; font.pixelSize: 11; font.bold: true
                     anchors.horizontalCenter: parent.horizontalCenter
                 }

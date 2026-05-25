@@ -49,7 +49,7 @@ Popup {
                     anchors.verticalCenter: parent.verticalCenter
                 }
                 Text {
-                    text: "Desktop limit"
+                    text: qsTr("Desktop limit")
                     font.pixelSize: 14
                     font.bold: true
                     color: ThemeManager.textColor
@@ -71,7 +71,7 @@ Popup {
 
                 Text {
                     width: parent.width
-                    text: "You are about to create more than " + DesktopManager.softLimit
+                    text: qsTr("You are about to create more than ") + DesktopManager.softLimit
                           + " virtual desktops. Having many desktops may impact performance and memory."
                     color: ThemeManager.textSecondaryColor
                     font.pixelSize: 13
@@ -80,7 +80,7 @@ Popup {
                 }
                 Text {
                     width: parent.width
-                    text: "Click OK to continue (this warning won't appear again in this session)."
+                    text: qsTr("Click OK to continue (this warning won't appear again in this session).")
                     color: ThemeManager.textSecondaryColor
                     font.pixelSize: 11
                     opacity: 0.7
@@ -101,7 +101,7 @@ Popup {
                                    : "transparent"
                         border.color: ThemeManager.borderColor
                         border.width: 1
-                        Text { anchors.centerIn: parent; text: "Cancel"
+                        Text { anchors.centerIn: parent; text: qsTr("Cancel")
                                color: ThemeManager.textSecondaryColor; font.pixelSize: 12 }
                         MouseArea {
                             id: cancelHover
@@ -117,7 +117,7 @@ Popup {
                         color: okHover.containsMouse
                                    ? Qt.lighter("#ff9800", 1.1)
                                    : "#ff9800"
-                        Text { anchors.centerIn: parent; text: "OK, create anyway"
+                        Text { anchors.centerIn: parent; text: qsTr("OK, create anyway")
                                color: "white"; font.pixelSize: 12; font.bold: true }
                         MouseArea {
                             id: okHover

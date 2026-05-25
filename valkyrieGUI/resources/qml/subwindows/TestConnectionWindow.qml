@@ -59,7 +59,7 @@ Rectangle {
             TextField {
                 id: cmdLine
                 Layout.fillWidth: true
-                placeholderText: "Command..."
+                placeholderText: qsTr("Command...")
                 rightPadding: clearBtn.visible ? clearBtn.width + 4 : 0
 
                 AppBarButton {
@@ -76,7 +76,7 @@ Rectangle {
 
             Button {
                 id: btnAction
-                text: "Send"
+                text: qsTr("Send")
                 onClicked: {
                     let cmdSplits = cmdLine.text.split(" ");
                     midClient.sendCommand(cmdSplits[0], cmdSplits.slice(1,cmdSplits.length))
@@ -115,7 +115,7 @@ Rectangle {
                 Layout.alignment: Qt.AlignVCenter
                 color: ThemeManager.textColor
                 Layout.fillWidth: true
-                text: "Initiated"
+                text: qsTr("Initiated")
             }
 
             TextField {
@@ -128,7 +128,7 @@ Rectangle {
             Button {
                 id: btnConnIp
                 Layout.preferredHeight: stateText.height
-                text: "Ok"
+                text: qsTr("Ok")
                 onClicked: {
                     midClient.retryConn(ipConn.text, 6969);
                 }

@@ -118,7 +118,7 @@ Item {
                         anchors.left: parent.left; anchors.leftMargin: 8
                         anchors.right: parent.right; anchors.rightMargin: 22
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "Search files…"; font.pixelSize: 12
+                        text: qsTr("Search files…"); font.pixelSize: 12
                         color: ThemeManager.textColor; opacity: 0.3
                         visible: !searchInput.text.length && !searchInput.activeFocus
                     }
@@ -256,7 +256,7 @@ Item {
 
                         Text {
                             visible: index < root.breadcrumbLabels.length - 1
-                            text: " › "; font.pixelSize: 10
+                            text: qsTr(" › "); font.pixelSize: 10
                             color: ThemeManager.textColor; opacity: 0.35
                             anchors.verticalCenter: parent.verticalCenter
                         }
@@ -279,7 +279,7 @@ Item {
                     width: 28; height: 28; anchors.horizontalCenter: parent.horizontalCenter
                 }
                 Text {
-                    text: "No files found"
+                    text: qsTr("No files found")
                     font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.3
                     anchors.horizontalCenter: parent.horizontalCenter
                 }

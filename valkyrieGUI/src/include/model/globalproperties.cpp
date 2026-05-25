@@ -101,6 +101,7 @@ void GlobalProperties::saveProperties() {
     root["ui"]       = uiObj;
     root["snap"]     = snapObj;
     root["autosave"] = autosaveObj;
+    root["language"] = m_language;
 
     QFile file(settingsFilePath());
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
@@ -155,6 +156,8 @@ void GlobalProperties::loadProperties() {
     const QJsonObject autosaveObj = root["autosave"].toObject();
     m_autosaveEnabled     = autosaveObj["enabled"].toBool(false);
     m_autosaveIntervalMin = autosaveObj["intervalMin"].toInt(5);
+
+    m_language = root["language"].toString(QStringLiteral("en"));
 }
 
 // ── Getters ───────────────────────────────────────────────────────────────────
@@ -184,6 +187,7 @@ bool    GlobalProperties::snapResizeEnabled() const { return m_snapResizeEnabled
 QString GlobalProperties::snapGuideColor()    const { return m_snapGuideColor; }
 bool    GlobalProperties::autosaveEnabled()    const { return m_autosaveEnabled; }
 int     GlobalProperties::autosaveIntervalMin() const { return m_autosaveIntervalMin; }
+QString GlobalProperties::language()           const { return m_language; }
 
 // ── Setters ───────────────────────────────────────────────────────────────────
 
@@ -276,4 +280,7 @@ void GlobalProperties::setAutosaveEnabled(bool value) {
 void GlobalProperties::setAutosaveIntervalMin(int value) {
     if (value < 1) value = 1;
     if (m_autosaveIntervalMin != value) { m_autosaveIntervalMin = value; saveProperties(); emit autosaveIntervalMinChanged(); }
+}
+void GlobalProperties::setLanguage(const QString& code) {
+    if (m_language != code) { m_language = code; saveProperties(); emit languageChanged(); }
 }

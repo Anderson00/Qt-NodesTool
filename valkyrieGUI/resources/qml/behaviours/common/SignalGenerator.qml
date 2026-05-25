@@ -138,7 +138,7 @@ Item {
                 Column {
                     spacing: 1
                     Text {
-                        text: "Live"; font.pixelSize: 8
+                        text: qsTr("Live"); font.pixelSize: 8
                         color: ThemeManager.textSecondaryColor
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
@@ -156,7 +156,7 @@ Item {
                 Column {
                     spacing: 1
                     Text {
-                        text: "Samples"; font.pixelSize: 8
+                        text: qsTr("Samples"); font.pixelSize: 8
                         color: ThemeManager.textSecondaryColor
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
@@ -221,7 +221,7 @@ Item {
         // -- Parameters -----------------------------------------------------
         NumericInputField {
             Layout.fillWidth: true; implicitHeight: 34
-            label: "Hz"; value: root.frequency
+            label: qsTr("Hz"); value: root.frequency
             from: 0.001; to: 10000; stepSize: 0.1; decimals: 3
             accentColor: root._wc
             onValueModified: function(newValue) { root.frequency = newValue; resetChart() }
@@ -229,7 +229,7 @@ Item {
 
         NumericInputField {
             Layout.fillWidth: true; implicitHeight: 34
-            label: "A"; value: root.amplitude
+            label: qsTr("A"); value: root.amplitude
             from: 0; to: 1e6; stepSize: 0.1; decimals: 3
             accentColor: root._wc
             onValueModified: function(newValue) { root.amplitude = newValue }
@@ -237,7 +237,7 @@ Item {
 
         NumericInputField {
             Layout.fillWidth: true; implicitHeight: 34
-            label: "DC"; value: root.dcOffset
+            label: qsTr("DC"); value: root.dcOffset
             from: -1e6; to: 1e6; stepSize: 0.1; decimals: 3
             accentColor: ThemeManager.textSecondaryColor
             onValueModified: function(newValue) { root.dcOffset = newValue }
@@ -245,7 +245,7 @@ Item {
 
         NumericInputField {
             Layout.fillWidth: true; implicitHeight: 34
-            label: "φ"; value: root.phase; suffix: "°"
+            label: qsTr("φ"); value: root.phase; suffix: "°"
             from: 0; to: 360; stepSize: 1; decimals: 1; showBar: true
             accentColor: root._wc
             onValueModified: function(newValue) { root.phase = newValue }
@@ -254,7 +254,7 @@ Item {
         NumericInputField {
             visible: root.waveMode === 1
             Layout.fillWidth: true; implicitHeight: 34
-            label: "D"; value: root.dutyCycle; suffix: "%"
+            label: qsTr("D"); value: root.dutyCycle; suffix: "%"
             from: 1; to: 99; stepSize: 1; decimals: 1; showBar: true
             accentColor: root._wc
             onValueModified: function(newValue) { root.dutyCycle = newValue }
@@ -284,7 +284,7 @@ Item {
 
             NewButton {
                 Layout.preferredWidth: 48; Layout.preferredHeight: 32
-                variant: "outlined"; text: "Step"
+                variant: "outlined"; text: qsTr("Step")
                 backgroundColor: root.waveColors[root.waveMode]
                 onClicked: {
                     root._t += 1.0 / Math.max(0.01, root.frequency * 20.0)

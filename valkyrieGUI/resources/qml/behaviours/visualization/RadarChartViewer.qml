@@ -122,7 +122,7 @@ Item {
                 spacing: 6
 
                 Text {
-                    text: "Radar Chart"
+                    text: qsTr("Radar Chart")
                     color: ThemeManager.textColor
                     font.pixelSize: 11
                     font.bold: true
@@ -142,7 +142,7 @@ Item {
                     }
                 }
                 Text {
-                    text: "Grid"
+                    text: qsTr("Grid")
                     color: ThemeManager.textSecondaryColor
                     font.pixelSize: 9
                     Layout.alignment: Qt.AlignVCenter

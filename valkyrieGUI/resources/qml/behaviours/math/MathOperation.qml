@@ -82,7 +82,7 @@ Item {
         // -- A input --------------------------------------------------------
         NumericInputField {
             Layout.fillWidth: true; implicitHeight: 36
-            label: "A"
+            label: qsTr("A")
             value: behaviourObject ? behaviourObject.valueA : 0
             from: -1e6; to: 1e6
             stepSize: 1.0; decimals: 2
@@ -94,7 +94,7 @@ Item {
         // -- B input --------------------------------------------------------
         NumericInputField {
             Layout.fillWidth: true; implicitHeight: 36
-            label: "B"
+            label: qsTr("B")
             value: behaviourObject ? behaviourObject.valueB : 0
             from: -1e6; to: 1e6
             stepSize: 1.0; decimals: 2

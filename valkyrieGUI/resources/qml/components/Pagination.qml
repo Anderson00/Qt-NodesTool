@@ -64,7 +64,7 @@ Item {
 
         // ← Prev
         NavBtn {
-            label: "‹"; enabled: root.currentPage > 1
+            label: qsTr("‹"); enabled: root.currentPage > 1
             accentColor: root.accentColor; hoverColor: root.hoverColor
             borderColor: root.borderColor; textColor: root.textColor
             btnSize: root.btnSize; fontSize: root.fontSize + 2; radius: root.radius
@@ -82,7 +82,7 @@ Item {
                 Text {
                     visible: modelData === -1
                     anchors.centerIn: parent
-                    text: "…"; color: root.textColor; font.pixelSize: root.fontSize
+                    text: qsTr("…"); color: root.textColor; font.pixelSize: root.fontSize
                 }
 
                 // Page button
@@ -111,7 +111,7 @@ Item {
 
         // → Next
         NavBtn {
-            label: "›"; enabled: root.currentPage < root.totalPages
+            label: qsTr("›"); enabled: root.currentPage < root.totalPages
             accentColor: root.accentColor; hoverColor: root.hoverColor
             borderColor: root.borderColor; textColor: root.textColor
             btnSize: root.btnSize; fontSize: root.fontSize + 2; radius: root.radius

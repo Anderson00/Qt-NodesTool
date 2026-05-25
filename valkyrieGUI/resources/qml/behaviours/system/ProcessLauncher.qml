@@ -34,7 +34,7 @@ Item {
             Layout.fillWidth: true
             spacing: 6
             Text {
-                text: "Process Launcher"
+                text: qsTr("Process Launcher")
                 color: ThemeManager.textColor
                 font.pixelSize: 11
                 font.bold: true
@@ -56,7 +56,7 @@ Item {
             Layout.fillWidth: true
             spacing: 4
             Text {
-                text: "Cmd:"
+                text: qsTr("Cmd:")
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 9
                 Layout.alignment: Qt.AlignVCenter
@@ -64,7 +64,7 @@ Item {
             CustomTextField {
                 id: cmdField
                 Layout.fillWidth: true
-                placeholderText: "command / executable"
+                placeholderText: qsTr("command / executable")
             }
         }
 
@@ -73,7 +73,7 @@ Item {
             Layout.fillWidth: true
             spacing: 4
             Text {
-                text: "Args:"
+                text: qsTr("Args:")
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 9
                 Layout.alignment: Qt.AlignVCenter
@@ -81,7 +81,7 @@ Item {
             CustomTextField {
                 id: argsField
                 Layout.fillWidth: true
-                placeholderText: "arg1, arg2, ... (comma-separated)"
+                placeholderText: qsTr("arg1, arg2, ... (comma-separated)")
             }
         }
 
@@ -90,7 +90,7 @@ Item {
             Layout.fillWidth: true
             spacing: 4
             Text {
-                text: "Dir:"
+                text: qsTr("Dir:")
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 9
                 Layout.alignment: Qt.AlignVCenter
@@ -98,7 +98,7 @@ Item {
             CustomTextField {
                 id: wdirField
                 Layout.fillWidth: true
-                placeholderText: "working directory (optional)"
+                placeholderText: qsTr("working directory (optional)")
                 text: behaviourObject ? behaviourObject.workingDir : ""
                 onTextChanged: {
                     if (behaviourObject) behaviourObject.workingDir = text
@@ -115,7 +115,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 28
                 variant: "filled"
-                text: "Launch"
+                text: qsTr("Launch")
                 backgroundColor: ThemeManager.primaryColor
                 enabled: !running
                 onClicked: {
@@ -136,7 +136,7 @@ Item {
                 Layout.preferredWidth: 60
                 Layout.preferredHeight: 28
                 variant: "filled"
-                text: "Kill"
+                text: qsTr("Kill")
                 backgroundColor: "#e74c3c"
                 enabled: running
                 onClicked: { if (behaviourObject) behaviourObject.kill() }
@@ -156,7 +156,7 @@ Item {
                 Text {
                     id: exitLabel
                     anchors.centerIn: parent
-                    text: "exit: " + lastExit
+                    text: qsTr("exit: ") + lastExit
                     color: lastExit === 0 ? "#2ecc71" : "#e74c3c"
                     font.pixelSize: 9
                     font.bold: true

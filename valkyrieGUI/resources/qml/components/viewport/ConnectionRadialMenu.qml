@@ -131,7 +131,7 @@ Popup {
             spacing: 8
             
             Text {
-                text: "Anotação da Conexão"
+                text: qsTr("Anotação da Conexão")
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 14
                 font.bold: true
@@ -151,7 +151,7 @@ Popup {
                     id: commentInput
                     anchors.fill: parent
 
-                    placeholderText: "Escreva suas anotações aqui..."
+                    placeholderText: qsTr("Escreva suas anotações aqui...")
                     color: ThemeManager.textColor
                     font.pixelSize: 14
                     wrapMode: Text.Wrap
@@ -163,7 +163,7 @@ Popup {
                 Layout.alignment: Qt.AlignRight
                 Button {
                     id: saveBtn
-                    text: "Salvar Anotação"
+                    text: qsTr("Salvar Anotação")
                     background: Rectangle {
                         color: ThemeManager.primaryColor
                         radius: 6

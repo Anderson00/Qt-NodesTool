@@ -169,13 +169,13 @@ Item {
                 Rectangle {
                     width: 24; height: 24; radius: 4
                     color: yyBackArea.containsMouse ? Qt.rgba(1,1,1,0.08) : "transparent"
-                    Text { anchors.centerIn: parent; text: "«"; color: ThemeManager.textSecondaryColor; font.pixelSize: 11 }
+                    Text { anchors.centerIn: parent; text: qsTr("«"); color: ThemeManager.textSecondaryColor; font.pixelSize: 11 }
                     MouseArea { id: yyBackArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root._prevYear() }
                 }
                 Rectangle {
                     width: 24; height: 24; radius: 4
                     color: mBackArea.containsMouse ? Qt.rgba(1,1,1,0.08) : "transparent"
-                    Text { anchors.centerIn: parent; text: "‹"; color: ThemeManager.textColor; font.pixelSize: 16 }
+                    Text { anchors.centerIn: parent; text: qsTr("‹"); color: ThemeManager.textColor; font.pixelSize: 16 }
                     MouseArea { id: mBackArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root._prevMonth() }
                 }
 
@@ -195,13 +195,13 @@ Item {
                 Rectangle {
                     width: 24; height: 24; radius: 4
                     color: mFwdArea.containsMouse ? Qt.rgba(1,1,1,0.08) : "transparent"
-                    Text { anchors.centerIn: parent; text: "›"; color: ThemeManager.textColor; font.pixelSize: 16 }
+                    Text { anchors.centerIn: parent; text: qsTr("›"); color: ThemeManager.textColor; font.pixelSize: 16 }
                     MouseArea { id: mFwdArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root._nextMonth() }
                 }
                 Rectangle {
                     width: 24; height: 24; radius: 4
                     color: yyFwdArea.containsMouse ? Qt.rgba(1,1,1,0.08) : "transparent"
-                    Text { anchors.centerIn: parent; text: "»"; color: ThemeManager.textSecondaryColor; font.pixelSize: 11 }
+                    Text { anchors.centerIn: parent; text: qsTr("»"); color: ThemeManager.textSecondaryColor; font.pixelSize: 11 }
                     MouseArea { id: yyFwdArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root._nextYear() }
                 }
             }
@@ -271,7 +271,7 @@ Item {
                         Rectangle {
                             width: 22; height: 22; radius: 4
                             color: yBackA.containsMouse ? Qt.rgba(1,1,1,0.1) : "transparent"
-                            Text { anchors.centerIn: parent; text: "‹"; color: ThemeManager.textColor; font.pixelSize: 14 }
+                            Text { anchors.centerIn: parent; text: qsTr("‹"); color: ThemeManager.textColor; font.pixelSize: 14 }
                             MouseArea { id: yBackA; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root._viewYear-- }
                         }
                         Text {
@@ -282,7 +282,7 @@ Item {
                         Rectangle {
                             width: 22; height: 22; radius: 4
                             color: yFwdA.containsMouse ? Qt.rgba(1,1,1,0.1) : "transparent"
-                            Text { anchors.centerIn: parent; text: "›"; color: ThemeManager.textColor; font.pixelSize: 14 }
+                            Text { anchors.centerIn: parent; text: qsTr("›"); color: ThemeManager.textColor; font.pixelSize: 14 }
                             MouseArea { id: yFwdA; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root._viewYear++ }
                         }
                     }

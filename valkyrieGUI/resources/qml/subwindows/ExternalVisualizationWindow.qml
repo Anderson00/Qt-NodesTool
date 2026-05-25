@@ -13,7 +13,7 @@ Window {
     property var  nodesModel:   null
     property bool isPlaying:    false
     
-    title: "Valkyrie — External Visualization"
+    title: qsTr("Valkyrie — External Visualization")
     width:  1280
     height: 720
     minimumWidth: 400

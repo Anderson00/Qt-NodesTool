@@ -37,7 +37,7 @@ Item {
 
         // ── Title ─────────────────────────────────────────────────────────
         Text {
-            text: "JSON Parser"
+            text: qsTr("JSON Parser")
             color: ThemeManager.textColor
             font.pixelSize: 11
             font.bold: true
@@ -49,7 +49,7 @@ Item {
             spacing: 4
 
             Text {
-                text: "Path:"
+                text: qsTr("Path:")
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 10
                 Layout.alignment: Qt.AlignVCenter
@@ -58,7 +58,7 @@ Item {
             CustomTextField {
                 id: pathField
                 Layout.fillWidth: true
-                placeholderText: "e.g. data.items.0.name"
+                placeholderText: qsTr("e.g. data.items.0.name")
                 text: behaviourObject ? behaviourObject.currentPath : ""
                 onEditingFinished: {
                     if (behaviourObject)
@@ -86,7 +86,7 @@ Item {
                     spacing: 4
 
                     Text {
-                        text: "keys:"
+                        text: qsTr("keys:")
                         color: ThemeManager.textSecondaryColor
                         font.pixelSize: 9
                         anchors.verticalCenter: parent.verticalCenter
@@ -175,7 +175,7 @@ Item {
                 spacing: 6
 
                 Text {
-                    text: "Result:"
+                    text: qsTr("Result:")
                     color: ThemeManager.textSecondaryColor
                     font.pixelSize: 10
                     Layout.alignment: Qt.AlignVCenter

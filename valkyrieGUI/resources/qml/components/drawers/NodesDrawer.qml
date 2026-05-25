@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.14
 import App.Theme 1.0
 import App.NodeRegistry 1.0
 import App.Icons 1.0
+import App.Language 1.0
 import ".."
 
 Item {
@@ -52,6 +53,12 @@ Item {
         var data = NodeRegistry.discoverAll()
         root.categoryData = data
         root.categoryKeys = Object.keys(data)
+    }
+
+    // Reload node data when the language changes so node names are retranslated
+    Connections {
+        target: LanguageManager
+        function onLanguageChanged() { root._loadData() }
     }
 
     function _navigateToCategory(catName) {
@@ -129,7 +136,7 @@ Item {
                         anchors.left: parent.left; anchors.leftMargin: 8
                         anchors.right: parent.right; anchors.rightMargin: 22
                         anchors.verticalCenter: parent.verticalCenter
-                        text: root.navState === "root" ? "Search categories…" : "Search nodes…"
+                        text: root.navState === "root" ? qsTr("Search categories…") : qsTr("Search nodes…")
                         font.pixelSize: 12; color: ThemeManager.textColor; opacity: 0.3
                         visible: !searchInput.text.length && !searchInput.activeFocus
                     }
@@ -221,7 +228,7 @@ Item {
 
                         Text {
                             visible: index < root.breadcrumbArr.length - 1
-                            text: " › "; font.pixelSize: 10
+                            text: qsTr(" › "); font.pixelSize: 10
                             color: ThemeManager.textColor; opacity: 0.35
                             anchors.verticalCenter: parent.verticalCenter
                         }
@@ -328,7 +335,7 @@ Item {
                         width: 28; height: 28; anchors.horizontalCenter: parent.horizontalCenter
                     }
                     Text {
-                        text: "No categories"
+                        text: qsTr("No categories")
                         font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.3
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
@@ -427,7 +434,7 @@ Item {
                         width: 28; height: 28; anchors.horizontalCenter: parent.horizontalCenter
                     }
                     Text {
-                        text: root.currentInfos.length === 0 ? "Empty category" : "No results"
+                        text: root.currentInfos.length === 0 ? qsTr("Empty category") : qsTr("No results")
                         font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.3
                         anchors.horizontalCenter: parent.horizontalCenter
                     }

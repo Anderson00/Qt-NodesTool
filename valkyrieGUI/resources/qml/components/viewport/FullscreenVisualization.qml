@@ -26,7 +26,7 @@ Window {
     height: Screen.height
     color:  "#111111"
     visible: true
-    title:  "Valkyrie — Fullscreen Visualization"
+    title: qsTr("Valkyrie — Fullscreen Visualization")
     flags:  Qt.Window | Qt.FramelessWindowHint
 
     onVisibleChanged: {
@@ -132,7 +132,7 @@ Window {
         // ESC hint — bottom-center
         Text {
             anchors { bottom: parent.bottom; horizontalCenter: parent.horizontalCenter; bottomMargin: 16 }
-            text: "ESC  ·  fechar"
+            text: qsTr("ESC  ·  fechar")
             color: Qt.rgba(1, 1, 1, 0.18)
             font.pixelSize: 11; font.letterSpacing: 1.2
         }

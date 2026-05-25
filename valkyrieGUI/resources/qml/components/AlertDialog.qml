@@ -18,7 +18,7 @@ import App.Theme 1.0
 Popup {
     id: root
 
-    property string title:        "Alert"
+    property string title: qsTr("Alert")
     property string message:      ""
     property string type:         "info"   // info | warning | danger | success
     property string confirmLabel: "OK"

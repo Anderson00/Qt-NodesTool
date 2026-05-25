@@ -111,7 +111,7 @@ Item {
         // -- Formula display ------------------------------------------------
         Text {
             Layout.alignment: Qt.AlignHCenter
-            text: "[" + previewInMin.toFixed(2) + ", " + previewInMax.toFixed(2) + "]  ?  [" +
+            text: qsTr("[") + previewInMin.toFixed(2) + ", " + previewInMax.toFixed(2) + "]  ?  [" +
                   previewOutMin.toFixed(2) + ", " + previewOutMax.toFixed(2) + "]"
             font.pixelSize: 10; font.family: "Consolas"
             color: ThemeManager.textSecondaryColor
@@ -120,7 +120,7 @@ Item {
         // -- Input value ----------------------------------------------------
         NumericInputField {
             Layout.fillWidth: true; implicitHeight: 36
-            label: "In"; value: root.previewInput
+            label: qsTr("In"); value: root.previewInput
             from: -1e9; to: 1e9; stepSize: 1.0; decimals: 4
             showBar: true; accentColor: "#3498db"
             onValueModified: function(newValue) {
@@ -134,20 +134,20 @@ Item {
             Layout.fillWidth: true; implicitHeight: 1; color: ThemeManager.borderColor; opacity: 0.3
         }
 
-        Text { text: "Input Range"; font.pixelSize: 8; color: ThemeManager.textSecondaryColor }
+        Text { text: qsTr("Input Range"); font.pixelSize: 8; color: ThemeManager.textSecondaryColor }
 
         RowLayout {
             Layout.fillWidth: true; spacing: 4
             NumericInputField {
                 Layout.fillWidth: true; implicitHeight: 34
-                label: "Min"; value: root.previewInMin
+                label: qsTr("Min"); value: root.previewInMin
                 from: -1e9; to: 1e9; stepSize: 1; decimals: 4
                 accentColor: "#3498db"
                 onValueModified: function(newValue) { root.previewInMin = newValue; if (behaviourObject) behaviourObject.setInMin(newValue) }
             }
             NumericInputField {
                 Layout.fillWidth: true; implicitHeight: 34
-                label: "Max"; value: root.previewInMax
+                label: qsTr("Max"); value: root.previewInMax
                 from: -1e9; to: 1e9; stepSize: 1; decimals: 4
                 accentColor: "#3498db"
                 onValueModified: function(newValue) { root.previewInMax = newValue; if (behaviourObject) behaviourObject.setInMax(newValue) }
@@ -155,20 +155,20 @@ Item {
         }
 
         // -- Output range ---------------------------------------------------
-        Text { text: "Output Range"; font.pixelSize: 8; color: ThemeManager.textSecondaryColor }
+        Text { text: qsTr("Output Range"); font.pixelSize: 8; color: ThemeManager.textSecondaryColor }
 
         RowLayout {
             Layout.fillWidth: true; spacing: 4
             NumericInputField {
                 Layout.fillWidth: true; implicitHeight: 34
-                label: "Min"; value: root.previewOutMin
+                label: qsTr("Min"); value: root.previewOutMin
                 from: -1e9; to: 1e9; stepSize: 0.1; decimals: 4
                 accentColor: ThemeManager.primaryColor
                 onValueModified: function(newValue) { root.previewOutMin = newValue; if (behaviourObject) behaviourObject.setOutMin(newValue) }
             }
             NumericInputField {
                 Layout.fillWidth: true; implicitHeight: 34
-                label: "Max"; value: root.previewOutMax
+                label: qsTr("Max"); value: root.previewOutMax
                 from: -1e9; to: 1e9; stepSize: 0.1; decimals: 4
                 accentColor: ThemeManager.primaryColor
                 onValueModified: function(newValue) { root.previewOutMax = newValue; if (behaviourObject) behaviourObject.setOutMax(newValue) }
@@ -183,7 +183,7 @@ Item {
                 onCheckedChanged: { root.clampOut = checked; if (behaviourObject) behaviourObject.setClamp(checked) }
             }
             Text {
-                text: "Clamp output to range"
+                text: qsTr("Clamp output to range")
                 font.pixelSize: 10; color: ThemeManager.textSecondaryColor
                 Layout.alignment: Qt.AlignVCenter
             }

@@ -88,7 +88,7 @@ Rectangle {
                 icon.color:  ThemeManager.textColor
                 icon.width: 13; icon.height: 13
                 onClicked: root.detachRequested()
-                AppToolTip { text: "Abrir em Janela Externa"; visible: parent.hovered }
+                AppToolTip { text: qsTr("Abrir em Janela Externa"); visible: parent.hovered }
             }
 
             AppBarButton {
@@ -96,7 +96,7 @@ Rectangle {
                 icon.source: Icons.close
                 icon.color:  ThemeManager.textColor; icon.width: 12; icon.height: 12
                 onClicked: root.closeRequested()
-                AppToolTip { text: "Fechar"; visible: parent.hovered }
+                AppToolTip { text: qsTr("Fechar"); visible: parent.hovered }
             }
         }
 

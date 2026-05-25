@@ -23,7 +23,7 @@ Item {
             border.width: 1; border.color: Qt.rgba(1, 0.6, 0, 0.3)
             RowLayout {
                 anchors.fill: parent; anchors.margins: 8
-                Text { text: "Value"; font.pixelSize: 11; color: ThemeManager.textSecondaryColor; Layout.fillWidth: true }
+                Text { text: qsTr("Value"); font.pixelSize: 11; color: ThemeManager.textSecondaryColor; Layout.fillWidth: true }
                 Text {
                     text: behaviourObject ? behaviourObject.switchValue : "0"
                     font.pixelSize: 15; font.bold: true; font.family: "Consolas"; color: "#FF9800"
@@ -61,7 +61,7 @@ Item {
         // Value spinner
         NumericInputField {
             Layout.fillWidth: true; implicitHeight: 32
-            label: "Set Value"
+            label: qsTr("Set Value")
             value: behaviourObject ? behaviourObject.switchValue : 0
             from: 0; to: 100; stepSize: 1; decimals: 0; showBar: false
             accentColor: "#FF9800"

@@ -27,7 +27,7 @@ Item {
                 anchors.centerIn: parent; spacing: 12
                 Column {
                     spacing: 1
-                    Text { text: "Clamped"; font.pixelSize: 8; color: ThemeManager.textSecondaryColor; anchors.horizontalCenter: parent.horizontalCenter }
+                    Text { text: qsTr("Clamped"); font.pixelSize: 8; color: ThemeManager.textSecondaryColor; anchors.horizontalCenter: parent.horizontalCenter }
                     Text {
                         text: behaviourObject ? behaviourObject.clampedValue.toFixed(3) : "0"
                         font.pixelSize: 16; font.family: "Consolas"; font.bold: true
@@ -39,7 +39,7 @@ Item {
 
                 Column {
                     spacing: 1
-                    Text { text: "Normalized"; font.pixelSize: 8; color: ThemeManager.textSecondaryColor; anchors.horizontalCenter: parent.horizontalCenter }
+                    Text { text: qsTr("Normalized"); font.pixelSize: 8; color: ThemeManager.textSecondaryColor; anchors.horizontalCenter: parent.horizontalCenter }
                     Text {
                         text: behaviourObject ? behaviourObject.normalized.toFixed(4) : "0"
                         font.pixelSize: 16; font.family: "Consolas"; font.bold: true
@@ -64,7 +64,7 @@ Item {
         // -- Min input ------------------------------------------------------
         NumericInputField {
             Layout.fillWidth: true; implicitHeight: 36
-            label: "Min"
+            label: qsTr("Min")
             value: behaviourObject ? behaviourObject.rangeMin : 0
             from: -1e6; to: 1e6
             stepSize: 1.0; decimals: 2
@@ -76,7 +76,7 @@ Item {
         // -- Max input ------------------------------------------------------
         NumericInputField {
             Layout.fillWidth: true; implicitHeight: 36
-            label: "Max"
+            label: qsTr("Max")
             value: behaviourObject ? behaviourObject.rangeMax : 1
             from: -1e6; to: 1e6
             stepSize: 1.0; decimals: 2

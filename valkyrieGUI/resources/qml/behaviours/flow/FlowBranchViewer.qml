@@ -63,7 +63,7 @@ Item {
                 Behavior on color { ColorAnimation { duration: 150 } }
                 RowLayout { anchors.centerIn: parent; spacing: 4
                     SvgIcon { width: 11; height: 11; source: Icons.play; color: "#00C853" }
-                    Text { text: "TRUE"; font.pixelSize: 11; font.bold: true; color: "#00C853" }
+                    Text { text: qsTr("TRUE"); font.pixelSize: 11; font.bold: true; color: "#00C853" }
                 }
             }
 
@@ -74,7 +74,7 @@ Item {
                 Behavior on color { ColorAnimation { duration: 150 } }
                 RowLayout { anchors.centerIn: parent; spacing: 4
                     SvgIcon { width: 11; height: 11; source: Icons.play; color: "#FF1744" }
-                    Text { text: "FALSE"; font.pixelSize: 11; font.bold: true; color: "#FF1744" }
+                    Text { text: qsTr("FALSE"); font.pixelSize: 11; font.bold: true; color: "#FF1744" }
                 }
             }
         }
@@ -82,7 +82,7 @@ Item {
         // Manual condition toggle
         RowLayout {
             Layout.fillWidth: true
-            Text { text: "Condition"; font.pixelSize: 11; color: ThemeManager.textSecondaryColor; Layout.fillWidth: true }
+            Text { text: qsTr("Condition"); font.pixelSize: 11; color: ThemeManager.textSecondaryColor; Layout.fillWidth: true }
             CustomSwitch {
                 checked: behaviourObject ? behaviourObject.condition : false
                 onToggled: if (behaviourObject) behaviourObject.setCondition(checked)

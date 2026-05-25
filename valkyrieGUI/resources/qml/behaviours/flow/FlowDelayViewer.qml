@@ -48,7 +48,7 @@ Item {
         // Delay input
         NumericInputField {
             Layout.fillWidth: true; implicitHeight: 36
-            label: "Delay (ms)"
+            label: qsTr("Delay (ms)")
             value: behaviourObject ? behaviourObject.delayMs : 1000
             from: 0; to: 60000; stepSize: 100; decimals: 0; showBar: false
             accentColor: "#FF9800"

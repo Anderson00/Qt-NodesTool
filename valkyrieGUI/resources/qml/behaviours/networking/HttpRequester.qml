@@ -46,7 +46,7 @@ Item {
                 spacing: 6
 
                 Text {
-                    text: "HTTP Requester"
+                    text: qsTr("HTTP Requester")
                     color: ThemeManager.textColor
                     font.pixelSize: 11
                     font.bold: true
@@ -111,7 +111,7 @@ Item {
                     Layout.preferredWidth: 52
                     Layout.fillHeight: true
                     variant: "filled"
-                    text: "Send"
+                    text: qsTr("Send")
                     backgroundColor: ThemeManager.primaryColor
                     onClicked: {
                         if (!behaviourObject) return
@@ -150,7 +150,7 @@ Item {
                     spacing: 4
 
                     Text {
-                        text: "Headers"
+                        text: qsTr("Headers")
                         font.pixelSize: 9
                         color: ThemeManager.textSecondaryColor
                         font.bold: true
@@ -177,13 +177,13 @@ Item {
                     CustomTextField {
                         id: headerKey
                         Layout.preferredWidth: 100
-                        placeholderText: "Key"
+                        placeholderText: qsTr("Key")
                     }
 
                     CustomTextField {
                         id: headerValue
                         Layout.fillWidth: true
-                        placeholderText: "Value"
+                        placeholderText: qsTr("Value")
                     }
 
                     NewButton {
@@ -285,7 +285,7 @@ Item {
                 spacing: 4
 
                 Text {
-                    text: "Timeout: " + (behaviourObject ? behaviourObject.timeout : 30000) + "ms"
+                    text: qsTr("Timeout: ") + (behaviourObject ? behaviourObject.timeout : 30000) + "ms"
                     font.pixelSize: 9
                     color: ThemeManager.textSecondaryColor
                     Layout.alignment: Qt.AlignVCenter
@@ -297,7 +297,7 @@ Item {
                     Layout.preferredWidth: 52
                     Layout.preferredHeight: 20
                     variant: "outlined"
-                    text: "Cancel"
+                    text: qsTr("Cancel")
                     onClicked: { if (behaviourObject) behaviourObject.cancel() }
                     visible: behaviourObject && behaviourObject.isLoading
                 }

@@ -443,7 +443,7 @@ Rectangle {
             // Pinned indicator — node is visible on every desktop
             Text {
                 visible: root.isPinnedNode
-                text: "📌"
+                text: qsTr("📌")
                 font.pixelSize: 11
                 Layout.alignment: Qt.AlignVCenter
             }

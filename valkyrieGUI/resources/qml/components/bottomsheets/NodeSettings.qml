@@ -125,7 +125,7 @@ Drawer {
                 spacing: 2
 
                 Text {
-                    text: "Selected Node"
+                    text: qsTr("Selected Node")
                     font.pixelSize: 10
                     font.bold: true
                     color: ThemeManager.textSecondaryColor
@@ -179,7 +179,7 @@ Drawer {
                 spacing: 10
 
                 Text {
-                    text: "Position (relative to center)"
+                    text: qsTr("Position (relative to center)")
                     font.pixelSize: 11
                     font.bold: true
                     color: ThemeManager.textSecondaryColor
@@ -208,7 +208,7 @@ Drawer {
                             spacing: 3
 
                             Text {
-                                text: "X"
+                                text: qsTr("X")
                                 font.pixelSize: 9
                                 color: ThemeManager.textSecondaryColor
                                 opacity: 0.7
@@ -242,7 +242,7 @@ Drawer {
                             spacing: 3
 
                             Text {
-                                text: "Y"
+                                text: qsTr("Y")
                                 font.pixelSize: 9
                                 color: ThemeManager.textSecondaryColor
                                 opacity: 0.7
@@ -276,7 +276,7 @@ Drawer {
                 spacing: 10
 
                 Text {
-                    text: "Size"
+                    text: qsTr("Size")
                     font.pixelSize: 11
                     font.bold: true
                     color: ThemeManager.textSecondaryColor
@@ -305,7 +305,7 @@ Drawer {
                             spacing: 3
 
                             Text {
-                                text: "Width"
+                                text: qsTr("Width")
                                 font.pixelSize: 9
                                 color: ThemeManager.textSecondaryColor
                                 opacity: 0.7
@@ -339,7 +339,7 @@ Drawer {
                             spacing: 3
 
                             Text {
-                                text: "Height"
+                                text: qsTr("Height")
                                 font.pixelSize: 9
                                 color: ThemeManager.textSecondaryColor
                                 opacity: 0.7
@@ -381,7 +381,7 @@ Drawer {
                     spacing: 2
 
                     Text {
-                        text: "Z-Index (Layer)"
+                        text: qsTr("Z-Index (Layer)")
                         font.pixelSize: 10
                         font.bold: true
                         color: ThemeManager.textSecondaryColor
@@ -407,7 +407,7 @@ Drawer {
 
                     Text {
                         anchors.centerIn: parent
-                        text: "Front"
+                        text: qsTr("Front")
                         font.pixelSize: 10
                         color: ThemeManager.textColor
                     }
@@ -430,7 +430,7 @@ Drawer {
 
                     Text {
                         anchors.centerIn: parent
-                        text: "Back"
+                        text: qsTr("Back")
                         font.pixelSize: 10
                         color: ThemeManager.textColor
                     }
@@ -460,7 +460,7 @@ Drawer {
                 spacing: 10
 
                 Text {
-                    text: "Connections"
+                    text: qsTr("Connections")
                     font.pixelSize: 11
                     font.bold: true
                     color: ThemeManager.textSecondaryColor
@@ -509,7 +509,7 @@ Drawer {
                                             Layout.fillWidth: true
                                         }
                                         Text {
-                                            text: "M: " + (modelData.outputUuid === root.currentNodeUuid ? modelData.outputMethod : modelData.inputMethod)
+                                            text: qsTr("M: ") + (modelData.outputUuid === root.currentNodeUuid ? modelData.outputMethod : modelData.inputMethod)
                                             font.pixelSize: 9
                                             color: ThemeManager.textSecondaryColor
                                             opacity: 0.8
@@ -626,7 +626,7 @@ Drawer {
                 }
 
                 Text {
-                    text: "Deletar Nó"
+                    text: qsTr("Deletar Nó")
                     font.pixelSize: 12
                     font.bold: true
                     color: ThemeManager.dangerColor

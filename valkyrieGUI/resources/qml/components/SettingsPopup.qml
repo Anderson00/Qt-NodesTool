@@ -6,6 +6,7 @@ import App.Theme 1.0
 import App.Properties 1.0
 import App.Presets 1.0
 import App.Icons 1.0
+import App.Language 1.0
 
 
 Popup {
@@ -101,7 +102,7 @@ Popup {
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.left: parent.left
                         anchors.leftMargin: 18
-                        text: "Settings"
+                        text: qsTr("Settings")
                         font.pixelSize: 16
                         font.bold: true
                         color: ThemeManager.textColor
@@ -157,7 +158,7 @@ Popup {
                         }
 
                         Text {
-                            text: "Appearance"
+                            text: qsTr("Appearance")
                             font.pixelSize: 12
                             color: selectedCategory === "appearance"
                                        ? ThemeManager.primaryColor : ThemeManager.textColor
@@ -215,7 +216,7 @@ Popup {
                         }
 
                         Text {
-                            text: "Viewport"
+                            text: qsTr("Viewport")
                             font.pixelSize: 12
                             color: selectedCategory === "viewport"
                                        ? ThemeManager.primaryColor : ThemeManager.textColor
@@ -273,7 +274,7 @@ Popup {
                         }
 
                         Text {
-                            text: "General"
+                            text: qsTr("General")
                             font.pixelSize: 12
                             color: selectedCategory === "general"
                                        ? ThemeManager.primaryColor : ThemeManager.textColor
@@ -330,7 +331,7 @@ Popup {
                     spacing: 0
 
                     Text {
-                        text: "Appearance"
+                        text: qsTr("Appearance")
                         font.pixelSize: 15
                         font.bold: true
                         color: ThemeManager.textColor
@@ -338,7 +339,7 @@ Popup {
                     }
 
                     // ── THEME MODE ──────────────────────────────────────────────
-                    SectionLabel { text: "THEME MODE" }
+                    SectionLabel { text: qsTr("THEME MODE") }
 
                     RowLayout {
                         width: parent.width
@@ -364,7 +365,7 @@ Popup {
                             opacity: lightHover.containsMouse ? 0.8 : 1
                             Text {
                                 anchors.centerIn: parent
-                                text: "☀  Light"
+                                text: qsTr("☀  Light")
                                 font.pixelSize: 11
                                 color: !ThemeManager.isDarkMode ? ThemeManager.backgroundColor : ThemeManager.textColor
                             }
@@ -388,7 +389,7 @@ Popup {
                             opacity: darkHover.containsMouse ? 0.8 : 1
                             Text {
                                 anchors.centerIn: parent
-                                text: "☾  Dark"
+                                text: qsTr("☾  Dark")
                                 font.pixelSize: 11
                                 color: ThemeManager.isDarkMode ? ThemeManager.backgroundColor : ThemeManager.textColor
                             }
@@ -406,7 +407,7 @@ Popup {
                     Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
 
                     // ── PRESETS ─────────────────────────────────────────────────
-                    SectionLabel { text: "PRESETS" }
+                    SectionLabel { text: qsTr("PRESETS") }
 
                     // ── Save current theme as preset ──────────────────────────
                     RowLayout {
@@ -439,7 +440,7 @@ Popup {
                                 Text {
                                     anchors.fill: parent
                                     verticalAlignment: Text.AlignVCenter
-                                    text: "Name for new preset…"
+                                    text: qsTr("Name for new preset…")
                                     color: ThemeManager.textSecondaryColor
                                     font.pixelSize: 12
                                     visible: presetNameInput.text.length === 0 && !presetNameInput.activeFocus
@@ -469,7 +470,7 @@ Popup {
 
                             Text {
                                 anchors.centerIn: parent
-                                text: "Save Current"
+                                text: qsTr("Save Current")
                                 font.pixelSize: 11
                                 font.bold: true
                                 color: ThemeManager.backgroundColor
@@ -650,30 +651,30 @@ Popup {
                     Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
 
                     // ── STRUCTURAL ──────────────────────────────────────────────
-                    SectionLabel { text: "STRUCTURAL" }
+                    SectionLabel { text: qsTr("STRUCTURAL") }
 
                     ColorRow {
-                        label: "Background"
+                        label: qsTr("Background")
                         value: ThemeManager.backgroundColor
                         onAccepted: function(c) { ThemeManager.backgroundColor = c }
                     }
                     ColorRow {
-                        label: "Surface"
+                        label: qsTr("Surface")
                         value: ThemeManager.surfaceColor
                         onAccepted: function(c) { ThemeManager.surfaceColor = c }
                     }
                     ColorRow {
-                        label: "Foreground (panels)"
+                        label: qsTr("Foreground (panels)")
                         value: ThemeManager.foregroundColor
                         onAccepted: function(c) { ThemeManager.foregroundColor = c }
                     }
                     ColorRow {
-                        label: "Border"
+                        label: qsTr("Border")
                         value: ThemeManager.borderColor
                         onAccepted: function(c) { ThemeManager.borderColor = c }
                     }
                     ColorRow {
-                        label: "Shadow"
+                        label: qsTr("Shadow")
                         value: ThemeManager.shadowColor
                         onAccepted: function(c) { ThemeManager.shadowColor = c }
                     }
@@ -681,20 +682,20 @@ Popup {
                     Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
 
                     // ── BRAND / ACTIONS ─────────────────────────────────────────
-                    SectionLabel { text: "BRAND / ACTIONS" }
+                    SectionLabel { text: qsTr("BRAND / ACTIONS") }
 
                     ColorRow {
-                        label: "Primary"
+                        label: qsTr("Primary")
                         value: ThemeManager.primaryColor
                         onAccepted: function(c) { ThemeManager.primaryColor = c }
                     }
                     ColorRow {
-                        label: "Secondary"
+                        label: qsTr("Secondary")
                         value: ThemeManager.secondaryColor
                         onAccepted: function(c) { ThemeManager.secondaryColor = c }
                     }
                     ColorRow {
-                        label: "Accent"
+                        label: qsTr("Accent")
                         value: ThemeManager.accentColor
                         onAccepted: function(c) { ThemeManager.accentColor = c }
                     }
@@ -702,20 +703,20 @@ Popup {
                     Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
 
                     // ── SEMANTIC STATES ─────────────────────────────────────────
-                    SectionLabel { text: "SEMANTIC STATES" }
+                    SectionLabel { text: qsTr("SEMANTIC STATES") }
 
                     ColorRow {
-                        label: "Success"
+                        label: qsTr("Success")
                         value: ThemeManager.successColor
                         onAccepted: function(c) { ThemeManager.successColor = c }
                     }
                     ColorRow {
-                        label: "Warning"
+                        label: qsTr("Warning")
                         value: ThemeManager.warningColor
                         onAccepted: function(c) { ThemeManager.warningColor = c }
                     }
                     ColorRow {
-                        label: "Danger"
+                        label: qsTr("Danger")
                         value: ThemeManager.dangerColor
                         onAccepted: function(c) { ThemeManager.dangerColor = c }
                     }
@@ -723,20 +724,20 @@ Popup {
                     Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
 
                     // ── TYPOGRAPHY ──────────────────────────────────────────────
-                    SectionLabel { text: "TYPOGRAPHY" }
+                    SectionLabel { text: qsTr("TYPOGRAPHY") }
 
                     ColorRow {
-                        label: "Text"
+                        label: qsTr("Text")
                         value: ThemeManager.textColor
                         onAccepted: function(c) { ThemeManager.textColor = c }
                     }
                     ColorRow {
-                        label: "Text Secondary"
+                        label: qsTr("Text Secondary")
                         value: ThemeManager.textSecondaryColor
                         onAccepted: function(c) { ThemeManager.textSecondaryColor = c }
                     }
                     ColorRow {
-                        label: "Selection"
+                        label: qsTr("Selection")
                         value: ThemeManager.selectionColor
                         onAccepted: function(c) { ThemeManager.selectionColor = c }
                     }
@@ -762,7 +763,7 @@ Popup {
                     spacing: 0
 
                     Text {
-                        text: "Viewport"
+                        text: qsTr("Viewport")
                         font.pixelSize: 15
                         font.bold: true
                         color: ThemeManager.textColor
@@ -770,7 +771,7 @@ Popup {
                     }
 
                     // ── DISPLAY ─────────────────────────────────────────────────
-                    SectionLabel { text: "DISPLAY" }
+                    SectionLabel { text: qsTr("DISPLAY") }
 
                     RowLayout {
                         width: parent.width
@@ -780,12 +781,12 @@ Popup {
                             Layout.fillWidth: true
                             spacing: 2
                             Text {
-                                text: "Show FPS Counter"
+                                text: qsTr("Show FPS Counter")
                                 font.pixelSize: 12
                                 color: ThemeManager.textColor
                             }
                             Text {
-                                text: "Display frames per second and frame time"
+                                text: qsTr("Display frames per second and frame time")
                                 font.pixelSize: 10
                                 color: ThemeManager.textColor
                                 opacity: 0.45
@@ -806,16 +807,16 @@ Popup {
                     Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
 
                     // ── GRID PATTERN ─────────────────────────────────────────────
-                    SectionLabel { text: "GRID PATTERN" }
+                    SectionLabel { text: qsTr("GRID PATTERN") }
 
                     readonly property var _gridPatterns: [
-                        { id: "dots",    label: "Dots",    icon: Icons.dotsGrid },
-                        { id: "lines",   label: "Lines",   icon: Icons.viewSequential },
-                        { id: "circles", label: "Circles", icon: Icons.circleOutline },
-                        { id: "cross",   label: "Cross",   icon: Icons.plus },
-                        { id: "x",       label: "X",       icon: Icons.close },
-                        { id: "hexagon", label: "Hexagon", icon: Icons.hexagonOutline },
-                        { id: "none",    label: "None",    icon: Icons.eyeOffOutline }
+                        { id: "dots",    label: qsTr("Dots"),    icon: Icons.dotsGrid },
+                        { id: "lines",   label: qsTr("Lines"),   icon: Icons.viewSequential },
+                        { id: "circles", label: qsTr("Circles"), icon: Icons.circleOutline },
+                        { id: "cross",   label: qsTr("Cross"),   icon: Icons.plus },
+                        { id: "x",       label: qsTr("X"),       icon: Icons.close },
+                        { id: "hexagon", label: qsTr("Hexagon"), icon: Icons.hexagonOutline },
+                        { id: "none",    label: qsTr("None"),    icon: Icons.eyeOffOutline }
                     ]
 
                     Flow {
@@ -870,13 +871,13 @@ Popup {
                     Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
 
                     // ── GRID SIZE ─────────────────────────────────────────────────
-                    SectionLabel { text: "GRID SIZE" }
+                    SectionLabel { text: qsTr("GRID SIZE") }
 
                     readonly property var _gridSizes: [
-                        { id: "compact",     label: "Compact",     value: 10 },
-                        { id: "normal",      label: "Normal",      value: 20 },
-                        { id: "comfortable", label: "Comfortable", value: 40 },
-                        { id: "spacious",    label: "Spacious",    value: 60 }
+                        { id: "compact",     label: qsTr("Compact"),     value: 10 },
+                        { id: "normal",      label: qsTr("Normal"),      value: 20 },
+                        { id: "comfortable", label: qsTr("Comfortable"), value: 40 },
+                        { id: "spacious",    label: qsTr("Spacious"),    value: 60 }
                     ]
 
                     Flow {
@@ -932,15 +933,15 @@ Popup {
                     Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
 
                     // ── SNAP & SNAPPING ─────────────────────────────────────────────
-                    SectionLabel { text: "SNAP & SNAPPING" }
+                    SectionLabel { text: qsTr("SNAP & SNAPPING") }
 
                     // Enable snap
                     RowLayout {
                         width: parent.width; height: 44
                         Column {
                             Layout.fillWidth: true; spacing: 2
-                            Text { text: "Enable Grid Snap"; font.pixelSize: 12; color: ThemeManager.textColor }
-                            Text { text: "Applies to drag and resize  ·  Shortcut: G"; font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.45 }
+                            Text { text: qsTr("Enable Grid Snap"); font.pixelSize: 12; color: ThemeManager.textColor }
+                            Text { text: qsTr("Applies to drag and resize  ·  Shortcut: G"); font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.45 }
                         }
                         CustomSwitch {
                             checked: GlobalProperties.snapEnabled
@@ -953,14 +954,14 @@ Popup {
                         width: parent.width; height: 44; spacing: 8
                         Text {
                             Layout.fillWidth: true
-                            text: "Snap Mode"
+                            text: qsTr("Snap Mode")
                             font.pixelSize: 12; color: ThemeManager.textColor
                             verticalAlignment: Text.AlignVCenter
                         }
 
                         readonly property var _modes: [
-                            { id: "hard", label: "Hard", desc: "Always snaps" },
-                            { id: "soft", label: "Soft", desc: "Magnetic pull" }
+                            { id: "hard", label: qsTr("Hard"), desc: "Always snaps" },
+                            { id: "soft", label: qsTr("Soft"), desc: "Magnetic pull" }
                         ]
 
                         Repeater {
@@ -1005,7 +1006,7 @@ Popup {
                         visible: GlobalProperties.snapMode === "soft"
                         Column {
                             Layout.fillWidth: true; spacing: 2
-                            Text { text: "Magnetic Radius"; font.pixelSize: 12; color: ThemeManager.textColor }
+                            Text { text: qsTr("Magnetic Radius"); font.pixelSize: 12; color: ThemeManager.textColor }
                             Text {
                                 text: GlobalProperties.snapRadius + " px from grid line"
                                 font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.45
@@ -1038,7 +1039,7 @@ Popup {
                         width: parent.width; height: 44; spacing: 8
                         Column {
                             Layout.fillWidth: true; spacing: 2
-                            Text { text: "Snap Grid Size"; font.pixelSize: 12; color: ThemeManager.textColor }
+                            Text { text: qsTr("Snap Grid Size"); font.pixelSize: 12; color: ThemeManager.textColor }
                             Text {
                                 text: GlobalProperties.snapSyncToGrid
                                     ? "Following visual grid (" + GlobalProperties.minWgrid + " u)"
@@ -1058,7 +1059,7 @@ Popup {
                             Behavior on color { ColorAnimation { duration: 110 } }
                             Text {
                                 anchors.centerIn: parent
-                                text: "Auto"
+                                text: qsTr("Auto")
                                 font.pixelSize: 11
                                 font.bold: GlobalProperties.snapSyncToGrid
                                 color: GlobalProperties.snapSyncToGrid ? ThemeManager.primaryColor : ThemeManager.textSecondaryColor
@@ -1112,7 +1113,7 @@ Popup {
                             border.width: 1
                             border.color: ThemeManager.borderColor
                             Text {
-                                anchors.centerIn: parent; text: "Custom"
+                                anchors.centerIn: parent; text: qsTr("Custom")
                                 font.pixelSize: 11; color: ThemeManager.textSecondaryColor
                             }
                             MouseArea {
@@ -1127,8 +1128,8 @@ Popup {
                         width: parent.width; height: 44
                         Column {
                             Layout.fillWidth: true; spacing: 2
-                            Text { text: "Snap to Node Edges"; font.pixelSize: 12; color: ThemeManager.textColor }
-                            Text { text: "Align dragged nodes to others' edges and centers"; font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.45 }
+                            Text { text: qsTr("Snap to Node Edges"); font.pixelSize: 12; color: ThemeManager.textColor }
+                            Text { text: qsTr("Align dragged nodes to others' edges and centers"); font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.45 }
                         }
                         CustomSwitch {
                             checked: GlobalProperties.snapToNodes
@@ -1141,8 +1142,8 @@ Popup {
                         width: parent.width; height: 44
                         Column {
                             Layout.fillWidth: true; spacing: 2
-                            Text { text: "Show Snap Coordinates"; font.pixelSize: 12; color: ThemeManager.textColor }
-                            Text { text: "Display world-space position label on snap crosshair"; font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.45 }
+                            Text { text: qsTr("Show Snap Coordinates"); font.pixelSize: 12; color: ThemeManager.textColor }
+                            Text { text: qsTr("Display world-space position label on snap crosshair"); font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.45 }
                         }
                         CustomSwitch {
                             checked: GlobalProperties.snapShowCoords
@@ -1154,7 +1155,7 @@ Popup {
                     RowLayout {
                         width: parent.width; height: 44
                         Text {
-                            Layout.fillWidth: true; text: "Guide Line Color"
+                            Layout.fillWidth: true; text: qsTr("Guide Line Color")
                             font.pixelSize: 12; color: ThemeManager.textColor
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -1170,17 +1171,17 @@ Popup {
                     Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
 
                     // ── NODES LIST ──────────────────────────────────────────────────
-                    SectionLabel { text: "NODES LIST" }
+                    SectionLabel { text: qsTr("NODES LIST") }
 
                     readonly property var _nodesListPositions: [
-                        { id: "top-left",      label: "Top Left" },
-                        { id: "top-center",    label: "Top Center" },
-                        { id: "top-right",     label: "Top Right" },
-                        { id: "mid-left",      label: "Mid Left" },
-                        { id: "mid-right",     label: "Mid Right" },
-                        { id: "bottom-left",   label: "Bottom Left" },
-                        { id: "bottom-center", label: "Bottom Center" },
-                        { id: "bottom-right",  label: "Bottom Right" }
+                        { id: "top-left",      label: qsTr("Top Left") },
+                        { id: "top-center",    label: qsTr("Top Center") },
+                        { id: "top-right",     label: qsTr("Top Right") },
+                        { id: "mid-left",      label: qsTr("Mid Left") },
+                        { id: "mid-right",     label: qsTr("Mid Right") },
+                        { id: "bottom-left",   label: qsTr("Bottom Left") },
+                        { id: "bottom-center", label: qsTr("Bottom Center") },
+                        { id: "bottom-right",  label: qsTr("Bottom Right") }
                     ]
 
                     Flow {
@@ -1270,11 +1271,11 @@ Popup {
                     Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
 
                     // ── NODES CONNECTIONS ───────────────────────────────────────────
-                    SectionLabel { text: "NODE CONNECTIONS STYLE" }
+                    SectionLabel { text: qsTr("NODE CONNECTIONS STYLE") }
 
                     readonly property var _connectionStyles: [
-                        { id: "pills", label: "Pills", desc: "Modern wrapped tags" },
-                        { id: "list",  label: "List",  desc: "Classic vertical list" }
+                        { id: "pills", label: qsTr("Pills"), desc: "Modern wrapped tags" },
+                        { id: "list",  label: qsTr("List"),  desc: "Classic vertical list" }
                     ]
 
                     Flow {
@@ -1329,21 +1330,21 @@ Popup {
                     Rectangle { width: parent.width; height: 1; color: ThemeManager.borderColor; opacity: 0.3 }
 
                     // ── WIRE SETTINGS ───────────────────────────────────────────
-                    SectionLabel { text: "WIRE SETTINGS" }
+                    SectionLabel { text: qsTr("WIRE SETTINGS") }
 
                     // Wire Style (Bezier / Straight)
                     RowLayout {
                         width: parent.width; height: 44; spacing: 8
                         Text {
                             Layout.fillWidth: true
-                            text: "Line Style"
+                            text: qsTr("Line Style")
                             font.pixelSize: 12; color: ThemeManager.textColor
                             verticalAlignment: Text.AlignVCenter
                         }
 
                         readonly property var _wireStyles: [
-                            { id: "bezier", label: "Bezier", desc: "Smooth curves" },
-                            { id: "straight", label: "Straight", desc: "Linear paths" }
+                            { id: "bezier", label: qsTr("Bezier"), desc: "Smooth curves" },
+                            { id: "straight", label: qsTr("Straight"), desc: "Linear paths" }
                         ]
 
                         Repeater {
@@ -1387,15 +1388,15 @@ Popup {
                         width: parent.width; height: 44; spacing: 8
                         Text {
                             Layout.fillWidth: true
-                            text: "Dash Style"
+                            text: qsTr("Dash Style")
                             font.pixelSize: 12; color: ThemeManager.textColor
                             verticalAlignment: Text.AlignVCenter
                         }
 
                         readonly property var _wireDashes: [
-                            { id: "dashed", label: "Dashed" },
-                            { id: "solid", label: "Solid" },
-                            { id: "dotted", label: "Dotted" }
+                            { id: "dashed", label: qsTr("Dashed") },
+                            { id: "solid", label: qsTr("Solid") },
+                            { id: "dotted", label: qsTr("Dotted") }
                         ]
 
                         Repeater {
@@ -1431,15 +1432,15 @@ Popup {
                         width: parent.width; height: 44; spacing: 8
                         Text {
                             Layout.fillWidth: true
-                            text: "Animation Style"
+                            text: qsTr("Animation Style")
                             font.pixelSize: 12; color: ThemeManager.textColor
                             verticalAlignment: Text.AlignVCenter
                         }
 
                         readonly property var _wireAnims: [
-                            { id: "flow", label: "Flow" },
-                            { id: "pulse", label: "Pulse" },
-                            { id: "none", label: "None" }
+                            { id: "flow", label: qsTr("Flow") },
+                            { id: "pulse", label: qsTr("Pulse") },
+                            { id: "none", label: qsTr("None") }
                         ]
 
                         Repeater {
@@ -1491,7 +1492,7 @@ Popup {
                     spacing: 0
 
                     Text {
-                        text: "General"
+                        text: qsTr("General")
                         font.pixelSize: 15
                         font.bold: true
                         color: ThemeManager.textColor
@@ -1499,7 +1500,7 @@ Popup {
                     }
 
                     Text {
-                        text: "APPLICATION"
+                        text: qsTr("APPLICATION")
                         font.pixelSize: 10
                         font.letterSpacing: 1.2
                         color: ThemeManager.textColor
@@ -1516,12 +1517,12 @@ Popup {
                             spacing: 2
 
                             Text {
-                                text: "Debug Mode"
+                                text: qsTr("Debug Mode")
                                 font.pixelSize: 12
                                 color: ThemeManager.textColor
                             }
                             Text {
-                                text: "Enable verbose logging and diagnostics"
+                                text: qsTr("Enable verbose logging and diagnostics")
                                 font.pixelSize: 10
                                 color: ThemeManager.textColor
                                 opacity: 0.45
@@ -1549,7 +1550,7 @@ Popup {
 
                     // ── AUTOSAVE ────────────────────────────────────────────────
                     Text {
-                        text: "AUTOSAVE"
+                        text: qsTr("AUTOSAVE")
                         font.pixelSize: 10
                         font.letterSpacing: 1.2
                         color: ThemeManager.textColor
@@ -1564,9 +1565,9 @@ Popup {
                         Column {
                             Layout.fillWidth: true
                             spacing: 2
-                            Text { text: "Enable Autosave"; font.pixelSize: 12; color: ThemeManager.textColor }
+                            Text { text: qsTr("Enable Autosave"); font.pixelSize: 12; color: ThemeManager.textColor }
                             Text {
-                                text: "Saves a recovery snapshot of the active workspace at a regular interval"
+                                text: qsTr("Saves a recovery snapshot of the active workspace at a regular interval")
                                 font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.45
                             }
                         }
@@ -1586,7 +1587,7 @@ Popup {
                         Column {
                             Layout.fillWidth: true
                             spacing: 2
-                            Text { text: "Autosave Interval"; font.pixelSize: 12; color: ThemeManager.textColor }
+                            Text { text: qsTr("Autosave Interval"); font.pixelSize: 12; color: ThemeManager.textColor }
                             Text {
                                 text: GlobalProperties.autosaveIntervalMin + " minute" + (GlobalProperties.autosaveIntervalMin === 1 ? "" : "s")
                                 font.pixelSize: 10; color: ThemeManager.textColor; opacity: 0.45
@@ -1631,8 +1632,93 @@ Popup {
 
                     Item { width: 1; height: 20 }
 
+                    // ── LANGUAGE ─────────────────────────────────────────────
                     Text {
-                        text: "ABOUT"
+                        text: qsTr("LANGUAGE")
+                        font.pixelSize: 10
+                        font.letterSpacing: 1.2
+                        color: ThemeManager.textColor
+                        opacity: 0.45
+                        bottomPadding: 14
+                    }
+
+                    RowLayout {
+                        width: parent.width
+                        height: 54
+
+                        Column {
+                            Layout.fillWidth: true
+                            spacing: 3
+
+                            Text {
+                                text: qsTr("Interface Language")
+                                font.pixelSize: 12
+                                color: ThemeManager.textColor
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            Text {
+                                text: qsTr("Changes take effect immediately")
+                                font.pixelSize: 10
+                                color: ThemeManager.textColor
+                                opacity: 0.45
+                            }
+                        }
+
+                        Row {
+                            spacing: 6
+
+                            Repeater {
+                                model: LanguageManager.availableLanguages
+
+                                delegate: Rectangle {
+                                    readonly property bool active: LanguageManager.currentLanguage === modelData
+                                    width: Math.max(70, langLabel.implicitWidth + 20)
+                                    height: 30
+                                    radius: 6
+                                    color: active
+                                           ? Qt.rgba(ThemeManager.primaryColor.r,
+                                                     ThemeManager.primaryColor.g,
+                                                     ThemeManager.primaryColor.b, 0.18)
+                                           : ThemeManager.foregroundColor
+                                    border.width: active ? 2 : 1
+                                    border.color: active ? ThemeManager.primaryColor : ThemeManager.borderColor
+
+                                    Behavior on color { ColorAnimation { duration: 110 } }
+
+                                    Text {
+                                        id: langLabel
+                                        anchors.centerIn: parent
+                                        text: LanguageManager.displayName(modelData)
+                                        font.pixelSize: 11
+                                        font.bold: active
+                                        color: active ? ThemeManager.primaryColor : ThemeManager.textColor
+
+                                        Behavior on color { ColorAnimation { duration: 110 } }
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: LanguageManager.setLanguage(modelData)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Item { width: 1; height: 20 }
+
+                    Rectangle {
+                        width: parent.width; height: 1
+                        color: ThemeManager.primaryColor; opacity: 0.1
+                    }
+
+                    Item { width: 1; height: 20 }
+
+                    // ── ABOUT ─────────────────────────────────────────────────
+                    Text {
+                        text: qsTr("ABOUT")
                         font.pixelSize: 10
                         font.letterSpacing: 1.2
                         color: ThemeManager.textColor
@@ -1646,7 +1732,7 @@ Popup {
 
                         Text {
                             Layout.fillWidth: true
-                            text: "Valkyrie Nodes Tool"
+                            text: qsTr("Valkyrie Nodes Tool")
                             font.pixelSize: 12
                             color: ThemeManager.textColor
                             verticalAlignment: Text.AlignVCenter

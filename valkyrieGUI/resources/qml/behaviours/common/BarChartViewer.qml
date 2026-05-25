@@ -81,7 +81,7 @@ Item {
                 anchors.leftMargin: 6; anchors.rightMargin: 6
                 spacing: 2
 
-                Text { text: "Bar Chart"; color: ThemeManager.textColor; font.pixelSize: 11; font.bold: true; Layout.rightMargin: 4 }
+                Text { text: qsTr("Bar Chart"); color: ThemeManager.textColor; font.pixelSize: 11; font.bold: true; Layout.rightMargin: 4 }
 
                 component TBBtn: Rectangle {
                     id: tb
@@ -170,7 +170,7 @@ Item {
                 anchors.topMargin: 4; anchors.bottomMargin: 4
                 spacing: 4
 
-                Text { text: "Set"; font.pixelSize: 9; color: ThemeManager.textSecondaryColor; Layout.alignment: Qt.AlignVCenter }
+                Text { text: qsTr("Set"); font.pixelSize: 9; color: ThemeManager.textSecondaryColor; Layout.alignment: Qt.AlignVCenter }
 
                 NumberSpinBox {
                     id: setIdx; Layout.preferredWidth: 70

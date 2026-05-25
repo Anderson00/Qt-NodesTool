@@ -34,7 +34,7 @@ Item {
 
             // Max lines control
             Text {
-                text: "max:"
+                text: qsTr("max:")
                 font.pixelSize: 9
                 color: ThemeManager.textSecondaryColor
                 Layout.alignment: Qt.AlignVCenter

@@ -37,7 +37,7 @@ Item {
             spacing: 6
 
             Text {
-                text: "Clipboard"
+                text: qsTr("Clipboard")
                 font.pixelSize: 10
                 font.bold: true
                 color: ThemeManager.textColor
@@ -47,7 +47,7 @@ Item {
             Item { Layout.fillWidth: true }
 
             Text {
-                text: "Monitor"
+                text: qsTr("Monitor")
                 font.pixelSize: 9
                 color: ThemeManager.textSecondaryColor
                 Layout.alignment: Qt.AlignVCenter
@@ -89,7 +89,7 @@ Item {
                     font.pixelSize: 10
                     color: ThemeManager.textColor
                     background: null
-                    placeholderText: "Clipboard content will appear here..."
+                    placeholderText: qsTr("Clipboard content will appear here...")
                     placeholderTextColor: ThemeManager.textSecondaryColor
                     selectByMouse: true
                 }
@@ -99,7 +99,7 @@ Item {
         // -- Last updated timestamp --
         Text {
             visible: lastUpdated !== ""
-            text: "Updated: " + lastUpdated
+            text: qsTr("Updated: ") + lastUpdated
             font.pixelSize: 8
             color: ThemeManager.textSecondaryColor
             Layout.alignment: Qt.AlignRight
@@ -114,7 +114,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 28
                 variant: "outlined"
-                text: "Read"
+                text: qsTr("Read")
                 onClicked: {
                     if (behaviourObject) behaviourObject.readText()
                 }
@@ -124,7 +124,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 28
                 variant: "filled"
-                text: "Write"
+                text: qsTr("Write")
                 backgroundColor: ThemeManager.primaryColor
                 onClicked: {
                     if (behaviourObject && clipText.text !== "")

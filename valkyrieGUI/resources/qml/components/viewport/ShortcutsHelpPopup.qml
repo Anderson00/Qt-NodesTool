@@ -36,14 +36,14 @@ Popup {
         RowLayout {
             Layout.fillWidth: true
             Text {
-                text: "Keyboard Shortcuts"
+                text: qsTr("Keyboard Shortcuts")
                 font.pixelSize: 22
                 font.bold: true
                 color: ThemeManager.textColor
                 Layout.fillWidth: true
             }
             Button {
-                text: "✕"
+                text: qsTr("✕")
                 font.pixelSize: 16
                 flat: true
                 Layout.preferredWidth: 40
@@ -130,7 +130,7 @@ Popup {
                 }
 
                 ShortcutSection {
-                    title: "General"
+                    title: qsTr("General")
                     items: [
                         {key: "Ctrl + O", desc: "Open Workspace"},
                         {key: "Ctrl + S", desc: "Save Workspace"},
@@ -141,7 +141,7 @@ Popup {
                 }
 
                 ShortcutSection {
-                    title: "Nodes & Canvas"
+                    title: qsTr("Nodes & Canvas")
                     items: [
                         {key: "F", desc: "Focus camera on selected node"},
                         {key: "G", desc: "Toggle Snap to Grid"},
@@ -158,7 +158,7 @@ Popup {
                 }
 
                 ShortcutSection {
-                    title: "Virtual Desktops"
+                    title: qsTr("Virtual Desktops")
                     items: [
                         {key: "Ctrl + Shift + N", desc: "Add new Virtual Desktop"},
                         {key: "Ctrl + Right", desc: "Switch to next Desktop"},
@@ -169,7 +169,7 @@ Popup {
                 }
 
                 ShortcutSection {
-                    title: "Tools"
+                    title: qsTr("Tools")
                     items: [
                         {key: "Ctrl + Shift + C", desc: "Toggle Camera overlay"},
                         {key: "Ctrl + Shift + V", desc: "Toggle Visualization window"}

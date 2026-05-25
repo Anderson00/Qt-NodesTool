@@ -67,7 +67,7 @@ Rectangle {
             }
 
             Text {
-                text: "Camera"
+                text: qsTr("Camera")
                 color: root.camColor; font.pixelSize: 10; font.bold: true
                 anchors.verticalCenter: parent.verticalCenter
             }
@@ -98,7 +98,7 @@ Rectangle {
                     else                                    root.aspectRatio = "Screen"
                     _applyAspect()
                 }
-                AppToolTip { text: "Cycle aspect ratio"; visible: parent.hovered }
+                AppToolTip { text: qsTr("Cycle aspect ratio"); visible: parent.hovered }
             }
 
             AppBarButton {

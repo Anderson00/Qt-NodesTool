@@ -67,7 +67,7 @@ Item {
                 spacing: 4
 
                 Text {
-                    text: "JSON Tree Viewer"
+                    text: qsTr("JSON Tree Viewer")
                     color: ThemeManager.textColor
                     font.pixelSize: 11
                     font.bold: true
@@ -84,7 +84,7 @@ Item {
 
                 // Expand depth spinbox
                 Text {
-                    text: "depth:"
+                    text: qsTr("depth:")
                     color: ThemeManager.textSecondaryColor
                     font.pixelSize: 9
                     Layout.alignment: Qt.AlignVCenter
@@ -219,7 +219,7 @@ Item {
 
             Text {
                 anchors.centerIn: parent
-                text: "Send JSON to loadJson() to visualize"
+                text: qsTr("Send JSON to loadJson() to visualize")
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 10
             }

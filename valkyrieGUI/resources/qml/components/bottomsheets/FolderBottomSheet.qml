@@ -113,7 +113,7 @@ Contrl.Drawer {
 
                         Contrl.Label {
                             visible: index < breadcrumb.model.length - 1
-                            text: "/"
+                            text: qsTr("/")
                             height: 30
                             color: ThemeManager.textColor
                         }
@@ -137,7 +137,7 @@ Contrl.Drawer {
                         id: _nameInput
                         Layout.preferredWidth: 200
                         Layout.preferredHeight: 35
-                        placeholderText: "Search"
+                        placeholderText: qsTr("Search")
                     }
                 }
 

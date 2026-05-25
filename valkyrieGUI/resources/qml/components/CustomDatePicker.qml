@@ -87,7 +87,7 @@ Item {
                 spacing: 4
 
                 Button {
-                    text: "<"
+                    text: qsTr("<")
                     flat: true
                     Layout.preferredWidth: 28
                     onClicked: {
@@ -106,7 +106,7 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                 }
                 Button {
-                    text: ">"
+                    text: qsTr(">")
                     flat: true
                     Layout.preferredWidth: 28
                     onClicked: {

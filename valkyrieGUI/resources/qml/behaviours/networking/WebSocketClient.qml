@@ -61,7 +61,7 @@ Item {
                 }
 
                 Text {
-                    text: "WebSocket"
+                    text: qsTr("WebSocket")
                     color: ThemeManager.textColor; font.pixelSize: 11; font.bold: true
                 }
 
@@ -125,7 +125,7 @@ Item {
                 anchors.leftMargin: 8; anchors.rightMargin: 8
                 spacing: 8
 
-                Text { text: "Auto-reconnect"; font.pixelSize: 10; color: ThemeManager.textSecondaryColor }
+                Text { text: qsTr("Auto-reconnect"); font.pixelSize: 10; color: ThemeManager.textSecondaryColor }
                 CustomSwitch {
                     checked: behaviourObject ? behaviourObject.autoReconnect : false
                     onCheckedChanged: if (behaviourObject) behaviourObject.autoReconnect = checked
@@ -133,7 +133,7 @@ Item {
                 Item { Layout.fillWidth: true }
                 NewButton {
                     Layout.preferredWidth: 50; Layout.preferredHeight: 22
-                    variant: "outlined"; text: "Clear"
+                    variant: "outlined"; text: qsTr("Clear")
                     onClicked: { root.messages = []; msgList.model = [] }
                 }
             }
@@ -176,7 +176,7 @@ Item {
                 CustomTextField {
                     id: sendField
                     Layout.fillWidth: true
-                    placeholderText: "Send message..."
+                    placeholderText: qsTr("Send message...")
                     enabled: behaviourObject && behaviourObject.isConnected
                     Keys.onReturnPressed: sendBtn.clicked()
                 }
@@ -184,7 +184,7 @@ Item {
                     id: sendBtn
                     Layout.preferredWidth: 60
                     Layout.preferredHeight: 30
-                    variant: "filled"; text: "Send"
+                    variant: "filled"; text: qsTr("Send")
                     backgroundColor: ThemeManager.primaryColor
                     enabled: behaviourObject && behaviourObject.isConnected && sendField.text.length > 0
                     onClicked: {

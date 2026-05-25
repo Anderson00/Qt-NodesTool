@@ -108,7 +108,7 @@ Rectangle {
                             }
                             Text {
                                 visible: !tab.editing && modelData.nodeCount > 0
-                                text:    "(" + modelData.nodeCount + ")"
+                                text: qsTr("(") + modelData.nodeCount + ")"
                                 color:   ThemeManager.textSecondaryColor
                                 font.pixelSize: 9
                                 opacity: 0.55
@@ -182,7 +182,7 @@ Rectangle {
                                 border.width: 1
                             }
                             MenuItem {
-                                text: "Rename"
+                                text: qsTr("Rename")
                                 onTriggered: {
                                     tabRenameField.text = tabMenu.tabName
                                     tab.editing = true
@@ -193,24 +193,24 @@ Rectangle {
                                 }
                             }
                             MenuItem {
-                                text: "Duplicate"
+                                text: qsTr("Duplicate")
                                 onTriggered: DesktopManager.duplicateDesktop(tabMenu.tabId)
                             }
                             Menu {
-                                title: "Color"
+                                title: qsTr("Color")
                                 Material.foreground: ThemeManager.textColor
                                 Material.background: ThemeManager.surfaceColor
                                 Repeater {
                                     model: ["#4CAF50", "#2196F3", "#FF9800", "#9C27B0", "#F44336", "#00BCD4", "#FF5722", "#607D8B"]
                                     MenuItem {
-                                        text: "■ " + modelData
+                                        text: qsTr("■ ") + modelData
                                         onTriggered: DesktopManager.setDesktopColor(tabMenu.tabId, modelData)
                                     }
                                 }
                             }
                             MenuSeparator {}
                             MenuItem {
-                                text: "Delete"
+                                text: qsTr("Delete")
                                 enabled: DesktopManager.desktopCount > 1
                                 onTriggered: DesktopManager.removeDesktop(tabMenu.tabId)
                             }
@@ -236,7 +236,7 @@ Rectangle {
             Text {
                 anchors.centerIn: parent
                 anchors.verticalCenterOffset: -2
-                text: "+"
+                text: qsTr("+")
                 font.pixelSize: 18
                 font.bold: true
                 color: ThemeManager.primaryColor
@@ -252,7 +252,7 @@ Rectangle {
                 onClicked: DesktopManager.addDesktop("")
             }
 
-            AppToolTip { text: "New desktop (Ctrl+Shift+N)"; visible: addHover.containsMouse; delay: 500 }
+            AppToolTip { text: qsTr("New desktop (Ctrl+Shift+N)"); visible: addHover.containsMouse; delay: 500 }
         }
 
         // ── Desktop count badge ──────────────────────────────────────────────

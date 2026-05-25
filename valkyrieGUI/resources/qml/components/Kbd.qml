@@ -42,7 +42,7 @@ Item {
                 // "+" separator between keys
                 Text {
                     visible: index > 0
-                    text: "+"; font.pixelSize: root.fontSize
+                    text: qsTr("+"); font.pixelSize: root.fontSize
                     color: Qt.rgba(root.textColor.r, root.textColor.g, root.textColor.b, 0.4)
                     anchors.verticalCenter: parent.verticalCenter
                 }

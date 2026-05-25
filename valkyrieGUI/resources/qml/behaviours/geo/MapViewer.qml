@@ -53,15 +53,15 @@ Item {
     // ── Map styles ────────────────────────────────────────────────────────────
     property string mapStyle: "osm"
     readonly property var styleList: [
-        { id: "osm",            label: "Streets"      },
-        { id: "carto-light",    label: "Voyager"      },
-        { id: "carto-positron", label: "Positron"     },
-        { id: "carto-dark",     label: "Dark"         },
-        { id: "esri-satellite", label: "Satélite"     },
-        { id: "esri-streets",   label: "Esri Streets" },
-        { id: "topo",           label: "Topo"         },
-        { id: "osm-hot",        label: "Humanitário"  },
-        { id: "wikimedia",      label: "Wikimedia"    }
+        { id: "osm",            label: qsTr("Streets")      },
+        { id: "carto-light",    label: qsTr("Voyager")      },
+        { id: "carto-positron", label: qsTr("Positron")     },
+        { id: "carto-dark",     label: qsTr("Dark")         },
+        { id: "esri-satellite", label: qsTr("Satélite")     },
+        { id: "esri-streets",   label: qsTr("Esri Streets") },
+        { id: "topo",           label: qsTr("Topo")         },
+        { id: "osm-hot",        label: qsTr("Humanitário")  },
+        { id: "wikimedia",      label: qsTr("Wikimedia")    }
     ]
     property bool isDark: mapStyle === "carto-dark" || mapStyle === "esri-satellite"
 
@@ -191,7 +191,7 @@ Item {
             anchors { fill: parent; margins: 10 }
             spacing: 6
             Text {
-                text: "Label do marcador (opcional)"
+                text: qsTr("Label do marcador (opcional)")
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 9
             }
@@ -226,7 +226,7 @@ Item {
         Column {
             anchors { fill: parent; margins: 10 }
             spacing: 6
-            Text { text: "Novo círculo"; color: ThemeManager.textColor; font.pixelSize: 10; font.bold: true }
+            Text { text: qsTr("Novo círculo"); color: ThemeManager.textColor; font.pixelSize: 10; font.bold: true }
 
             // Coord display
             Text {
@@ -240,7 +240,7 @@ Item {
                     Row {
                         anchors { fill: parent; leftMargin: 6; rightMargin: 6 }
                         spacing: 3
-                        Text { anchors.verticalCenter: parent.verticalCenter; text: "R:"; color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("R:"); color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
                         TextInput {
                             id: radiusIn
                             anchors.verticalCenter: parent.verticalCenter
@@ -262,7 +262,7 @@ Item {
                         anchors { fill: parent; leftMargin: 7; rightMargin: 7; topMargin: 4; bottomMargin: 4 }
                         color: ThemeManager.textColor
                         font.pixelSize: 11
-                        placeholderText: "Label…"
+                        placeholderText: qsTr("Label…")
                         placeholderTextColor: ThemeManager.textSecondaryColor
                         background: null
                         padding: 0
@@ -292,7 +292,7 @@ Item {
                     border.color: circlePopup.asGeofence ? "#22c55e" : ThemeManager.borderColor; border.width: 1
                     Row { anchors.centerIn: parent; spacing: 4
                         Rectangle { width: 8; height: 8; radius: 4; color: circlePopup.asGeofence ? "#22c55e" : ThemeManager.textSecondaryColor }
-                        Text { id: geofTxt; text: "Geofence"; color: circlePopup.asGeofence ? "#22c55e" : ThemeManager.textSecondaryColor; font.pixelSize: 9 }
+                        Text { id: geofTxt; text: qsTr("Geofence"); color: circlePopup.asGeofence ? "#22c55e" : ThemeManager.textSecondaryColor; font.pixelSize: 9 }
                     }
                     MouseArea { anchors.fill: parent; onClicked: circlePopup.asGeofence = !circlePopup.asGeofence }
                 }
@@ -347,7 +347,7 @@ Item {
                 anchors { fill: parent; leftMargin: 8; rightMargin: 8 }
                 spacing: 4
 
-                Text { text: "Map"; color: ThemeManager.textColor; font.pixelSize: 11; font.bold: true }
+                Text { text: qsTr("Map"); color: ThemeManager.textColor; font.pixelSize: 11; font.bold: true }
 
                 // Style button (FIX: opens root-level dropdown to avoid z-clipping)
                 Rectangle {
@@ -363,7 +363,7 @@ Item {
                             text: { for(var i=0;i<root.styleList.length;i++) if(root.styleList[i].id===root.mapStyle) return root.styleList[i].label; return root.mapStyle }
                             color: ThemeManager.textColor; font.pixelSize: 10; anchors.verticalCenter: parent.verticalCenter
                         }
-                        Text { text: "▾"; color: ThemeManager.textSecondaryColor; font.pixelSize: 8; anchors.verticalCenter: parent.verticalCenter }
+                        Text { text: qsTr("▾"); color: ThemeManager.textSecondaryColor; font.pixelSize: 8; anchors.verticalCenter: parent.verticalCenter }
                     }
                     MouseArea {
                         anchors.fill: parent
@@ -417,7 +417,7 @@ Item {
                 Rectangle {
                     width: 24; height: 24; radius: 4
                     color: zmH.containsMouse ? Qt.rgba(0.5,0.5,0.5,0.12) : "transparent"; border.color: ThemeManager.borderColor
-                    Text { anchors.centerIn: parent; text: "−"; color: ThemeManager.textColor; font.pixelSize: 16; font.bold: true }
+                    Text { anchors.centerIn: parent; text: qsTr("−"); color: ThemeManager.textColor; font.pixelSize: 16; font.bold: true }
                     MouseArea { id: zmH; anchors.fill: parent; hoverEnabled: true
                         onClicked: if(root.zoom>1){root.zoom--;tileLayer.fullRefresh();overlayCanvas.requestPaint()} }
                 }
@@ -425,7 +425,7 @@ Item {
                 Rectangle {
                     width: 24; height: 24; radius: 4
                     color: zpH.containsMouse ? Qt.rgba(0.5,0.5,0.5,0.12) : "transparent"; border.color: ThemeManager.borderColor
-                    Text { anchors.centerIn: parent; text: "+"; color: ThemeManager.textColor; font.pixelSize: 16; font.bold: true }
+                    Text { anchors.centerIn: parent; text: qsTr("+"); color: ThemeManager.textColor; font.pixelSize: 16; font.bold: true }
                     MouseArea { id: zpH; anchors.fill: parent; hoverEnabled: true
                         onClicked: if(root.zoom<19){root.zoom++;tileLayer.fullRefresh();overlayCanvas.requestPaint()} }
                 }
@@ -435,7 +435,7 @@ Item {
                 Rectangle {
                     width: 40; height: 24; radius: 4
                     color: clH.containsMouse ? Qt.rgba(0.5,0.5,0.5,0.12) : "transparent"; border.color: ThemeManager.borderColor
-                    Text { anchors.centerIn: parent; text: "Clear"; color: ThemeManager.textSecondaryColor; font.pixelSize: 10 }
+                    Text { anchors.centerIn: parent; text: qsTr("Clear"); color: ThemeManager.textSecondaryColor; font.pixelSize: 10 }
                     MouseArea { id: clH; anchors.fill: parent; hoverEnabled: true; onClicked: if(behaviourObject)behaviourObject.clearAll() }
                 }
             }
@@ -457,8 +457,8 @@ Item {
                 spacing: 6
                 visible: root.showLivePanel
 
-                Text { text: "●"; color: "#10b981"; font.pixelSize: 10 }
-                Text { text: "Live"; color: "#10b981"; font.pixelSize: 10; font.bold: true }
+                Text { text: qsTr("●"); color: "#10b981"; font.pixelSize: 10 }
+                Text { text: qsTr("Live"); color: "#10b981"; font.pixelSize: 10; font.bold: true }
 
                 function fieldBox(w) { return w }
 
@@ -468,7 +468,7 @@ Item {
                         anchors { fill: parent; leftMargin: 6; rightMargin: 6; topMargin: 3; bottomMargin: 3 }
                         color: ThemeManager.textColor
                         font.pixelSize: 10
-                        placeholderText: "Lat"
+                        placeholderText: qsTr("Lat")
                         placeholderTextColor: ThemeManager.textSecondaryColor
                         background: null
                         padding: 0
@@ -483,7 +483,7 @@ Item {
                         anchors { fill: parent; leftMargin: 6; rightMargin: 6; topMargin: 3; bottomMargin: 3 }
                         color: ThemeManager.textColor
                         font.pixelSize: 10
-                        placeholderText: "Lng"
+                        placeholderText: qsTr("Lng")
                         placeholderTextColor: ThemeManager.textSecondaryColor
                         background: null
                         padding: 0
@@ -498,7 +498,7 @@ Item {
                         anchors { fill: parent; leftMargin: 6; rightMargin: 6; topMargin: 3; bottomMargin: 3 }
                         color: ThemeManager.textColor
                         font.pixelSize: 10
-                        placeholderText: "Label"
+                        placeholderText: qsTr("Label")
                         placeholderTextColor: ThemeManager.textSecondaryColor
                         background: null
                         padding: 0
@@ -823,19 +823,19 @@ Item {
                 Rectangle {
                     width: 64; height: 24; radius: 5
                     color: "#d88b5cf6"
-                    Text { anchors.centerIn: parent; text: "⎌ Desfazer"; color: "white"; font.pixelSize: 9; font.bold: true }
+                    Text { anchors.centerIn: parent; text: qsTr("⎌ Desfazer"); color: "white"; font.pixelSize: 9; font.bold: true }
                     MouseArea { anchors.fill: parent; onClicked: if(behaviourObject) behaviourObject.removeLastTracePoint() }
                 }
                 Rectangle {
                     width: 56; height: 24; radius: 5
                     color: "#bf505050"
-                    Text { anchors.centerIn: parent; text: "Limpar"; color: "white"; font.pixelSize: 9; font.bold: true }
+                    Text { anchors.centerIn: parent; text: qsTr("Limpar"); color: "white"; font.pixelSize: 9; font.bold: true }
                     MouseArea { anchors.fill: parent; onClicked: if(behaviourObject) behaviourObject.clearTrace() }
                 }
                 Rectangle {
                     width: 58; height: 24; radius: 5
                     color: "#d88b5cf6"
-                    Text { anchors.centerIn: parent; text: "✓ Concluir"; color: "white"; font.pixelSize: 9; font.bold: true }
+                    Text { anchors.centerIn: parent; text: qsTr("✓ Concluir"); color: "white"; font.pixelSize: 9; font.bold: true }
                     MouseArea { anchors.fill: parent; onClicked: root.activeMode = "" }
                 }
             }
