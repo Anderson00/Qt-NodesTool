@@ -24,6 +24,18 @@ NumberInput::NumberInput(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void NumberInput::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("trigger()", Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("outputValue(double)",    Connections::DoubleType);
+    setPinTypeForSignature("outputInt(int)",          Connections::IntType);
+    setPinTypeForSignature("outputBool(bool)",        Connections::BoolType);
+    setPinTypeForSignature("outputString(QString)",   Connections::StringType);
+    setPinTypeForSignature("outputData(QVariantList)",Connections::ArrayType);
+}
+
 QMap<QString, QVariant> NumberInput::loadInfos()
 {
     return NumberInput::static_infos();

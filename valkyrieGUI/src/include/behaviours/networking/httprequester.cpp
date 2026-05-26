@@ -26,6 +26,21 @@ HttpRequester::HttpRequester(QObject *parent)
     }));
 }
 
+void HttpRequester::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("get(QString)",             Connections::StringType);
+    setPinTypeForSignature("post(QString,QString)",    Connections::AnyType);
+    setPinTypeForSignature("put(QString,QString)",     Connections::AnyType);
+    setPinTypeForSignature("del(QString)",             Connections::StringType);
+    setPinTypeForSignature("setHeader(QString,QString)", Connections::AnyType);
+    setPinTypeForSignature("cancel()",                 Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("responseReceived(QString)", Connections::StringType);
+    setPinTypeForSignature("errorOccurred(QString)",    Connections::StringType);
+    setPinTypeForSignature("statusCode(int)",           Connections::IntType);
+}
+
 QMap<QString, QVariant> HttpRequester::loadInfos()
 {
     return HttpRequester::static_infos();

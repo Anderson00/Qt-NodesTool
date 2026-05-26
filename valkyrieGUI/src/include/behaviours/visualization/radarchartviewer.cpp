@@ -19,6 +19,17 @@ RadarChartViewer::RadarChartViewer(QObject *parent)
     }));
 }
 
+void RadarChartViewer::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("setValues(QVariantList)",          Connections::ArrayType);
+    setPinTypeForSignature("setLabels(QStringList)",           Connections::ArrayType);
+    setPinTypeForSignature("addSeries(QString,QVariantList)",  Connections::AnyType);
+    setPinTypeForSignature("clear()",                          Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("seriesClicked(QString)", Connections::StringType);
+}
+
 QMap<QString, QVariant> RadarChartViewer::loadInfos()
 {
     return RadarChartViewer::static_infos();

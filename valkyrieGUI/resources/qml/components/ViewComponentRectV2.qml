@@ -70,6 +70,7 @@ Rectangle {
     // remain prominent.
     property string draggingPortSig:      ""
     property bool   draggingPortIsOutput: false
+    property int    draggingPortPinType:  0     // Connections::PinType of the dragging port
 
     // Derived state — updated reactively whenever the dragging sig changes.
     readonly property bool isAnyPortDragging: draggingPortSig !== ""
@@ -92,18 +93,23 @@ Rectangle {
     // True if at least one port on this node is compatible with the dragging port.
     readonly property bool hasCompatiblePort: {
         if (!isAnyPortDragging || isSourceNode) return true
-        var sig   = draggingPortSig
-        var isOut = draggingPortIsOutput
+        var sig      = draggingPortSig
+        var isOut    = draggingPortIsOutput
+        var dragType = draggingPortPinType
         if (isOut) {
             // dragging output → look for compatible INPUT ports
             for (var i = 0; i < connectionsInput.length; i++) {
-                if (viewPort.isPortCompatible(sig, connectionsInput[i].name))
+                var p = connectionsInput[i]
+                if (!isPinTypeCompatible(dragType, p.pinType)) continue
+                if (viewPort.isPortCompatible(sig, p.name))
                     return true
             }
         } else {
             // dragging input → look for compatible OUTPUT ports
             for (var j = 0; j < connectionsOutput.length; j++) {
-                if (viewPort.isPortCompatible(connectionsOutput[j].name, sig))
+                var q = connectionsOutput[j]
+                if (!isPinTypeCompatible(q.pinType, dragType)) continue
+                if (viewPort.isPortCompatible(q.name, sig))
                     return true
             }
         }
@@ -162,6 +168,40 @@ Rectangle {
         return text.slice(i, text.length - 1)
     }
 
+    /**
+     * Returns the accent colour for a pin based on its PinType integer value.
+     *
+     * The integer values must stay in sync with the Connections::PinType enum
+     * defined in connections.h:
+     *   0  AnyType    → grey
+     *   1  BoolType   → red
+     *   2  IntType    → light blue
+     *   3  DoubleType → green
+     *   4  StringType → orange
+     *   5  Vec2Type   → purple
+     *   6  Vec3Type   → pink
+     *   7  ColorType  → gold
+     *   8  ArrayType  → yellow
+     *   9  DictType   → cyan
+     *   10 FlowType   → white
+     */
+    function pinColor(pinType) {
+        switch (pinType) {
+            case 0:  return "#888888"  // AnyType   — grey
+            case 1:  return "#ff4444"  // BoolType  — red
+            case 2:  return "#44aaff"  // IntType   — light blue
+            case 3:  return "#44ff88"  // DoubleType — green
+            case 4:  return "#ffaa00"  // StringType — orange
+            case 5:  return "#9955ff"  // Vec2Type  — purple
+            case 6:  return "#ff55cc"  // Vec3Type  — pink
+            case 7:  return "#ffd700"  // ColorType — gold
+            case 8:  return "#ffff44"  // ArrayType — yellow
+            case 9:  return "#44ffff"  // DictType  — cyan
+            case 10: return "#ffffff"  // FlowType  — white
+            default: return "#888888"
+        }
+    }
+
     function connectionByName(name) {
         const all = connectionsInput.concat(connectionsOutput)
         for (let i = 0; i < all.length; i++) {
@@ -182,17 +222,32 @@ Rectangle {
         return undefined
     }
 
+    /**
+     * Returns true if two PinType values are compatible for connection.
+     * Mirrors Connections::arePinTypesCompatible() on the C++ side.
+     * AnyType (0) on either side always returns true.
+     */
+    function isPinTypeCompatible(a, b) {
+        return (a === 0 || b === 0 || a === b)
+    }
+
     function loadInputConns() {
         const connObj = []
         const inputs = behaviourObject.getInputsMethodSignature()
-        inputs.forEach((input) => connObj.push({ name: input }))
+        inputs.forEach((input) => connObj.push({
+            name:    input,
+            pinType: behaviourObject.getPinType(input)
+        }))
         root.connectionsInput = connObj
     }
 
     function loadOutputConns() {
         const connObj = []
         const outputs = behaviourObject.getOutputsMethodSignature()
-        outputs.forEach((output) => connObj.push({ name: output }))
+        outputs.forEach((output) => connObj.push({
+            name:    output,
+            pinType: behaviourObject.getPinType(output)
+        }))
         root.connectionsOutput = connObj
     }
 
@@ -790,6 +845,9 @@ Rectangle {
                                 readonly property bool _isCompatible: {
                                     if (!root.isAnyPortDragging || root.isSourceNode) return false
                                     if (!root.draggingPortIsOutput) return false
+                                    // PinType semantic check (fast, no C++ call)
+                                    if (!isPinTypeCompatible(root.draggingPortPinType, modelData.pinType))
+                                        return false
                                     return viewPort.isPortCompatible(root.draggingPortSig, modelData.name)
                                 }
 
@@ -835,14 +893,14 @@ Rectangle {
                                         width:  style === "list" ? 6 : 8
                                         height: width
                                         radius: width / 2
-                                        color:  stringToColour(extractParams(modelData.name))
+                                        color:  pinColor(modelData.pinType)
                                         anchors.verticalCenter: parent.verticalCenter
                                         // Visual highlight on compatible target: bright border only
                                         border.width: inputArea._isCompatible && root.isAnyPortDragging
                                                       ? 2
                                                       : (style === "list" ? 0 : 1)
                                         border.color: inputArea._isCompatible && root.isAnyPortDragging
-                                                      ? Qt.lighter(stringToColour(extractParams(modelData.name)), 1.6)
+                                                      ? Qt.lighter(pinColor(modelData.pinType), 1.6)
                                                       : Qt.rgba(0,0,0,0.2)
 
                                         // Pulsing glow ring on compatible port
@@ -912,6 +970,9 @@ Rectangle {
                                 readonly property bool _isCompatible: {
                                     if (!root.isAnyPortDragging || root.isSourceNode) return false
                                     if (root.draggingPortIsOutput) return false
+                                    // PinType semantic check (fast, no C++ call)
+                                    if (!isPinTypeCompatible(modelData.pinType, root.draggingPortPinType))
+                                        return false
                                     return viewPort.isPortCompatible(modelData.name, root.draggingPortSig)
                                 }
 
@@ -968,14 +1029,14 @@ Rectangle {
                                         width:  style === "list" ? 6 : 8
                                         height: width
                                         radius: width / 2
-                                        color:  stringToColour(extractParams(modelData.name))
+                                        color:  pinColor(modelData.pinType)
                                         anchors.verticalCenter: parent.verticalCenter
                                         // Visual highlight on compatible target: bright border only
                                         border.width: outputArea._isCompatible && root.isAnyPortDragging
                                                       ? 2
                                                       : (style === "list" ? 0 : 1)
                                         border.color: outputArea._isCompatible && root.isAnyPortDragging
-                                                      ? Qt.lighter(stringToColour(extractParams(modelData.name)), 1.6)
+                                                      ? Qt.lighter(pinColor(modelData.pinType), 1.6)
                                                       : Qt.rgba(0,0,0,0.2)
 
                                         // Pulsing glow ring on compatible port

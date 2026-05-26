@@ -15,6 +15,8 @@ class ArrayInput : public Behaviours
 public:
     explicit ArrayInput(QObject *parent = nullptr);
 
+    void onPinsReady() override;
+
     QMap<QString, QVariant> loadInfos() override;
     static QMap<QString, QVariant> static_infos();
 

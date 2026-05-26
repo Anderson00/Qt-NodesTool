@@ -12,6 +12,16 @@ Gate::Gate(QObject *parent) : Behaviours(parent)
     addInputOutputExclusion({"toggle()","resetCounts()","gateChanged()","lastInputChanged()","passCountChanged()","blockCountChanged()"});
 }
 
+void Gate::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("setGate(bool)",    Connections::BoolType);
+    setPinTypeForSignature("setInput(double)", Connections::DoubleType);
+    // outputs
+    setPinTypeForSignature("outputValue(double)",   Connections::DoubleType);
+    setPinTypeForSignature("outputBlocked(double)", Connections::DoubleType);
+}
+
 QMap<QString, QVariant> Gate::loadInfos() { return static_infos(); }
 
 QMap<QString, QVariant> Gate::static_infos() {

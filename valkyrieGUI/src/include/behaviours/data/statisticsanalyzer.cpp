@@ -27,6 +27,16 @@ StatisticsAnalyzer::StatisticsAnalyzer(QObject *parent)
     }));
 }
 
+void StatisticsAnalyzer::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("pushValue(double)", Connections::DoubleType);
+    setPinTypeForSignature("reset()",           Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("statsUpdated(double,double,double,double)", Connections::AnyType);
+    setPinTypeForSignature("outlierDetected(double)",                   Connections::DoubleType);
+}
+
 QMap<QString, QVariant> StatisticsAnalyzer::loadInfos()
 {
     return StatisticsAnalyzer::static_infos();

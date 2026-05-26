@@ -11,6 +11,13 @@ SignalGenerator::SignalGenerator(QObject *parent) : Behaviours(parent)
     this->setQmlBodyUrl("qrc:/behaviours/common/SignalGenerator.qml");
 }
 
+void SignalGenerator::onPinsReady()
+{
+    // outputs
+    setPinTypeForSignature("outputValue(double)",  Connections::DoubleType);
+    setPinTypeForSignature("outputString(QString)", Connections::StringType);
+}
+
 QMap<QString, QVariant> SignalGenerator::loadInfos()
 {
     return SignalGenerator::static_infos();

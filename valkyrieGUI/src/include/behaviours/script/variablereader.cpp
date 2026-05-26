@@ -25,6 +25,14 @@ VariableReader::VariableReader(QObject *parent)
             this, &VariableReader::onVariablesChanged);
 }
 
+void VariableReader::onPinsReady()
+{
+    // outputs
+    setPinTypeForSignature("outputValue(double)", Connections::DoubleType);
+    setPinTypeForSignature("outputText(QString)", Connections::StringType);
+    setPinTypeForSignature("outputBool(bool)",    Connections::BoolType);
+}
+
 QMap<QString, QVariant> VariableReader::loadInfos() { return static_infos(); }
 
 QMap<QString, QVariant> VariableReader::static_infos() {

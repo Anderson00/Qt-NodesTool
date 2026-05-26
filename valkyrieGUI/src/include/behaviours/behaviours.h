@@ -102,6 +102,15 @@ public slots:
 
     bool isConnectionCompatible(const QString &sender, Behaviours *target, const QString &receiver);
 
+    /**
+     * @brief Returns the PinType (as int) for the pin identified by @p signature.
+     *
+     * Called from QML via behaviourObject.getPinType(sig) to populate the
+     * connectionsInput / connectionsOutput arrays with { name, pinType } entries.
+     * Returns Connections::AnyType (0) if the signature is not found.
+     */
+    Q_INVOKABLE int getPinType(const QString& signature) const;
+
 signals:
     void titleChanged(QString newText);
     void widthChanged(double newWidth);
@@ -120,6 +129,38 @@ protected:
     void setOutputConns(QMap<QString, Connections*> outputConns);
     void addOutputConn(QString outputName, Connections* outputConn);
     void addInputOutputExclusion(const QList<QString>& exclusionConnections);
+
+    /**
+     * @brief Assign a semantic PinType to a pin identified by its method signature.
+     *
+     * Call this from subclass constructors (after start()) to colour-code specific
+     * pins.  The assignment is stored in the Connections object and queried by QML
+     * via getPinType().  Signatures not listed here default to AnyType.
+     *
+     * Example (inside a Behaviour subclass constructor):
+     * @code
+     *   // After start() has been called by ViewPortWindow::addBehaviourWithUuid()
+     *   // or directly:
+     *   setPinTypeForSignature("setA(double)",       Connections::DoubleType);
+     *   setPinTypeForSignature("outputResult(double)", Connections::DoubleType);
+     * @endcode
+     *
+     * NOTE: Connections objects are created by loadConnections() which is called
+     * inside start().  Call this helper after start() returns.  If the signature
+     * is not found (e.g. wrong name), the call is silently ignored.
+     */
+    void setPinTypeForSignature(const QString& signature, int type);
+
+    /**
+     * @brief Hook called by start() after loadConnections() completes.
+     *
+     * Override in subclasses to call setPinTypeForSignature() for each pin.
+     * At the point this method is invoked all Connections objects are already
+     * created, so every setPinTypeForSignature() call will find its target.
+     *
+     * Default implementation is a no-op.
+     */
+    virtual void onPinsReady() {}
 
 private:
     void loaderOfInfosInFields();

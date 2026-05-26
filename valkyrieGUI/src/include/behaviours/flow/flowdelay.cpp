@@ -13,6 +13,15 @@ FlowDelay::FlowDelay(QObject *parent) : Behaviours(parent)
     connect(&m_timer, &QTimer::timeout, this, &FlowDelay::onTimeout);
 }
 
+void FlowDelay::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("trigger()",       Connections::FlowType);
+    setPinTypeForSignature("setDelayMs(int)", Connections::IntType);
+    // outputs
+    setPinTypeForSignature("execOut()", Connections::FlowType);
+}
+
 QMap<QString, QVariant> FlowDelay::loadInfos() { return static_infos(); }
 QMap<QString, QVariant> FlowDelay::static_infos() {
     return {{"name","Flow Delay"},{"type",Behaviours::CPP},{"className","FlowDelay"},

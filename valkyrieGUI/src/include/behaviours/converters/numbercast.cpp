@@ -17,6 +17,20 @@ NumberCast::NumberCast(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void NumberCast::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("trigger()",        Connections::FlowType);
+    setPinTypeForSignature("setInput(double)", Connections::DoubleType);
+    setPinTypeForSignature("setInputInt(int)", Connections::IntType);
+    // outputs
+    setPinTypeForSignature("outputDouble(double)", Connections::DoubleType);
+    setPinTypeForSignature("outputInt(int)",        Connections::IntType);
+    setPinTypeForSignature("outputBool(bool)",      Connections::BoolType);
+    setPinTypeForSignature("outputString(QString)", Connections::StringType);
+    setPinTypeForSignature("outputData(QVariantList)", Connections::ArrayType);
+}
+
 QMap<QString, QVariant> NumberCast::loadInfos()
 {
     return NumberCast::static_infos();

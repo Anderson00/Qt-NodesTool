@@ -26,6 +26,29 @@ MapViewer::MapViewer(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void MapViewer::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("addMarker(double,double,QString)",                     Connections::AnyType);
+    setPinTypeForSignature("addMarkerWithPayload(double,double,QString,QString)",  Connections::AnyType);
+    setPinTypeForSignature("addTracePoint(double,double)",                         Connections::AnyType);
+    setPinTypeForSignature("setCenter(double,double,int)",                         Connections::AnyType);
+    setPinTypeForSignature("clearMarkers()",                                       Connections::FlowType);
+    setPinTypeForSignature("clearTrace()",                                         Connections::FlowType);
+    setPinTypeForSignature("clearAll()",                                           Connections::FlowType);
+    setPinTypeForSignature("setLiveMarker(double,double,QString)",                 Connections::AnyType);
+    setPinTypeForSignature("clearLiveMarker()",                                    Connections::FlowType);
+    setPinTypeForSignature("addCircle(double,double,double,QString,QString)",      Connections::AnyType);
+    setPinTypeForSignature("setGeofence(double,double,double)",                    Connections::AnyType);
+    setPinTypeForSignature("clearGeofence()",                                      Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("markerClicked(double,double,QString)",                 Connections::AnyType);
+    setPinTypeForSignature("markerClickedWithPayload(double,double,QString,QString)", Connections::AnyType);
+    setPinTypeForSignature("mapClicked(double,double)",                            Connections::AnyType);
+    setPinTypeForSignature("geofenceEntered(double,double)",                       Connections::AnyType);
+    setPinTypeForSignature("geofenceExited(double,double)",                        Connections::AnyType);
+}
+
 QMap<QString, QVariant> MapViewer::loadInfos() { return MapViewer::static_infos(); }
 
 QMap<QString, QVariant> MapViewer::static_infos()

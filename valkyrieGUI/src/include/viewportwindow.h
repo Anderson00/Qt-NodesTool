@@ -125,6 +125,12 @@ public slots:
     // Returns true for exact matches and all registered coercion pairs.
     Q_INVOKABLE bool isPortCompatible(const QString& srcSig, const QString& dstSig) const;
 
+    // Extended compatibility check that also validates PinType semantics.
+    // srcUuid / dstUuid are the node UUIDs; srcSig / dstSig the method signatures.
+    // If either UUID is unknown, falls back to the signature-only check.
+    Q_INVOKABLE bool isPortCompatibleFull(const QString& srcUuid, const QString& srcSig,
+                                          const QString& dstUuid, const QString& dstSig) const;
+
     void restoreViewport(qreal x, qreal y, qreal scale);
 
 signals:

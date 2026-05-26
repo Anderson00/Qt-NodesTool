@@ -53,6 +53,14 @@ PythonBehaviour::PythonBehaviour(QObject *parent)
 PythonBehaviour::~PythonBehaviour() {
 }
 
+void PythonBehaviour::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("updateInput(QString,QVariant)", Connections::AnyType);
+    // outputs
+    setPinTypeForSignature("outputResult(QString,QVariant)", Connections::AnyType);
+}
+
 QMap<QString, QVariant> PythonBehaviour::loadInfos() { return static_infos(); }
 
 QMap<QString, QVariant> PythonBehaviour::static_infos() {

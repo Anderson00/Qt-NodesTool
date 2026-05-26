@@ -34,6 +34,15 @@ QMap<QString, QVariant> MathFunction::static_infos()
     });
 }
 
+void MathFunction::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("setInput(double)", Connections::DoubleType);
+    // outputs
+    setPinTypeForSignature("outputResult(double)",  Connections::DoubleType);
+    setPinTypeForSignature("outputString(QString)", Connections::StringType);
+}
+
 // ── Accessors ────────────────────────────────────────────────────────────────
 
 int    MathFunction::function()   const { return m_function; }

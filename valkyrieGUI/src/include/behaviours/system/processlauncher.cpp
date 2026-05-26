@@ -24,6 +24,19 @@ ProcessLauncher::~ProcessLauncher()
     cleanupProcess();
 }
 
+void ProcessLauncher::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("launch(QString,QStringList)", Connections::AnyType);
+    setPinTypeForSignature("launchShell(QString)",        Connections::StringType);
+    setPinTypeForSignature("kill()",                      Connections::FlowType);
+    setPinTypeForSignature("setWorkingDirSlot(QString)",  Connections::StringType);
+    // outputs
+    setPinTypeForSignature("stdoutReceived(QString)", Connections::StringType);
+    setPinTypeForSignature("stderrReceived(QString)", Connections::StringType);
+    setPinTypeForSignature("finished(int)",           Connections::IntType);
+}
+
 QMap<QString, QVariant> ProcessLauncher::loadInfos()
 {
     return ProcessLauncher::static_infos();

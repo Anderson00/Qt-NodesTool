@@ -12,6 +12,17 @@ StringFormat::StringFormat(QObject *parent) : Behaviours(parent)
     addInputOutputExclusion({"templateChanged()","resultChanged()","precisionChanged()"});
 }
 
+void StringFormat::onPinsReady()
+{
+    // inputs — numeric values
+    setPinTypeForSignature("setA(double)", Connections::DoubleType);
+    setPinTypeForSignature("setB(double)", Connections::DoubleType);
+    setPinTypeForSignature("setC(double)", Connections::DoubleType);
+    // setTemplate(QString) and setPrecision(int) remain AnyType (control inputs)
+    // outputs
+    setPinTypeForSignature("outputString(QString)", Connections::StringType);
+}
+
 QMap<QString, QVariant> StringFormat::loadInfos() { return static_infos(); }
 
 QMap<QString, QVariant> StringFormat::static_infos() {

@@ -26,6 +26,19 @@ GaugeViewer::GaugeViewer(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void GaugeViewer::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("setInputValue(double)",          Connections::DoubleType);
+    setPinTypeForSignature("setMin(double)",                 Connections::DoubleType);
+    setPinTypeForSignature("setMax(double)",                 Connections::DoubleType);
+    setPinTypeForSignature("setWarn(double)",                Connections::DoubleType);
+    setPinTypeForSignature("setCrit(double)",                Connections::DoubleType);
+    setPinTypeForSignature("setUnit(QString)",               Connections::StringType);
+    setPinTypeForSignature("setInputData(QVariantList)",     Connections::ArrayType);
+    // no node outputs — all signals are internal QML bridge
+}
+
 QMap<QString, QVariant> GaugeViewer::loadInfos()
 {
     return GaugeViewer::static_infos();

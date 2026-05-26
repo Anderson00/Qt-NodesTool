@@ -12,6 +12,17 @@ PieChartViewer::PieChartViewer(QObject *parent) : Behaviours(parent)
     this->setQmlBodyUrl("qrc:/behaviours/common/PieChartViewer.qml");
 }
 
+void PieChartViewer::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("addSlice(QString,double)",      Connections::AnyType);
+    setPinTypeForSignature("setSliceValue(int,double)",     Connections::AnyType);
+    setPinTypeForSignature("clearSlices()",                 Connections::FlowType);
+    setPinTypeForSignature("removeSlice(int)",              Connections::IntType);
+    setPinTypeForSignature("setInputData(QVariantList)",    Connections::ArrayType);
+    // no node outputs — all signals are internal QML bridge
+}
+
 QMap<QString, QVariant> PieChartViewer::loadInfos()
 {
     return PieChartViewer::static_infos();

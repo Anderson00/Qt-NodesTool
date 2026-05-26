@@ -10,6 +10,16 @@ FlowMerge::FlowMerge(QObject *parent) : Behaviours(parent)
     addInputOutputExclusion({"lastSourceChanged()","mergeCountChanged()"});
 }
 
+void FlowMerge::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("triggerA()", Connections::FlowType);
+    setPinTypeForSignature("triggerB()", Connections::FlowType);
+    setPinTypeForSignature("triggerC()", Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("execOut()", Connections::FlowType);
+}
+
 QMap<QString, QVariant> FlowMerge::loadInfos() { return static_infos(); }
 QMap<QString, QVariant> FlowMerge::static_infos() {
     return {{"name","Flow Merge"},{"type",Behaviours::CPP},{"className","FlowMerge"},

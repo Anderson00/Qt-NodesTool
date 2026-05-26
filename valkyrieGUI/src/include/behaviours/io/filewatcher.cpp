@@ -26,6 +26,20 @@ FileWatcher::FileWatcher(QObject *parent)
             this, &FileWatcher::onDirectoryChanged);
 }
 
+void FileWatcher::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("setPath(QString)", Connections::StringType);
+    setPinTypeForSignature("start()",          Connections::FlowType);
+    setPinTypeForSignature("stop()",           Connections::FlowType);
+    setPinTypeForSignature("readFile()",       Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("fileChanged(QString)",  Connections::StringType);
+    setPinTypeForSignature("fileCreated(QString)",  Connections::StringType);
+    setPinTypeForSignature("fileDeleted(QString)",  Connections::StringType);
+    setPinTypeForSignature("contentRead(QString)",  Connections::StringType);
+}
+
 QMap<QString, QVariant> FileWatcher::loadInfos()
 {
     return FileWatcher::static_infos();

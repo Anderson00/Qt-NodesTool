@@ -24,6 +24,18 @@ ExpressionEvaluator::ExpressionEvaluator(QObject *parent)
     m_engine.evaluate("var a=0,b=0,c=0,d=0;");
 }
 
+void ExpressionEvaluator::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("setA(double)", Connections::DoubleType);
+    setPinTypeForSignature("setB(double)", Connections::DoubleType);
+    setPinTypeForSignature("setC(double)", Connections::DoubleType);
+    setPinTypeForSignature("setD(double)", Connections::DoubleType);
+    // outputs
+    setPinTypeForSignature("outputResult(double)", Connections::DoubleType);
+    setPinTypeForSignature("outputString(QString)", Connections::StringType);
+}
+
 QMap<QString, QVariant> ExpressionEvaluator::loadInfos()
 {
     return ExpressionEvaluator::static_infos();

@@ -17,6 +17,14 @@ NetworkInterfaceInfo::NetworkInterfaceInfo(QObject *parent) : Behaviours(parent)
     refresh();
 }
 
+void NetworkInterfaceInfo::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("refresh()", Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("interfacesFetched(QVariantList)", Connections::ArrayType);
+}
+
 QMap<QString, QVariant> NetworkInterfaceInfo::loadInfos() { return NetworkInterfaceInfo::static_infos(); }
 
 QMap<QString, QVariant> NetworkInterfaceInfo::static_infos()

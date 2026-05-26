@@ -20,6 +20,16 @@ Vec2Input::Vec2Input(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void Vec2Input::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("trigger()", Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("outputXY(double,double)",   Connections::AnyType);
+    setPinTypeForSignature("outputString(QString)",     Connections::StringType);
+    setPinTypeForSignature("outputData(QVariantList)",  Connections::ArrayType);
+}
+
 QMap<QString, QVariant> Vec2Input::loadInfos()
 {
     return Vec2Input::static_infos();

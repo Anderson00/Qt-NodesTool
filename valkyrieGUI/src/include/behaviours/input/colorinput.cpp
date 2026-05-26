@@ -18,6 +18,16 @@ ColorInput::ColorInput(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void ColorInput::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("trigger()", Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("outputString(QString)",    Connections::StringType);
+    setPinTypeForSignature("outputRGB(int,int,int)",   Connections::AnyType);
+    setPinTypeForSignature("outputData(QVariantList)", Connections::ArrayType);
+}
+
 QMap<QString, QVariant> ColorInput::loadInfos()
 {
     return ColorInput::static_infos();

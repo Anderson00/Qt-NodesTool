@@ -12,6 +12,11 @@ ComponentsViewer::ComponentsViewer(QObject *parent)
     this->setQmlBodyUrl("qrc:/behaviours/common/ComponentsViewer.qml");
 }
 
+void ComponentsViewer::onPinsReady()
+{
+    // ComponentsViewer has no I/O pins — purely a visual testing/showcase tool
+}
+
 QMap<QString, QVariant> ComponentsViewer::loadInfos()
 {
     return ComponentsViewer::static_infos();

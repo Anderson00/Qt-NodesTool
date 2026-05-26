@@ -14,6 +14,8 @@ class FileOpener : public Behaviours
 public:
     explicit FileOpener(QObject *parent = nullptr);
 
+    void onPinsReady() override;
+
     virtual QMap<QString, QVariant> loadInfos() override;
     static QMap<QString, QVariant> static_infos();
 

@@ -22,6 +22,19 @@ AIQueryNode::AIQueryNode(QObject *parent)
     }));
 }
 
+void AIQueryNode::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("query(QString)",        Connections::StringType);
+    setPinTypeForSignature("setSystemPrompt(QString)", Connections::StringType);
+    setPinTypeForSignature("setModel(QString)",     Connections::StringType);
+    setPinTypeForSignature("setApiKey(QString)",    Connections::StringType);
+    // outputs
+    setPinTypeForSignature("responseReceived(QString)", Connections::StringType);
+    setPinTypeForSignature("error(QString)",            Connections::StringType);
+    setPinTypeForSignature("tokensUsed(int,int)",       Connections::AnyType);
+}
+
 QMap<QString, QVariant> AIQueryNode::loadInfos()
 {
     return AIQueryNode::static_infos();

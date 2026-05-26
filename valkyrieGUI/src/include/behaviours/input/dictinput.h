@@ -16,6 +16,8 @@ class DictInput : public Behaviours
 public:
     explicit DictInput(QObject *parent = nullptr);
 
+    void onPinsReady() override;
+
     QMap<QString, QVariant> loadInfos() override;
     static QMap<QString, QVariant> static_infos();
 

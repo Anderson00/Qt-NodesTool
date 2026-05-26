@@ -31,6 +31,25 @@ LineChartViewer::LineChartViewer(QObject *parent)
     m_flushTimer.start();
 }
 
+void LineChartViewer::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("appendXY(double,double)",              Connections::AnyType);
+    setPinTypeForSignature("appendYAutoIncrementX(double)",        Connections::DoubleType);
+    setPinTypeForSignature("appendYAutoIncrementXChannel2(double)",Connections::DoubleType);
+    setPinTypeForSignature("appendXYToSeries(int,double,double)",  Connections::AnyType);
+    setPinTypeForSignature("appendYToSeries(int,double)",          Connections::AnyType);
+    setPinTypeForSignature("clearChart()",                         Connections::FlowType);
+    setPinTypeForSignature("clearSeries(int)",                     Connections::IntType);
+    setPinTypeForSignature("setXRange(double,double)",             Connections::AnyType);
+    setPinTypeForSignature("setYRange(double,double)",             Connections::AnyType);
+    setPinTypeForSignature("resetZoom()",                          Connections::FlowType);
+    setPinTypeForSignature("setMaxPoints(int)",                    Connections::IntType);
+    setPinTypeForSignature("setAutoScale(bool)",                   Connections::BoolType);
+    setPinTypeForSignature("setInputData(QVariantList)",           Connections::ArrayType);
+    // no node outputs — all signals are internal QML bridge
+}
+
 QMap<QString, QVariant> LineChartViewer::loadInfos()
 {
     return LineChartViewer::static_infos();

@@ -27,6 +27,14 @@ RateLimiter::RateLimiter(QObject *parent) : Behaviours(parent)
     });
 }
 
+void RateLimiter::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("push(QVariant)", Connections::AnyType);
+    // outputs
+    setPinTypeForSignature("passed(QVariant)", Connections::AnyType);
+}
+
 QMap<QString, QVariant> RateLimiter::loadInfos() { return RateLimiter::static_infos(); }
 
 QMap<QString, QVariant> RateLimiter::static_infos()

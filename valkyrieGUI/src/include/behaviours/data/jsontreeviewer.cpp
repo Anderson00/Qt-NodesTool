@@ -18,6 +18,15 @@ JsonTreeViewer::JsonTreeViewer(QObject *parent)
     }));
 }
 
+void JsonTreeViewer::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("loadJson(QString)",     Connections::StringType);
+    setPinTypeForSignature("clear()",               Connections::FlowType);
+    setPinTypeForSignature("setExpandDepth(int)",   Connections::IntType);
+    // no node outputs — display-only node
+}
+
 QMap<QString, QVariant> JsonTreeViewer::loadInfos()
 {
     return JsonTreeViewer::static_infos();

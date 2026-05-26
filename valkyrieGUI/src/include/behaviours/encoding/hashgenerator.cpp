@@ -17,6 +17,15 @@ HashGenerator::HashGenerator(QObject *parent)
     }));
 }
 
+void HashGenerator::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("hash(QString)",         Connections::StringType);
+    setPinTypeForSignature("setAlgorithm(QString)", Connections::StringType);
+    // outputs
+    setPinTypeForSignature("hashReady(QString)", Connections::StringType);
+}
+
 QMap<QString, QVariant> HashGenerator::loadInfos()
 {
     return HashGenerator::static_infos();

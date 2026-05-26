@@ -10,6 +10,16 @@ FlowBranch::FlowBranch(QObject *parent) : Behaviours(parent)
     addInputOutputExclusion({"conditionChanged()","lastPathChanged()"});
 }
 
+void FlowBranch::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("trigger()",          Connections::FlowType);
+    setPinTypeForSignature("setCondition(bool)", Connections::BoolType);
+    // outputs
+    setPinTypeForSignature("execTrue()",  Connections::FlowType);
+    setPinTypeForSignature("execFalse()", Connections::FlowType);
+}
+
 QMap<QString, QVariant> FlowBranch::loadInfos() { return static_infos(); }
 QMap<QString, QVariant> FlowBranch::static_infos() {
     return {{"name","Flow Branch"},{"type",Behaviours::CPP},{"className","FlowBranch"},

@@ -22,6 +22,20 @@ MapRange::MapRange(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void MapRange::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("setInputValue(double)", Connections::DoubleType);
+    setPinTypeForSignature("setInMin(double)",      Connections::DoubleType);
+    setPinTypeForSignature("setInMax(double)",      Connections::DoubleType);
+    setPinTypeForSignature("setOutMin(double)",     Connections::DoubleType);
+    setPinTypeForSignature("setOutMax(double)",     Connections::DoubleType);
+    setPinTypeForSignature("setClamp(bool)",        Connections::BoolType);
+    // outputs
+    setPinTypeForSignature("outputMapped(double)",  Connections::DoubleType);
+    setPinTypeForSignature("outputString(QString)", Connections::StringType);
+}
+
 QMap<QString, QVariant> MapRange::loadInfos()
 {
     return MapRange::static_infos();

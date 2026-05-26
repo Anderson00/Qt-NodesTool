@@ -23,6 +23,16 @@ DateTimeInput::DateTimeInput(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void DateTimeInput::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("trigger()", Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("outputString(QString)",      Connections::StringType);
+    setPinTypeForSignature("outputTimestamp(int)",       Connections::IntType);
+    setPinTypeForSignature("outputData(QVariantList)",   Connections::ArrayType);
+}
+
 QMap<QString, QVariant> DateTimeInput::loadInfos()
 {
     return DateTimeInput::static_infos();

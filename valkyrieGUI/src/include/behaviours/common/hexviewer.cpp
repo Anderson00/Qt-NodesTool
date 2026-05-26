@@ -17,6 +17,13 @@ HexViewer::HexViewer(QObject *parent)
                                                  }));
 }
 
+void HexViewer::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("input(QByteArray)", Connections::StringType);
+    // no node outputs — viewOutput(QJsonArray) is internal QML bridge
+}
+
 QMap<QString, QVariant> HexViewer::loadInfos()
 {
     return HexViewer::static_infos();

@@ -460,3 +460,22 @@ bool ViewPortWindow::isPortCompatible(const QString& srcSig, const QString& dstS
     const QByteArray dstP = TypeCoercions::extractParams(dst);
     return TypeCoercions::isCoercible(srcP, dstP);
 }
+
+bool ViewPortWindow::isPortCompatibleFull(const QString& srcUuid, const QString& srcSig,
+                                          const QString& dstUuid, const QString& dstSig) const
+{
+    // ── PinType semantic check ────────────────────────────────────────────────
+    // Look up both nodes and compare their pin types before doing the heavier
+    // Qt signature coercion check.  AnyType on either side always passes.
+    const Behaviours* srcBeh = m_behaviours.value(srcUuid);
+    const Behaviours* dstBeh = m_behaviours.value(dstUuid);
+    if (srcBeh && dstBeh) {
+        const auto srcPinType = static_cast<Connections::PinType>(srcBeh->getPinType(srcSig));
+        const auto dstPinType = static_cast<Connections::PinType>(dstBeh->getPinType(dstSig));
+        if (!Connections::arePinTypesCompatible(srcPinType, dstPinType))
+            return false;
+    }
+
+    // ── Qt signature coercion check ───────────────────────────────────────────
+    return isPortCompatible(srcSig, dstSig);
+}

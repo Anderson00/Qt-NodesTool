@@ -15,6 +15,8 @@ class StringFormat : public Behaviours
 public:
     explicit StringFormat(QObject *parent = nullptr);
 
+    void onPinsReady() override;
+
     QMap<QString, QVariant> loadInfos() override;
     static QMap<QString, QVariant> static_infos();
 

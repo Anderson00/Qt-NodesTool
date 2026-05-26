@@ -14,6 +14,8 @@ class FlowSequence : public Behaviours
 public:
     explicit FlowSequence(QObject *parent = nullptr);
 
+    void onPinsReady() override;
+
     QMap<QString, QVariant> loadInfos() override;
     static QMap<QString, QVariant> static_infos();
 

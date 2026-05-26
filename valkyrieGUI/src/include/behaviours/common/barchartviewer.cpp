@@ -12,6 +12,15 @@ BarChartViewer::BarChartViewer(QObject *parent) : Behaviours(parent)
     this->setQmlBodyUrl("qrc:/behaviours/common/BarChartViewer.qml");
 }
 
+void BarChartViewer::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("appendToSet(int,double)",     Connections::AnyType);
+    setPinTypeForSignature("addSet(QString)",             Connections::StringType);
+    setPinTypeForSignature("setInputData(QVariantList)",  Connections::ArrayType);
+    // no node outputs — all signals are internal QML bridge
+}
+
 QMap<QString, QVariant> BarChartViewer::loadInfos()
 {
     return BarChartViewer::static_infos();

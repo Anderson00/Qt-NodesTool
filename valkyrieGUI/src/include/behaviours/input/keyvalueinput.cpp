@@ -22,6 +22,18 @@ KeyValueInput::KeyValueInput(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void KeyValueInput::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("trigger()", Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("outputLabelValue(QString,double)", Connections::AnyType);
+    setPinTypeForSignature("outputIndexValue(int,double)",     Connections::AnyType);
+    setPinTypeForSignature("outputString(QString)",            Connections::StringType);
+    setPinTypeForSignature("outputValue(double)",              Connections::DoubleType);
+    setPinTypeForSignature("outputData(QVariantList)",         Connections::ArrayType);
+}
+
 QMap<QString, QVariant> KeyValueInput::loadInfos()
 {
     return KeyValueInput::static_infos();

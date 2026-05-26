@@ -22,6 +22,8 @@ class RadarChartViewer : public Behaviours
 public:
     explicit RadarChartViewer(QObject *parent = nullptr);
 
+    void onPinsReady() override;
+
     virtual QMap<QString, QVariant> loadInfos() override;
     static  QMap<QString, QVariant> static_infos();
 

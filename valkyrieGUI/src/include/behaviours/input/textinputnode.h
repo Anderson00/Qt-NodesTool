@@ -15,6 +15,8 @@ class TextInputNode : public Behaviours
 public:
     explicit TextInputNode(QObject *parent = nullptr);
 
+    void onPinsReady() override;
+
     QMap<QString, QVariant> loadInfos() override;
     static QMap<QString, QVariant> static_infos();
 

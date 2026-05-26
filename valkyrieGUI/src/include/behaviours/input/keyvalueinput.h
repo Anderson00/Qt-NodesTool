@@ -17,6 +17,8 @@ class KeyValueInput : public Behaviours
 public:
     explicit KeyValueInput(QObject *parent = nullptr);
 
+    void onPinsReady() override;
+
     QMap<QString, QVariant> loadInfos() override;
     static QMap<QString, QVariant> static_infos();
 

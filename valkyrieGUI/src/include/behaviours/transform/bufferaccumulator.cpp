@@ -18,6 +18,17 @@ BufferAccumulator::BufferAccumulator(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void BufferAccumulator::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("push(QVariant)",  Connections::AnyType);
+    setPinTypeForSignature("flush()",         Connections::FlowType);
+    setPinTypeForSignature("reset()",         Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("bufferFull(QVariantList)",    Connections::ArrayType);
+    setPinTypeForSignature("bufferFlushed(QVariantList)", Connections::ArrayType);
+}
+
 QMap<QString, QVariant> BufferAccumulator::loadInfos() { return BufferAccumulator::static_infos(); }
 
 QMap<QString, QVariant> BufferAccumulator::static_infos()

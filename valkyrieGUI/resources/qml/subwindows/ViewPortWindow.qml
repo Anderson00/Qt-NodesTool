@@ -38,6 +38,7 @@ Rectangle {
     // Broadcast to every ViewComponentRectV2 so incompatible ports can dim.
     property string draggingPortSig:      ""    // method signature of the port being dragged
     property bool   draggingPortIsOutput: false // true = dragging from an output (signal)
+    property int    draggingPortPinType:  0     // Connections::PinType of the dragging port (0 = AnyType)
 
     //Behaviours properties
     property var nodeOnFocus
@@ -795,6 +796,7 @@ Rectangle {
                 }
                 root.draggingPortSig      = ""
                 root.draggingPortIsOutput = false
+                root.draggingPortPinType  = 0
                 _clearSelection()
                 event.accepted = true
                 break
@@ -936,6 +938,7 @@ Rectangle {
             shapeConn = undefined
             root.draggingPortSig      = ""
             root.draggingPortIsOutput = false
+            root.draggingPortPinType  = 0
             mouse.accepted = false
         }
 
@@ -1672,6 +1675,7 @@ Rectangle {
                             }
                             root.draggingPortSig      = conn.name
                             root.draggingPortIsOutput = isOut
+                            root.draggingPortPinType  = conn.pinType !== undefined ? conn.pinType : 0
 
                             nodeConnections.model.append({
                                 methodSignature1: conn.name, node: this,
@@ -1690,6 +1694,7 @@ Rectangle {
 
                         draggingPortSig:      root.draggingPortSig
                         draggingPortIsOutput: root.draggingPortIsOutput
+                        draggingPortPinType:  root.draggingPortPinType
 
                         Component.onCompleted: {
                             // New nodes appear on top of all existing ones.

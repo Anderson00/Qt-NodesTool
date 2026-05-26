@@ -15,6 +15,19 @@ Counter::Counter(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void Counter::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("increment()",   Connections::FlowType);
+    setPinTypeForSignature("decrement()",   Connections::FlowType);
+    setPinTypeForSignature("reset()",       Connections::FlowType);
+    setPinTypeForSignature("setValue(int)", Connections::IntType);
+    setPinTypeForSignature("setStep(int)",  Connections::IntType);
+    // outputs
+    setPinTypeForSignature("outputCount(int)",    Connections::IntType);
+    setPinTypeForSignature("outputValue(double)", Connections::DoubleType);
+}
+
 QMap<QString, QVariant> Counter::loadInfos()
 {
     return Counter::static_infos();

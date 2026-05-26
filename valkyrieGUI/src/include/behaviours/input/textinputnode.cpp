@@ -18,6 +18,15 @@ TextInputNode::TextInputNode(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void TextInputNode::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("trigger()", Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("outputString(QString)",    Connections::StringType);
+    setPinTypeForSignature("outputData(QVariantList)", Connections::ArrayType);
+}
+
 QMap<QString, QVariant> TextInputNode::loadInfos()
 {
     return TextInputNode::static_infos();

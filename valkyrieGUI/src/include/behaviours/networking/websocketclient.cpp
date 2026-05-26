@@ -34,6 +34,19 @@ WebSocketClient::~WebSocketClient()
     }
 }
 
+void WebSocketClient::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("connectTo(QString)", Connections::StringType);
+    setPinTypeForSignature("send(QString)",      Connections::StringType);
+    setPinTypeForSignature("disconnect()",       Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("messageReceived(QString)", Connections::StringType);
+    setPinTypeForSignature("connected()",              Connections::FlowType);
+    setPinTypeForSignature("disconnected()",           Connections::FlowType);
+    setPinTypeForSignature("error(QString)",           Connections::StringType);
+}
+
 QMap<QString, QVariant> WebSocketClient::loadInfos() { return WebSocketClient::static_infos(); }
 
 QMap<QString, QVariant> WebSocketClient::static_infos()

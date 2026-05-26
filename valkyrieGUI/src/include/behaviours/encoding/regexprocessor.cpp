@@ -21,6 +21,18 @@ RegexProcessor::RegexProcessor(QObject *parent)
     }));
 }
 
+void RegexProcessor::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("setText(QString)",           Connections::StringType);
+    setPinTypeForSignature("setPattern(QString)",        Connections::StringType);
+    setPinTypeForSignature("replace(QString)",           Connections::StringType);
+    // outputs
+    setPinTypeForSignature("matchFound(QStringList)", Connections::ArrayType);
+    setPinTypeForSignature("noMatch()",               Connections::FlowType);
+    setPinTypeForSignature("replaced(QString)",       Connections::StringType);
+}
+
 QMap<QString, QVariant> RegexProcessor::loadInfos()
 {
     return RegexProcessor::static_infos();

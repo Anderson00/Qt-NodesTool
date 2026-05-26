@@ -57,6 +57,18 @@ ScriptScheduler::ScriptScheduler(QObject *parent)
 
 // ── Static info ────────────────────────────────────────────────────────────────
 
+void ScriptScheduler::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("startScheduler()",  Connections::FlowType);
+    setPinTypeForSignature("stopScheduler()",   Connections::FlowType);
+    setPinTypeForSignature("triggerEvent(QString)", Connections::StringType);
+    // outputs
+    setPinTypeForSignature("eventFired(QString,QVariantMap)",        Connections::AnyType);
+    setPinTypeForSignature("eventScriptFinished(QString,QVariantMap)", Connections::AnyType);
+    setPinTypeForSignature("eventScriptError(QString,QString)",      Connections::AnyType);
+}
+
 QMap<QString, QVariant> ScriptScheduler::loadInfos()  { return static_infos(); }
 QMap<QString, QVariant> ScriptScheduler::static_infos()
 {

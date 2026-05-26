@@ -19,6 +19,19 @@ SerialMonitor::SerialMonitor(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void SerialMonitor::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("sendData(QString)",     Connections::StringType);
+    setPinTypeForSignature("setBaud(int)",          Connections::IntType);
+    setPinTypeForSignature("setPort(QString)",      Connections::StringType);
+    setPinTypeForSignature("connectPort()",         Connections::FlowType);
+    setPinTypeForSignature("disconnectPort()",      Connections::FlowType);
+    setPinTypeForSignature("clear()",               Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("outputReceived(QString)", Connections::StringType);
+}
+
 QMap<QString, QVariant> SerialMonitor::loadInfos()
 {
     return SerialMonitor::static_infos();

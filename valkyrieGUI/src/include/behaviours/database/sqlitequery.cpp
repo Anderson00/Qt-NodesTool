@@ -36,6 +36,17 @@ SQLiteQuery::~SQLiteQuery()
     }
 }
 
+void SQLiteQuery::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("setDatabase(QString)",                    Connections::StringType);
+    setPinTypeForSignature("execute(QString)",                        Connections::StringType);
+    setPinTypeForSignature("executeWithParams(QString,QVariantList)", Connections::AnyType);
+    // outputs
+    setPinTypeForSignature("rowsFetched(QVariantList)", Connections::ArrayType);
+    setPinTypeForSignature("error(QString)",            Connections::StringType);
+}
+
 QMap<QString, QVariant> SQLiteQuery::loadInfos()
 {
     return SQLiteQuery::static_infos();

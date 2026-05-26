@@ -14,6 +14,11 @@ ProcessesViewer::ProcessesViewer(QObject *parent)
                                                  }));
 }
 
+void ProcessesViewer::onPinsReady()
+{
+    // ProcessesViewer has no configurable I/O slots — output is auto-populated via QML
+}
+
 QMap<QString, QVariant> ProcessesViewer::loadInfos()
 {
     return ProcessesViewer::static_infos();

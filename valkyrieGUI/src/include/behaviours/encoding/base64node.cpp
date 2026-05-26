@@ -17,6 +17,16 @@ Base64Node::Base64Node(QObject *parent)
     }));
 }
 
+void Base64Node::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("encode(QString)", Connections::StringType);
+    setPinTypeForSignature("decode(QString)", Connections::StringType);
+    // outputs
+    setPinTypeForSignature("encoded(QString)",      Connections::StringType);
+    setPinTypeForSignature("decodeResult(QString)", Connections::StringType);
+}
+
 QMap<QString, QVariant> Base64Node::loadInfos()
 {
     return Base64Node::static_infos();

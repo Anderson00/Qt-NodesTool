@@ -10,6 +10,14 @@ FlowEnd::FlowEnd(QObject *parent) : Behaviours(parent)
     addInputOutputExclusion({"triggered()","hitCountChanged()"});
 }
 
+void FlowEnd::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("trigger()", Connections::FlowType);
+    // outputs (triggered() = flow notification, but FlowEnd has 0 outputs by design)
+    setPinTypeForSignature("triggered()", Connections::FlowType);
+}
+
 QMap<QString, QVariant> FlowEnd::loadInfos() { return static_infos(); }
 QMap<QString, QVariant> FlowEnd::static_infos() {
     return {{"name","Flow End"},{"type",Behaviours::CPP},{"className","FlowEnd"},
