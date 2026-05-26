@@ -86,6 +86,10 @@ private:
 
     QString m_currentTaskId;
     qint64  m_startTime = 0;
+
+    // Set to true during loadState() to suppress autoRun while restoring state,
+    // preventing scripts from firing before inputs/variables are fully loaded.
+    bool m_loading = false;
 };
 
 #endif // PYTHONBEHAVIOUR_H

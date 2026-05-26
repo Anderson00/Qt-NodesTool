@@ -19,8 +19,9 @@ DesktopManager::DesktopManager(QObject* parent) : QObject(parent)
 
 DesktopManager* DesktopManager::instance()
 {
-    static DesktopManager* _instance = new DesktopManager();
-    return _instance;
+    // Meyers singleton: constructed once, destroyed on app exit in correct order
+    static DesktopManager s_instance;
+    return &s_instance;
 }
 
 QObject* DesktopManager::qmlSingletonProvider(QQmlEngine*, QJSEngine*)
@@ -131,6 +132,12 @@ bool DesktopManager::removeDesktop(const QString& id)
     if (idx < 0) return false;
 
     const bool wasCurrent = (m_currentId == id);
+
+    // Give QML a chance to snapshot the outgoing desktop's viewport before
+    // removal — same contract as switchToDesktop()
+    if (wasCurrent && !m_currentId.isEmpty())
+        emit aboutToLeaveDesktop(m_currentId);
+
     m_desktops.removeAt(idx);
 
     if (wasCurrent) {
@@ -408,8 +415,12 @@ QJsonArray DesktopManager::serialize() const
 
 QJsonArray DesktopManager::serializePinned() const
 {
+    // Sort before serializing to produce deterministic JSON (avoids noisy git diffs)
+    QList<QString> sorted = m_pinned.values();
+    std::sort(sorted.begin(), sorted.end());
+
     QJsonArray arr;
-    for (const auto& u : m_pinned) arr.append(u);
+    for (const auto& u : sorted) arr.append(u);
     return arr;
 }
 

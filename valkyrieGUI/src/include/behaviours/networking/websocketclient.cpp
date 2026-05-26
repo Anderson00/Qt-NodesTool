@@ -28,9 +28,14 @@ WebSocketClient::WebSocketClient(QObject *parent) : Behaviours(parent)
 
 WebSocketClient::~WebSocketClient()
 {
+    // Stop reconnect timer so its slot cannot fire while we're destructing
+    m_reconnectTimer.stop();
+    m_autoReconnect = false;
+
     if (m_socket) {
-        m_socket->disconnectFromHost();
-        m_socket->deleteLater();
+        // abort() is synchronous (unlike disconnectFromHost which is async).
+        // Parent ownership (this) handles deletion — no deleteLater needed.
+        m_socket->abort();
     }
 }
 
@@ -84,9 +89,9 @@ void WebSocketClient::connectTo(QString url)
     connect(m_socket, &QAbstractSocket::errorOccurred, this, &WebSocketClient::onSocketError);
 
     QUrl parsed(url);
-    quint16 port = static_cast<quint16>(parsed.port(-1));
-    if (port == static_cast<quint16>(-1))
-        port = (parsed.scheme() == "wss") ? 443 : 80;
+    int rawPort = parsed.port(-1);
+    quint16 port = (rawPort > 0) ? static_cast<quint16>(rawPort)
+                                 : (parsed.scheme() == QStringLiteral("wss") ? 443u : 80u);
 
     m_socket->connectToHost(parsed.host(), port);
 }
@@ -140,8 +145,13 @@ void WebSocketClient::onSocketReadyRead()
     }
 
     int consumed = 0;
-    while (consumed < m_rxBuffer.size())
+    int lastConsumed = -1;
+    // Guard against infinite loop: if a frame is incomplete and consumed does
+    // not advance, exit immediately — more data will arrive in the next read.
+    while (consumed < m_rxBuffer.size() && consumed != lastConsumed) {
+        lastConsumed = consumed;
         processFrame(m_rxBuffer, consumed);
+    }
 
     if (consumed > 0)
         m_rxBuffer.remove(0, consumed);
@@ -233,7 +243,7 @@ void WebSocketClient::processFrame(const QByteArray& data, int& consumed)
     bool fin    = (buf[0] & 0x80) != 0;
     quint8 op   = buf[0] & 0x0F;
     bool masked = (buf[1] & 0x80) != 0;
-    quint64 len = buf[1] & 0x7F;
+    quint64 len = buf[1] & 0x7Fu;
 
     int headerSize = 2;
     if (len == 126) {
@@ -249,6 +259,13 @@ void WebSocketClient::processFrame(const QByteArray& data, int& consumed)
 
     int maskOffset = headerSize;
     if (masked) headerSize += 4;
+
+    // Reject absurdly large payloads to prevent int overflow and OOM
+    static constexpr quint64 kMaxFramePayload = 16u * 1024u * 1024u; // 16 MB
+    if (len > kMaxFramePayload) {
+        if (m_socket) m_socket->abort();
+        return;
+    }
 
     if (static_cast<quint64>(data.size() - consumed) < static_cast<quint64>(headerSize) + len) return;
 

@@ -60,6 +60,10 @@ private:
     PythonWorker* m_worker;
     void* m_guard = nullptr;
     void* m_release = nullptr;
+
+    // Tracks the id of the task currently executing so that a stale timeout
+    // cannot abort a newer task after the original one already completed.
+    QString m_currentTaskId;
 };
 
 Q_DECLARE_METATYPE(PythonTask)

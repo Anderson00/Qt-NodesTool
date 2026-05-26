@@ -10,8 +10,9 @@
 #include <QDebug>
 
 VariableManager* VariableManager::instance() {
-    static VariableManager* _instance = new VariableManager();
-    return _instance;
+    // Meyers singleton: constructed once, destroyed on app exit in correct order
+    static VariableManager s_instance;
+    return &s_instance;
 }
 
 QObject* VariableManager::qmlSingletonProvider(QQmlEngine*, QJSEngine*) {
@@ -19,6 +20,11 @@ QObject* VariableManager::qmlSingletonProvider(QQmlEngine*, QJSEngine*) {
 }
 
 VariableManager::VariableManager(QObject* parent) : QObject(parent) {
+    // Debounce: coalesce rapid saves into a single write 500 ms after the last change
+    m_saveTimer.setSingleShot(true);
+    m_saveTimer.setInterval(500);
+    connect(&m_saveTimer, &QTimer::timeout, this, &VariableManager::saveToFile);
+
     loadFromFile();
 }
 
@@ -119,7 +125,7 @@ NodeVariable* VariableManager::addVec3(const QString& name, double x, double y, 
 
 void VariableManager::saveToFile() {
     QJsonArray arr;
-    for (const NodeVariable* v : qAsConst(m_variables))
+    for (const NodeVariable* v : std::as_const(m_variables))
         arr.append(v->toJson());
 
     QJsonObject root;
@@ -155,5 +161,7 @@ void VariableManager::loadFromFile() {
 }
 
 void VariableManager::autoSave() {
-    saveToFile();
+    // Restart the debounce timer; the actual write happens 500 ms after the
+    // last call. Prevents thrashing when many variables are updated rapidly.
+    m_saveTimer.start();
 }

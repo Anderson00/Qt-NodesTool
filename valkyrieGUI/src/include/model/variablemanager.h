@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QList>
+#include <QTimer>
 #include <QVariant>
 #include <QQmlListProperty>
 #include "nodevariable.h"
@@ -49,6 +50,11 @@ private:
     void autoSave();
 
     QList<NodeVariable*> m_variables;
+
+    // Debounce timer: batches rapid setValue() calls into a single disk write
+    // to avoid I/O thrashing when variables are updated at high frequency
+    // (e.g. from a Python loop or a fast signal generator node).
+    QTimer m_saveTimer;
 };
 
 #endif // VARIABLEMANAGER_H

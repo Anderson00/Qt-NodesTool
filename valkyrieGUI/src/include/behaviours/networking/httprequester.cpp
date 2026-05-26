@@ -4,6 +4,7 @@
 #include <QJsonDocument>
 #include <QByteArray>
 #include <QTimer>
+#include <QPointer>
 
 REGISTER_BEHAVIOUR(HttpRequester, "HTTP Requester", "REST client: GET/POST/PUT/DELETE with custom headers", "networking", 6, 3)
 
@@ -132,6 +133,15 @@ void HttpRequester::sendRequest(const QString& method, const QString& url, const
     }
 
     QUrl qurl(url);
+
+    // SSRF guard: only allow http/https schemes
+    const QString scheme = qurl.scheme().toLower();
+    if (scheme != QStringLiteral("http") && scheme != QStringLiteral("https")) {
+        emit errorOccurred(QStringLiteral("Blocked: only http/https URLs are allowed (got '%1')").arg(scheme));
+        emit internalError(QStringLiteral("Blocked: only http/https URLs are allowed"));
+        return;
+    }
+
     QNetworkRequest request(qurl);
 
     // Apply custom headers
@@ -160,29 +170,33 @@ void HttpRequester::sendRequest(const QString& method, const QString& url, const
 
     setIsLoading(true);
 
-    // Timeout timer
+    // Capture the reply locally so timeout/finished lambdas always operate on
+    // the exact reply they were created for — not on a potentially newer m_reply
+    // assigned by a subsequent sendRequest() call.
+    QPointer<QNetworkReply> capturedReply = m_reply;
+
+    // Timeout timer — parented to the reply so it auto-deletes with it
     QTimer* timer = new QTimer(m_reply);
     timer->setSingleShot(true);
     timer->setInterval(m_timeout);
-    connect(timer, &QTimer::timeout, this, [this]() {
-        if (m_reply && m_reply->isRunning()) {
-            m_reply->abort();
-        }
+    connect(timer, &QTimer::timeout, this, [this, capturedReply]() {
+        if (capturedReply && capturedReply->isRunning())
+            capturedReply->abort();
     });
     timer->start();
 
-    connect(m_reply, &QNetworkReply::finished, this, [this]() {
-        if (!m_reply) return;
+    connect(m_reply, &QNetworkReply::finished, this, [this, capturedReply]() {
+        if (!capturedReply) return;
 
-        int code = m_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        int code = capturedReply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         setLastStatus(code);
 
-        if (m_reply->error() == QNetworkReply::NoError) {
-            QString responseBody = QString::fromUtf8(m_reply->readAll());
+        if (capturedReply->error() == QNetworkReply::NoError) {
+            QString responseBody = QString::fromUtf8(capturedReply->readAll());
             emit responseReceived(responseBody);
             emit internalResponse(responseBody);
-        } else if (m_reply->error() != QNetworkReply::OperationCanceledError) {
-            QString errMsg = m_reply->errorString();
+        } else if (capturedReply->error() != QNetworkReply::OperationCanceledError) {
+            QString errMsg = capturedReply->errorString();
             emit errorOccurred(errMsg);
             emit internalError(errMsg);
         }
@@ -192,8 +206,10 @@ void HttpRequester::sendRequest(const QString& method, const QString& url, const
 
         setIsLoading(false);
 
-        m_reply->deleteLater();
-        m_reply = nullptr;
+        // Clear m_reply only if it still points to this reply
+        if (m_reply == capturedReply)
+            m_reply = nullptr;
+        capturedReply->deleteLater();
     });
 }
 

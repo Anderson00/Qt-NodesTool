@@ -54,6 +54,10 @@ private:
     QString autosavePath(const QString& name) const;
     QString uniqueCopyName(const QString& base) const;
 
+    // Shared serialization logic (nodes + connections with comments + viewport +
+    // desktops). Both saveWorkspace() and saveAutosave() call this to avoid drift.
+    QJsonObject buildWorkspaceJson() const;
+
     ViewPortWindow* m_viewPort = nullptr;
     QStringList     m_workspaceList;
     QString         m_currentWorkspace;

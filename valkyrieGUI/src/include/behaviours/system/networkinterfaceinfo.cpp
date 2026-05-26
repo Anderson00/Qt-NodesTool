@@ -1,5 +1,6 @@
 #include "networkinterfaceinfo.h"
 #include "behaviours/behaviourregistry.h"
+#include <QTimer>
 
 REGISTER_BEHAVIOUR(NetworkInterfaceInfo, "Network Interfaces", "List all network interfaces with IP and MAC addresses", "system", 1, 1)
 
@@ -14,7 +15,10 @@ NetworkInterfaceInfo::NetworkInterfaceInfo(QObject *parent) : Behaviours(parent)
         "interfaceCountChanged()"
     }));
 
-    refresh();
+    // Defer the initial refresh until after construction so that any signal
+    // connections made by callers (e.g. QML bindings) are already in place
+    // when the first interfacesFetched() signal fires.
+    QTimer::singleShot(0, this, &NetworkInterfaceInfo::refresh);
 }
 
 void NetworkInterfaceInfo::onPinsReady()
