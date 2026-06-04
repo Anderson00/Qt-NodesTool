@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick Gui Svg Sql Network Test)
-find_package(Qt6 REQUIRED COMPONENTS Widgets Core Svg Gui Sql Quick Network Xml QuickControls2 Core5Compat Test Charts Qml)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Core Svg Gui Sql Quick Network Xml QuickControls2 Core5Compat Test Charts Qml LinguistTools)
 
 # --- Python & pybind11 setup ---
 # Use python_env/ when present (local embedded distribution); otherwise fall
@@ -41,6 +41,7 @@ set(PROJECT_SOURCES
     src/include/mainwindow.ui
     src/include/qmlwindow.h src/include/qmlwindow.cpp
     src/include/viewportwindow.h src/include/viewportwindow.cpp
+    src/include/presentation/PresentationStage.h src/include/presentation/PresentationStage.cpp
     src/include/behaviours/common/fileopener.h src/include/behaviours/common/fileopener.cpp
     src/include/behaviours/common/cameraviewer.h src/include/behaviours/common/cameraviewer.cpp
     src/include/behaviours/common/processesviewer.h src/include/behaviours/common/processesviewer.cpp
@@ -105,6 +106,7 @@ set(PROJECT_SOURCES
     src/include/model/colorpreset.h src/include/model/colorpreset.cpp
     src/include/model/presetmanager.h src/include/model/presetmanager.cpp
     src/include/model/globalproperties.h src/include/model/globalproperties.cpp
+    src/include/model/languagemanager.h src/include/model/languagemanager.cpp
     src/include/model/nodevariable.h src/include/model/nodevariable.cpp
     src/include/model/variablemanager.h src/include/model/variablemanager.cpp
     src/include/behaviours/behaviours.h src/include/behaviours/behaviours.cpp
@@ -145,6 +147,29 @@ qt_add_executable(Debugger
     src/include/behaviours/transform/unitconverter.h src/include/behaviours/transform/unitconverter.cpp
     src/include/behaviours/networking/websocketclient.h src/include/behaviours/networking/websocketclient.cpp
     src/include/behaviours/geo/mapviewer.h src/include/behaviours/geo/mapviewer.cpp
+)
+
+# ── Translations (Qt 6 i18n) ─────────────────────────────────────────────────
+# Scan all QML files automatically so lupdate finds qsTr() calls.
+file(GLOB_RECURSE VALKYRIE_QML_FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/resources/qml/*.qml"
+)
+
+qt_add_translations(Debugger
+    TS_FILES
+        translations/Debugger_en.ts
+        translations/Debugger_pt_BR.ts
+        translations/Debugger_es.ts
+    SOURCES
+        ${PROJECT_SOURCES}
+        # node_strings.cpp is scanned by lupdate but NOT compiled into the binary
+        translations/node_strings.cpp
+    QML_FILES
+        ${VALKYRIE_QML_FILES}
+    LUPDATE_OPTIONS
+        -no-obsolete
+    LRELEASE_OPTIONS
+        -compress
 )
 
 target_link_libraries(Debugger PRIVATE Qt6::Widgets Qt6::Core Qt6::Quick Qt6::Xml Qt6::Charts Qt6::Qml Qt6::Network Qt6::Sql cxxopts pybind11::embed)

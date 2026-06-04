@@ -55,7 +55,7 @@ Item {
             CustomTextField {
                 anchors.fill: parent
                 background: null
-                placeholderText: "Regular expression pattern..."
+                placeholderText: qsTr("Regular expression pattern...")
                 text: behaviourObject ? behaviourObject.pattern : ""
                 onEditingFinished: behaviourObject.setPattern(text)
             }
@@ -77,7 +77,7 @@ Item {
             spacing: 12
 
             Text {
-                text: "Case insensitive"
+                text: qsTr("Case insensitive")
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 11
             }
@@ -87,7 +87,7 @@ Item {
             }
 
             Text {
-                text: "Multi-line"
+                text: qsTr("Multi-line")
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 11
             }
@@ -113,7 +113,7 @@ Item {
 
                 TextArea {
                     id: textInputArea
-                    placeholderText: "Input text to match..."
+                    placeholderText: qsTr("Input text to match...")
                     color: ThemeManager.textColor
                     font.pixelSize: 11
                     background: null
@@ -131,11 +131,11 @@ Item {
             CustomTextField {
                 id: replaceInputField
                 Layout.fillWidth: true
-                placeholderText: "Replacement string..."
+                placeholderText: qsTr("Replacement string...")
             }
 
             NewButton {
-                text: "Replace"
+                text: qsTr("Replace")
                 variant: "outlined"
                 onClicked: behaviourObject.replace(replaceInputField.text)
             }
@@ -170,7 +170,7 @@ Item {
             spacing: 6
 
             Text {
-                text: "Matches:"
+                text: qsTr("Matches:")
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 11
             }
@@ -207,7 +207,7 @@ Item {
                     spacing: 6
 
                     Text {
-                        text: "[" + model.groupIndex + "]"
+                        text: qsTr("[") + model.groupIndex + "]"
                         color: ThemeManager.primaryColor
                         font { pixelSize: 10; family: "Consolas" }
                         Layout.minimumWidth: 28

@@ -1,5 +1,7 @@
 #include "aiquerynode.h"
 #include "behaviours/behaviourregistry.h"
+#include <QTimer>
+#include <QPointer>
 
 REGISTER_BEHAVIOUR(AIQueryNode, "AI Query", "Send prompts to Claude API (claude-haiku-4-5-20251001) and receive responses", "ai", 4, 3)
 
@@ -20,6 +22,19 @@ AIQueryNode::AIQueryNode(QObject *parent)
         "internalError(QString)",
         "internalTokens(int,int)"
     }));
+}
+
+void AIQueryNode::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("query(QString)",        Connections::StringType);
+    setPinTypeForSignature("setSystemPrompt(QString)", Connections::StringType);
+    setPinTypeForSignature("setModel(QString)",     Connections::StringType);
+    setPinTypeForSignature("setApiKey(QString)",    Connections::StringType);
+    // outputs
+    setPinTypeForSignature("responseReceived(QString)", Connections::StringType);
+    setPinTypeForSignature("error(QString)",            Connections::StringType);
+    setPinTypeForSignature("tokensUsed(int,int)",       Connections::AnyType);
 }
 
 QMap<QString, QVariant> AIQueryNode::loadInfos()
@@ -130,11 +145,26 @@ void AIQueryNode::query(QString userPrompt)
     setIsLoading(true);
     m_currentReply = m_manager->post(request, bodyData);
 
-    connect(m_currentReply, &QNetworkReply::finished, this, [this]() {
-        if (!m_currentReply) return;
+    // Capture the reply locally so the lambda always operates on the exact
+    // reply it was created for, even if m_currentReply is replaced by cancel/retry.
+    QPointer<QNetworkReply> capturedReply = m_currentReply;
 
-        if (m_currentReply->error() == QNetworkReply::NoError) {
-            QByteArray responseData = m_currentReply->readAll();
+    // Timeout: Claude API can be slow — abort after 60 s if no response
+    static constexpr int kTimeoutMs = 60000;
+    QTimer* timer = new QTimer(m_currentReply);
+    timer->setSingleShot(true);
+    timer->setInterval(kTimeoutMs);
+    connect(timer, &QTimer::timeout, this, [capturedReply]() {
+        if (capturedReply && capturedReply->isRunning())
+            capturedReply->abort();
+    });
+    timer->start();
+
+    connect(m_currentReply, &QNetworkReply::finished, this, [this, capturedReply]() {
+        if (!capturedReply) return;
+
+        if (capturedReply->error() == QNetworkReply::NoError) {
+            QByteArray responseData = capturedReply->readAll();
             QJsonDocument doc = QJsonDocument::fromJson(responseData);
             QJsonObject obj   = doc.object();
 
@@ -155,24 +185,27 @@ void AIQueryNode::query(QString userPrompt)
             emit internalResponse(text);
             emit tokensUsed(inputTokens, outputTokens);
             emit internalTokens(inputTokens, outputTokens);
-        } else if (m_currentReply->error() != QNetworkReply::OperationCanceledError) {
+        } else if (capturedReply->error() != QNetworkReply::OperationCanceledError) {
             // Try to parse error body
-            QByteArray errData  = m_currentReply->readAll();
+            QByteArray errData   = capturedReply->readAll();
             QJsonDocument errDoc = QJsonDocument::fromJson(errData);
             QString errMsg;
             if (!errDoc.isNull() && errDoc.object().contains("error")) {
                 errMsg = errDoc.object()["error"].toObject()["message"].toString();
             }
             if (errMsg.isEmpty())
-                errMsg = m_currentReply->errorString();
+                errMsg = capturedReply->errorString();
 
             emit error(errMsg);
             emit internalError(errMsg);
         }
 
         setIsLoading(false);
-        m_currentReply->deleteLater();
-        m_currentReply = nullptr;
+
+        // Clear m_currentReply only if it still points to this reply
+        if (m_currentReply == capturedReply)
+            m_currentReply = nullptr;
+        capturedReply->deleteLater();
     });
 }
 

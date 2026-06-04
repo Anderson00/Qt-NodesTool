@@ -63,7 +63,7 @@ Item {
             spacing: 4
 
             Text {
-                text: "Statistics Analyzer"
+                text: qsTr("Statistics Analyzer")
                 color: ThemeManager.textColor
                 font.pixelSize: 11
                 font.bold: true
@@ -81,7 +81,7 @@ Item {
                 Text {
                     id: countLabel
                     anchors.centerIn: parent
-                    text: "n=" + lCount
+                    text: qsTr("n=") + lCount
                     color: ThemeManager.primaryColor
                     font.pixelSize: 9
                     font.bold: true

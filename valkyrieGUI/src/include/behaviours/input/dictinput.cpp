@@ -21,6 +21,17 @@ DictInput::DictInput(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void DictInput::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("trigger()", Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("outputDict(QVariantMap)",    Connections::DictType);
+    setPinTypeForSignature("outputString(QString)",      Connections::StringType);
+    setPinTypeForSignature("outputCount(int)",           Connections::IntType);
+    setPinTypeForSignature("outputData(QVariantList)",   Connections::ArrayType);
+}
+
 QMap<QString, QVariant> DictInput::loadInfos()
 {
     return DictInput::static_infos();

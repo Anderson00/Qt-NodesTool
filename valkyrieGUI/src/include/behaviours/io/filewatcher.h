@@ -21,6 +21,8 @@ class FileWatcher : public Behaviours
 public:
     explicit FileWatcher(QObject *parent = nullptr);
 
+    void onPinsReady() override;
+
     virtual QMap<QString, QVariant> loadInfos() override;
     static  QMap<QString, QVariant> static_infos();
 

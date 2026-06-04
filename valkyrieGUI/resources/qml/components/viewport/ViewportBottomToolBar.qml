@@ -49,7 +49,7 @@ Rectangle {
             iconSource: Icons.cursorDefault
             iconColor: root.toolMode === "select" ? ThemeManager.accentColor : ThemeManager.textColor
             onClicked: root.toolModeActivated("select")
-            AppToolTip { text: "Select Tool  [S]"; visible: parent.hovered }
+            AppToolTip { text: qsTr("Select Tool  [S]"); visible: parent.hovered }
         }
 
         // Tool Mode: Pan
@@ -59,7 +59,7 @@ Rectangle {
             iconSource: Icons.handBackRight
             iconColor: root.toolMode === "pan" ? ThemeManager.accentColor : ThemeManager.textColor
             onClicked: root.toolModeActivated("pan")
-            AppToolTip { text: "Pan Tool  [P]"; visible: parent.hovered }
+            AppToolTip { text: qsTr("Pan Tool  [P]"); visible: parent.hovered }
         }
 
         Rectangle { width: 1; height: 32; color: ThemeManager.borderColor; Layout.alignment: Qt.AlignVCenter }
@@ -70,7 +70,7 @@ Rectangle {
             iconSource: Icons.minus
             iconColor: ThemeManager.textColor
             onClicked: root.zoomOut()
-            AppToolTip { text: "Zoom Out"; visible: parent.hovered }
+            AppToolTip { text: qsTr("Zoom Out"); visible: parent.hovered }
         }
 
         // Zoom Label
@@ -86,7 +86,7 @@ Rectangle {
                 anchors.fill: parent
                 onClicked: root.resetZoom()
                 cursorShape: Qt.PointingHandCursor
-                AppToolTip { text: "Reset Zoom"; visible: parent.containsMouse }
+                AppToolTip { text: qsTr("Reset Zoom"); visible: parent.containsMouse }
             }
         }
 
@@ -96,7 +96,7 @@ Rectangle {
             iconSource: Icons.plus
             iconColor: ThemeManager.textColor
             onClicked: root.zoomIn()
-            AppToolTip { text: "Zoom In"; visible: parent.hovered }
+            AppToolTip { text: qsTr("Zoom In"); visible: parent.hovered }
         }
 
         Rectangle { width: 1; height: 32; color: ThemeManager.borderColor; Layout.alignment: Qt.AlignVCenter }
@@ -112,7 +112,7 @@ Rectangle {
                 ? ThemeManager.accentColor
                 : ThemeManager.textColor
             onClicked: root.toggleConnectionsMinimized()
-            AppToolTip { text: root.connectionsMinimized ? "Expandir todas as conexões" : "Recolher todas as conexões"; visible: parent.hovered }
+            AppToolTip { text: root.connectionsMinimized ? qsTr("Expand all connections") : qsTr("Collapse all connections"); visible: parent.hovered }
         }
 
         Rectangle { width: 1; height: 32; color: ThemeManager.borderColor; Layout.alignment: Qt.AlignVCenter }
@@ -123,7 +123,7 @@ Rectangle {
             iconSource: Icons.centerFocus
             iconColor: ThemeManager.textColor
             onClicked: root.centerView()
-            AppToolTip { text: "Center View"; visible: parent.hovered }
+            AppToolTip { text: qsTr("Center View"); visible: parent.hovered }
         }
 
         Rectangle { width: 1; height: 32; color: ThemeManager.borderColor; Layout.alignment: Qt.AlignVCenter }
@@ -136,7 +136,7 @@ Rectangle {
             iconSource: Icons.magnet
             iconColor: root.snapEnabled ? "#00e676" : ThemeManager.textColor
             onClicked: root.toggleSnap()
-            AppToolTip { text: "Grid Snap  [G]"; visible: parent.hovered; delay: 600 }
+            AppToolTip { text: qsTr("Grid Snap  [G]"); visible: parent.hovered; delay: 600 }
 
             // Subtle green glow ring when active
             Rectangle {
@@ -159,7 +159,7 @@ Rectangle {
             iconSource: Icons.eye
             iconColor:  ThemeManager.textColor
             onClicked: viewMenu.open()
-            AppToolTip { text: "View Options"; visible: parent.hovered }
+            AppToolTip { text: qsTr("View Options"); visible: parent.hovered }
         }
 
         Popup {
@@ -231,17 +231,17 @@ Rectangle {
                 Item { width: 1; height: 4 }
 
                 AppMenuItem {
-                    label:      root.showGrid ? "Hide Grid" : "Show Grid"
+                    label:      root.showGrid ? qsTr("Hide Grid") : qsTr("Show Grid")
                     iconSource: Icons.viewGrid
                     onTriggered: root.toggleGrid()
                 }
                 AppMenuItem {
-                    label:      "Toggle FPS"
+                    label: qsTr("Toggle FPS")
                     iconSource: Icons.speedometer
                     onTriggered: root.toggleFps()
                 }
                 AppMenuItem {
-                    label:      "Toggle Fullscreen"
+                    label: qsTr("Toggle Fullscreen")
                     iconSource: Icons.fullscreen
                     onTriggered: root.toggleFullscreen()
                 }

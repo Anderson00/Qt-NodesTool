@@ -21,7 +21,7 @@ Item {
     // ── File Dialogs ─────────────────────────────────────────────────────────
     Platform.FileDialog {
         id: loadDialog
-        title: "Load Python Script"
+        title: qsTr("Load Python Script")
         nameFilters: ["Python files (*.py)", "All files (*)"]
         fileMode: Platform.FileDialog.OpenFile
         onAccepted: {
@@ -35,7 +35,7 @@ Item {
 
     Platform.FileDialog {
         id: saveDialog
-        title: "Save Python Script"
+        title: qsTr("Save Python Script")
         nameFilters: ["Python files (*.py)", "All files (*)"]
         fileMode: Platform.FileDialog.SaveFile
         onAccepted: {
@@ -93,7 +93,7 @@ Item {
 
                 // Auto-run toggle
                 Ctrl.CheckBox {
-                    text: "Auto"
+                    text: qsTr("Auto")
                     checked: behaviourObject ? behaviourObject.autoRun : false
                     onCheckedChanged: if (behaviourObject) behaviourObject.setAutoRun(checked)
                     contentItem: Text {
@@ -108,7 +108,7 @@ Item {
                     color: _docsMa.pressed ? Qt.darker(ThemeManager.primaryColor, 1.2) : "transparent"
                     border.width: 1; border.color: ThemeManager.primaryColor
                     Text { 
-                        anchors.centerIn: parent; text: "DOCS"; font.pixelSize: 10; font.bold: true
+                        anchors.centerIn: parent; text: qsTr("DOCS"); font.pixelSize: 10; font.bold: true
                         color: _docsMa.pressed ? ThemeManager.backgroundColor : ThemeManager.primaryColor 
                     }
                     MouseArea {
@@ -123,7 +123,7 @@ Item {
                     color: _saveMa.pressed ? Qt.darker(ThemeManager.primaryColor, 1.2) : "transparent"
                     border.width: 1; border.color: ThemeManager.primaryColor
                     Text { 
-                        anchors.centerIn: parent; text: "SAVE"; font.pixelSize: 10; font.bold: true
+                        anchors.centerIn: parent; text: qsTr("SAVE"); font.pixelSize: 10; font.bold: true
                         color: _saveMa.pressed ? ThemeManager.backgroundColor : ThemeManager.primaryColor 
                     }
                     MouseArea {
@@ -138,7 +138,7 @@ Item {
                     color: _loadMa.pressed ? Qt.darker(ThemeManager.primaryColor, 1.2) : "transparent"
                     border.width: 1; border.color: ThemeManager.primaryColor
                     Text { 
-                        anchors.centerIn: parent; text: "LOAD"; font.pixelSize: 10; font.bold: true
+                        anchors.centerIn: parent; text: qsTr("LOAD"); font.pixelSize: 10; font.bold: true
                         color: _loadMa.pressed ? ThemeManager.backgroundColor : ThemeManager.primaryColor 
                     }
                     MouseArea {
@@ -150,7 +150,7 @@ Item {
                 // Timeout config
                 RowLayout {
                     spacing: 2
-                    Text { text: "Timeout:"; font.pixelSize: 10; color: ThemeManager.textColor }
+                    Text { text: qsTr("Timeout:"); font.pixelSize: 10; color: ThemeManager.textColor }
                     Rectangle {
                         width: 40; height: 18; radius: 2
                         color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.1)
@@ -164,7 +164,7 @@ Item {
                             onEditingFinished: if (behaviourObject) behaviourObject.setTimeoutMs(parseInt(text) || 0)
                         }
                     }
-                    Text { text: "ms (0=∞)"; font.pixelSize: 9; color: ThemeManager.textSecondaryColor }
+                    Text { text: qsTr("ms (0=∞)"); font.pixelSize: 9; color: ThemeManager.textSecondaryColor }
                 }
 
                 Item { Layout.fillWidth: true } // spacer

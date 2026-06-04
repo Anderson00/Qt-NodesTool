@@ -155,7 +155,7 @@ Item {
 
             NumericInputField {
                 Layout.fillWidth: true; implicitHeight: 34
-                label: "Min"
+                label: qsTr("Min")
                 value: behaviourObject ? behaviourObject.rangeMin : 0
                 from: -1e9; to: 1e9; stepSize: 1.0; decimals: 2
                 accentColor: "#3498db"
@@ -163,7 +163,7 @@ Item {
             }
             NumericInputField {
                 Layout.fillWidth: true; implicitHeight: 34
-                label: "Max"
+                label: qsTr("Max")
                 value: behaviourObject ? behaviourObject.rangeMax : 100
                 from: -1e9; to: 1e9; stepSize: 1.0; decimals: 2
                 accentColor: "#2ecc71"
@@ -236,7 +236,7 @@ Item {
             }
             NumericInputField {
                 Layout.fillWidth: true; implicitHeight: 34
-                label: "P"
+                label: qsTr("P")
                 value: behaviourObject ? behaviourObject.probability * 100 : 50
                 from: 0; to: 100; stepSize: 1; decimals: 1; suffix: "%"
                 showBar: true; accentColor: "#00C853"
@@ -249,7 +249,7 @@ Item {
             Layout.fillWidth: true; spacing: 4
             visible: behaviourObject && behaviourObject.mode !== 3 && behaviourObject.mode !== 4
 
-            Text { text: ".0"; font.pixelSize: 9; color: ThemeManager.textSecondaryColor; Layout.alignment: Qt.AlignVCenter }
+            Text { text: qsTr(".0"); font.pixelSize: 9; color: ThemeManager.textSecondaryColor; Layout.alignment: Qt.AlignVCenter }
 
             Rectangle {
                 Layout.fillWidth: true; height: 28; radius: 4
@@ -279,7 +279,7 @@ Item {
         // -- Interval -------------------------------------------------------
         RowLayout {
             Layout.fillWidth: true; spacing: 6
-            Text { text: "?"; font.pixelSize: 12; Layout.alignment: Qt.AlignVCenter }
+            Text { text: qsTr("?"); font.pixelSize: 12; Layout.alignment: Qt.AlignVCenter }
             NumericInputField {
                 id: intervalField
                 Layout.fillWidth: true; implicitHeight: 34
@@ -301,7 +301,7 @@ Item {
             }
             NewButton {
                 Layout.preferredWidth: 56; Layout.preferredHeight: 32
-                variant: "outlined"; text: "Step"
+                variant: "outlined"; text: qsTr("Step")
                 backgroundColor: ThemeManager.primaryColor
                 onClicked: behaviourObject.generate()
             }

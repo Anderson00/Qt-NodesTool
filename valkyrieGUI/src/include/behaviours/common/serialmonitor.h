@@ -15,6 +15,8 @@ class SerialMonitor : public Behaviours
 public:
     explicit SerialMonitor(QObject *parent = nullptr);
 
+    void onPinsReady() override;
+
     QMap<QString, QVariant> loadInfos() override;
     static QMap<QString, QVariant> static_infos();
 

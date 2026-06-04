@@ -17,6 +17,17 @@ TextDisplay::TextDisplay(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void TextDisplay::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("appendText(QString)",       Connections::StringType);
+    setPinTypeForSignature("appendLine(QString)",       Connections::StringType);
+    setPinTypeForSignature("clear()",                   Connections::FlowType);
+    setPinTypeForSignature("setMaxLines(int)",          Connections::IntType);
+    setPinTypeForSignature("setInputData(QVariantList)", Connections::ArrayType);
+    // no node outputs
+}
+
 QMap<QString, QVariant> TextDisplay::loadInfos()
 {
     return TextDisplay::static_infos();

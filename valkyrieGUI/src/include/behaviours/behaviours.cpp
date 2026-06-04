@@ -3,7 +3,7 @@
 #include <QDebug>
 #include <model/connectionmodel.h>
 #include "behaviours/typecoercions.h"
-#include "behaviours/typecoercions.h"
+#include "utils/toastmanager.h"
 
 Behaviours::Behaviours(QObject *parent) : QObject(parent)
 {
@@ -134,6 +134,17 @@ bool Behaviours::isConnectionCompatible(const QString &sender, Behaviours *targe
 
     if (connections == nullptr || outputConn == nullptr)
         return false;
+
+    // ── PinType semantic check ──────────────────────────────────────────────
+    // Reject connections between incompatible typed pins before doing the
+    // heavier Qt signature check. AnyType on either side always passes.
+    if (!Connections::arePinTypesCompatible(connections->pinType(), outputConn->pinType())) {
+        ToastManager::instance()->show(
+            tr("Pin type mismatch: cannot connect %1 → %2")
+                .arg(sender, receiver),
+            "error");
+        return false;
+    }
 
     QMetaMethod signalMethod, slotMethod;
     if (connections->methodType() == Connections::Signal && outputConn->methodType() == Connections::Slot) {
@@ -328,6 +339,13 @@ void Behaviours::setBehaviourInfos(const QJsonObject& i) { m_behaviourInfos = i;
 const QString &Behaviours::uuid() const { return m_uuid; }
 void Behaviours::setUuid(const QString &uuid) { m_uuid = uuid; }
 
+bool Behaviours::hiddenInPresentation() const { return m_hiddenInPresentation; }
+void Behaviours::setHiddenInPresentation(bool hidden) {
+    if (m_hiddenInPresentation == hidden) return;
+    m_hiddenInPresentation = hidden;
+    emit hiddenInPresentationChanged(hidden);
+}
+
 QJsonObject Behaviours::saveState() const {
     return {};
 }
@@ -345,4 +363,26 @@ void Behaviours::start()
 {
     loaderOfInfosInFields();
     loadConnections();
+    onPinsReady();
+}
+
+int Behaviours::getPinType(const QString& signature) const
+{
+    if (auto* conn = m_input_conns.value(signature))
+        return static_cast<int>(conn->pinType());
+    if (auto* conn = m_output_conns.value(signature))
+        return static_cast<int>(conn->pinType());
+    return static_cast<int>(Connections::AnyType);
+}
+
+void Behaviours::setPinTypeForSignature(const QString& signature, int type)
+{
+    const auto pinType = static_cast<Connections::PinType>(type);
+    if (auto* conn = m_input_conns.value(signature)) {
+        conn->setPinType(pinType);
+        return;
+    }
+    if (auto* conn = m_output_conns.value(signature)) {
+        conn->setPinType(pinType);
+    }
 }

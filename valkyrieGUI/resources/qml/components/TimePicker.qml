@@ -116,7 +116,7 @@ Item {
             onValueChanged: function(v) { root.hours = v; root.timeChanged(root.hours, root.minutes, root.seconds) }
         }
 
-        Text { text: ":"; font.pixelSize: 22; font.bold: true; color: ThemeManager.textColor; Layout.alignment: Qt.AlignVCenter }
+        Text { text: qsTr(":"); font.pixelSize: 22; font.bold: true; color: ThemeManager.textColor; Layout.alignment: Qt.AlignVCenter }
 
         Drum {
             Layout.fillWidth: true; implicitHeight: root.height
@@ -125,7 +125,7 @@ Item {
             onValueChanged: function(v) { root.minutes = v; root.timeChanged(root.hours, root.minutes, root.seconds) }
         }
 
-        Text { visible: root.showSeconds; text: ":"; font.pixelSize: 22; font.bold: true; color: ThemeManager.textColor; Layout.alignment: Qt.AlignVCenter }
+        Text { visible: root.showSeconds; text: qsTr(":"); font.pixelSize: 22; font.bold: true; color: ThemeManager.textColor; Layout.alignment: Qt.AlignVCenter }
 
         Drum {
             visible: root.showSeconds

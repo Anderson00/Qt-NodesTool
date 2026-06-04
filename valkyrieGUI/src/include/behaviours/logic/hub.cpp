@@ -15,6 +15,13 @@ Hub::Hub(QObject *parent) : Behaviours(parent)
                                                  }));
 }
 
+void Hub::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("input(QByteArray)", Connections::StringType);
+    // Hub broadcasts to all connected outputs — output pins are dynamic/AnyType
+}
+
 QMap<QString, QVariant> Hub::loadInfos()
 {
     return Hub::static_infos();

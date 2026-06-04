@@ -34,13 +34,13 @@ Item {
             spacing: 4
 
             Text {
-                text: "Algorithm:"
+                text: qsTr("Algorithm:")
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 11
             }
 
             Chip {
-                label: "MD5"
+                label: qsTr("MD5")
                 closeable: false
                 selectable: true
                 selected: behaviourObject ? behaviourObject.algorithm === "md5" : false
@@ -48,7 +48,7 @@ Item {
             }
 
             Chip {
-                label: "SHA1"
+                label: qsTr("SHA1")
                 closeable: false
                 selectable: true
                 selected: behaviourObject ? behaviourObject.algorithm === "sha1" : false
@@ -56,7 +56,7 @@ Item {
             }
 
             Chip {
-                label: "SHA256"
+                label: qsTr("SHA256")
                 closeable: false
                 selectable: true
                 selected: behaviourObject ? behaviourObject.algorithm === "sha256" : true
@@ -64,7 +64,7 @@ Item {
             }
 
             Chip {
-                label: "SHA512"
+                label: qsTr("SHA512")
                 closeable: false
                 selectable: true
                 selected: behaviourObject ? behaviourObject.algorithm === "sha512" : false
@@ -76,14 +76,14 @@ Item {
         CustomTextField {
             id: inputField
             Layout.fillWidth: true
-            placeholderText: "Input text..."
+            placeholderText: qsTr("Input text...")
             onAccepted: behaviourObject.hash(text)
         }
 
         // ── Hash button ───────────────────────────────────────────────────────
         NewButton {
             Layout.fillWidth: true
-            text: "Hash"
+            text: qsTr("Hash")
             variant: "filled"
             onClicked: behaviourObject.hash(inputField.text)
         }
@@ -149,7 +149,7 @@ Item {
                         resultField.copy()
                     }
                 }
-                AppToolTip { text: "Copy hash"; visible: copyMouse.containsMouse; delay: 600 }
+                AppToolTip { text: qsTr("Copy hash"); visible: copyMouse.containsMouse; delay: 600 }
             }
         }
     }

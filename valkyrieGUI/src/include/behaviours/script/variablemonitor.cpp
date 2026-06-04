@@ -16,6 +16,11 @@ VariableMonitor::VariableMonitor(QObject *parent)
     addInputOutputExclusion(QList<QString>({ "watchedIdsChanged()" }));
 }
 
+void VariableMonitor::onPinsReady()
+{
+    // VariableMonitor has no I/O pins — purely a visual inspection dashboard node
+}
+
 QMap<QString, QVariant> VariableMonitor::loadInfos() { return static_infos(); }
 
 QMap<QString, QVariant> VariableMonitor::static_infos() {

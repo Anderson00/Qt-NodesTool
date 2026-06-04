@@ -99,7 +99,7 @@ Item {
                 spacing: 4
 
                 Text {
-                    text: "Data Table"
+                    text: qsTr("Data Table")
                     color: ThemeManager.textColor
                     font.pixelSize: 11
                     font.bold: true
@@ -119,7 +119,7 @@ Item {
                     Layout.preferredWidth: 60
                     Layout.preferredHeight: 24
                     variant: "outlined"
-                    text: "CSV"
+                    text: qsTr("CSV")
                     onClicked: {
                         var lines = []
                         if (tableHeaders.length > 0)
@@ -135,7 +135,7 @@ Item {
                     Layout.preferredWidth: 52
                     Layout.preferredHeight: 24
                     variant: "outlined"
-                    text: "Clear"
+                    text: qsTr("Clear")
                     onClicked: { if (behaviourObject) behaviourObject.clear() }
                 }
             }
@@ -164,7 +164,7 @@ Item {
                 CustomTextField {
                     id: filterField
                     Layout.fillWidth: true
-                    placeholderText: "Filter rows…"
+                    placeholderText: qsTr("Filter rows…")
                     onTextChanged: root.filterStr = text
                 }
             }
@@ -319,7 +319,7 @@ Item {
 
             Text {
                 anchors.centerIn: parent
-                text: "No data — send rows via addRow()"
+                text: qsTr("No data — send rows via addRow()")
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 10
             }

@@ -26,8 +26,9 @@ WorkspaceManager::WorkspaceManager(QObject* parent) : QObject(parent)
 
 WorkspaceManager* WorkspaceManager::instance()
 {
-    static WorkspaceManager* _instance = new WorkspaceManager();
-    return _instance;
+    // Meyers singleton: constructed once, destroyed on app exit in correct order
+    static WorkspaceManager s_instance;
+    return &s_instance;
 }
 
 QObject* WorkspaceManager::qmlSingletonProvider(QQmlEngine*, QJSEngine*)
@@ -93,17 +94,12 @@ void WorkspaceManager::newWorkspace()
     emit currentWorkspaceChanged();
 }
 
-// ── Save ──────────────────────────────────────────────────────────────────────
+// ── Shared serialization helper ───────────────────────────────────────────────
 
-bool WorkspaceManager::saveWorkspace(const QString& name)
+QJsonObject WorkspaceManager::buildWorkspaceJson() const
 {
-    if (!m_viewPort || name.isEmpty()) return false;
-
-    QDir().mkpath(workspacesDir());
-
+    Q_ASSERT(m_viewPort);
     const auto& behaviours = m_viewPort->behaviours();
-    qDebug() << "[WorkspaceManager] Saving workspace:" << name
-             << "| nodes:" << behaviours.size();
 
     // Nodes
     QJsonArray nodes;
@@ -119,10 +115,13 @@ bool WorkspaceManager::saveWorkspace(const QString& name)
         node["height"] = beh->height();
         node["title"]  = beh->title();
         node["state"]  = beh->saveState();
+        if (beh->hiddenInPresentation())
+            node["hiddenInPresentation"] = true;
         nodes.append(node);
     }
 
-    // Connections — iterate only outputConns to avoid duplicate entries
+    // Connections — iterate only outputConns to avoid duplicate entries.
+    // Connection comments are preserved here for both save and autosave.
     QJsonArray connections;
     for (auto it = behaviours.constBegin(); it != behaviours.constEnd(); ++it) {
         const QString& outputUuid = it.key();
@@ -137,12 +136,13 @@ bool WorkspaceManager::saveWorkspace(const QString& name)
                 c["outputMethod"] = conn->methodSignature();
                 c["inputUuid"]    = inputUuid;
                 c["inputMethod"]  = QString::fromLatin1(model->slot().methodSignature());
-                
-                QString comment = m_viewPort->getConnectionComment(outputUuid, c["outputMethod"].toString(), inputUuid, c["inputMethod"].toString());
-                if (!comment.isEmpty()) {
+
+                const QString comment = m_viewPort->getConnectionComment(
+                    outputUuid, c["outputMethod"].toString(),
+                    inputUuid,  c["inputMethod"].toString());
+                if (!comment.isEmpty())
                     c["comment"] = comment;
-                }
-                
+
                 connections.append(c);
             }
         }
@@ -154,16 +154,39 @@ bool WorkspaceManager::saveWorkspace(const QString& name)
     viewport["y"]     = m_viewPort->viewportY();
     viewport["scale"] = m_viewPort->viewportScale();
 
+    QJsonObject root;
+    root["version"]          = WORKSPACE_VERSION;
+    root["nodes"]            = nodes;
+    root["connections"]      = connections;
+    root["viewport"]         = viewport;
+    root["desktops"]         = DesktopManager::instance()->serialize();
+    root["pinnedNodes"]      = DesktopManager::instance()->serializePinned();
+    root["currentDesktopId"] = DesktopManager::instance()->serializeCurrentDesktopId();
+    root["stages"]           = m_viewPort->stagesToJson();
+    return root;
+}
+
+// ── Save ──────────────────────────────────────────────────────────────────────
+
+bool WorkspaceManager::saveWorkspace(const QString& name)
+{
+    if (!m_viewPort || name.isEmpty()) return false;
+
+    QDir().mkpath(workspacesDir());
+    qDebug() << "[WorkspaceManager] Saving workspace:" << name
+             << "| nodes:" << m_viewPort->behaviours().size();
+
+    QJsonObject root = buildWorkspaceJson();
+
     // ── Metadata (preserve createdAt across re-saves) ─────────────────────────
-    const QString nowIso = QDateTime::currentDateTime().toString(Qt::ISODate);
+    const QString nowIso  = QDateTime::currentDateTime().toString(Qt::ISODate);
     QString createdAt = nowIso;
     {
         QFile prev(workspacePath(name));
         if (prev.exists() && prev.open(QIODevice::ReadOnly)) {
             const QJsonDocument pdoc = QJsonDocument::fromJson(prev.readAll());
             if (pdoc.isObject()) {
-                const QJsonObject pmeta = pdoc.object()["metadata"].toObject();
-                const QString prevCreated = pmeta["createdAt"].toString();
+                const QString prevCreated = pdoc.object()["metadata"].toObject()["createdAt"].toString();
                 if (!prevCreated.isEmpty()) createdAt = prevCreated;
             }
         }
@@ -172,28 +195,18 @@ bool WorkspaceManager::saveWorkspace(const QString& name)
     QJsonObject metadata;
     metadata["createdAt"]       = createdAt;
     metadata["modifiedAt"]      = nowIso;
-    metadata["nodeCount"]       = nodes.size();
-    metadata["connectionCount"] = connections.size();
-
-    QJsonObject root;
-    root["version"]      = WORKSPACE_VERSION;
-    root["metadata"]     = metadata;
-    root["nodes"]        = nodes;
-    root["connections"]  = connections;
-    root["viewport"]     = viewport;
-    root["desktops"]     = DesktopManager::instance()->serialize();
-    root["pinnedNodes"]  = DesktopManager::instance()->serializePinned();
-    root["currentDesktopId"] = DesktopManager::instance()->serializeCurrentDesktopId();
+    metadata["nodeCount"]       = root["nodes"].toArray().size();
+    metadata["connectionCount"] = root["connections"].toArray().size();
+    root["metadata"] = metadata;
 
     QFile file(workspacePath(name));
-
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         qWarning() << "WorkspaceManager: cannot write" << workspacePath(name);
         return false;
     }
     file.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
-    qDebug() << "[WorkspaceManager] Saved" << nodes.size() << "nodes,"
-             << connections.size() << "connections ->" << workspacePath(name);
+    qDebug() << "[WorkspaceManager] Saved" << root["nodes"].toArray().size() << "nodes,"
+             << root["connections"].toArray().size() << "connections ->" << workspacePath(name);
 
     if (m_currentWorkspace != name) {
         m_currentWorkspace = name;
@@ -232,10 +245,11 @@ bool WorkspaceManager::loadWorkspace(const QString& name)
 
     for (const QJsonValue& v : nodeArr) {
         const QJsonObject n = v.toObject();
+        const QString uuid = n["uuid"].toString();
         m_viewPort->addBehaviourWithUuid(
             n["path"].toString(),
             n["infos"].toObject(),
-            n["uuid"].toString(),
+            uuid,
             n["x"].toDouble(),
             n["y"].toDouble(),
             n["width"].toDouble(),
@@ -243,6 +257,10 @@ bool WorkspaceManager::loadWorkspace(const QString& name)
             n["title"].toString(),
             n.contains("state") ? n["state"].toObject() : QJsonObject()
         );
+        if (n.value("hiddenInPresentation").toBool(false)) {
+            if (Behaviours* beh = m_viewPort->searchBehaviourFromUUID(uuid))
+                beh->setHiddenInPresentation(true);
+        }
     }
 
     for (const QJsonValue& v : connArr) {
@@ -253,7 +271,7 @@ bool WorkspaceManager::loadWorkspace(const QString& name)
             c["inputUuid"].toString(),
             c["inputMethod"].toString()
         );
-        
+
         if (c.contains("comment")) {
             m_viewPort->setConnectionComment(
                 c["outputUuid"].toString(),
@@ -285,6 +303,12 @@ bool WorkspaceManager::loadWorkspace(const QString& name)
         }
     }
 
+    // Presentation stages (optional — only present in workspaces saved after
+    // the stages feature shipped). Restored after nodes/desktops so the QML
+    // layer can render the StageBar with up-to-date data.
+    if (root.contains("stages"))
+        m_viewPort->stagesFromJson(root.value("stages").toArray());
+
     qDebug() << "[WorkspaceManager] Workspace loaded successfully:" << name;
     emit workspaceLoaded(name);
 
@@ -301,6 +325,10 @@ bool WorkspaceManager::deleteWorkspace(const QString& name)
 {
     const bool ok = QFile::remove(workspacePath(name));
     if (ok) {
+        // Remove the autosave sidecar too, so it cannot accidentally be loaded
+        // if a new workspace with the same name is created later.
+        QFile::remove(autosavePath(name));
+
         if (m_currentWorkspace == name) {
             m_currentWorkspace.clear();
             emit currentWorkspaceChanged();
@@ -440,67 +468,17 @@ bool WorkspaceManager::saveAutosave()
     if (!m_viewPort || m_currentWorkspace.isEmpty()) return false;
     QDir().mkpath(workspacesDir());
 
-    // Reuse the same serialization shape as saveWorkspace, but to a sidecar file
-    // and without bumping createdAt. We delegate by temporarily writing to the
-    // autosave path via the same logic — simplest: do a regular save into the
-    // sidecar by hand.
-    const auto& behaviours = m_viewPort->behaviours();
-
-    QJsonArray nodes;
-    for (auto it = behaviours.constBegin(); it != behaviours.constEnd(); ++it) {
-        Behaviours* beh = it.value();
-        QJsonObject node;
-        node["uuid"]   = it.key();
-        node["path"]   = beh->behaviourPath();
-        node["infos"]  = beh->behaviourInfos();
-        node["x"]      = beh->x();
-        node["y"]      = beh->y();
-        node["width"]  = beh->width();
-        node["height"] = beh->height();
-        node["title"]  = beh->title();
-        node["state"]  = beh->saveState();
-        nodes.append(node);
-    }
-
-    QJsonArray connections;
-    for (auto it = behaviours.constBegin(); it != behaviours.constEnd(); ++it) {
-        const QString& outputUuid = it.key();
-        const auto& outs = it.value()->outputConns();
-        for (auto ci = outs.constBegin(); ci != outs.constEnd(); ++ci) {
-            Connections* conn = ci.value();
-            for (ConnectionModel* model : conn->getAllConnections()) {
-                const QString inputUuid = m_viewPort->getUUIDFromBehaviour(model->input());
-                if (inputUuid.isEmpty()) continue;
-                QJsonObject c;
-                c["outputUuid"]   = outputUuid;
-                c["outputMethod"] = conn->methodSignature();
-                c["inputUuid"]    = inputUuid;
-                c["inputMethod"]  = QString::fromLatin1(model->slot().methodSignature());
-                connections.append(c);
-            }
-        }
-    }
-
-    QJsonObject viewport;
-    viewport["x"]     = m_viewPort->viewportX();
-    viewport["y"]     = m_viewPort->viewportY();
-    viewport["scale"] = m_viewPort->viewportScale();
+    // Reuse buildWorkspaceJson() so the autosave is always in sync with
+    // saveWorkspace() — previously this was duplicated code and had diverged
+    // (connection comments were lost in autosave).
+    QJsonObject root = buildWorkspaceJson();
 
     QJsonObject metadata;
     metadata["modifiedAt"]      = QDateTime::currentDateTime().toString(Qt::ISODate);
-    metadata["nodeCount"]       = nodes.size();
-    metadata["connectionCount"] = connections.size();
+    metadata["nodeCount"]       = root["nodes"].toArray().size();
+    metadata["connectionCount"] = root["connections"].toArray().size();
     metadata["autosave"]        = true;
-
-    QJsonObject root;
-    root["version"]         = WORKSPACE_VERSION;
-    root["metadata"]        = metadata;
-    root["nodes"]           = nodes;
-    root["connections"]     = connections;
-    root["viewport"]        = viewport;
-    root["desktops"]        = DesktopManager::instance()->serialize();
-    root["pinnedNodes"]     = DesktopManager::instance()->serializePinned();
-    root["currentDesktopId"] = DesktopManager::instance()->serializeCurrentDesktopId();
+    root["metadata"] = metadata;
 
     QFile file(autosavePath(m_currentWorkspace));
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
@@ -539,10 +517,11 @@ bool WorkspaceManager::loadAutosave(const QString& name)
 
     for (const QJsonValue& v : nodeArr) {
         const QJsonObject n = v.toObject();
+        const QString uuid = n["uuid"].toString();
         m_viewPort->addBehaviourWithUuid(
             n["path"].toString(),
             n["infos"].toObject(),
-            n["uuid"].toString(),
+            uuid,
             n["x"].toDouble(),
             n["y"].toDouble(),
             n["width"].toDouble(),
@@ -550,6 +529,10 @@ bool WorkspaceManager::loadAutosave(const QString& name)
             n["title"].toString(),
             n.contains("state") ? n["state"].toObject() : QJsonObject()
         );
+        if (n.value("hiddenInPresentation").toBool(false)) {
+            if (Behaviours* beh = m_viewPort->searchBehaviourFromUUID(uuid))
+                beh->setHiddenInPresentation(true);
+        }
     }
 
     for (const QJsonValue& v : connArr) {
@@ -578,6 +561,10 @@ bool WorkspaceManager::loadAutosave(const QString& name)
                 DesktopManager::instance()->registerNewNode(uuid);
         }
     }
+
+    // Restore presentation stages (same as loadWorkspace).
+    if (root.contains("stages"))
+        m_viewPort->stagesFromJson(root.value("stages").toArray());
 
     if (m_currentWorkspace != name) {
         m_currentWorkspace = name;

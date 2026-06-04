@@ -55,7 +55,7 @@ Item {
         // Iterations input
         NumericInputField {
             Layout.fillWidth: true; implicitHeight: 32
-            label: "Iterations"
+            label: qsTr("Iterations")
             value: behaviourObject ? behaviourObject.iterations : 3
             from: 1; to: 1000; stepSize: 1; decimals: 0; showBar: false
             accentColor: "#FF9800"
@@ -73,7 +73,7 @@ Item {
                 Behavior on color { ColorAnimation { duration: 100 } }
                 RowLayout { anchors.centerIn: parent; spacing: 4
                     SvgIcon { width: 11; height: 11; source: Icons.play; color: "#FF9800" }
-                    Text { text: "Run"; font.pixelSize: 11; font.bold: true; color: "#FF9800" }
+                    Text { text: qsTr("Run"); font.pixelSize: 11; font.bold: true; color: "#FF9800" }
                 }
                 MouseArea { id: runMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                     onClicked: if (behaviourObject) behaviourObject.trigger() }
@@ -86,7 +86,7 @@ Item {
                 Behavior on color { ColorAnimation { duration: 100 } }
                 RowLayout { anchors.centerIn: parent; spacing: 4
                     SvgIcon { width: 11; height: 11; source: Icons.stop; color: "#FF1744" }
-                    Text { text: "Break"; font.pixelSize: 11; font.bold: true; color: "#FF1744" }
+                    Text { text: qsTr("Break"); font.pixelSize: 11; font.bold: true; color: "#FF1744" }
                 }
                 MouseArea { id: brkMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                     onClicked: if (behaviourObject) behaviourObject.breakLoop() }

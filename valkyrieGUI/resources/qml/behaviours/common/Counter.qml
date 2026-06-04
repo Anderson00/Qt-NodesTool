@@ -38,7 +38,7 @@ Item {
         RowLayout {
             Layout.fillWidth: true; spacing: 6
             Text {
-                text: "Step"
+                text: qsTr("Step")
                 font.pixelSize: 9; color: ThemeManager.textSecondaryColor
                 Layout.alignment: Qt.AlignVCenter
             }

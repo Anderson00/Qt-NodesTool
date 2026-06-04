@@ -6,9 +6,12 @@
 #include <QHash>
 #include <QWidget>
 #include <QJsonObject>
+#include <QJsonArray>
+#include <QList>
 #include <QVariantList>
 #include <QUndoStack>
 #include "behaviours/behaviours.h"
+#include "presentation/PresentationStage.h"
 #include "qmlwindow.h"
 
 class ViewPortWindow : public QMLWindow
@@ -31,7 +34,21 @@ class ViewPortWindow : public QMLWindow
     Q_PROPERTY(int historyCount READ historyCount NOTIFY historyChanged)
     Q_PROPERTY(int historyIndex READ historyIndex NOTIFY historyChanged)
 
+    Q_PROPERTY(int presentationMode READ presentationMode WRITE setPresentationMode NOTIFY presentationModeChanged)
+
+    // Presentation stages — named camera framings the user can navigate to.
+    Q_PROPERTY(int  stageCount   READ stageCount   NOTIFY stagesChanged)
+    Q_PROPERTY(int  currentStage READ currentStage WRITE setCurrentStage NOTIFY currentStageChanged)
+    Q_PROPERTY(bool hasStages    READ hasStages    NOTIFY stagesChanged)
+
 public:
+    enum PresentationLayer {
+        PresentationOff    = 0,
+        PresentationQuiet  = 1,
+        PresentationLocked = 2
+    };
+    Q_ENUM(PresentationLayer)
+
     explicit ViewPortWindow(QWidget* parent = nullptr);
     ~ViewPortWindow();
 
@@ -46,6 +63,42 @@ public:
     bool  isClean()       const;
     int   historyCount()  const;
     int   historyIndex()  const;
+
+    int   presentationMode() const;
+    Q_INVOKABLE void setPresentationMode(int mode);
+
+    // ── Presentation stages ──────────────────────────────────────────────
+    int  stageCount()   const;
+    int  currentStage() const;
+    bool hasStages()    const;
+    // Q_INVOKABLE so QML can call viewPort.setCurrentStage(n) as a method —
+    // being just the WRITE of a Q_PROPERTY only exposes assignment, not the
+    // function call form used by the F5/Shift+F5 shortcuts and StageBar.
+    Q_INVOKABLE void setCurrentStage(int idx);
+    // Re-emits stageTransitionRequested for the current stage. Used by the
+    // presentation entry timer so the very first F10 -> stage 0 transition
+    // still animates even when m_currentStage is already 0.
+    Q_INVOKABLE void replayCurrentStage();
+
+    Q_INVOKABLE QString      addStage(const QString& name,
+                                      qreal x, qreal y, qreal w, qreal h,
+                                      qreal zoom = -1);
+    Q_INVOKABLE void         removeStage(const QString& id);
+    // Convenience overload — remove a stage by its index in the list.
+    // Used by the StageBar's in-presentation Delete button so the QML side
+    // doesn't have to resolve an id first.
+    Q_INVOKABLE void         removeStageAt(int index);
+    // Returns the id of the currently selected stage (empty if none).
+    Q_INVOKABLE QString      currentStageId() const;
+    Q_INVOKABLE void         updateStage(const QString& id,
+                                         const QString& name,
+                                         const QString& notes);
+    Q_INVOKABLE void         moveStage(int from, int to);
+    Q_INVOKABLE QVariantList stagesData() const;
+
+    // Serialization helpers used by WorkspaceManager (save / load).
+    QJsonArray stagesToJson() const;
+    void       stagesFromJson(const QJsonArray& arr);
 
     QUndoStack* undoStack() const;
 
@@ -125,15 +178,34 @@ public slots:
     // Returns true for exact matches and all registered coercion pairs.
     Q_INVOKABLE bool isPortCompatible(const QString& srcSig, const QString& dstSig) const;
 
+    // Extended compatibility check that also validates PinType semantics.
+    // srcUuid / dstUuid are the node UUIDs; srcSig / dstSig the method signatures.
+    // If either UUID is unknown, falls back to the signature-only check.
+    Q_INVOKABLE bool isPortCompatibleFull(const QString& srcUuid, const QString& srcSig,
+                                          const QString& dstUuid, const QString& dstSig) const;
+
     void restoreViewport(qreal x, qreal y, qreal scale);
 
 signals:
     void fullScreenToogle();
+    // Emitted whenever the presentation mode changes — MainWindow listens to
+    // toggle the OS-level window between fullscreen and the previous state.
+    // active=true → enter fullscreen; active=false → restore.
+    void presentationFullScreenRequested(bool active);
     void showFpsChanged();
     void fpsCountChanged();
     void viewportStateChanged();
     void undoStateChanged();
     void historyChanged();
+    void presentationModeChanged();
+    void stagesChanged();
+    void currentStageChanged();
+    // Emitted when setCurrentStage() runs — the QML layer animates the
+    // canvas pan/zoom to frame the requested world rectangle. zoom < 0
+    // means "auto-fit the rectangle in the viewport".
+    void stageTransitionRequested(qreal worldX, qreal worldY,
+                                  qreal worldW, qreal worldH,
+                                  qreal zoom);
     void viewportRestoreRequested(qreal x, qreal y, qreal scale);
     void behaviourAdded(Behaviours* behaviour);
     void behaviourRemoved(Behaviours* obj, const QString& uuid);
@@ -160,6 +232,10 @@ private:
     qreal m_viewportX     = 0.0;
     qreal m_viewportY     = 0.0;
     qreal m_viewportScale = 1.0;
+    int   m_presentationMode = 0;
+
+    QList<PresentationStage*> m_stages;
+    int  m_currentStage = -1;
 };
 
 #endif // VIEWPORTWINDOW_H

@@ -24,6 +24,17 @@ HeatMapViewer::HeatMapViewer(QObject *parent)
     m_data.resize(m_rows * m_cols, 0.0);
 }
 
+void HeatMapViewer::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("setValue(int,int,double)",  Connections::AnyType);
+    setPinTypeForSignature("setGrid(int,int)",          Connections::AnyType);
+    setPinTypeForSignature("setData(QVariantList)",     Connections::ArrayType);
+    setPinTypeForSignature("clear()",                   Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("cellClicked(int,int,double)", Connections::AnyType);
+}
+
 QMap<QString, QVariant> HeatMapViewer::loadInfos()
 {
     return HeatMapViewer::static_infos();

@@ -147,18 +147,18 @@ Item {
                 ToolSep {}
 
                 // Grid
-                TBBtn { tipText: "Toggle Grid"; label: "⊞"; isActive: showGrid
+                TBBtn { tipText: "Toggle Grid"; label: qsTr("⊞"); isActive: showGrid
                     onBtnClicked: { showGrid=!showGrid; fastChart.gridCountX=showGrid?5:0; fastChart.gridCountY=showGrid?5:0 } }
 
                 // Fill under curve
-                TBBtn { tipText: "Fill Area"; label: "▨"; isActive: showFill
+                TBBtn { tipText: "Fill Area"; label: qsTr("▨"); isActive: showFill
                     onBtnClicked: {
                         showFill=!showFill
                         for (var i=0;i<fastChart.seriesCount;i++) fastChart.setSeriesFillOpacity(i, showFill?0.35:0)
                     } }
 
                 // Moving average
-                TBBtn { tipText: "Moving Average (20 pts)"; label: "~"; isActive: showMovingAvg
+                TBBtn { tipText: "Moving Average (20 pts)"; label: qsTr("~"); isActive: showMovingAvg
                     onBtnClicked: {
                         showMovingAvg=!showMovingAvg
                         for (var i=0;i<fastChart.seriesCount;i++)
@@ -167,11 +167,11 @@ Item {
                     } }
 
                 // Anti-alias
-                TBBtn { tipText: "Anti-alias"; label: "◎"; isActive: antialiasOn
+                TBBtn { tipText: "Anti-alias"; label: qsTr("◎"); isActive: antialiasOn
                     onBtnClicked: { antialiasOn=!antialiasOn; fastChart.antialias=antialiasOn } }
 
                 // Oscilloscope mode
-                TBBtn { tipText: "Oscilloscope (last 200 pts)"; label: "⏱"; isActive: oscMode
+                TBBtn { tipText: "Oscilloscope (last 200 pts)"; label: qsTr("⏱"); isActive: oscMode
                     onBtnClicked: {
                         oscMode=!oscMode
                         fastChart.oscilloscopeWindow = oscMode ? 200 : 0
@@ -181,23 +181,23 @@ Item {
                 ToolSep {}
 
                 // Interaction mode
-                TBBtn { tipText: "Pan mode"; label: "✥"; isActive: interactMode===0
+                TBBtn { tipText: "Pan mode"; label: qsTr("✥"); isActive: interactMode===0
                     onBtnClicked: interactMode=0 }
-                TBBtn { tipText: "Rubber-band zoom"; label: "⬚"; isActive: interactMode===1
+                TBBtn { tipText: "Rubber-band zoom"; label: qsTr("⬚"); isActive: interactMode===1
                     onBtnClicked: interactMode=1 }
-                TBBtn { tipText: "Crosshair"; label: "⊕"; isActive: crosshairMode
+                TBBtn { tipText: "Crosshair"; label: qsTr("⊕"); isActive: crosshairMode
                     onBtnClicked: crosshairMode=!crosshairMode }
 
                 ToolSep {}
 
                 // Auto-scale
-                TBBtn { tipText: "Auto Scale"; label: "⤢"; isActive: isAutoScale
+                TBBtn { tipText: "Auto Scale"; label: qsTr("⤢"); isActive: isAutoScale
                     onBtnClicked: { isAutoScale=!isAutoScale; fastChart.autoScale=isAutoScale } }
 
                 // Zoom in/out/reset
-                TBBtn { tipText: "Zoom In";   label: "+"; onBtnClicked: zoomChart(1.25) }
-                TBBtn { tipText: "Zoom Out";  label: "−"; onBtnClicked: zoomChart(0.80) }
-                TBBtn { tipText: "Reset View"; label: "⟳"; onBtnClicked: resetView() }
+                TBBtn { tipText: "Zoom In";   label: qsTr("+"); onBtnClicked: zoomChart(1.25) }
+                TBBtn { tipText: "Zoom Out";  label: qsTr("−"); onBtnClicked: zoomChart(0.80) }
+                TBBtn { tipText: "Reset View"; label: qsTr("⟳"); onBtnClicked: resetView() }
 
                 ToolSep {}
 
@@ -217,11 +217,11 @@ Item {
                 ToolSep {}
 
                 // Export
-                TBBtn { tipText: "Export PNG"; label: "↓"
+                TBBtn { tipText: "Export PNG"; label: qsTr("↓")
                     onBtnClicked: exportDialog.open() }
 
                 // Clear
-                TBBtn { tipText: "Clear All"; label: "✕ Clear"; isDanger: true
+                TBBtn { tipText: "Clear All"; label: qsTr("✕ Clear"); isDanger: true
                     Layout.preferredWidth: 56
                     onBtnClicked: { fastChart.clearAll(); resetAllStats() } }
             }
@@ -467,7 +467,7 @@ Item {
                             Text {
                                 property double dataX: fastChart.xMin
                                     + interactArea.mouseX/fastChart.width*(fastChart.xMax-fastChart.xMin)
-                                text: "x: " + dataX.toFixed(2)
+                                text: qsTr("x: ") + dataX.toFixed(2)
                                 color: ThemeManager.textSecondaryColor
                                 font { pixelSize: 9; family: "Consolas" }
                             }
@@ -563,7 +563,7 @@ Item {
                             // Right-axis indicator
                             Text {
                                 visible: fastChart.hasRightAxis
-                                text: "R"
+                                text: qsTr("R")
                                 color: fastChart.seriesColor(index); font { pixelSize: 8; bold: true }
                                 opacity: 0.6; Layout.alignment: Qt.AlignVCenter
                             }
@@ -575,7 +575,7 @@ Item {
                                 source: Icons.close; color: ThemeManager.dangerColor
                                 width: 14; height: 14
                                 opacity: clrH.containsMouse?1.0:0.4; Layout.alignment:Qt.AlignVCenter
-                                AppToolTip { text:"Clear series"; visible: clrH.containsMouse; delay: 600 }
+                                AppToolTip { text:qsTr("Clear series"); visible: clrH.containsMouse; delay: 600 }
                                 MouseArea { id:clrH; anchors.fill:parent; hoverEnabled:true; cursorShape:Qt.PointingHandCursor
                                     onClicked:{ fastChart.clearSeries(index); resetStats(index) } }
                             }
@@ -589,7 +589,7 @@ Item {
     // ── File dialog for export ────────────────────────────────────────────────
     Platform.FileDialog {
         id: exportDialog
-        title: "Export chart as PNG"
+        title: qsTr("Export chart as PNG")
         fileMode: Platform.FileDialog.SaveFile
         nameFilters: ["PNG images (*.png)"]
         defaultSuffix: "png"

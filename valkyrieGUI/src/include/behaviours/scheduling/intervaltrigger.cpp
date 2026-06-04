@@ -32,6 +32,15 @@ IntervalTrigger::IntervalTrigger(QObject *parent)
 
 // ── Static info ───────────────────────────────────────────────────────────────
 
+void IntervalTrigger::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("trigger()", Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("execOut()",          Connections::FlowType);
+    setPinTypeForSignature("outputTick(int)",    Connections::IntType);
+}
+
 QMap<QString, QVariant> IntervalTrigger::loadInfos()  { return static_infos(); }
 QMap<QString, QVariant> IntervalTrigger::static_infos()
 {

@@ -37,7 +37,7 @@ Item {
                            ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.25)
                            : Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.08)
                     Behavior on color { ColorAnimation { duration: 100 } }
-                    Text { anchors.centerIn: parent; text: "−"; font.pixelSize: 20; font.bold: true; color: ThemeManager.primaryColor }
+                    Text { anchors.centerIn: parent; text: qsTr("−"); font.pixelSize: 20; font.bold: true; color: ThemeManager.primaryColor }
                     MouseArea {
                         id: decMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                         onClicked: if (behaviourObject) behaviourObject.setValue(behaviourObject.value - behaviourObject.stepSize)
@@ -68,7 +68,7 @@ Item {
                            ? Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.25)
                            : Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.08)
                     Behavior on color { ColorAnimation { duration: 100 } }
-                    Text { anchors.centerIn: parent; text: "+"; font.pixelSize: 20; font.bold: true; color: ThemeManager.primaryColor }
+                    Text { anchors.centerIn: parent; text: qsTr("+"); font.pixelSize: 20; font.bold: true; color: ThemeManager.primaryColor }
                     MouseArea {
                         id: incMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                         onClicked: if (behaviourObject) behaviourObject.setValue(behaviourObject.value + behaviourObject.stepSize)
@@ -82,7 +82,7 @@ Item {
             Layout.fillWidth: true
             spacing: 6
             Text {
-                text: "Step"
+                text: qsTr("Step")
                 font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.55
                 Layout.preferredWidth: 32; Layout.alignment: Qt.AlignVCenter
             }
@@ -99,7 +99,7 @@ Item {
             Layout.fillWidth: true
             spacing: 6
             Text {
-                text: "Min"
+                text: qsTr("Min")
                 font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.55
                 Layout.preferredWidth: 32; Layout.alignment: Qt.AlignVCenter
             }
@@ -110,7 +110,7 @@ Item {
                 onValueModified: function(v) { if (behaviourObject) behaviourObject.setMinValue(v) }
             }
             Text {
-                text: "Max"
+                text: qsTr("Max")
                 font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.55
                 Layout.alignment: Qt.AlignVCenter
             }
@@ -125,7 +125,7 @@ Item {
         // ── Auto toggle ───────────────────────────────────────────────────
         RowLayout {
             Layout.fillWidth: true; spacing: 6
-            Text { text: "Auto-send"; font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.6; Layout.alignment: Qt.AlignVCenter }
+            Text { text: qsTr("Auto-send"); font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.6; Layout.alignment: Qt.AlignVCenter }
             CustomSwitch {
                 checked: behaviourObject ? behaviourObject.autoSend : false
                 onCheckedChanged: if (behaviourObject) behaviourObject.setAutoSend(checked)
@@ -136,7 +136,7 @@ Item {
         // ── Send button — full width ──────────────────────────────────────
         NewButton {
             Layout.fillWidth: true; Layout.preferredHeight: 36
-            text: "Send"; variant: "filled"; iconSource: Icons.flash
+            text: qsTr("Send"); variant: "filled"; iconSource: Icons.flash
             backgroundColor: ThemeManager.primaryColor
             onClicked: if (behaviourObject) behaviourObject.send()
         }

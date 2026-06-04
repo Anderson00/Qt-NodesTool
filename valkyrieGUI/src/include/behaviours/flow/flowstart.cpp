@@ -10,6 +10,14 @@ FlowStart::FlowStart(QObject *parent) : Behaviours(parent)
     addInputOutputExclusion({"autoStartChanged()","runCountChanged()"});
 }
 
+void FlowStart::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("trigger()", Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("execOut()", Connections::FlowType);
+}
+
 QMap<QString, QVariant> FlowStart::loadInfos() { return static_infos(); }
 QMap<QString, QVariant> FlowStart::static_infos() {
     return {{"name","Flow Start"},{"type",Behaviours::CPP},{"className","FlowStart"},

@@ -71,7 +71,7 @@ Item {
                 anchors { fill: parent; leftMargin: 6; rightMargin: 6 } spacing: 2
 
                 Text {
-                    text: "Pie Chart"; color: ThemeManager.textColor
+                    text: qsTr("Pie Chart"); color: ThemeManager.textColor
                     font.pixelSize: 11; font.bold: true; Layout.rightMargin: 4
                 }
 
@@ -169,7 +169,7 @@ Item {
                         anchors { fill: parent; leftMargin: 6; rightMargin: 6 }
                         verticalAlignment: TextInput.AlignVCenter
                         font.pixelSize: 11; color: ThemeManager.textColor
-                        placeholderText: "Label"; selectByMouse: true
+                        placeholderText: qsTr("Label"); selectByMouse: true
                     }
                 }
 

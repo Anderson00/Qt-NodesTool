@@ -58,7 +58,7 @@ Item {
     // conteúdo do card
     Text {
         anchors.centerIn: parent
-        text: "Card QML"
+        text: qsTr("Card QML")
         color: ThemeManager.textColor
     }
 }

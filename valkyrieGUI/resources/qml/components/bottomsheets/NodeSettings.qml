@@ -125,7 +125,7 @@ Drawer {
                 spacing: 2
 
                 Text {
-                    text: "Selected Node"
+                    text: qsTr("Selected Node")
                     font.pixelSize: 10
                     font.bold: true
                     color: ThemeManager.textSecondaryColor
@@ -179,7 +179,7 @@ Drawer {
                 spacing: 10
 
                 Text {
-                    text: "Position (relative to center)"
+                    text: qsTr("Position (relative to center)")
                     font.pixelSize: 11
                     font.bold: true
                     color: ThemeManager.textSecondaryColor
@@ -208,7 +208,7 @@ Drawer {
                             spacing: 3
 
                             Text {
-                                text: "X"
+                                text: qsTr("X")
                                 font.pixelSize: 9
                                 color: ThemeManager.textSecondaryColor
                                 opacity: 0.7
@@ -242,7 +242,7 @@ Drawer {
                             spacing: 3
 
                             Text {
-                                text: "Y"
+                                text: qsTr("Y")
                                 font.pixelSize: 9
                                 color: ThemeManager.textSecondaryColor
                                 opacity: 0.7
@@ -276,7 +276,7 @@ Drawer {
                 spacing: 10
 
                 Text {
-                    text: "Size"
+                    text: qsTr("Size")
                     font.pixelSize: 11
                     font.bold: true
                     color: ThemeManager.textSecondaryColor
@@ -305,7 +305,7 @@ Drawer {
                             spacing: 3
 
                             Text {
-                                text: "Width"
+                                text: qsTr("Width")
                                 font.pixelSize: 9
                                 color: ThemeManager.textSecondaryColor
                                 opacity: 0.7
@@ -339,7 +339,7 @@ Drawer {
                             spacing: 3
 
                             Text {
-                                text: "Height"
+                                text: qsTr("Height")
                                 font.pixelSize: 9
                                 color: ThemeManager.textSecondaryColor
                                 opacity: 0.7
@@ -381,7 +381,7 @@ Drawer {
                     spacing: 2
 
                     Text {
-                        text: "Z-Index (Layer)"
+                        text: qsTr("Z-Index (Layer)")
                         font.pixelSize: 10
                         font.bold: true
                         color: ThemeManager.textSecondaryColor
@@ -407,7 +407,7 @@ Drawer {
 
                     Text {
                         anchors.centerIn: parent
-                        text: "Front"
+                        text: qsTr("Front")
                         font.pixelSize: 10
                         color: ThemeManager.textColor
                     }
@@ -430,7 +430,7 @@ Drawer {
 
                     Text {
                         anchors.centerIn: parent
-                        text: "Back"
+                        text: qsTr("Back")
                         font.pixelSize: 10
                         color: ThemeManager.textColor
                     }
@@ -460,7 +460,7 @@ Drawer {
                 spacing: 10
 
                 Text {
-                    text: "Connections"
+                    text: qsTr("Connections")
                     font.pixelSize: 11
                     font.bold: true
                     color: ThemeManager.textSecondaryColor
@@ -500,7 +500,7 @@ Drawer {
                                             text: {
                                                 // Identify if we are the input or output of this connection
                                                 var isOutput = (modelData.outputUuid === root.currentNodeUuid);
-                                                var dir = isOutput ? "=> Destino" : "<= Origem";
+                                                var dir = isOutput ? qsTr("=> Destination") : qsTr("<= Origin");
                                                 return dir + " (" + (isOutput ? modelData.inputMethod : modelData.outputMethod) + ")"
                                             }
                                             font.pixelSize: 10
@@ -509,7 +509,7 @@ Drawer {
                                             Layout.fillWidth: true
                                         }
                                         Text {
-                                            text: "M: " + (modelData.outputUuid === root.currentNodeUuid ? modelData.outputMethod : modelData.inputMethod)
+                                            text: qsTr("M: ") + (modelData.outputUuid === root.currentNodeUuid ? modelData.outputMethod : modelData.inputMethod)
                                             font.pixelSize: 9
                                             color: ThemeManager.textSecondaryColor
                                             opacity: 0.8
@@ -535,8 +535,8 @@ Drawer {
                                             cursorShape: Qt.PointingHandCursor
                                             onClicked: {
                                                 var cmt = viewPortWindow.getConnectionComment(modelData.outputUuid, modelData.outputMethod, modelData.inputUuid, modelData.inputMethod);
-                                                var msg = cmt ? cmt : "Sem anotação.";
-                                                ToastManager.show("Comentário: " + msg, "info");
+                                                var msg = cmt ? cmt : qsTr("No annotation.");
+                                                ToastManager.show(qsTr("Comment: ") + msg, "info");
                                             }
                                             onEntered: parent.color = Qt.rgba(1,1,1,0.1)
                                             onExited: parent.color = "transparent"
@@ -560,7 +560,7 @@ Drawer {
                                             anchors.fill: parent
                                             hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
-                                            onClicked: ToastManager.show("Intercepção de valores requer o nó Debugger (Em breve)", "warning")
+                                            onClicked: ToastManager.show(qsTr("Value interception requires the Debugger node (Coming soon)"), "warning")
                                             onEntered: parent.color = Qt.rgba(1,1,1,0.1)
                                             onExited: parent.color = "transparent"
                                         }
@@ -590,6 +590,83 @@ Drawer {
                                     }
                                 }
                             }
+                }
+            }
+        }
+
+        // Presentation section — toggle whether this node is hidden when
+        // the user enters Presentation Mode (F10). Persists with the workspace.
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 64
+            radius: 6
+            color: Qt.rgba(ThemeManager.backgroundColor.r,
+                          ThemeManager.backgroundColor.g,
+                          ThemeManager.backgroundColor.b, 0.4)
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 10
+                spacing: 6
+
+                Text {
+                    text: qsTr("Presentation")
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: ThemeManager.textSecondaryColor
+                    opacity: 0.7
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    Text {
+                        text: qsTr("Hide in presentation mode")
+                        font.pixelSize: 11
+                        color: ThemeManager.textColor
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                    }
+
+                    // Lightweight inline toggle — keeps NodeSettings free of
+                    // dependencies on CustomSwitch which lives outside this dir.
+                    Rectangle {
+                        id: hideToggle
+                        Layout.preferredWidth: 36
+                        Layout.preferredHeight: 18
+                        radius: 9
+                        readonly property bool active:
+                            selectedObjectView !== null && selectedObjectView !== undefined
+                            && selectedObjectView.behaviourObject
+                            && selectedObjectView.behaviourObject.hiddenInPresentation
+                        color: active
+                               ? Qt.rgba(ThemeManager.primaryColor.r,
+                                         ThemeManager.primaryColor.g,
+                                         ThemeManager.primaryColor.b, 0.8)
+                               : Qt.rgba(ThemeManager.borderColor.r,
+                                         ThemeManager.borderColor.g,
+                                         ThemeManager.borderColor.b, 0.5)
+                        Behavior on color { ColorAnimation { duration: 120 } }
+
+                        Rectangle {
+                            width: 14; height: 14; radius: 7
+                            color: "white"
+                            anchors.verticalCenter: parent.verticalCenter
+                            x: hideToggle.active ? parent.width - width - 2 : 2
+                            Behavior on x { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (!selectedObjectView || !selectedObjectView.behaviourObject) return
+                                selectedObjectView.behaviourObject.hiddenInPresentation =
+                                    !selectedObjectView.behaviourObject.hiddenInPresentation
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -626,7 +703,7 @@ Drawer {
                 }
 
                 Text {
-                    text: "Deletar Nó"
+                    text: qsTr("Delete Node")
                     font.pixelSize: 12
                     font.bold: true
                     color: ThemeManager.dangerColor

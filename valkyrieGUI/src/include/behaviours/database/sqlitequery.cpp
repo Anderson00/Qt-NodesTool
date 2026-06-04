@@ -36,6 +36,17 @@ SQLiteQuery::~SQLiteQuery()
     }
 }
 
+void SQLiteQuery::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("setDatabase(QString)",                    Connections::StringType);
+    setPinTypeForSignature("execute(QString)",                        Connections::StringType);
+    setPinTypeForSignature("executeWithParams(QString,QVariantList)", Connections::AnyType);
+    // outputs
+    setPinTypeForSignature("rowsFetched(QVariantList)", Connections::ArrayType);
+    setPinTypeForSignature("error(QString)",            Connections::StringType);
+}
+
 QMap<QString, QVariant> SQLiteQuery::loadInfos()
 {
     return SQLiteQuery::static_infos();
@@ -63,11 +74,15 @@ void SQLiteQuery::setLastError(const QString& err)
 
 void SQLiteQuery::setDatabase(QString filePath)
 {
-    // Close existing connection if open
+    // Close existing connection if open.
+    // The QSqlDatabase copy must be destroyed (go out of scope) BEFORE calling
+    // removeDatabase(); otherwise Qt emits "connection still in use" warnings.
     if (QSqlDatabase::contains(m_connectionName)) {
-        QSqlDatabase db = QSqlDatabase::database(m_connectionName);
-        if (db.isOpen())
-            db.close();
+        {
+            QSqlDatabase db = QSqlDatabase::database(m_connectionName);
+            if (db.isOpen())
+                db.close();
+        } // db copy destroyed here — safe to remove now
         QSqlDatabase::removeDatabase(m_connectionName);
     }
 
@@ -80,6 +95,9 @@ void SQLiteQuery::setDatabase(QString filePath)
         m_isConnected = false;
         emit isConnectedChanged();
         setLastError(db.lastError().text());
+        // Clean up the registered-but-closed connection so a retry works cleanly
+        { /* db goes out of scope below */ }
+        QSqlDatabase::removeDatabase(m_connectionName);
         return;
     }
     m_isConnected = true;

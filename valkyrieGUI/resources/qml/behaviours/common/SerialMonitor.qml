@@ -92,7 +92,7 @@ Item {
                 }
 
                 // Baud rate selector
-                Text { text: "Baud:"; font.pixelSize: 9; color: ThemeManager.textSecondaryColor }
+                Text { text: qsTr("Baud:"); font.pixelSize: 9; color: ThemeManager.textSecondaryColor }
                 Rectangle {
                     Layout.preferredWidth: 72; Layout.preferredHeight: 24; radius: 4
                     color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.06)
@@ -233,7 +233,7 @@ Item {
                 NewButton {
                     id: sendBtn
                     Layout.preferredWidth: 52; Layout.fillHeight: true
-                    variant: "filled"; text: "Send"
+                    variant: "filled"; text: qsTr("Send")
                     backgroundColor: ThemeManager.primaryColor
                     function sendData() {
                         var txt = sendField.text

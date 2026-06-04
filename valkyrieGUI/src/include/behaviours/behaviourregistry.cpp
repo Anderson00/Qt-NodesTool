@@ -1,13 +1,14 @@
 #include "behaviourregistry.h"
+#include <QCoreApplication>
 #include <QDebug>
 #include <QDir>
 
 BehaviourRegistry::BehaviourRegistry() : QObject(nullptr) {
-    // Create plugin directories if they don't exist
-    QDir().mkdir("Behaviours");
-    QDir dir("Behaviours");
-    dir.mkdir("Debug");
-    dir.mkdir("Plugins");
+    // Create plugin directories relative to the executable, not to CWD
+    const QString base = QCoreApplication::applicationDirPath() + "/Behaviours";
+    QDir().mkpath(base);
+    QDir(base).mkdir("Debug");
+    QDir(base).mkdir("Plugins");
 }
 
 BehaviourRegistry& BehaviourRegistry::instance() {
@@ -106,11 +107,10 @@ QJsonArray BehaviourRegistry::discoverAllToTree() {
 
         if (keySplit.size() > 1) {
             QJsonObject itemNode;
-            itemNode["text"] = keySplit.mid(1).join("/");
+            itemNode["text"]   = keySplit.mid(1).join("/");
             itemNode["isLeaf"] = true;
-            categoryNodes[category]["children"].toArray().append(itemNode); // Wait, toArray() returns a copy
-            
-            // Correct way to append to nested array
+
+            // QJsonValue::toArray() returns a copy, so we must read–modify–write
             QJsonArray children = categoryNodes[category]["children"].toArray();
             children.append(itemNode);
             categoryNodes[category]["children"] = children;

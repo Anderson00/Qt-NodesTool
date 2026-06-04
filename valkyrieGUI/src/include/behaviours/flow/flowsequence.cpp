@@ -10,6 +10,16 @@ FlowSequence::FlowSequence(QObject *parent) : Behaviours(parent)
     addInputOutputExclusion({"currentStepChanged()","isRunningChanged()"});
 }
 
+void FlowSequence::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("trigger()", Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("step1()", Connections::FlowType);
+    setPinTypeForSignature("step2()", Connections::FlowType);
+    setPinTypeForSignature("step3()", Connections::FlowType);
+}
+
 QMap<QString, QVariant> FlowSequence::loadInfos() { return static_infos(); }
 QMap<QString, QVariant> FlowSequence::static_infos() {
     return {{"name","Flow Sequence"},{"type",Behaviours::CPP},{"className","FlowSequence"},

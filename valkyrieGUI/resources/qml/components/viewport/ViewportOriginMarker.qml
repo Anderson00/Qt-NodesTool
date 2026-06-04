@@ -36,7 +36,7 @@ Item {
     // Label
     Text {
         x: 7; y: -16
-        text: "0, 0"
+        text: qsTr("0, 0")
         font.pixelSize: 10
         color: ThemeManager.primaryColor
         opacity: 0.50

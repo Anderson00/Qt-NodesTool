@@ -77,7 +77,7 @@ Rectangle {
                 icon.color:  root.frameColor
                 icon.width: 12; icon.height: 12
                 onClicked: root.contentsSelected()
-                AppToolTip { text: "Select nodes"; visible: parent.hovered }
+                AppToolTip { text: qsTr("Select nodes"); visible: parent.hovered }
             }
             AppBarButton {
                 width: 22; height: 22; padding: 0
@@ -85,7 +85,7 @@ Rectangle {
                 icon.color:  root.frameColor
                 icon.width: 11; icon.height: 11
                 onClicked: root.dissolved()
-                AppToolTip { text: "Dissolve group"; visible: parent.hovered }
+                AppToolTip { text: qsTr("Dissolve group"); visible: parent.hovered }
             }
         }
 

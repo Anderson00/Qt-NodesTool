@@ -5,6 +5,7 @@
 #include "include/mainwindow.h"
 #include <model/tablemodel.h>
 #include <model/globalproperties.h>
+#include <model/languagemanager.h>
 #include <utils/toastmanager.h>
 #include <utils/logmanager.h>
 #include <utils/fastlinechart.h>
@@ -93,6 +94,14 @@ int main(int argc, char **argv)
     // Register BehaviourRegistry (node discovery + factory) as singleton in QML
     qmlRegisterSingletonType<BehaviourRegistry>("App.NodeRegistry", 1, 0, "NodeRegistry",
                                                  &BehaviourRegistry::qmlSingletonProvider);
+
+    // Register LanguageManager — runtime language switching, exposed as App.Language 1.0
+    qmlRegisterSingletonInstance("App.Language", 1, 0, "LanguageManager",
+                                  LanguageManager::instance());
+
+    // Load the language saved in settings.json and install the QTranslator
+    // before any QML engine is created (MainWindow constructor creates engines).
+    LanguageManager::instance()->loadSavedLanguage();
 
     // Register FastLineChart — direct SGG renderer, replaces QtCharts in LineChartViewer
     qmlRegisterType<FastLineChart>("App.Widgets", 1, 0, "FastLineChart");

@@ -19,6 +19,8 @@ class JsonTreeViewer : public Behaviours
 public:
     explicit JsonTreeViewer(QObject *parent = nullptr);
 
+    void onPinsReady() override;
+
     virtual QMap<QString, QVariant> loadInfos() override;
     static  QMap<QString, QVariant> static_infos();
 

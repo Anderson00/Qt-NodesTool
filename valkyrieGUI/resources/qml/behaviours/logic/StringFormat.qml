@@ -19,7 +19,7 @@ Item {
         // ── Template input ─────────────────────────────────────────────────
         ColumnLayout {
             Layout.fillWidth: true; spacing: 2
-            Text { text: "Template"; font.pixelSize: 9; color: ThemeManager.textSecondaryColor }
+            Text { text: qsTr("Template"); font.pixelSize: 9; color: ThemeManager.textSecondaryColor }
             Rectangle {
                 Layout.fillWidth: true; height: 32; radius: 4
                 color: Qt.rgba(ThemeManager.textColor.r, ThemeManager.textColor.g, ThemeManager.textColor.b, 0.05)
@@ -37,7 +37,7 @@ Item {
                 }
             }
             Text {
-                text: "Use {A}, {B}, {C} as placeholders"
+                text: qsTr("Use {A}, {B}, {C} as placeholders")
                 font.pixelSize: 8; color: ThemeManager.textSecondaryColor; opacity: 0.6
             }
         }
@@ -51,7 +51,7 @@ Item {
 
             Column {
                 anchors.centerIn: parent; spacing: 2
-                Text { text: "Result"; font.pixelSize: 8; color: ThemeManager.textSecondaryColor; anchors.horizontalCenter: parent.horizontalCenter }
+                Text { text: qsTr("Result"); font.pixelSize: 8; color: ThemeManager.textSecondaryColor; anchors.horizontalCenter: parent.horizontalCenter }
                 Text {
                     text: behaviourObject ? behaviourObject.resultStr : ""
                     font.pixelSize: 12; font.family: "Consolas"; font.bold: true
@@ -68,7 +68,7 @@ Item {
             Layout.fillWidth: true; spacing: 4
 
             Text {
-                text: ".0"
+                text: qsTr(".0")
                 font.pixelSize: 9; color: ThemeManager.textSecondaryColor
                 Layout.alignment: Qt.AlignVCenter
             }

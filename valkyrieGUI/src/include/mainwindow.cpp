@@ -34,6 +34,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     QObject::connect(m_viewPort, &ViewPortWindow::fullScreenToogle, this, &MainWindow::on_actionFullscreen_triggered);
 
+    // Presentation mode toggles OS-level fullscreen on the MainWindow itself
+    QObject::connect(m_viewPort, &ViewPortWindow::presentationFullScreenRequested,
+                     this, &MainWindow::onPresentationFullScreenRequested);
+
     // Connect undo/redo shortcuts to viewport
     QObject::connect(ui->actionUndo, &QAction::triggered, m_viewPort, &ViewPortWindow::undo);
     QObject::connect(ui->actionRedo, &QAction::triggered, m_viewPort, &ViewPortWindow::redo);
@@ -143,5 +147,27 @@ void MainWindow::on_actionShow_fps_toggled(bool arg1)
 {
     this->m_viewPort->setShowFps(arg1);
     GlobalProperties::instance()->setShowFps(arg1);
+}
+
+void MainWindow::onPresentationFullScreenRequested(bool active)
+{
+    if (active) {
+        // Save current visibility so we can restore it when leaving presentation
+        m_wasFullScreenBeforePresentation = this->isFullScreen();
+        m_savedWindowState = this->windowState();
+        if (!this->isFullScreen())
+            this->showFullScreen();
+    } else {
+        // Don't disturb the user's fullscreen choice if they already were in it
+        if (m_wasFullScreenBeforePresentation) {
+            this->showFullScreen();
+        } else if (m_savedWindowState & Qt::WindowMaximized) {
+            this->showMaximized();
+        } else if (m_savedWindowState & Qt::WindowMinimized) {
+            this->showMinimized();
+        } else {
+            this->showNormal();
+        }
+    }
 }
 

@@ -19,6 +19,15 @@ ClipboardNode::ClipboardNode(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void ClipboardNode::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("writeText(QString)", Connections::StringType);
+    setPinTypeForSignature("readText()",         Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("clipboardRead(QString)", Connections::StringType);
+}
+
 QMap<QString, QVariant> ClipboardNode::loadInfos() { return ClipboardNode::static_infos(); }
 
 QMap<QString, QVariant> ClipboardNode::static_infos()

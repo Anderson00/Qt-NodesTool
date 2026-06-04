@@ -21,6 +21,8 @@ public:
     explicit ScriptScheduler(QObject *parent = nullptr);
     ~ScriptScheduler() override = default;
 
+    void onPinsReady() override;
+
     bool isActive() const;
 
     QMap<QString, QVariant> loadInfos() override;

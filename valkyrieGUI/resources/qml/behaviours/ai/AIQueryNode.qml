@@ -22,7 +22,7 @@ Item {
         }
 
         function onInternalError(msg) {
-            responseArea.text = "Error: " + msg
+            responseArea.text = qsTr("Error: ") + msg
         }
 
         function onInternalTokens(inT, outT) {
@@ -42,13 +42,13 @@ Item {
             spacing: 4
 
             Text {
-                text: "Model:"
+                text: qsTr("Model:")
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 11
             }
 
             Chip {
-                label: "Haiku"
+                label: qsTr("Haiku")
                 closeable: false
                 selectable: true
                 selected: behaviourObject ? behaviourObject.model === "claude-haiku-4-5-20251001" : true
@@ -56,7 +56,7 @@ Item {
             }
 
             Chip {
-                label: "Sonnet"
+                label: qsTr("Sonnet")
                 closeable: false
                 selectable: true
                 selected: behaviourObject ? behaviourObject.model === "claude-sonnet-4-5-20251001" : false
@@ -64,7 +64,7 @@ Item {
             }
 
             Chip {
-                label: "Opus"
+                label: qsTr("Opus")
                 closeable: false
                 selectable: true
                 selected: behaviourObject ? behaviourObject.model === "claude-opus-4-5-20251001" : false
@@ -76,7 +76,7 @@ Item {
         PasswordField {
             id: apiKeyField
             Layout.fillWidth: true
-            placeholderText: "sk-ant-..."
+            placeholderText: qsTr("sk-ant-...")
             onEditingFinished: behaviourObject.setApiKey(text)
         }
 
@@ -96,7 +96,7 @@ Item {
 
                 TextArea {
                     id: systemPromptArea
-                    placeholderText: "System prompt (optional)..."
+                    placeholderText: qsTr("System prompt (optional)...")
                     color: ThemeManager.textColor
                     font.pixelSize: 11
                     background: null
@@ -124,7 +124,7 @@ Item {
 
                 TextArea {
                     id: queryArea
-                    placeholderText: "Enter your prompt..."
+                    placeholderText: qsTr("Enter your prompt...")
                     color: ThemeManager.textColor
                     font.pixelSize: 11
                     background: null
@@ -136,7 +136,7 @@ Item {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.rightMargin: 4
-                text: "Send"
+                text: qsTr("Send")
                 variant: "filled"
                 width: 60
                 onClicked: {
@@ -163,7 +163,7 @@ Item {
 
                 TextArea {
                     id: responseArea
-                    placeholderText: "Response will appear here..."
+                    placeholderText: qsTr("Response will appear here...")
                     color: ThemeManager.textColor
                     font.pixelSize: 11
                     background: null
@@ -187,7 +187,7 @@ Item {
             spacing: 8
 
             Text {
-                text: "In: " + root.inTokens + "  Out: " + root.outTokens
+                text: qsTr("In: ") + root.inTokens + "  Out: " + root.outTokens
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 10
             }
@@ -195,7 +195,7 @@ Item {
             Item { Layout.fillWidth: true }
 
             NewButton {
-                text: "Cancel"
+                text: qsTr("Cancel")
                 variant: "outlined"
                 visible: behaviourObject ? behaviourObject.isLoading : false
                 onClicked: behaviourObject.cancel()

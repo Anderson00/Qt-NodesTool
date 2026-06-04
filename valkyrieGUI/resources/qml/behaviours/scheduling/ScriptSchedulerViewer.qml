@@ -42,7 +42,7 @@ Item {
             type: type,
             time: Qt.formatDateTime(new Date(), "HH:mm:ss"),
             event: evName,
-            text: (text && text.length > 0) ? text : "(sem saída)"
+            text: (text && text.length > 0) ? text : qsTr("(no output)")
         })
         if (logs.length > 300) logs.length = 300
         _consoleLogs = logs
@@ -255,7 +255,7 @@ Item {
                     RowLayout {
                         Layout.fillWidth: true; spacing: 4
                         Text {
-                            text: "EVENTOS"
+                            text: qsTr("EVENTOS")
                             color: ThemeManager.textSecondaryColor
                             font.pixelSize: 9; font.bold: true; font.letterSpacing: 1.2
                             Layout.fillWidth: true
@@ -443,7 +443,7 @@ Item {
                         RowLayout {
                             anchors.centerIn: parent; spacing: 5
                             SvgIcon { width: 16; height: 16; source: Icons.plus; color: "#fff" }
-                            Text { text: "Evento"; color: "#fff"; font.pixelSize: 11; font.bold: true }
+                            Text { text: qsTr("Evento"); color: "#fff"; font.pixelSize: 11; font.bold: true }
                         }
                         MouseArea {
                             id: addA; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
@@ -472,7 +472,7 @@ Item {
                     SvgIcon { Layout.alignment: Qt.AlignHCenter; width: 36; height: 36; source: Icons.clipboardTextOutline; color: ThemeManager.textColor; opacity: 0.2 }
                     Text {
                         Layout.alignment: Qt.AlignHCenter
-                        text: "Selecione ou crie\num evento"
+                        text: qsTr("Select or create\nan event")
                         color: Qt.rgba(1,1,1,0.22); font.pixelSize: 12
                         horizontalAlignment: Text.AlignHCenter
                     }
@@ -530,7 +530,7 @@ Item {
                                 RowLayout {
                                     Layout.fillWidth: true; spacing: 8
                                     CustomSwitch {
-                                        text: "Evento ativo"
+                                        text: qsTr("Evento ativo")
                                         checked: root.selectedEvent ? root.selectedEvent.enabled : false
                                         onCheckedChanged: {
                                             if (root.selectedEventId !== "")
@@ -548,7 +548,7 @@ Item {
                                                 text: root.selectedEvent ? root.selectedEvent.runCount : "0"
                                                 color: ThemeManager.textColor; font.pixelSize: 10; font.bold: true
                                             }
-                                            Text { text: "execuções"; color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
+                                            Text { text: qsTr("runs"); color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
                                         }
                                     }
                                 }
@@ -562,7 +562,7 @@ Item {
                             spacing: 8
 
                             Text {
-                                text: "TIPO DE TRIGGER"
+                                text: qsTr("TIPO DE TRIGGER")
                                 color: ThemeManager.textSecondaryColor
                                 font.pixelSize: 9; font.bold: true; font.letterSpacing: 1.2
                             }
@@ -629,7 +629,7 @@ Item {
                                     // and can be reset in onSelectedEventIdChanged when switching events.
                                     ColumnLayout {
                                         Layout.fillWidth: true; spacing: 4
-                                        Text { Layout.alignment: Qt.AlignHCenter; text: "Dias"; color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
+                                        Text { Layout.alignment: Qt.AlignHCenter; text: qsTr("Dias"); color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
                                         VerticalSpinBox {
                                             id: daysSpinBox; Layout.alignment: Qt.AlignHCenter
                                             from: 0; to: 999
@@ -642,7 +642,7 @@ Item {
                                     }
                                     ColumnLayout {
                                         Layout.fillWidth: true; spacing: 4
-                                        Text { Layout.alignment: Qt.AlignHCenter; text: "Horas"; color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
+                                        Text { Layout.alignment: Qt.AlignHCenter; text: qsTr("Horas"); color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
                                         VerticalSpinBox {
                                             id: hoursSpinBox; Layout.alignment: Qt.AlignHCenter
                                             from: 0; to: 999
@@ -655,7 +655,7 @@ Item {
                                     }
                                     ColumnLayout {
                                         Layout.fillWidth: true; spacing: 4
-                                        Text { Layout.alignment: Qt.AlignHCenter; text: "Min"; color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
+                                        Text { Layout.alignment: Qt.AlignHCenter; text: qsTr("Min"); color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
                                         VerticalSpinBox {
                                             id: minsSpinBox; Layout.alignment: Qt.AlignHCenter
                                             from: 0; to: 999
@@ -668,7 +668,7 @@ Item {
                                     }
                                     ColumnLayout {
                                         Layout.fillWidth: true; spacing: 4
-                                        Text { Layout.alignment: Qt.AlignHCenter; text: "Seg"; color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
+                                        Text { Layout.alignment: Qt.AlignHCenter; text: qsTr("Seg"); color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
                                         VerticalSpinBox {
                                             id: secsSpinBox; Layout.alignment: Qt.AlignHCenter
                                             from: 0; to: 999
@@ -717,7 +717,7 @@ Item {
 
                             RowLayout {
                                 Layout.fillWidth: true; spacing: 8
-                                Text { text: "Hora:"; color: ThemeManager.textSecondaryColor; font.pixelSize: 11 }
+                                Text { text: qsTr("Hora:"); color: ThemeManager.textSecondaryColor; font.pixelSize: 11 }
                                 TimePicker {
                                     id: dtTimePicker
                                     hours: dtSection._h; minutes: dtSection._m
@@ -834,7 +834,7 @@ Item {
 
                             RowLayout {
                                 Layout.fillWidth: true; spacing: 8
-                                Text { text: "Hora:"; color: ThemeManager.textSecondaryColor; font.pixelSize: 11 }
+                                Text { text: qsTr("Hora:"); color: ThemeManager.textSecondaryColor; font.pixelSize: 11 }
                                 TimePicker {
                                     hours:   root.selectedEvent ? root.selectedEvent.multiTimeHour   : 9
                                     minutes: root.selectedEvent ? root.selectedEvent.multiTimeMinute : 0
@@ -861,7 +861,7 @@ Item {
                             spacing: 10
 
                             Text {
-                                text: "SCRIPT"
+                                text: qsTr("SCRIPT")
                                 color: ThemeManager.textSecondaryColor
                                 font.pixelSize: 9; font.bold: true; font.letterSpacing: 1.2
                             }
@@ -873,7 +873,7 @@ Item {
                                 RowLayout {
                                     anchors { fill: parent; margins: 3 } spacing: 3
                                     Repeater {
-                                        model: ["Inline", "Arquivo"]
+                                        model: [qsTr("Inline"), qsTr("File")]
                                         Rectangle {
                                             Layout.fillWidth: true; height: parent.height; radius: 5
                                             property bool isCurrent: {
@@ -933,7 +933,7 @@ Item {
                                             verticalAlignment: TextInput.AlignVCenter
                                             text: root.selectedEvent ? root.selectedEvent.scriptFile : ""
                                             color: ThemeManager.textColor; font.pixelSize: 11; font.family: "Consolas"
-                                            selectByMouse: true; placeholderText: "Caminho do arquivo .py"
+                                            selectByMouse: true; placeholderText: qsTr("Caminho do arquivo .py")
                                             placeholderTextColor: Qt.rgba(1,1,1,0.3); background: null
                                             onEditingFinished: behaviourObject.updateEventField(root.selectedEventId, "scriptFile", text)
                                         }
@@ -962,7 +962,7 @@ Item {
                             RowLayout {
                                 Layout.fillWidth: true
                                 Text {
-                                    text: "PARÂMETROS"
+                                    text: qsTr("PARÂMETROS")
                                     color: ThemeManager.textSecondaryColor
                                     font.pixelSize: 9; font.bold: true; font.letterSpacing: 1.2
                                     Layout.fillWidth: true
@@ -1030,7 +1030,7 @@ Item {
                                             }
 
                                             // Separator
-                                            Text { text: " : "; color: Qt.rgba(1,1,1,0.25); font.pixelSize: 12 }
+                                            Text { text: qsTr(" : "); color: Qt.rgba(1,1,1,0.25); font.pixelSize: 12 }
 
                                             // Value (editable)
                                             TextInput {
@@ -1076,7 +1076,7 @@ Item {
 
                             ColumnLayout {
                                 spacing: 2
-                                Text { text: "Último disparo"; color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
+                                Text { text: qsTr("Último disparo"); color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
                                 Text {
                                     text: root.selectedEvent && root.selectedEvent.lastRun &&
                                           root.selectedEvent.lastRun.length > 0
@@ -1095,7 +1095,7 @@ Item {
                                 Behavior on color { ColorAnimation { duration: 150 } }
                                 RowLayout { id: fireLabel; anchors.centerIn: parent; spacing: 5
                                     SvgIcon { width: 12; height: 12; source: Icons.flash; color: "#fff" }
-                                    Text { text: "Disparar agora"; color: "#fff"; font.pixelSize: 11; font.bold: true }
+                                    Text { text: qsTr("Disparar agora"); color: "#fff"; font.pixelSize: 11; font.bold: true }
                                 }
                                 MouseArea {
                                     id: fireNowA; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
@@ -1133,7 +1133,7 @@ Item {
 
                         SvgIcon { width: 11; height: 11; source: Icons.codeBraces; color: ThemeManager.textSecondaryColor; opacity: 0.7 }
                         Text {
-                            text: "SAÍDA"
+                            text: qsTr("SAÍDA")
                             color: ThemeManager.textSecondaryColor
                             font.pixelSize: 9; font.bold: true; font.letterSpacing: 1.2
                         }
@@ -1218,7 +1218,7 @@ Item {
                     Text {
                         anchors.centerIn: parent
                         visible: consoleList.count === 0
-                        text: "Nenhuma saída ainda"
+                        text: qsTr("Nenhuma saída ainda")
                         color: Qt.rgba(1,1,1,0.15); font.pixelSize: 10
                     }
 
@@ -1287,7 +1287,7 @@ Item {
 
     Platform.FileDialog {
         id: fileDialog
-        title: "Selecione o Script Python"
+        title: qsTr("Selecione o Script Python")
         nameFilters: ["Python Scripts (*.py)", "All Files (*)"]
         onAccepted: {
             if (root.selectedEventId !== "") {

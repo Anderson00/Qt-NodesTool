@@ -17,6 +17,17 @@ JSONParser::JSONParser(QObject *parent)
     }));
 }
 
+void JSONParser::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("parse(QString)",   Connections::StringType);
+    setPinTypeForSignature("setPath(QString)", Connections::StringType);
+    // outputs
+    setPinTypeForSignature("valueExtracted(QString)", Connections::StringType);
+    setPinTypeForSignature("error(QString)",           Connections::StringType);
+    setPinTypeForSignature("allKeys(QStringList)",     Connections::ArrayType);
+}
+
 QMap<QString, QVariant> JSONParser::loadInfos()
 {
     return JSONParser::static_infos();

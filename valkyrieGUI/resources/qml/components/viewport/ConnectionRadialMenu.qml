@@ -75,9 +75,9 @@ Popup {
         angle: -90
         distance: 55 * root.expansion
         iconSource: Icons.information
-        toolTipText: "Informação"
+        toolTipText: qsTr("Info")
         onClicked: {
-            ToastManager.show("Conexão: " + outNodeName + " (" + outMethod + ") -> " + inNodeName + " (" + inMethod + ")", "info")
+            ToastManager.show(qsTr("Connection: %1 (%2) -> %3 (%4)").arg(outNodeName).arg(outMethod).arg(inNodeName).arg(inMethod), "info")
             root.close()
         }
     }
@@ -88,7 +88,7 @@ Popup {
         angle: 0
         distance: 55 * root.expansion
         iconSource: Icons.close
-        toolTipText: "Remover"
+        toolTipText: qsTr("Remove")
         iconColor: ThemeManager.dangerColor
         onClicked: {
             if (connectionIndex !== -1) {
@@ -104,7 +104,7 @@ Popup {
         angle: 90
         distance: 55 * root.expansion
         iconSource: Icons.fileDocumentEditOutline // Use an edit icon for comment
-        toolTipText: "Adicionar Comentário"
+        toolTipText: qsTr("Add Comment")
         onClicked: {
             commentDialog.open()
         }
@@ -131,7 +131,7 @@ Popup {
             spacing: 8
             
             Text {
-                text: "Anotação da Conexão"
+                text: qsTr("Connection Annotation")
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 14
                 font.bold: true
@@ -151,7 +151,7 @@ Popup {
                     id: commentInput
                     anchors.fill: parent
 
-                    placeholderText: "Escreva suas anotações aqui..."
+                    placeholderText: qsTr("Write your annotations here...")
                     color: ThemeManager.textColor
                     font.pixelSize: 14
                     wrapMode: Text.Wrap
@@ -163,7 +163,7 @@ Popup {
                 Layout.alignment: Qt.AlignRight
                 Button {
                     id: saveBtn
-                    text: "Salvar Anotação"
+                    text: qsTr("Save Annotation")
                     background: Rectangle {
                         color: ThemeManager.primaryColor
                         radius: 6
@@ -177,7 +177,7 @@ Popup {
                     }
                     onClicked: {
                         viewPort.setConnectionComment(outUuid, outMethod, inUuid, inMethod, commentInput.text)
-                        ToastManager.show("Comentário salvo!", "success")
+                        ToastManager.show(qsTr("Annotation saved!"), "success")
                         commentDialog.close()
                         root.close()
                     }
@@ -197,9 +197,9 @@ Popup {
         angle: 180
         distance: 55 * root.expansion
         iconSource: Icons.contentSaveCogOutline
-        toolTipText: "Copiar UUIDs"
+        toolTipText: qsTr("Copy UUIDs")
         onClicked: {
-            ToastManager.show("UUID Origem: " + outUuid + "\nUUID Destino: " + inUuid, "success")
+            ToastManager.show(qsTr("Source UUID: %1\nTarget UUID: %2").arg(outUuid).arg(inUuid), "success")
             root.close()
         }
     }

@@ -16,6 +16,8 @@ class Base64Node : public Behaviours
 public:
     explicit Base64Node(QObject *parent = nullptr);
 
+    void onPinsReady() override;
+
     virtual QMap<QString, QVariant> loadInfos() override;
     static  QMap<QString, QVariant> static_infos();
 

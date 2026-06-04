@@ -13,6 +13,16 @@ Comparison::Comparison(QObject *parent) : Behaviours(parent)
     addInputOutputExclusion({"operationChanged()","valueAChanged()","valueBChanged()","resultChanged()"});
 }
 
+void Comparison::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("setA(double)", Connections::DoubleType);
+    setPinTypeForSignature("setB(double)", Connections::DoubleType);
+    // outputs
+    setPinTypeForSignature("outputResult(bool)",    Connections::BoolType);
+    setPinTypeForSignature("outputString(QString)", Connections::StringType);
+}
+
 QMap<QString, QVariant> Comparison::loadInfos() { return static_infos(); }
 
 QMap<QString, QVariant> Comparison::static_infos() {

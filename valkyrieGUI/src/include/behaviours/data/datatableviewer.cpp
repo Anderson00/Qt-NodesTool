@@ -20,6 +20,18 @@ DataTableViewer::DataTableViewer(QObject *parent)
     }));
 }
 
+void DataTableViewer::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("addRow(QVariantList)",     Connections::ArrayType);
+    setPinTypeForSignature("setHeaders(QStringList)",  Connections::ArrayType);
+    setPinTypeForSignature("clear()",                  Connections::FlowType);
+    setPinTypeForSignature("removeRow(int)",            Connections::IntType);
+    // outputs
+    setPinTypeForSignature("rowClicked(int,QVariantList)",      Connections::AnyType);
+    setPinTypeForSignature("cellClicked(int,int,QString)",      Connections::AnyType);
+}
+
 QMap<QString, QVariant> DataTableViewer::loadInfos()
 {
     return DataTableViewer::static_infos();

@@ -10,25 +10,43 @@ namespace py = pybind11;
 #include <QDir>
 #include <QTimer>
 
-namespace py = pybind11;
+// Forward declarations for mutual recursion
+static py::object  qvariantToPyObject(const QVariant& v);
+static py::dict    qvariantMapToPyDict(const QVariantMap& qmap);
+static py::list    qvariantListToPyList(const QVariantList& qlist);
 
-// Helper to convert QVariantMap to py::dict
+static py::object qvariantToPyObject(const QVariant& v) {
+    if (v.typeId() == QMetaType::Double)       return py::float_(v.toDouble());
+    if (v.typeId() == QMetaType::Int)           return py::int_(v.toInt());
+    if (v.typeId() == QMetaType::LongLong)      return py::int_(v.toLongLong());
+    if (v.typeId() == QMetaType::Bool)          return py::bool_(v.toBool());
+    if (v.typeId() == QMetaType::QString)       return py::str(v.toString().toStdString());
+    if (v.typeId() == QMetaType::QVariantList)  return qvariantListToPyList(v.toList());
+    if (v.typeId() == QMetaType::QVariantMap)   return qvariantMapToPyDict(v.toMap());
+    if (v.typeId() == QMetaType::QStringList) {
+        py::list lst;
+        for (const QString& s : v.toStringList()) lst.append(py::str(s.toStdString()));
+        return lst;
+    }
+    // Unmapped type: emit a warning and return None to avoid silent data loss
+    qWarning() << "[PythonEngine] qvariantToPyObject: unsupported QVariant type"
+               << v.typeName() << "— mapped to None";
+    return py::none();
+}
+
 static py::dict qvariantMapToPyDict(const QVariantMap& qmap) {
     py::dict pydict;
     for (auto it = qmap.constBegin(); it != qmap.constEnd(); ++it) {
-        QVariant v = it.value();
-        if (v.typeId() == QMetaType::Double) {
-            pydict[py::str(it.key().toStdString())] = v.toDouble();
-        } else if (v.typeId() == QMetaType::Int) {
-            pydict[py::str(it.key().toStdString())] = v.toInt();
-        } else if (v.typeId() == QMetaType::Bool) {
-            pydict[py::str(it.key().toStdString())] = v.toBool();
-        } else if (v.typeId() == QMetaType::QString) {
-            pydict[py::str(it.key().toStdString())] = v.toString().toStdString();
-        }
-        // Simplified conversion. Full recursive conversion can be added if needed.
+        pydict[py::str(it.key().toStdString())] = qvariantToPyObject(it.value());
     }
     return pydict;
+}
+
+static py::list qvariantListToPyList(const QVariantList& qlist) {
+    py::list lst;
+    for (const QVariant& v : qlist)
+        lst.append(qvariantToPyObject(v));
+    return lst;
 }
 
 // Helper to convert py::dict back to QVariantMap
@@ -73,29 +91,29 @@ public slots:
         PythonResult result;
         result.id = task.id;
 
-        try {
+        py::module_ sys = py::module_::import("sys");
+        // Save original stdout so we can always restore it (success or error)
+        py::object origStdout = sys.attr("stdout");
 
-            py::module_ sys = py::module_::import("sys");
-            
+        try {
             // Setup sandbox and execution environment
             py::dict globals = py::globals();
             py::dict locals = py::dict();
 
-            // Clear potentially dangerous builtins if strict sandboxing is needed
-            // locals["__builtins__"] = ...
+            // NOTE: No sandbox active. Scripts have full Python access.
+            // Do NOT load workspaces from untrusted sources.
 
             // Inject inputs and variables
-            locals["inputs"] = qvariantMapToPyDict(task.inputs);
+            locals["inputs"]    = qvariantMapToPyDict(task.inputs);
             locals["variables"] = qvariantMapToPyDict(task.variables);
-            
+
             // Output dictionary for the script to write to
             py::dict outputs;
             locals["output"] = outputs;
 
-            // Setup a custom stdout to capture print() statements
+            // Redirect stdout to capture print() statements
             py::exec(R"(
 import sys
-import io
 class StringOut:
     def __init__(self):
         self.buffer = []
@@ -117,20 +135,20 @@ sys.stdout = StringOut()
                 result.logs.append(QString::fromStdString(py::str(item)));
             }
 
-            // Restore stdout
-            sys.attr("stdout") = sys.attr("__stdout__");
+            // Restore stdout (success path)
+            sys.attr("stdout") = origStdout;
 
             // Extract outputs populated by the script
-            result.outputs = pyDictToQVariantMap(locals["output"].cast<py::dict>());
-            
-            // Extract the potentially modified variables dictionary
+            result.outputs   = pyDictToQVariantMap(locals["output"].cast<py::dict>());
             result.variables = pyDictToQVariantMap(locals["variables"].cast<py::dict>());
-            
-            result.success = true;
+            result.success   = true;
 
         } catch (const std::exception& e) {
+            // Always restore stdout, even on error, to prevent a permanently
+            // broken stdout for subsequent script executions
+            try { sys.attr("stdout") = origStdout; } catch (...) {}
             result.success = false;
-            result.error = QString::fromStdString(e.what());
+            result.error   = QString::fromStdString(e.what());
         }
 
         emit taskFinished(result);
@@ -191,6 +209,9 @@ PythonEngine::~PythonEngine() {
 }
 
 void PythonEngine::executeScript(const PythonTask& task) {
+    // Track the current task so stale timeouts cannot abort newer tasks
+    m_currentTaskId = task.id;
+
     // Invoke the processTask slot in the worker thread via Qt's queued connection
     QMetaObject::invokeMethod(m_worker, "processTask",
                               Qt::QueuedConnection,
@@ -198,15 +219,17 @@ void PythonEngine::executeScript(const PythonTask& task) {
 
     if (task.timeoutMs > 0) {
         QTimer::singleShot(task.timeoutMs, this, [this, id = task.id]() {
-            this->killTask(id);
+            // Only kill if the task with this id is still the active one
+            if (m_currentTaskId == id)
+                this->killTask(id);
         });
     }
 }
 
 void PythonEngine::killTask(const QString& taskId) {
-    // A simplified kill mechanism. In a production scenario with multiple queued tasks,
-    // we would need to check if this task is currently running.
-    // For now, we inject a KeyboardInterrupt into the worker thread.
+    // Only interrupt if this task is still the one currently executing
+    if (m_currentTaskId != taskId) return;
+
     if (m_worker && m_worker->threadId() != 0) {
         py::gil_scoped_acquire acquire; // Needs GIL to set async exception
         PyThreadState_SetAsyncExc(m_worker->threadId(), PyExc_KeyboardInterrupt);
@@ -214,6 +237,10 @@ void PythonEngine::killTask(const QString& taskId) {
 }
 
 void PythonEngine::handleWorkerFinished(const PythonResult& result) {
+    // Clear current task tracking when the task completes
+    if (m_currentTaskId == result.id)
+        m_currentTaskId.clear();
+
     emit scriptFinished(result);
 }
 

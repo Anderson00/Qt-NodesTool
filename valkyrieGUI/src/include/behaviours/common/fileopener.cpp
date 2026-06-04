@@ -22,6 +22,14 @@ FileOpener::FileOpener(QObject *parent) : Behaviours(parent)
     });
 }
 
+void FileOpener::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("openFile(QString)", Connections::StringType);
+    // outputs
+    setPinTypeForSignature("output(QByteArray)", Connections::StringType);
+}
+
 QMap<QString, QVariant> FileOpener::loadInfos()
 {
     return FileOpener::static_infos();

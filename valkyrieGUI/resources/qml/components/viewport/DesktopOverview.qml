@@ -57,14 +57,14 @@ Popup {
             spacing: 6
 
             Text {
-                text: "Desktops"
+                text: qsTr("Desktops")
                 font.pixelSize: 22
                 font.bold: true
                 color: "white"
                 anchors.horizontalCenter: parent.horizontalCenter
             }
             Text {
-                text: "Click a desktop or use Ctrl + 1…" + DesktopManager.desktopCount + "  ·  Esc to dismiss"
+                text: qsTr("Click a desktop or use Ctrl + 1…") + DesktopManager.desktopCount + "  ·  Esc to dismiss"
                 font.pixelSize: 11
                 color: "white"
                 opacity: 0.55
@@ -195,13 +195,13 @@ Popup {
                                 anchors.centerIn: parent
                                 spacing: 4
                                 Text {
-                                    text: "Empty"
+                                    text: qsTr("Empty")
                                     font.pixelSize: 11
                                     color: Qt.rgba(1, 1, 1, 0.4)
                                     anchors.horizontalCenter: parent.horizontalCenter
                                 }
                                 Text {
-                                    text: "Drop nodes here"
+                                    text: qsTr("Drop nodes here")
                                     font.pixelSize: 9
                                     color: Qt.rgba(1, 1, 1, 0.25)
                                     anchors.horizontalCenter: parent.horizontalCenter
@@ -241,7 +241,7 @@ Popup {
                                     // Tiny pin marker
                                     Text {
                                         visible: isPinned && parent.width >= 12
-                                        text: "📌"
+                                        text: qsTr("📌")
                                         font.pixelSize: 6
                                         anchors.top:   parent.top
                                         anchors.right: parent.right
@@ -309,7 +309,7 @@ Popup {
 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: "×"
+                                    text: qsTr("×")
                                     color: "white"
                                     font.pixelSize: 14
                                     font.bold: true
@@ -357,7 +357,7 @@ Popup {
                 Behavior on color { ColorAnimation { duration: 120 } }
                 Text {
                     anchors.centerIn: parent
-                    text: "+   New Desktop"
+                    text: qsTr("+   New Desktop")
                     color: "white"
                     font.pixelSize: 13
                     font.bold: true

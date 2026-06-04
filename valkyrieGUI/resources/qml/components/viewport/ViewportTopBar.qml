@@ -26,6 +26,9 @@ Rectangle {
     signal newProjectRequested()
     signal cameraToggled()
     signal visualizationToggled()
+    // Emitted when the user clicks the "Capture Stage" button. The viewport
+    // listens and calls viewPort.addStage() with the current view rectangle.
+    signal captureStageRequested()
     signal saveRequested()
     signal saveAsRequested()
     signal openRequested()
@@ -73,7 +76,7 @@ Rectangle {
 
                 Text {
                     id: logoText
-                    text: "Valkyrie"
+                    text: qsTr("Valkyrie")
                     font.pixelSize: 14
                     font.bold: true
                     font.letterSpacing: 0.8
@@ -103,7 +106,7 @@ Rectangle {
                     onClicked:    root.homeRequested()
                 }
 
-                AppToolTip { text: "Back to Home"; visible: logoHover.containsMouse; delay: 500 }
+                AppToolTip { text: qsTr("Back to Home"); visible: logoHover.containsMouse; delay: 500 }
             }
 
             Item { width: 12; height: 1 }
@@ -206,7 +209,7 @@ Rectangle {
                 }
 
                 AppToolTip {
-                    text: "Double-click to rename"
+                    text: qsTr("Double-click to rename")
                     visible: projectNameHover.containsMouse && !projectNameWrap.editing
                     delay: 600
                 }
@@ -244,7 +247,7 @@ Rectangle {
                         Behavior on color { ColorAnimation { duration: 120 } }
                     }
                     Text {
-                        text: "Nodes"
+                        text: qsTr("Nodes")
                         font.pixelSize: 11
                         color: root.selectedPanel === "nodes" ? ThemeManager.primaryColor : ThemeManager.textColor
                         anchors.verticalCenter: parent.verticalCenter
@@ -295,7 +298,7 @@ Rectangle {
                         Behavior on color { ColorAnimation { duration: 120 } }
                     }
                     Text {
-                        text: "Explorer"
+                        text: qsTr("Explorer")
                         font.pixelSize: 11
                         color: root.selectedPanel === "explorer" ? ThemeManager.primaryColor : ThemeManager.textColor
                         anchors.verticalCenter: parent.verticalCenter
@@ -346,7 +349,7 @@ Rectangle {
                         Behavior on color { ColorAnimation { duration: 120 } }
                     }
                     Text {
-                        text: "Variables"
+                        text: qsTr("Variables")
                         font.pixelSize: 11
                         color: root.selectedPanel === "variables" ? ThemeManager.primaryColor : ThemeManager.textColor
                         anchors.verticalCenter: parent.verticalCenter
@@ -386,7 +389,7 @@ Rectangle {
                 width: 40; height: 40
                 onClicked: root.historyPanelOpen = !root.historyPanelOpen
                 Behavior on icon.color { ColorAnimation { duration: 150 } }
-                AppToolTip { text: "Histórico (Ctrl+H)"; visible: parent.hovered }
+                AppToolTip { text: qsTr("History (Ctrl+H)"); visible: parent.hovered }
             }
 
             AppBarButton {
@@ -395,7 +398,7 @@ Rectangle {
                 enabled:     root.canUndo
                 width: 40; height: 40
                 onClicked: root.undoRequested()
-                AppToolTip { text: "Undo (Ctrl+Z)"; visible: parent.hovered }
+                AppToolTip { text: qsTr("Undo (Ctrl+Z)"); visible: parent.hovered }
             }
 
             AppBarButton {
@@ -404,7 +407,7 @@ Rectangle {
                 enabled:     root.canRedo
                 width: 40; height: 40
                 onClicked: root.redoRequested()
-                AppToolTip { text: "Redo (Ctrl+Y)"; visible: parent.hovered }
+                AppToolTip { text: qsTr("Redo (Ctrl+Y)"); visible: parent.hovered }
             }
 
             AppBarButton {
@@ -412,7 +415,7 @@ Rectangle {
                 icon.color:  ThemeManager.textColor
                 width: 40; height: 40
                 onClicked: root.newProjectRequested()
-                AppToolTip { text: "New Project"; visible: parent.hovered }
+                AppToolTip { text: qsTr("New Project"); visible: parent.hovered }
             }
 
             AppBarButton {
@@ -426,7 +429,7 @@ Rectangle {
                 width: 40; height: 40
                 onClicked: root.saveRequested()
                 Behavior on icon.color { ColorAnimation { duration: 150 } }
-                AppToolTip { text: "Save  (Ctrl+S)"; visible: parent.hovered }
+                AppToolTip { text: qsTr("Save  (Ctrl+S)"); visible: parent.hovered }
             }
 
             AppBarButton {
@@ -434,7 +437,7 @@ Rectangle {
                 icon.color:  ThemeManager.textColor
                 width: 40; height: 40
                 onClicked: root.saveAsRequested()
-                AppToolTip { text: "Save As…  (Ctrl+Shift+S)"; visible: parent.hovered }
+                AppToolTip { text: qsTr("Save As…  (Ctrl+Shift+S)"); visible: parent.hovered }
             }
 
             AppBarButton {
@@ -442,7 +445,7 @@ Rectangle {
                 icon.color:  ThemeManager.textColor
                 width: 40; height: 40
                 onClicked: root.openRequested()
-                AppToolTip { text: "Open Project"; visible: parent.hovered }
+                AppToolTip { text: qsTr("Open Project"); visible: parent.hovered }
             }
 
             // ── Camera / Visualization separator ──────────────────────────────
@@ -460,7 +463,7 @@ Rectangle {
                                                        ThemeManager.textColor.b, 0.6)
                 onClicked: root.cameraToggled()
                 Behavior on icon.color { ColorAnimation { duration: 150 } }
-                AppToolTip { text: "Camera frame (Ctrl+Shift+C)"; visible: parent.hovered }
+                AppToolTip { text: qsTr("Camera frame (Ctrl+Shift+C)"); visible: parent.hovered }
             }
 
             AppBarButton {
@@ -472,7 +475,18 @@ Rectangle {
                                                               ThemeManager.textColor.b, 0.6)
                 onClicked: root.visualizationToggled()
                 Behavior on icon.color { ColorAnimation { duration: 150 } }
-                AppToolTip { text: "Visualization window (Ctrl+Shift+V)"; visible: parent.hovered }
+                AppToolTip { text: qsTr("Visualization window (Ctrl+Shift+V)"); visible: parent.hovered }
+            }
+
+            // Capture current view as a Presentation Stage
+            AppBarButton {
+                width: 40; height: 40
+                icon.source: Icons.plusCircleOutline
+                icon.color:  Qt.rgba(ThemeManager.textColor.r,
+                                     ThemeManager.textColor.g,
+                                     ThemeManager.textColor.b, 0.6)
+                onClicked: root.captureStageRequested()
+                AppToolTip { text: qsTr("Capture view as Stage"); visible: parent.hovered }
             }
 
             Rectangle {
@@ -485,7 +499,7 @@ Rectangle {
                 icon.source: Icons.cameraOutline
                 icon.color:  ThemeManager.textColor
                 onClicked: root.screenshotRequested()
-                AppToolTip { text: "Screenshot"; visible: parent.hovered }
+                AppToolTip { text: qsTr("Screenshot"); visible: parent.hovered }
             }
 
             AppBarButton {
@@ -493,7 +507,7 @@ Rectangle {
                 icon.source: Icons.cog
                 icon.color:  ThemeManager.textColor
                 onClicked: root.settingsRequested()
-                AppToolTip { text: "Settings"; visible: parent.hovered }
+                AppToolTip { text: qsTr("Settings"); visible: parent.hovered }
             }
         }
     }

@@ -13,12 +13,12 @@ Item {
 
     // ── Preset chips ──────────────────────────────────────────────────────────
     readonly property var presets: [
-        {label: "@hourly",   expr: "@hourly"},
-        {label: "@daily",    expr: "@daily"},
-        {label: "@weekly",   expr: "@weekly"},
-        {label: "@monthly",  expr: "@monthly"},
-        {label: "Seg-Sex 9h",expr: "0 9 * * 1-5"},
-        {label: "30 min",    expr: "*/30 * * * *"}
+        {label: qsTr("@hourly"),   expr: "@hourly"},
+        {label: qsTr("@daily"),    expr: "@daily"},
+        {label: qsTr("@weekly"),   expr: "@weekly"},
+        {label: qsTr("@monthly"),  expr: "@monthly"},
+        {label: qsTr("Seg-Sex 9h"),expr: "0 9 * * 1-5"},
+        {label: qsTr("30 min"),    expr: "*/30 * * * *"}
     ]
 
     ColumnLayout {
@@ -28,7 +28,7 @@ Item {
 
         // ── Expression field ──────────────────────────────────────────────────
         Text {
-            text: "Expressão Cron"
+            text: qsTr("Expressão Cron")
             color: ThemeManager.textSecondaryColor; font.pixelSize: 10
         }
 
@@ -103,7 +103,7 @@ Item {
 
         RowLayout {
             Layout.fillWidth: true; spacing: 4
-            Text { text: "Próximo:"; color: ThemeManager.textSecondaryColor; font.pixelSize: 10 }
+            Text { text: qsTr("Próximo:"); color: ThemeManager.textSecondaryColor; font.pixelSize: 10 }
             Text {
                 text: behaviourObject ? behaviourObject.nextOccurrence : "—"
                 color: ThemeManager.textColor; font.pixelSize: 11; font.bold: true
@@ -113,7 +113,7 @@ Item {
         RowLayout {
             Layout.fillWidth: true; spacing: 4
             visible: behaviourObject && behaviourObject.lastOccurrence.length > 0
-            Text { text: "Último:";  color: ThemeManager.textSecondaryColor; font.pixelSize: 10 }
+            Text { text: qsTr("Último:");  color: ThemeManager.textSecondaryColor; font.pixelSize: 10 }
             Text {
                 text: behaviourObject ? behaviourObject.lastOccurrence : "—"
                 color: ThemeManager.textSecondaryColor; font.pixelSize: 11
@@ -184,7 +184,7 @@ Item {
                 border.width: 1; border.color: Qt.rgba(1,1,1,0.15)
                 SvgIcon { anchors.centerIn: parent; width: 16; height: 16; source: Icons.flash; color: ThemeManager.textColor }
                 MouseArea { id: testA; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: behaviourObject.testFire() }
-                AppToolTip { text: "Disparar agora (teste)" }
+                AppToolTip { text: qsTr("Disparar agora (teste)") }
             }
         }
 

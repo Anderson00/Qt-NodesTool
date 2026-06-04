@@ -20,6 +20,19 @@ NodeGraphViewer::NodeGraphViewer(QObject *parent)
     }));
 }
 
+void NodeGraphViewer::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("addNode(QString,QString)",        Connections::AnyType);
+    setPinTypeForSignature("addEdge(QString,QString,QString)", Connections::AnyType);
+    setPinTypeForSignature("removeNode(QString)",             Connections::StringType);
+    setPinTypeForSignature("clear()",                         Connections::FlowType);
+    setPinTypeForSignature("setLayoutSlot(QString)",          Connections::StringType);
+    // outputs
+    setPinTypeForSignature("nodeClicked(QString,QString)", Connections::AnyType);
+    setPinTypeForSignature("edgeClicked(QString,QString)", Connections::AnyType);
+}
+
 QMap<QString, QVariant> NodeGraphViewer::loadInfos()
 {
     return NodeGraphViewer::static_infos();

@@ -16,6 +16,18 @@ FlowLoop::FlowLoop(QObject *parent) : Behaviours(parent)
 
 FlowLoop::~FlowLoop() { m_timer.stop(); }
 
+void FlowLoop::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("trigger()",          Connections::FlowType);
+    setPinTypeForSignature("setIterations(int)", Connections::IntType);
+    setPinTypeForSignature("breakLoop()",        Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("body()",             Connections::FlowType);
+    setPinTypeForSignature("completed()",        Connections::FlowType);
+    setPinTypeForSignature("outputIndex(int)",   Connections::IntType);
+}
+
 QMap<QString, QVariant> FlowLoop::loadInfos() { return static_infos(); }
 QMap<QString, QVariant> FlowLoop::static_infos() {
     return {{"name","Flow Loop"},{"type",Behaviours::CPP},{"className","FlowLoop"},

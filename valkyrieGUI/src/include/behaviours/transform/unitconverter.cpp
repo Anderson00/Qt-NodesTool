@@ -101,6 +101,15 @@ UnitConverter::UnitConverter(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void UnitConverter::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("convert(double)",                    Connections::DoubleType);
+    setPinTypeForSignature("setConversion(QString,QString)",     Connections::AnyType);
+    // outputs
+    setPinTypeForSignature("result(double,QString)", Connections::AnyType);
+}
+
 QMap<QString, QVariant> UnitConverter::loadInfos() { return UnitConverter::static_infos(); }
 
 QMap<QString, QVariant> UnitConverter::static_infos()

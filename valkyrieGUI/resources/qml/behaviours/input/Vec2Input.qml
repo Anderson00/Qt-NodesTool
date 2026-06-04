@@ -23,7 +23,7 @@ Item {
 
             ColumnLayout {
                 Layout.fillWidth: true; spacing: 3
-                Text { text: "X"; font.pixelSize: 11; font.bold: true; color: "#EF5350"; Layout.alignment: Qt.AlignHCenter }
+                Text { text: qsTr("X"); font.pixelSize: 11; font.bold: true; color: "#EF5350"; Layout.alignment: Qt.AlignHCenter }
                 NumericInputField {
                     Layout.fillWidth: true; Layout.preferredHeight: 32
                     // vecX — não usar 'x' (conflito com Behaviours base)
@@ -34,7 +34,7 @@ Item {
             }
             ColumnLayout {
                 Layout.fillWidth: true; spacing: 3
-                Text { text: "Y"; font.pixelSize: 11; font.bold: true; color: "#66BB6A"; Layout.alignment: Qt.AlignHCenter }
+                Text { text: qsTr("Y"); font.pixelSize: 11; font.bold: true; color: "#66BB6A"; Layout.alignment: Qt.AlignHCenter }
                 NumericInputField {
                     Layout.fillWidth: true; Layout.preferredHeight: 32
                     // vecY — não usar 'y'
@@ -110,7 +110,7 @@ Item {
         // ── Auto-send toggle ──────────────────────────────────────────────
         RowLayout {
             Layout.fillWidth: true; spacing: 6
-            Text { text: "Auto-send"; font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.6; Layout.alignment: Qt.AlignVCenter }
+            Text { text: qsTr("Auto-send"); font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.6; Layout.alignment: Qt.AlignVCenter }
             CustomSwitch {
                 checked: behaviourObject ? behaviourObject.autoSend : false
                 onCheckedChanged: if (behaviourObject) behaviourObject.setAutoSend(checked)
@@ -121,7 +121,7 @@ Item {
         // ── Send — full width ─────────────────────────────────────────────
         NewButton {
             Layout.fillWidth: true; Layout.preferredHeight: 36
-            text: "Send"; variant: "filled"; iconSource: Icons.flash
+            text: qsTr("Send"); variant: "filled"; iconSource: Icons.flash
             backgroundColor: ThemeManager.primaryColor
             onClicked: if (behaviourObject) behaviourObject.send()
         }

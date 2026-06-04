@@ -258,7 +258,7 @@ Item {
                 Button {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
-                    text: "CANCEL"
+                    text: qsTr("CANCEL")
                     font.pixelSize: 12
                     font.bold: true
                     onClicked: colorPopup.close()
@@ -282,7 +282,7 @@ Item {
                 Button {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
-                    text: "OK"
+                    text: qsTr("OK")
                     font.pixelSize: 12
                     font.bold: true
 

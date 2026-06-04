@@ -17,6 +17,8 @@ public:
     explicit FlowLoop(QObject *parent = nullptr);
     ~FlowLoop();
 
+    void onPinsReady() override;
+
     QMap<QString, QVariant> loadInfos() override;
     static QMap<QString, QVariant> static_infos();
 

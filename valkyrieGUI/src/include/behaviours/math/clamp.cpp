@@ -12,6 +12,17 @@ Clamp::Clamp(QObject *parent) : Behaviours(parent)
     addInputOutputExclusion({"inputValueChanged()","rangeMinChanged()","rangeMaxChanged()","clampedValueChanged()","normalizedChanged()"});
 }
 
+void Clamp::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("setInput(double)",  Connections::DoubleType);
+    setPinTypeForSignature("setMin(double)",    Connections::DoubleType);
+    setPinTypeForSignature("setMax(double)",    Connections::DoubleType);
+    // outputs
+    setPinTypeForSignature("outputValue(double)",      Connections::DoubleType);
+    setPinTypeForSignature("outputNormalized(double)", Connections::DoubleType);
+}
+
 QMap<QString, QVariant> Clamp::loadInfos() { return static_infos(); }
 
 QMap<QString, QVariant> Clamp::static_infos() {

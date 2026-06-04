@@ -18,6 +18,19 @@ MergeNumbers::MergeNumbers(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void MergeNumbers::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("trigger()",    Connections::FlowType);
+    setPinTypeForSignature("setA(double)", Connections::DoubleType);
+    setPinTypeForSignature("setB(double)", Connections::DoubleType);
+    // outputs
+    setPinTypeForSignature("outputDD(double,double)", Connections::AnyType);
+    setPinTypeForSignature("outputID(int,double)",    Connections::AnyType);
+    setPinTypeForSignature("outputII(int,int)",       Connections::AnyType);
+    setPinTypeForSignature("outputData(QVariantList)", Connections::ArrayType);
+}
+
 QMap<QString, QVariant> MergeNumbers::loadInfos()
 {
     return MergeNumbers::static_infos();

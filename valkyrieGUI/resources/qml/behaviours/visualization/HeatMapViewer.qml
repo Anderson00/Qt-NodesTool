@@ -112,7 +112,7 @@ Item {
                 spacing: 6
 
                 Text {
-                    text: "Heat Map"
+                    text: qsTr("Heat Map")
                     color: ThemeManager.textColor
                     font.pixelSize: 11
                     font.bold: true
@@ -315,13 +315,13 @@ Item {
             Layout.rightMargin: 6
 
             Text {
-                text: "min: " + localMin.toFixed(2)
+                text: qsTr("min: ") + localMin.toFixed(2)
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 9
             }
             Item { Layout.fillWidth: true }
             Text {
-                text: "max: " + localMax.toFixed(2)
+                text: qsTr("max: ") + localMax.toFixed(2)
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 9
             }

@@ -67,8 +67,8 @@ Item {
         // ── Column headers ────────────────────────────────────────────────
         RowLayout {
             Layout.fillWidth: true
-            Text { text: "Key";   font.pixelSize: 10; font.bold: true; color: ThemeManager.textColor; opacity: 0.55; Layout.preferredWidth: 90 }
-            Text { text: "Value"; font.pixelSize: 10; font.bold: true; color: ThemeManager.textColor; opacity: 0.55; Layout.fillWidth: true }
+            Text { text: qsTr("Key");   font.pixelSize: 10; font.bold: true; color: ThemeManager.textColor; opacity: 0.55; Layout.preferredWidth: 90 }
+            Text { text: qsTr("Value"); font.pixelSize: 10; font.bold: true; color: ThemeManager.textColor; opacity: 0.55; Layout.fillWidth: true }
             Item  { width: 30 }
         }
 
@@ -126,7 +126,7 @@ Item {
                                 width: 26; height: 26; radius: 4
                                 color: delMa.containsMouse ? "#FF1744" : Qt.rgba(1, 0.1, 0.2, 0.18)
                                 Behavior on color { ColorAnimation { duration: 100 } }
-                                Text { anchors.centerIn: parent; text: "−"; font.pixelSize: 15; font.bold: true; color: "#FF5252" }
+                                Text { anchors.centerIn: parent; text: qsTr("−"); font.pixelSize: 15; font.bold: true; color: "#FF5252" }
                                 MouseArea {
                                     id: delMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                     onClicked: root.removeAt(index)
@@ -151,8 +151,8 @@ Item {
             Behavior on color { ColorAnimation { duration: 100 } }
             RowLayout {
                 anchors.centerIn: parent; spacing: 5
-                Text { text: "+"; font.pixelSize: 15; font.bold: true; color: ThemeManager.primaryColor }
-                Text { text: "Add entry"; font.pixelSize: 12; color: ThemeManager.primaryColor }
+                Text { text: qsTr("+"); font.pixelSize: 15; font.bold: true; color: ThemeManager.primaryColor }
+                Text { text: qsTr("Add entry"); font.pixelSize: 12; color: ThemeManager.primaryColor }
             }
             MouseArea {
                 id: addMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
@@ -163,7 +163,7 @@ Item {
         // ── Auto toggle ───────────────────────────────────────────────────
         RowLayout {
             Layout.fillWidth: true; spacing: 6
-            Text { text: "Auto-send"; font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.6; Layout.alignment: Qt.AlignVCenter }
+            Text { text: qsTr("Auto-send"); font.pixelSize: 11; color: ThemeManager.textColor; opacity: 0.6; Layout.alignment: Qt.AlignVCenter }
             CustomSwitch {
                 checked: behaviourObject ? behaviourObject.autoSend : false
                 onCheckedChanged: if (behaviourObject) behaviourObject.setAutoSend(checked)
@@ -174,7 +174,7 @@ Item {
         // ── Send — full width ─────────────────────────────────────────────
         NewButton {
             Layout.fillWidth: true; Layout.preferredHeight: 36
-            text: "Send"; variant: "filled"; iconSource: Icons.flash
+            text: qsTr("Send"); variant: "filled"; iconSource: Icons.flash
             backgroundColor: ThemeManager.primaryColor
             onClicked: if (behaviourObject) behaviourObject.send()
         }

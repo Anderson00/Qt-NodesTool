@@ -53,6 +53,14 @@ PythonBehaviour::PythonBehaviour(QObject *parent)
 PythonBehaviour::~PythonBehaviour() {
 }
 
+void PythonBehaviour::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("updateInput(QString,QVariant)", Connections::AnyType);
+    // outputs
+    setPinTypeForSignature("outputResult(QString,QVariant)", Connections::AnyType);
+}
+
 QMap<QString, QVariant> PythonBehaviour::loadInfos() { return static_infos(); }
 
 QMap<QString, QVariant> PythonBehaviour::static_infos() {
@@ -72,7 +80,9 @@ void PythonBehaviour::setScript(const QString& script) {
     if (m_script != script) {
         m_script = script;
         emit scriptChanged();
-        if (m_autoRun) run();
+        // Do not autoRun during loadState() — inputs and variables may not yet
+        // be restored, which would produce incorrect/misleading results.
+        if (m_autoRun && !m_loading) run();
     }
 }
 
@@ -179,8 +189,10 @@ void PythonBehaviour::handleScriptFinished(const PythonResult& result) {
         // Append logs
         if (!result.logs.isEmpty()) {
             m_logs.append(result.logs);
-            // keep last 100 lines max
-            while (m_logs.size() > 100) m_logs.removeFirst();
+            // Keep last 100 lines: erase in one O(N) operation instead of
+            // calling removeFirst() in a loop which is O(N²)
+            if (m_logs.size() > 100)
+                m_logs.erase(m_logs.begin(), m_logs.begin() + (m_logs.size() - 100));
             emit logsChanged();
         }
 
@@ -227,9 +239,12 @@ QJsonObject PythonBehaviour::saveState() const {
 }
 
 void PythonBehaviour::loadState(const QJsonObject& s) {
-    if (s.contains("script")) setScript(s["script"].toString());
-    if (s.contains("autoRun")) setAutoRun(s["autoRun"].toBool());
+    // Suppress autoRun while restoring persisted state
+    m_loading = true;
+    if (s.contains("script"))    setScript(s["script"].toString());
+    if (s.contains("autoRun"))   setAutoRun(s["autoRun"].toBool());
     if (s.contains("timeoutMs")) setTimeoutMs(s["timeoutMs"].toInt());
+    m_loading = false;
 }
 
 // ── File I/O ─────────────────────────────────────────────────────────────────

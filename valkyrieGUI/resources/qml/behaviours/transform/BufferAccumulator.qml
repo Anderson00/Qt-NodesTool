@@ -58,7 +58,7 @@ Item {
             spacing: 6
 
             Text {
-                text: "Buffer Accumulator"
+                text: qsTr("Buffer Accumulator")
                 font.pixelSize: 10
                 font.bold: true
                 color: ThemeManager.textColor
@@ -81,7 +81,7 @@ Item {
             spacing: 6
 
             Text {
-                text: "Size"
+                text: qsTr("Size")
                 font.pixelSize: 9
                 color: ThemeManager.textSecondaryColor
                 Layout.alignment: Qt.AlignVCenter
@@ -134,7 +134,7 @@ Item {
             }
 
             Text {
-                text: "Auto-flush when full"
+                text: qsTr("Auto-flush when full")
                 font.pixelSize: 9
                 color: ThemeManager.textSecondaryColor
                 Layout.alignment: Qt.AlignVCenter
@@ -157,7 +157,7 @@ Item {
                 spacing: 2
 
                 Text {
-                    text: "Last flushed (max 5)"
+                    text: qsTr("Last flushed (max 5)")
                     font.pixelSize: 8
                     color: ThemeManager.textSecondaryColor
                 }
@@ -172,7 +172,7 @@ Item {
 
                     delegate: Text {
                         width: recentList.width
-                        text: "• " + modelData
+                        text: qsTr("• ") + modelData
                         font.pixelSize: 9
                         font.family: "Consolas, monospace"
                         color: ThemeManager.textColor
@@ -182,7 +182,7 @@ Item {
                     Text {
                         anchors.centerIn: parent
                         visible: recentList.count === 0
-                        text: "No data yet"
+                        text: qsTr("No data yet")
                         font.pixelSize: 9
                         color: ThemeManager.textSecondaryColor
                     }
@@ -199,7 +199,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 26
                 variant: "outlined"
-                text: "Flush"
+                text: qsTr("Flush")
                 onClicked: { if (behaviourObject) behaviourObject.flush() }
             }
 
@@ -207,7 +207,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 26
                 variant: "outlined"
-                text: "Reset"
+                text: qsTr("Reset")
                 onClicked: { if (behaviourObject) behaviourObject.reset() }
             }
         }

@@ -21,6 +21,18 @@ CSVReaderWriter::CSVReaderWriter(QObject *parent)
     }));
 }
 
+void CSVReaderWriter::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("readFile(QString)",                    Connections::StringType);
+    setPinTypeForSignature("writeFile(QString,QVariantList)",      Connections::AnyType);
+    setPinTypeForSignature("setDelimiterSlot(QString)",            Connections::StringType);
+    setPinTypeForSignature("clear()",                              Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("rowsRead(QVariantList,QStringList)", Connections::AnyType);
+    setPinTypeForSignature("error(QString)",                     Connections::StringType);
+}
+
 QMap<QString, QVariant> CSVReaderWriter::loadInfos()
 {
     return CSVReaderWriter::static_infos();

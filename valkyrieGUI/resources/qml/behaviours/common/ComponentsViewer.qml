@@ -145,39 +145,39 @@ Item {
                             spacing: 12
 
                             Tile {
-                                label: "Filled"
+                                label: qsTr("Filled")
                                 NewButton {
                                     anchors.centerIn: parent
-                                    text: "Filled"; variant: "filled"
+                                    text: qsTr("Filled"); variant: "filled"
                                     iconSource: Icons.play
                                 }
                             }
                             Tile {
-                                label: "Outlined"
+                                label: qsTr("Outlined")
                                 NewButton {
                                     anchors.centerIn: parent
-                                    text: "Outlined"; variant: "outlined"
+                                    text: qsTr("Outlined"); variant: "outlined"
                                     iconSource: Icons.play
                                 }
                             }
                             Tile {
-                                label: "Text"
-                                NewButton { anchors.centerIn: parent; text: "Text"; variant: "text" }
+                                label: qsTr("Text")
+                                NewButton { anchors.centerIn: parent; text: qsTr("Text"); variant: "text" }
                             }
                             Tile {
-                                label: "Rounded"
-                                NewButton { anchors.centerIn: parent; text: "Rounded"; variant: "rounded" }
+                                label: qsTr("Rounded")
+                                NewButton { anchors.centerIn: parent; text: qsTr("Rounded"); variant: "rounded" }
                             }
                             Tile {
-                                label: "Danger"
+                                label: qsTr("Danger")
                                 NewButton {
                                     anchors.centerIn: parent
-                                    text: "Delete"; variant: "filled"
+                                    text: qsTr("Delete"); variant: "filled"
                                     backgroundColor: ThemeManager.dangerColor
                                 }
                             }
                             Tile {
-                                label: "Icon only"
+                                label: qsTr("Icon only")
                                 NewButton {
                                     anchors.centerIn: parent
                                     iconSource: Icons.cog; variant: "rounded"
@@ -185,11 +185,11 @@ Item {
                                 }
                             }
                             Tile {
-                                label: "Disabled"
-                                NewButton { anchors.centerIn: parent; text: "Disabled"; enabled: false }
+                                label: qsTr("Disabled")
+                                NewButton { anchors.centerIn: parent; text: qsTr("Disabled"); enabled: false }
                             }
                             Tile {
-                                label: "IconButton"
+                                label: qsTr("IconButton")
                                 IconButton {
                                     anchors.centerIn: parent
                                     iconSource: Icons.play
@@ -214,31 +214,31 @@ Item {
                             spacing: 12
 
                             Tile {
-                                label: "CheckBox"; height: 170
+                                label: qsTr("CheckBox"); height: 170
                                 Column {
                                     anchors.fill: parent; spacing: 6
-                                    CustomCheckBox { text: "Unchecked" }
-                                    CustomCheckBox { text: "Checked"; checked: true }
-                                    CustomCheckBox { text: "Tri-state"; tristate: true; checkState: Qt.PartiallyChecked }
+                                    CustomCheckBox { text: qsTr("Unchecked") }
+                                    CustomCheckBox { text: qsTr("Checked"); checked: true }
+                                    CustomCheckBox { text: qsTr("Tri-state"); tristate: true; checkState: Qt.PartiallyChecked }
                                 }
                             }
                             Tile {
-                                label: "RadioButton"; height: 170
+                                label: qsTr("RadioButton"); height: 170
                                 Column {
                                     anchors.fill: parent; spacing: 6
                                     ButtonGroup { id: radioGroup }
-                                    CustomRadioButton { text: "Option A"; ButtonGroup.group: radioGroup; checked: true }
-                                    CustomRadioButton { text: "Option B"; ButtonGroup.group: radioGroup }
-                                    CustomRadioButton { text: "Disabled"; enabled: false }
+                                    CustomRadioButton { text: qsTr("Option A"); ButtonGroup.group: radioGroup; checked: true }
+                                    CustomRadioButton { text: qsTr("Option B"); ButtonGroup.group: radioGroup }
+                                    CustomRadioButton { text: qsTr("Disabled"); enabled: false }
                                 }
                             }
                             Tile {
-                                label: "Switch"; height: 180
+                                label: qsTr("Switch"); height: 180
                                 Column {
                                     anchors.fill: parent; spacing: 10
-                                    CustomSwitch { text: "Off" }
-                                    CustomSwitch { text: "On"; checked: true }
-                                    CustomSwitch { text: "Disabled"; enabled: false; checked: true }
+                                    CustomSwitch { text: qsTr("Off") }
+                                    CustomSwitch { text: qsTr("On"); checked: true }
+                                    CustomSwitch { text: qsTr("Disabled"); enabled: false; checked: true }
                                 }
                             }
                         }
@@ -259,23 +259,23 @@ Item {
                             spacing: 12
 
                             Tile {
-                                label: "CustomTextField"
+                                label: qsTr("CustomTextField")
                                 CustomTextField {
                                     anchors.left: parent.left; anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
-                                    placeholderText: "Type something..."
+                                    placeholderText: qsTr("Type something...")
                                 }
                             }
                             Tile {
-                                label: "PasswordField"
+                                label: qsTr("PasswordField")
                                 PasswordField {
                                     anchors.left: parent.left; anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
-                                    showStrength: true; text: "Abc123!"
+                                    showStrength: true; text: qsTr("Abc123!")
                                 }
                             }
                             Tile {
-                                label: "NumberSpinBox"
+                                label: qsTr("NumberSpinBox")
                                 NumberSpinBox {
                                     anchors.left: parent.left; anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
@@ -283,7 +283,7 @@ Item {
                                 }
                             }
                             Tile {
-                                label: "TagInput"; width: 280; height: 160
+                                label: qsTr("TagInput"); width: 280; height: 160
                                 TagInput {
                                     anchors.fill: parent
                                     tags: ["debug", "node", "cpu"]
@@ -307,7 +307,7 @@ Item {
                             spacing: 12
 
                             Tile {
-                                label: "ComboBox"
+                                label: qsTr("ComboBox")
                                 CustomComboBox {
                                     anchors.left: parent.left; anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
@@ -315,7 +315,7 @@ Item {
                                 }
                             }
                             Tile {
-                                label: "SearchableSelect"
+                                label: qsTr("SearchableSelect")
                                 SearchableSelect {
                                     anchors.left: parent.left; anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
@@ -324,19 +324,19 @@ Item {
                                 }
                             }
                             Tile {
-                                label: "DatePicker"
+                                label: qsTr("DatePicker")
                                 CustomDatePicker {
                                     anchors.left: parent.left; anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
                             }
                             Tile {
-                                label: "ColorPicker"
+                                label: qsTr("ColorPicker")
                                 ColorPicker {
                                     anchors.left: parent.left; anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
                                     value: ThemeManager.primaryColor
-                                    label: "Color:"
+                                    label: qsTr("Color:")
                                 }
                             }
                         }
@@ -357,7 +357,7 @@ Item {
                             spacing: 12
 
                             Tile {
-                                label: "CustomSlider"
+                                label: qsTr("CustomSlider")
                                 CustomSlider {
                                     anchors.left: parent.left; anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
@@ -365,7 +365,7 @@ Item {
                                 }
                             }
                             Tile {
-                                label: "CustomSliderVertical"; height: 220
+                                label: qsTr("CustomSliderVertical"); height: 220
                                 CustomSliderVertical {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     anchors.top: parent.top
@@ -440,7 +440,7 @@ Item {
                             anchors.fill: parent; anchors.margins: 8; spacing: 12
 
                             Tile {
-                                label: "RangeSlider"; width: 280
+                                label: qsTr("RangeSlider"); width: 280
                                 RangeSlider {
                                     anchors.left: parent.left; anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
@@ -449,7 +449,7 @@ Item {
                                 }
                             }
                             Tile {
-                                label: "SegmentedControl"; width: 300
+                                label: qsTr("SegmentedControl"); width: 300
                                 SegmentedControl {
                                     anchors.left: parent.left; anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
@@ -457,36 +457,36 @@ Item {
                                 }
                             }
                             Tile {
-                                label: "MultiSelect"; width: 280; height: 140
+                                label: qsTr("MultiSelect"); width: 280; height: 140
                                 MultiSelect {
                                     anchors.left: parent.left; anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
                                     model: ["Alpha", "Beta", "Gamma", "Delta", "Epsilon"]
                                     selected: ["Alpha", "Gamma"]
-                                    placeholder: "Choose items…"
+                                    placeholder: qsTr("Choose items…")
                                 }
                             }
                             Tile {
-                                label: "OTPInput"; width: 300
+                                label: qsTr("OTPInput"); width: 300
                                 OTPInput {
                                     anchors.centerIn: parent
                                     digits: 6; numbersOnly: true
                                 }
                             }
                             Tile {
-                                label: "TimePicker"; width: 260; height: 200
+                                label: qsTr("TimePicker"); width: 260; height: 200
                                 TimePicker {
                                     anchors.centerIn: parent
                                     hours: 14; minutes: 30; seconds: 0; showSeconds: true
                                 }
                             }
                             Tile {
-                                label: "AutocompleteInput"; width: 280; height: 140
+                                label: qsTr("AutocompleteInput"); width: 280; height: 140
                                 AutocompleteInput {
                                     anchors.left: parent.left; anchors.right: parent.right
                                     anchors.top: parent.top
                                     suggestions: ["Apple", "Banana", "Cherry", "Date", "Elderberry", "Fig", "Grape"]
-                                    placeholder: "Type a fruit…"
+                                    placeholder: qsTr("Type a fruit…")
                                 }
                             }
                         }
@@ -505,7 +505,7 @@ Item {
                             anchors.fill: parent; anchors.margins: 8; spacing: 12
 
                             Tile {
-                                label: "Badge"; width: 200; height: 130
+                                label: qsTr("Badge"); width: 200; height: 130
                                 Row {
                                     anchors.centerIn: parent; spacing: 14
                                     Badge { count: 3 }
@@ -514,16 +514,16 @@ Item {
                                 }
                             }
                             Tile {
-                                label: "Chip"; width: 260; height: 130
+                                label: qsTr("Chip"); width: 260; height: 130
                                 Flow {
                                     anchors.fill: parent; spacing: 8
-                                    Chip { label: "Debug"; closeable: true }
-                                    Chip { label: "Active"; selectable: true; selected: true }
-                                    Chip { label: "CPU"; chipColor: Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.18) }
+                                    Chip { label: qsTr("Debug"); closeable: true }
+                                    Chip { label: qsTr("Active"); selectable: true; selected: true }
+                                    Chip { label: qsTr("CPU"); chipColor: Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.18) }
                                 }
                             }
                             Tile {
-                                label: "Avatar"; width: 260; height: 130
+                                label: qsTr("Avatar"); width: 260; height: 130
                                 Row {
                                     anchors.centerIn: parent; spacing: 12
                                     Avatar { name: "Alice"; size: 44; showStatus: true; status: "online" }
@@ -533,15 +533,15 @@ Item {
                                 }
                             }
                             Tile {
-                                label: "ProgressCircle"; width: 200; height: 160
+                                label: qsTr("ProgressCircle"); width: 200; height: 160
                                 Row {
                                     anchors.centerIn: parent; spacing: 16
-                                    ProgressCircle { value: 0.72; size: 64; showLabel: true; label: "72%" }
-                                    ProgressCircle { value: 0.35; size: 48; strokeWidth: 4; progressColor: ThemeManager.warningColor; showLabel: true; label: "35%" }
+                                    ProgressCircle { value: 0.72; size: 64; showLabel: true; label: qsTr("72%") }
+                                    ProgressCircle { value: 0.35; size: 48; strokeWidth: 4; progressColor: ThemeManager.warningColor; showLabel: true; label: qsTr("35%") }
                                 }
                             }
                             Tile {
-                                label: "Skeleton"; width: 240; height: 150
+                                label: qsTr("Skeleton"); width: 240; height: 150
                                 Column {
                                     anchors.fill: parent; spacing: 8
                                     Skeleton { width: parent.width; height: 14; shape: "text" }
@@ -552,7 +552,7 @@ Item {
                                 }
                             }
                             Tile {
-                                label: "StatusDot"; width: 200; height: 160
+                                label: qsTr("StatusDot"); width: 200; height: 160
                                 Column {
                                     anchors.fill: parent; spacing: 8
                                     StatusDot { status: "online";  showLabel: true; showPulse: true }
@@ -562,23 +562,23 @@ Item {
                                 }
                             }
                             Tile {
-                                label: "Timeline"; width: 280; height: 220
+                                label: qsTr("Timeline"); width: 280; height: 220
                                 Timeline {
                                     anchors.fill: parent
                                     events: [
-                                        { title: "Build started",   subtitle: "10:02 AM", color: ThemeManager.primaryColor },
-                                        { title: "Tests passed",    subtitle: "10:04 AM", color: ThemeManager.successColor },
-                                        { title: "Deploy queued",   subtitle: "10:05 AM" }
+                                        { title: qsTr("Build started"),   subtitle: qsTr("10:02 AM"), color: ThemeManager.primaryColor },
+                                        { title: qsTr("Tests passed"),    subtitle: qsTr("10:04 AM"), color: ThemeManager.successColor },
+                                        { title: qsTr("Deploy queued"),   subtitle: qsTr("10:05 AM") }
                                     ]
                                 }
                             }
                             Tile {
-                                label: "EmptyState"; width: 260; height: 200
+                                label: qsTr("EmptyState"); width: 260; height: 200
                                 EmptyState {
                                     anchors.fill: parent
                                     icon: "📭"
-                                    title: "No results"
-                                    subtitle: "Try adjusting your search"
+                                    title: qsTr("No results")
+                                    subtitle: qsTr("Try adjusting your search")
                                     actionLabel: "Clear filters"
                                 }
                             }
@@ -598,16 +598,16 @@ Item {
                             anchors.fill: parent; anchors.margins: 8; spacing: 16
 
                             Text {
-                                text: "DataTable (sortable — click headers)"
+                                text: qsTr("DataTable (sortable — click headers)")
                                 color: ThemeManager.textSecondaryColor; font.pixelSize: 11
                             }
                             DataTable {
                                 width: parent.width; height: 200
                                 columns: [
-                                    { key: "name",   label: "Name",   width: 140 },
-                                    { key: "type",   label: "Type",   width: 100 },
-                                    { key: "size",   label: "Size",   width: 80  },
-                                    { key: "status", label: "Status", width: 100 }
+                                    { key: "name",   label: qsTr("Name"),   width: 140 },
+                                    { key: "type",   label: qsTr("Type"),   width: 100 },
+                                    { key: "size",   label: qsTr("Size"),   width: 80  },
+                                    { key: "status", label: qsTr("Status"), width: 100 }
                                 ]
                                 rows: [
                                     { name: "kernel32.dll",   type: "DLL",  size: "1.2 MB", status: "Loaded" },
@@ -619,7 +619,7 @@ Item {
                             }
 
                             Text {
-                                text: "Pagination"
+                                text: qsTr("Pagination")
                                 color: ThemeManager.textSecondaryColor; font.pixelSize: 11
                             }
                             Pagination {
@@ -645,7 +645,7 @@ Item {
 
                         AlertDialog {
                             id: alertRef
-                            title: "Delete node?"
+                            title: qsTr("Delete node?")
                             message: "This action will remove the node and all its connections. This cannot be undone."
                             type: "danger"; confirmLabel: "Delete"
                             onConfirmed: console.log("Confirmed deletion")
@@ -656,11 +656,11 @@ Item {
                         CommandPalette {
                             id: paletteRef
                             commands: [
-                                { label: "Add CPU Node",      shortcut: "Ctrl+1" },
-                                { label: "Toggle Dark Mode",  shortcut: "Ctrl+D" },
-                                { label: "Save Workspace",    shortcut: "Ctrl+S" },
-                                { label: "Open Settings",     shortcut: "Ctrl+," },
-                                { label: "Run All Nodes",     shortcut: "F5"     }
+                                { label: qsTr("Add CPU Node"),      shortcut: "Ctrl+1" },
+                                { label: qsTr("Toggle Dark Mode"),  shortcut: "Ctrl+D" },
+                                { label: qsTr("Save Workspace"),    shortcut: "Ctrl+S" },
+                                { label: qsTr("Open Settings"),     shortcut: "Ctrl+," },
+                                { label: qsTr("Run All Nodes"),     shortcut: "F5"     }
                             ]
                             onCommandSelected: function(cmd) { console.log("Cmd:", cmd.label) }
                         }
@@ -668,10 +668,10 @@ Item {
                         ContextMenu {
                             id: ctxRef
                             items: [
-                                { label: "Copy",       icon: "⎘", shortcut: "Ctrl+C" },
-                                { label: "Paste",      icon: "⌗", shortcut: "Ctrl+V" },
+                                { label: qsTr("Copy"),       icon: "⎘", shortcut: "Ctrl+C" },
+                                { label: qsTr("Paste"),      icon: "⌗", shortcut: "Ctrl+V" },
                                 { separator: true },
-                                { label: "Delete",     icon: "✕", danger: true }
+                                { label: qsTr("Delete"),     icon: "✕", danger: true }
                             ]
                             onItemSelected: function(i, item) { console.log("Ctx:", item.label) }
                         }
@@ -680,7 +680,7 @@ Item {
                             anchors.fill: parent; anchors.margins: 8; spacing: 10
 
                             NewButton {
-                                text: "AlertDialog"
+                                text: qsTr("AlertDialog")
                                 variant: "outlined"
                                 Layout.preferredWidth: 200
                                 leftPadding: 18; rightPadding: 18
@@ -688,28 +688,28 @@ Item {
                                 onClicked: alertRef.open()
                             }
                             NewButton {
-                                text: "Snackbar (success)"
+                                text: qsTr("Snackbar (success)")
                                 variant: "outlined"
                                 Layout.preferredWidth: 200
                                 leftPadding: 18; rightPadding: 18
                                 onClicked: snackRef.show("Workspace saved!", "Undo", "success")
                             }
                             NewButton {
-                                text: "Snackbar (danger)"
+                                text: qsTr("Snackbar (danger)")
                                 variant: "outlined"
                                 Layout.preferredWidth: 200
                                 leftPadding: 18; rightPadding: 18
                                 onClicked: snackRef.show("Build failed.", "", "danger")
                             }
                             NewButton {
-                                text: "CommandPalette"
+                                text: qsTr("CommandPalette")
                                 variant: "outlined"
                                 Layout.preferredWidth: 200
                                 leftPadding: 18; rightPadding: 18
                                 onClicked: paletteRef.open()
                             }
                             NewButton {
-                                text: "ContextMenu"
+                                text: qsTr("ContextMenu")
                                 variant: "outlined"
                                 Layout.preferredWidth: 200
                                 leftPadding: 18; rightPadding: 18
@@ -730,31 +730,31 @@ Item {
                         Column {
                             anchors.fill: parent; anchors.margins: 8; spacing: 20
 
-                            Text { text: "TabBar"; color: ThemeManager.textSecondaryColor; font.pixelSize: 11 }
+                            Text { text: qsTr("TabBar"); color: ThemeManager.textSecondaryColor; font.pixelSize: 11 }
                             TabBar {
                                 width: parent.width; tabHeight: 44
                                 tabs: [
-                                    { label: "Overview",  icon: "⬡" },
-                                    { label: "Nodes",     icon: "◈" },
-                                    { label: "Network",   icon: "⇄" },
-                                    { label: "Settings",  icon: "⚙" }
+                                    { label: qsTr("Overview"),  icon: "⬡" },
+                                    { label: qsTr("Nodes"),     icon: "◈" },
+                                    { label: qsTr("Network"),   icon: "⇄" },
+                                    { label: qsTr("Settings"),  icon: "⚙" }
                                 ]
                             }
 
-                            Text { text: "Stepper (horizontal)"; color: ThemeManager.textSecondaryColor; font.pixelSize: 11 }
+                            Text { text: qsTr("Stepper (horizontal)"); color: ThemeManager.textSecondaryColor; font.pixelSize: 11 }
                             Stepper {
                                 width: parent.width; height: 60
                                 steps: ["Connect", "Configure", "Deploy", "Monitor"]
                                 currentStep: 2
                             }
 
-                            Text { text: "BreadcrumbBar"; color: ThemeManager.textSecondaryColor; font.pixelSize: 11 }
+                            Text { text: qsTr("BreadcrumbBar"); color: ThemeManager.textSecondaryColor; font.pixelSize: 11 }
                             BreadcrumbBar {
                                 items: [
-                                    { label: "Workspace" },
-                                    { label: "Projects"  },
-                                    { label: "Valkyrie"  },
-                                    { label: "Nodes"     }
+                                    { label: qsTr("Workspace") },
+                                    { label: qsTr("Projects")  },
+                                    { label: qsTr("Valkyrie")  },
+                                    { label: qsTr("Nodes")     }
                                 ]
                                 onItemClicked: function(i, item) { console.log("Breadcrumb:", item.label) }
                             }
@@ -774,20 +774,20 @@ Item {
                             anchors.fill: parent; anchors.margins: 8; spacing: 12
 
                             Tile {
-                                label: "Divider — labeled"; width: 280
+                                label: qsTr("Divider — labeled"); width: 280
                                 Divider {
                                     anchors.left: parent.left; anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
-                                    label: "OR"
+                                    label: qsTr("OR")
                                 }
                             }
                             Tile {
-                                label: "Divider — plain"; width: 200
+                                label: qsTr("Divider — plain"); width: 200
                                 Divider { anchors.left: parent.left; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter }
                             }
 
                             Tile {
-                                label: "LoadingSpinner"; width: 200; height: 130
+                                label: qsTr("LoadingSpinner"); width: 200; height: 130
                                 Row {
                                     anchors.centerIn: parent; spacing: 20
                                     LoadingSpinner { size: 20 }
@@ -797,26 +797,26 @@ Item {
                             }
 
                             Tile {
-                                label: "SplitPane"; width: 340; height: 160
+                                label: qsTr("SplitPane"); width: 340; height: 160
                                 SplitPane {
                                     anchors.fill: parent
                                     orientation: Qt.Horizontal
                                     initialSplit: 0.4
                                     firstPanel: Component {
                                         Rectangle { color: Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.12)
-                                            Text { anchors.centerIn: parent; text: "Left"; color: ThemeManager.textColor; font.pixelSize: 12 }
+                                            Text { anchors.centerIn: parent; text: qsTr("Left"); color: ThemeManager.textColor; font.pixelSize: 12 }
                                         }
                                     }
                                     secondPanel: Component {
                                         Rectangle { color: Qt.rgba(ThemeManager.accentColor.r, ThemeManager.accentColor.g, ThemeManager.accentColor.b, 0.12)
-                                            Text { anchors.centerIn: parent; text: "Right"; color: ThemeManager.textColor; font.pixelSize: 12 }
+                                            Text { anchors.centerIn: parent; text: qsTr("Right"); color: ThemeManager.textColor; font.pixelSize: 12 }
                                         }
                                     }
                                 }
                             }
 
                             Tile {
-                                label: "CodeBlock"; width: 380; height: 200
+                                label: qsTr("CodeBlock"); width: 380; height: 200
                                 CodeBlock {
                                     anchors.fill: parent
                                     language: "cpp"
@@ -826,23 +826,23 @@ Item {
                             }
 
                             Tile {
-                                label: "Kbd — shortcuts"; width: 300; height: 140
+                                label: qsTr("Kbd — shortcuts"); width: 300; height: 140
                                 Column {
                                     anchors.fill: parent; spacing: 10
                                     Row { spacing: 12
-                                        Text { text: "Save:";      color: ThemeManager.textSecondaryColor; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
+                                        Text { text: qsTr("Save:");      color: ThemeManager.textSecondaryColor; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
                                         Kbd { keys: "Ctrl+S" }
                                     }
                                     Row { spacing: 12
-                                        Text { text: "Palette:";   color: ThemeManager.textSecondaryColor; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
+                                        Text { text: qsTr("Palette:");   color: ThemeManager.textSecondaryColor; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
                                         Kbd { keys: "Ctrl+P" }
                                     }
                                     Row { spacing: 12
-                                        Text { text: "Undo:";      color: ThemeManager.textSecondaryColor; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
+                                        Text { text: qsTr("Undo:");      color: ThemeManager.textSecondaryColor; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
                                         Kbd { keys: "Ctrl+Z" }
                                     }
                                     Row { spacing: 12
-                                        Text { text: "Run all:";   color: ThemeManager.textSecondaryColor; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
+                                        Text { text: qsTr("Run all:");   color: ThemeManager.textSecondaryColor; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
                                         Kbd { keys: ["F5"] }
                                     }
                                 }

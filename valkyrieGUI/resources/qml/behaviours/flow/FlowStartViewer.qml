@@ -32,7 +32,7 @@ Item {
         RowLayout {
             Layout.fillWidth: true
             Text {
-                text: "Auto Start"
+                text: qsTr("Auto Start")
                 font.pixelSize: 11
                 color: ThemeManager.textSecondaryColor
                 Layout.fillWidth: true
@@ -51,7 +51,7 @@ Item {
             RowLayout {
                 anchors.fill: parent; anchors.margins: 8
                 Text {
-                    text: "Runs"
+                    text: qsTr("Runs")
                     font.pixelSize: 11; color: ThemeManager.textSecondaryColor
                     Layout.fillWidth: true
                 }
@@ -73,7 +73,7 @@ Item {
             RowLayout {
                 anchors.centerIn: parent; spacing: 6
                 SvgIcon { width: 16; height: 16; source: Icons.play; color: "#FF9800" }
-                Text { text: "Trigger"; font.pixelSize: 13; font.bold: true; color: "#FF9800" }
+                Text { text: qsTr("Trigger"); font.pixelSize: 13; font.bold: true; color: "#FF9800" }
             }
 
             MouseArea {

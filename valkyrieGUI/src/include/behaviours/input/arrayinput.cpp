@@ -23,6 +23,17 @@ ArrayInput::ArrayInput(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void ArrayInput::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("trigger()", Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("outputArray(QVariantList)",  Connections::ArrayType);
+    setPinTypeForSignature("outputString(QString)",      Connections::StringType);
+    setPinTypeForSignature("outputCount(int)",           Connections::IntType);
+    setPinTypeForSignature("outputData(QVariantList)",   Connections::ArrayType);
+}
+
 QMap<QString, QVariant> ArrayInput::loadInfos()
 {
     return ArrayInput::static_infos();

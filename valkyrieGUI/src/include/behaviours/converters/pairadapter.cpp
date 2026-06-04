@@ -18,6 +18,23 @@ PairAdapter::PairAdapter(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void PairAdapter::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("trigger()",                     Connections::FlowType);
+    setPinTypeForSignature("setDD(double,double)",          Connections::AnyType);
+    setPinTypeForSignature("setID(int,double)",             Connections::AnyType);
+    setPinTypeForSignature("setII(int,int)",                Connections::AnyType);
+    setPinTypeForSignature("setDI(double,int)",             Connections::AnyType);
+    setPinTypeForSignature("setInputData(QVariantList)",    Connections::ArrayType);
+    // outputs
+    setPinTypeForSignature("outputDD(double,double)",  Connections::AnyType);
+    setPinTypeForSignature("outputID(int,double)",     Connections::AnyType);
+    setPinTypeForSignature("outputII(int,int)",        Connections::AnyType);
+    setPinTypeForSignature("outputDI(double,int)",     Connections::AnyType);
+    setPinTypeForSignature("outputData(QVariantList)", Connections::ArrayType);
+}
+
 QMap<QString, QVariant> PairAdapter::loadInfos()
 {
     return PairAdapter::static_infos();

@@ -26,7 +26,7 @@ Item {
                 anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 6; spacing: 4
 
                 Text {
-                    text: "f(x)"; font.pixelSize: 9; font.italic: true
+                    text: qsTr("f(x)"); font.pixelSize: 9; font.italic: true
                     color: ThemeManager.primaryColor; opacity: 0.8
                 }
 

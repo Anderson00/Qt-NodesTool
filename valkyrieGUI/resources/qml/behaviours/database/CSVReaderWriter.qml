@@ -41,7 +41,7 @@ Item {
 
         // ── Title ─────────────────────────────────────────────────────────
         Text {
-            text: "CSV Reader / Writer"
+            text: qsTr("CSV Reader / Writer")
             color: ThemeManager.textColor
             font.pixelSize: 11
             font.bold: true
@@ -55,7 +55,7 @@ Item {
             CustomTextField {
                 id: filePathField
                 Layout.fillWidth: true
-                placeholderText: "path/to/file.csv"
+                placeholderText: qsTr("path/to/file.csv")
                 text: behaviourObject ? behaviourObject.filePath : ""
             }
         }
@@ -66,7 +66,7 @@ Item {
             spacing: 8
 
             Text {
-                text: "Delimiter:"
+                text: qsTr("Delimiter:")
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 9
                 Layout.alignment: Qt.AlignVCenter
@@ -84,7 +84,7 @@ Item {
             Item { width: 8 }
 
             Text {
-                text: "Header:"
+                text: qsTr("Header:")
                 color: ThemeManager.textSecondaryColor
                 font.pixelSize: 9
                 Layout.alignment: Qt.AlignVCenter
@@ -146,7 +146,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 28
                 variant: "filled"
-                text: "Read"
+                text: qsTr("Read")
                 backgroundColor: ThemeManager.primaryColor
                 onClicked: {
                     if (behaviourObject && filePathField.text.trim() !== "")
@@ -157,7 +157,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 28
                 variant: "outlined"
-                text: "Write"
+                text: qsTr("Write")
                 onClicked: {
                     if (behaviourObject && filePathField.text.trim() !== "" && previewRows.length > 0)
                         behaviourObject.writeFile(filePathField.text.trim(), previewRows)
@@ -167,7 +167,7 @@ Item {
                 Layout.preferredWidth: 52
                 Layout.preferredHeight: 28
                 variant: "outlined"
-                text: "Clear"
+                text: qsTr("Clear")
                 onClicked: { if (behaviourObject) behaviourObject.clear() }
             }
         }

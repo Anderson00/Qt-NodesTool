@@ -21,6 +21,14 @@ VariableWriter::VariableWriter(QObject *parent)
     }));
 }
 
+void VariableWriter::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("setInput(double)",     Connections::DoubleType);
+    setPinTypeForSignature("setText(QString)",     Connections::StringType);
+    setPinTypeForSignature("setBool(bool)",        Connections::BoolType);
+}
+
 QMap<QString, QVariant> VariableWriter::loadInfos() { return static_infos(); }
 
 QMap<QString, QVariant> VariableWriter::static_infos() {

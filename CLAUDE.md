@@ -48,6 +48,7 @@ CI uses `jurplel/install-qt-action` to fetch Qt 6.5.3 — see `.github/workflows
 - `BehaviourLoader` (singleton) — Dynamically loads node behaviors from JSON; creates `Behaviours` objects at runtime; node type is a `Q_ENUM` (CPP, DLL, PYTHON)
 - `BehaviourRegistry` (singleton) — Static-init self-registration system; node types register via `REGISTER_BEHAVIOUR` macro; exposed to QML as `NodeRegistry`; provides `discoverAll()` / `discoverAllToTree()` for the NodesDrawer
 - `Behaviours` — Base class for all node types; each instance is identified by a UUID stored in `ViewPortWindow`'s `QHash` for O(1) lookup
+- `DesktopManager` (singleton) — Virtual desktop / workspace layer; each desktop owns a named list of node UUIDs; supports pinning nodes globally (cross-desktop), per-desktop viewport (pan/zoom) snapshots, reorder, duplicate, rename, color, and soft limit (8) with dismissable warning; exposed to QML as `App.Desktop 1.0`
 
 **Theming:**
 - `ThemeManager` / `AbstractTheme` / `SubTheme` — Layered theming system (dynamic, runtime-switchable)
@@ -75,16 +76,30 @@ CI uses `jurplel/install-qt-action` to fetch Qt 6.5.3 — see `.github/workflows
 - `ViewportGridItem` — Scene graph grid rendering
 - `FastLineChart` — Optimized chart renderer
 - `PythonHighlighter` — QSyntaxHighlighter for Python in CodeEditor
+- `TypeCoercions` — Utility functions for type conversion between node output types (double ↔ int ↔ bool ↔ QString)
 
 **Node behaviour categories:**
-- `behaviours/common/` — BarChartViewer, CameraViewer, ComponentsViewer, ConstantValue, Counter, FileOpener, GaugeViewer, HexViewer, LineChartViewer, PieChartViewer, ProcessesViewer, RandomGeneratorViewer, SerialMonitor, SignalGenerator, TextDisplay, TimerNode
+- `behaviours/ai/` — AIQueryNode (Claude API integration via QNetworkAccessManager; model, systemPrompt, maxTokens, apiKey; 4 inputs / 3 outputs)
+- `behaviours/common/` — BarChartViewer, CameraViewer, ComponentsViewer, Counter, FileOpener, GaugeViewer, HexViewer, LineChartViewer, PieChartViewer, ProcessesViewer, RandomGeneratorViewer, SerialMonitor, SignalGenerator, TextDisplay
+- `behaviours/converters/` — MergeNumbers (combines A+B into multi-type pair), NumberCast (double↔int↔bool↔string), PairAdapter (adapts A/B pair between type combos)
+- `behaviours/data/` — DataTableViewer (dynamic sortable/filterable table), JSONParser (dot-path extraction), JsonTreeViewer (collapsible JSON tree), StatisticsAnalyzer (real-time descriptive stats + outlier detection)
+- `behaviours/database/` — CSVReaderWriter (read/write CSV with configurable delimiter), SQLiteQuery (execute SQL on local SQLite DB)
+- `behaviours/encoding/` — Base64Node (encode/decode), HashGenerator (MD5/SHA1/SHA256/SHA512), RegexProcessor (match, capture groups, replace)
+- `behaviours/flow/` — FlowStart, FlowEnd, FlowBranch (If/Else), FlowDelay (ms wait), FlowLoop (repeat N times), FlowMerge (3→1), FlowSequence (1→3 ordered), FlowSwitch (int → N cases)
+- `behaviours/geo/` — MapViewer (interactive map with marker/polyline overlays)
+- `behaviours/input/` — ArrayInput, ColorInput (hex+RGB outputs), DateTimeInput (formatted string + Unix timestamp), DictInput (key/value dict), KeyValueInput (labeled value pair), NumberInput (double/int/bool/string), PairInput (X,Y point), TextInputNode, Vec2Input (2D vector + arrow preview), Vec3Input (3D vector + color axes)
+- `behaviours/io/` — FileWatcher (real-time file/directory change monitor)
 - `behaviours/logic/` — Comparison, Gate, Hub, StringFormat
 - `behaviours/math/` — Clamp, ExpressionEvaluator, Filter, MapRange, MathFunction, MathOperation
+- `behaviours/networking/` — HttpRequester (REST client: GET/POST/PUT/DELETE + custom headers), WebSocketClient (bidirectional WebSocket + streaming)
 - `behaviours/script/` — PythonBehaviour, VariableMonitor, VariableReader, VariableWriter
 - `behaviours/scheduling/` — ScriptSchedulerViewer (multi-event scheduler with Interval/DateTime/Cron/Multi-Date triggers + inline CodeEditor), CronTriggerViewer (cron expression + preset chips + enable/fire controls), IntervalTriggerViewer (day/hour/min/sec spinboxes + countdown display)
+- `behaviours/system/` — ClipboardNode (read/write system clipboard), NetworkInterfaceInfo (list interfaces with IP+MAC), ProcessLauncher (launch commands + capture stdout/stderr)
+- `behaviours/transform/` — BufferAccumulator (collect N values → emit batch), RateLimiter (throttle/debounce), UnitConverter (length/mass/temperature/speed)
+- `behaviours/visualization/` — HeatMapViewer (2D intensity grid + color gradient), NodeGraphViewer (force-directed graph topology), RadarChartViewer (spider/radar multi-axis chart)
 
 **Sub-windows:**
-- `DebuggerMain`, `QmlMdiSubWindow`, `TaskManagerWindow`, `TestConnectionWindow`
+- `DebuggerMain`, `QmlMdiSubWindow`, `TaskManagerWindow`, `TestConnectionWindow`, `ExternalVisualizationWindow`
 
 **QML — viewport sub-components (`components/viewport/`):**
 - `ViewportGridCanvas`, `ViewportGridSGG` — Grid background renderers
@@ -97,6 +112,9 @@ CI uses `jurplel/install-qt-action` to fetch Qt 6.5.3 — see `.github/workflows
 - `GroupFrame` — Visual grouping frame for nodes
 - `CameraFrameItem` — Camera view framing overlay
 - `VisualizationWindow`, `VisualizationPreview`, `FullscreenVisualization` — Viewport visualization cloning system
+- `DesktopBar` — Horizontal strip of virtual-desktop tabs (36px high); double-click to rename; `+` button with soft-limit guard; uses `App.Desktop 1.0`
+- `DesktopOverview` — Fullscreen Popup overlay (Ctrl+Tab) showing all desktops as thumbnail tiles with real node positions; click to switch; inspired by Windows Task View / macOS Mission Control
+- `DesktopLimitWarning` — Inline warning banner shown when desktop soft limit (8) is reached; has "Add Anyway" action; dismissed per session
 
 **QML — node visual (`components/`):**
 - `ViewComponentRectV2` — Primary node visual rectangle (drag, resize, animations)
@@ -115,7 +133,7 @@ CI uses `jurplel/install-qt-action` to fetch Qt 6.5.3 — see `.github/workflows
 - `FolderBottomSheet` — Folder/tree picker
 
 **QML — UI components (general):**
-- Input: `CustomCheckBox`, `CustomComboBox`, `CustomDatePicker`, `CustomRadioButton`, `CustomSwitch`, `CustomTextField`, `CustomSlider`, `CustomSliderVertical`, `NumberSpinBox`, `NumericInputField`, `PasswordField`, `SearchableSelect`, `TagInput`, `MultiSelect`, `RangeSlider`, `AutocompleteInput`, `OTPInput`
+- Input: `CustomCheckBox`, `CustomComboBox`, `CustomDatePicker`, `CustomRadioButton`, `CustomSwitch`, `CustomTextField`, `CustomSlider`, `CustomSliderVertical`, `NumberSpinBox`, `NumericInputField`, `PasswordField`, `SearchableSelect`, `TagInput`, `MultiSelect`, `RangeSlider`, `AutocompleteInput`, `OTPInput`, `VerticalSpinBox`
 - Display: `Card`, `SvgIcon`, `Icons`, `ColorIcon`, `Badge`, `Chip`, `Divider`, `StatusDot`, `Avatar`, `Skeleton`, `BreadcrumbBar`, `TabBar`, `Timeline`, `Stepper`, `Pagination`, `ProgressCircle`, `Kbd`, `EmptyState`, `VariableValueCard`
 - Feedback: `Toast`, `Snackbar`, `AlertDialog`, `LoadingSpinner`
 - Overlay: `ContextMenu`, `CommandPalette`, `AppToolTip`, `BottomSheet`, `SplitPane`
@@ -125,6 +143,8 @@ CI uses `jurplel/install-qt-action` to fetch Qt 6.5.3 — see `.github/workflows
 - Calendar: `CalendarView` — supports `multiSelect`, `rangeSelect` (first/second click sets start/end, fills all intermediate dates, emits `rangeChanged(start,end)` + hover preview bridge visual), and `markedDates`; `TimePicker` — hours/minutes/seconds spinners with `onTimeChanged(h,m,s)` signal
 - Data: `DataTable`, `VirtualList`, `NodesList`
 - Viewport utility: `FileDropZone`, `SegmentedControl`, `NewButton`, `AppBarButton`, `AppToolButton`, `CustomToolbar`, `Triangle`, `RippleEffectBackground`, `Accordion`
+- Buttons: `FabButton` — Floating Action Button with ripple; `IconButton` — icon-only circular button
+- Color: `ColorPicker` — interactive color picker with swatches and hex field
 
 **middleware** — Qt Core/Network daemon for agent and network management (C++11 only)
 - `Agente` — Base agent class with UUID and parameter cache
@@ -165,4 +185,4 @@ CI uses `jurplel/install-qt-action` to fetch Qt 6.5.3 — see `.github/workflows
 
 - All QML files are registered in `valkyrieGUI/resources/qml.qrc`
 - New files **must** be added there manually — no auto-discovery
-- Prefixes used: `/components`, `/components/viewport`, `/components/bottomsheets`, `/components/drawers`, `/subwindows`, `/behaviours`, `/behaviours/common`, `/behaviours/logic`, `/behaviours/math`, `/behaviours/script`, `/behaviours/scheduling`
+- Prefixes used: `/components`, `/components/viewport`, `/components/bottomsheets`, `/components/drawers`, `/subwindows`, `/behaviours`, `/behaviours/ai`, `/behaviours/common`, `/behaviours/converters`, `/behaviours/data`, `/behaviours/database`, `/behaviours/encoding`, `/behaviours/flow`, `/behaviours/geo`, `/behaviours/input`, `/behaviours/io`, `/behaviours/logic`, `/behaviours/math`, `/behaviours/networking`, `/behaviours/script`, `/behaviours/scheduling`, `/behaviours/system`, `/behaviours/transform`, `/behaviours/visualization`

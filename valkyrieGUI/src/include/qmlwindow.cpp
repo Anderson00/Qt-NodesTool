@@ -45,6 +45,7 @@ public:
 #include "model/thememanager.h"
 #include "model/subtheme.h"
 #include "model/globalproperties.h"
+#include "model/languagemanager.h"
 #include "model/presetmanager.h"
 #include "model/colorpreset.h"
 #include "model/nodevariable.h"
@@ -124,6 +125,10 @@ QMLWindow::QMLWindow(QWidget *parent, const QUrl& qmlUrl) : QMainWindow(parent),
             "App.Icons", 1, 0,
             "Icons"
         );
+
+        // Register this engine with LanguageManager so it receives retranslate()
+        // calls when the user switches language at runtime.
+        LanguageManager::instance()->registerEngine(this->m_view->engine());
 
         m_subTheme = new SubTheme(QUuid::createUuid().toString(QUuid::WithoutBraces));
         ThemeManager::instance()->addSubTheme(m_subTheme);

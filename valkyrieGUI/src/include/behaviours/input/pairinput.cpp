@@ -20,6 +20,15 @@ PairInput::PairInput(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void PairInput::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("trigger()", Connections::FlowType);
+    // outputs
+    setPinTypeForSignature("outputXY(double,double)", Connections::AnyType);
+    setPinTypeForSignature("outputData(QVariantList)", Connections::ArrayType);
+}
+
 QMap<QString, QVariant> PairInput::loadInfos()
 {
     return PairInput::static_infos();

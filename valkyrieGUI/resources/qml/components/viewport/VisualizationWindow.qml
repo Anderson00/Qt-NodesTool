@@ -61,7 +61,7 @@ Rectangle {
                 Behavior on color { ColorAnimation { duration: 250 } }
             }
             Text {
-                text: root.isPlaying ? "Visualization — Playing" : "Visualization"
+                text: root.isPlaying ? qsTr("Visualization — Playing") : qsTr("Visualization")
                 font.pixelSize: 11; font.bold: true
                 color: root.isPlaying ? "#4caf50" : "#FF9800"
                 anchors.verticalCenter: parent.verticalCenter
@@ -79,7 +79,7 @@ Rectangle {
                 icon.color:  root.isPlaying ? "#f44336" : "#4caf50"
                 icon.width: 14; icon.height: 14
                 onClicked: { root.isPlaying = !root.isPlaying; root.playToggled(root.isPlaying) }
-                AppToolTip { text: root.isPlaying ? "Stop (fechar fullscreen)" : "Play (abrir fullscreen)"; visible: parent.hovered }
+                AppToolTip { text: root.isPlaying ? qsTr("Stop (close fullscreen)") : qsTr("Play (open fullscreen)"); visible: parent.hovered }
             }
 
             AppBarButton {
@@ -88,7 +88,7 @@ Rectangle {
                 icon.color:  ThemeManager.textColor
                 icon.width: 13; icon.height: 13
                 onClicked: root.detachRequested()
-                AppToolTip { text: "Abrir em Janela Externa"; visible: parent.hovered }
+                AppToolTip { text: qsTr("Open in External Window"); visible: parent.hovered }
             }
 
             AppBarButton {
@@ -96,7 +96,7 @@ Rectangle {
                 icon.source: Icons.close
                 icon.color:  ThemeManager.textColor; icon.width: 12; icon.height: 12
                 onClicked: root.closeRequested()
-                AppToolTip { text: "Fechar"; visible: parent.hovered }
+                AppToolTip { text: qsTr("Close"); visible: parent.hovered }
             }
         }
 

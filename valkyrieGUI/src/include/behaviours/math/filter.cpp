@@ -21,6 +21,15 @@ Filter::Filter(QObject *parent) : Behaviours(parent)
     }));
 }
 
+void Filter::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("setInputValue(double)", Connections::DoubleType);
+    // outputs
+    setPinTypeForSignature("outputFiltered(double)", Connections::DoubleType);
+    setPinTypeForSignature("outputString(QString)",  Connections::StringType);
+}
+
 QMap<QString, QVariant> Filter::loadInfos()
 {
     return Filter::static_infos();

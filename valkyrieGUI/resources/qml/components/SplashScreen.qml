@@ -52,7 +52,7 @@ Rectangle {
 
             // ── Branding ──────────────────────────────────────────────────────
             Text {
-                text: "Valkyrie"
+                text: qsTr("Valkyrie")
                 font.pixelSize: 38
                 font.bold:      true
                 font.letterSpacing: 1.5
@@ -62,7 +62,7 @@ Rectangle {
             Item { height: 4; width: 1 }
 
             Text {
-                text: "Node-Based Debugger"
+                text: qsTr("Node-Based Debugger")
                 font.pixelSize: 11
                 color:   ThemeManager.foregroundColor
                 opacity: 0.45
@@ -73,7 +73,7 @@ Rectangle {
 
             // ── Section label ─────────────────────────────────────────────────
             Text {
-                text: "START"
+                text: qsTr("START")
                 font.pixelSize: 9
                 font.bold: true
                 color:   ThemeManager.primaryColor
@@ -86,7 +86,7 @@ Rectangle {
             // New Project
             ActionRow {
                 icon:  Icons.plusCircleOutline
-                label: "New Project"
+                label: qsTr("New Project")
                 onClicked: {
                     root.dismissed = true
                     root.newProjectRequested()
@@ -98,7 +98,7 @@ Rectangle {
             // Open Project
             ActionRow {
                 icon:  Icons.folderOpenOutline
-                label: "Open Project..."
+                label: qsTr("Open Project...")
                 onClicked: root.openProjectRequested()
             }
 
@@ -124,7 +124,7 @@ Rectangle {
             ActionRow {
                 visible: GlobalProperties.lastWorkspace !== ""
                 icon:    Icons.restore
-                label:   "Continue  \"" + GlobalProperties.lastWorkspace + "\""
+                label:   qsTr("Continue  \"%1\"").arg(GlobalProperties.lastWorkspace)
                 onClicked: root.workspaceOpenRequested(GlobalProperties.lastWorkspace)
             }
         }
@@ -138,7 +138,7 @@ Rectangle {
             spacing: 4
 
             Text {
-                text:    "Valkyrie v1.0.0"
+                text: qsTr("Valkyrie v1.0.0")
                 font.pixelSize: 9
                 font.bold: true
                 color:   ThemeManager.primaryColor
@@ -146,7 +146,7 @@ Rectangle {
             }
 
             Text {
-                text:    "Qt 6.5.3  •  C++17"
+                text: qsTr("Qt 6.5.3  •  C++17")
                 font.pixelSize: 8
                 color:   ThemeManager.textSecondaryColor
                 opacity: 0.5
@@ -179,7 +179,7 @@ Rectangle {
                     opacity: 0.7
                 }
                 Text {
-                    text: "RECENT PROJECTS"
+                    text: qsTr("RECENT PROJECTS")
                     font.pixelSize: 10
                     font.bold: true
                     color:   ThemeManager.primaryColor
@@ -194,7 +194,7 @@ Rectangle {
             // Empty state
             Text {
                 visible: WorkspaceManager.workspaceList.length === 0
-                text: "No recent projects yet.\nCreate a project or open an existing one to get started."
+                text: qsTr("No recent projects yet.\nCreate a project or open an existing one to get started.")
                 color:       ThemeManager.textSecondaryColor
                 opacity:     0.6
                 font.pixelSize: 12
@@ -277,7 +277,7 @@ Rectangle {
 
                             Text {
                                 visible: card.isLast
-                                text:    "Last opened"
+                                text: qsTr("Last opened")
                                 color:   ThemeManager.successColor
                                 opacity: 0.75
                                 font.pixelSize: 9
@@ -304,7 +304,7 @@ Rectangle {
 
                         Text {
                             anchors.centerIn: parent
-                            text: "⋮"
+                            text: qsTr("⋮")
                             font.pixelSize: 18
                             font.bold: true
                             color: ThemeManager.primaryColor
@@ -343,12 +343,12 @@ Rectangle {
                     ContextMenu {
                         id: cardMenu
                         items: [
-                            { label: "Open",       icon: "▶" },
-                            { label: "Rename…",    icon: "✎" },
-                            { label: "Duplicate",  icon: "⎘" },
-                            { label: "Export…",    icon: "↥" },
+                            { label: qsTr("Open"),       icon: "▶" },
+                            { label: qsTr("Rename…"),    icon: "✎" },
+                            { label: qsTr("Duplicate"),  icon: "⎘" },
+                            { label: qsTr("Export…"),    icon: "↥" },
                             { separator: true },
-                            { label: "Delete",     icon: "✕", danger: true }
+                            { label: qsTr("Delete"),     icon: "✕", danger: true }
                         ]
                         onItemSelected: function(idx, item) {
                             switch (item.label) {
@@ -383,7 +383,7 @@ Rectangle {
         width: 36; height: 36
         opacity: dismissHover.containsMouse ? 0.7 : 0.3
         onClicked: root.dismissed = true
-        AppToolTip { text: "Continue without opening"; visible: parent.hovered; delay: 600 }
+        AppToolTip { text: qsTr("Continue without opening"); visible: parent.hovered; delay: 600 }
 
         MouseArea {
             id: dismissHover

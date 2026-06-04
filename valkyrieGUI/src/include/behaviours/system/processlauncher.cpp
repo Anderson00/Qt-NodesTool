@@ -1,5 +1,6 @@
 #include "processlauncher.h"
 #include "behaviours/behaviourregistry.h"
+#include <QPointer>
 
 REGISTER_BEHAVIOUR(ProcessLauncher, "Process Launcher", "Launch system commands and capture stdout/stderr", "system", 4, 3)
 
@@ -22,6 +23,19 @@ ProcessLauncher::ProcessLauncher(QObject *parent)
 ProcessLauncher::~ProcessLauncher()
 {
     cleanupProcess();
+}
+
+void ProcessLauncher::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("launch(QString,QStringList)", Connections::AnyType);
+    setPinTypeForSignature("launchShell(QString)",        Connections::StringType);
+    setPinTypeForSignature("kill()",                      Connections::FlowType);
+    setPinTypeForSignature("setWorkingDirSlot(QString)",  Connections::StringType);
+    // outputs
+    setPinTypeForSignature("stdoutReceived(QString)", Connections::StringType);
+    setPinTypeForSignature("stderrReceived(QString)", Connections::StringType);
+    setPinTypeForSignature("finished(int)",           Connections::IntType);
 }
 
 QMap<QString, QVariant> ProcessLauncher::loadInfos()
@@ -59,23 +73,28 @@ void ProcessLauncher::setupProcess(QProcess* proc)
     if (!m_workingDir.isEmpty())
         proc->setWorkingDirectory(m_workingDir);
 
-    connect(proc, &QProcess::readyReadStandardOutput, this, [this]() {
-        if (!m_process) return;
-        QString text = QString::fromLocal8Bit(m_process->readAllStandardOutput());
+    // Capture the process pointer locally so lambdas always operate on the exact
+    // QProcess they were connected to, even if m_process is replaced by a new
+    // launch() call before the old process's signals fire.
+    QPointer<QProcess> capturedProc = proc;
+
+    connect(proc, &QProcess::readyReadStandardOutput, this, [this, capturedProc]() {
+        if (!capturedProc) return;
+        QString text = QString::fromUtf8(capturedProc->readAllStandardOutput());
         emit stdoutReceived(text);
         emit internalStdout(text);
     });
 
-    connect(proc, &QProcess::readyReadStandardError, this, [this]() {
-        if (!m_process) return;
-        QString text = QString::fromLocal8Bit(m_process->readAllStandardError());
+    connect(proc, &QProcess::readyReadStandardError, this, [this, capturedProc]() {
+        if (!capturedProc) return;
+        QString text = QString::fromUtf8(capturedProc->readAllStandardError());
         emit stderrReceived(text);
         emit internalStderr(text);
     });
 
-    connect(proc, &QProcess::started, this, [this]() {
+    connect(proc, &QProcess::started, this, [this, capturedProc]() {
         m_isRunning = true;
-        m_pid       = static_cast<int>(m_process ? m_process->processId() : 0);
+        m_pid       = static_cast<int>(capturedProc ? capturedProc->processId() : 0);
         emit isRunningChanged();
         emit pidChanged();
         emit internalStarted();
@@ -98,7 +117,10 @@ void ProcessLauncher::cleanupProcess()
 {
     if (m_process) {
         if (m_process->state() != QProcess::NotRunning) {
-            m_process->kill();
+            // Try a graceful shutdown first; escalate to kill if it doesn't stop
+            m_process->terminate();
+            if (!m_process->waitForFinished(3000))
+                m_process->kill();
             m_process->waitForFinished(1000);
         }
         m_process->deleteLater();
@@ -118,16 +140,21 @@ void ProcessLauncher::launch(QString command, QStringList args)
 
 void ProcessLauncher::launchShell(QString command)
 {
+    // ⚠ SECURITY WARNING: this method passes the command string directly to the
+    // system shell (cmd /c on Windows, sh -c on POSIX). Do NOT connect the input
+    // pin of this node to any external or untrusted data source — doing so
+    // creates a shell injection / RCE vulnerability. Use launch() with an
+    // explicit args list when the command or arguments come from an external input.
     cleanupProcess();
     m_lastCommand = command;
 
     QStringList args;
 #ifdef Q_OS_WIN
-    QString shell = "cmd";
-    args << "/c" << command;
+    const QString shell = QStringLiteral("cmd");
+    args << QStringLiteral("/c") << command;
 #else
-    QString shell = "sh";
-    args << "-c" << command;
+    const QString shell = QStringLiteral("sh");
+    args << QStringLiteral("-c") << command;
 #endif
 
     m_process = new QProcess(this);

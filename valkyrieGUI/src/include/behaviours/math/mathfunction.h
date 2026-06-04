@@ -20,6 +20,8 @@ public:
 
     explicit MathFunction(QObject *parent = nullptr);
 
+    void onPinsReady() override;
+
     QMap<QString, QVariant> loadInfos() override;
     static QMap<QString, QVariant> static_infos();
 

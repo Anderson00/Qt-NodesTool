@@ -31,7 +31,7 @@ Item {
             spacing: 6
 
             Text {
-                text: "Network Interfaces"
+                text: qsTr("Network Interfaces")
                 font.pixelSize: 10
                 font.bold: true
                 color: ThemeManager.textColor
@@ -125,14 +125,14 @@ Item {
 
                             Text {
                                 visible: modelData.ip4 !== ""
-                                text: "IPv4: " + modelData.ip4
+                                text: qsTr("IPv4: ") + modelData.ip4
                                 font.pixelSize: 9
                                 color: "#2ecc71"
                             }
 
                             Text {
                                 visible: modelData.ip6 !== ""
-                                text: "IPv6: " + modelData.ip6
+                                text: qsTr("IPv6: ") + modelData.ip6
                                 font.pixelSize: 8
                                 color: "#5dade2"
                                 elide: Text.ElideRight
@@ -146,7 +146,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     visible: ifaceList.count === 0
-                    text: "No interfaces found"
+                    text: qsTr("No interfaces found")
                     font.pixelSize: 10
                     color: ThemeManager.textSecondaryColor
                 }

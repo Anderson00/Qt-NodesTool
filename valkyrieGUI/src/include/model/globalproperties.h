@@ -41,6 +41,9 @@ class GlobalProperties : public QObject
     Q_PROPERTY(bool    autosaveEnabled     READ autosaveEnabled     WRITE setAutosaveEnabled     NOTIFY autosaveEnabledChanged)
     Q_PROPERTY(int     autosaveIntervalMin READ autosaveIntervalMin WRITE setAutosaveIntervalMin NOTIFY autosaveIntervalMinChanged)
 
+    // ── Locale ───────────────────────────────────────────────────────────────
+    Q_PROPERTY(QString language READ language WRITE setLanguage NOTIFY languageChanged)
+
 public:
     static GlobalProperties* instance();
     static QObject* qmlSingletonProvider(QQmlEngine*, QJSEngine*);
@@ -71,6 +74,7 @@ public:
     QString snapGuideColor()     const;
     bool    autosaveEnabled()    const;
     int     autosaveIntervalMin() const;
+    QString language()           const;
 
     // ── Setters ───────────────────────────────────────────────────────────────
     void setDebugMode(bool value);
@@ -98,6 +102,7 @@ public:
     void setSnapGuideColor(const QString& color);
     void setAutosaveEnabled(bool value);
     void setAutosaveIntervalMin(int value);
+    void setLanguage(const QString& code);
 
     Q_INVOKABLE void saveProperties();
     Q_INVOKABLE void loadProperties();
@@ -140,6 +145,7 @@ signals:
     void snapGuideColorChanged();
     void autosaveEnabledChanged();
     void autosaveIntervalMinChanged();
+    void languageChanged();
 
 private:
     explicit GlobalProperties(QObject* parent = nullptr);
@@ -180,6 +186,9 @@ private:
     // ── Autosave members ──────────────────────────────────────────────────────
     bool    m_autosaveEnabled     = false;
     int     m_autosaveIntervalMin = 5;
+
+    // ── Locale member ─────────────────────────────────────────────────────────
+    QString m_language            = QStringLiteral("en");
 };
 
 #endif // GLOBALPROPERTIES_H

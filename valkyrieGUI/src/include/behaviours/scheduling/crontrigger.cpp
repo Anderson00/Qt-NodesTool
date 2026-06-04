@@ -40,6 +40,14 @@ CronTrigger::CronTrigger(QObject *parent)
 
 // ── Static info ───────────────────────────────────────────────────────────────
 
+void CronTrigger::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("setCronExpression(QString)", Connections::StringType);
+    // outputs
+    setPinTypeForSignature("execOut()", Connections::FlowType);
+}
+
 QMap<QString, QVariant> CronTrigger::loadInfos()  { return static_infos(); }
 QMap<QString, QVariant> CronTrigger::static_infos()
 {

@@ -66,6 +66,147 @@ bool  ViewPortWindow::isClean()       const { return m_undoStack->isClean(); }
 int   ViewPortWindow::historyCount()  const { return m_undoStack->count() + 1; }
 int   ViewPortWindow::historyIndex()  const { return m_undoStack->index(); }
 
+int   ViewPortWindow::presentationMode() const { return m_presentationMode; }
+
+void ViewPortWindow::setPresentationMode(int mode) {
+    if (m_presentationMode == mode) return;
+    const bool wasPresenting = (m_presentationMode > 0);
+    const bool nowPresenting = (mode > 0);
+    m_presentationMode = mode;
+    emit presentationModeChanged();
+    // Toggle OS fullscreen only on transitions between off ↔ on; switching
+    // between modes 1 ↔ 2 keeps the window in its current visibility state.
+    if (wasPresenting != nowPresenting)
+        emit presentationFullScreenRequested(nowPresenting);
+}
+
+// ── Presentation Stages ──────────────────────────────────────────────────────
+
+int  ViewPortWindow::stageCount()   const { return m_stages.size(); }
+int  ViewPortWindow::currentStage() const { return m_currentStage; }
+bool ViewPortWindow::hasStages()    const { return !m_stages.isEmpty(); }
+
+void ViewPortWindow::setCurrentStage(int idx) {
+    if (m_stages.isEmpty()) return;
+    if (idx < 0 || idx >= m_stages.size()) return;
+    const bool changed = (m_currentStage != idx);
+    m_currentStage = idx;
+    PresentationStage* s = m_stages.at(idx);
+    if (changed) emit currentStageChanged();
+    // Always emit the transition — re-clicking the same stage (or jumping
+    // back to it via F5 wrap-around) must still animate the canvas.
+    emit stageTransitionRequested(s->worldX, s->worldY,
+                                  s->worldW, s->worldH, s->zoom);
+}
+
+void ViewPortWindow::replayCurrentStage() {
+    if (m_stages.isEmpty()) return;
+    int idx = m_currentStage;
+    if (idx < 0 || idx >= m_stages.size()) idx = 0;
+    setCurrentStage(idx);
+}
+
+QString ViewPortWindow::addStage(const QString& name,
+                                  qreal x, qreal y, qreal w, qreal h,
+                                  qreal zoom) {
+    auto* s = new PresentationStage(this);
+    s->id     = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    s->name   = name.isEmpty() ? tr("Stage %1").arg(m_stages.size() + 1) : name;
+    s->worldX = x;
+    s->worldY = y;
+    s->worldW = w;
+    s->worldH = h;
+    s->zoom   = zoom;
+    m_stages.append(s);
+    emit stagesChanged();
+    return s->id;
+}
+
+void ViewPortWindow::removeStage(const QString& id) {
+    for (int i = 0; i < m_stages.size(); ++i) {
+        if (m_stages.at(i)->id == id) {
+            delete m_stages.takeAt(i);
+            if (m_currentStage >= m_stages.size()) m_currentStage = m_stages.size() - 1;
+            emit stagesChanged();
+            emit currentStageChanged();
+            return;
+        }
+    }
+}
+
+void ViewPortWindow::removeStageAt(int index) {
+    if (index < 0 || index >= m_stages.size()) return;
+    delete m_stages.takeAt(index);
+    if (m_currentStage >= m_stages.size()) m_currentStage = m_stages.size() - 1;
+    emit stagesChanged();
+    emit currentStageChanged();
+}
+
+QString ViewPortWindow::currentStageId() const {
+    if (m_currentStage < 0 || m_currentStage >= m_stages.size()) return QString();
+    return m_stages.at(m_currentStage)->id;
+}
+
+void ViewPortWindow::updateStage(const QString& id,
+                                  const QString& name,
+                                  const QString& notes) {
+    for (PresentationStage* s : m_stages) {
+        if (s->id == id) {
+            s->name  = name;
+            s->notes = notes;
+            emit stagesChanged();
+            return;
+        }
+    }
+}
+
+void ViewPortWindow::moveStage(int from, int to) {
+    if (from < 0 || from >= m_stages.size()) return;
+    if (to   < 0 || to   >= m_stages.size()) return;
+    if (from == to) return;
+    m_stages.move(from, to);
+    if (m_currentStage == from)      m_currentStage = to;
+    else if (m_currentStage == to)   m_currentStage = from;
+    emit stagesChanged();
+    emit currentStageChanged();
+}
+
+QVariantList ViewPortWindow::stagesData() const {
+    QVariantList list;
+    for (PresentationStage* s : m_stages) {
+        QVariantMap m;
+        m["id"]     = s->id;
+        m["name"]   = s->name;
+        m["worldX"] = s->worldX;
+        m["worldY"] = s->worldY;
+        m["worldW"] = s->worldW;
+        m["worldH"] = s->worldH;
+        m["zoom"]   = s->zoom;
+        m["notes"]  = s->notes;
+        list.append(m);
+    }
+    return list;
+}
+
+QJsonArray ViewPortWindow::stagesToJson() const {
+    QJsonArray arr;
+    for (PresentationStage* s : m_stages)
+        arr.append(s->toJson());
+    return arr;
+}
+
+void ViewPortWindow::stagesFromJson(const QJsonArray& arr) {
+    qDeleteAll(m_stages);
+    m_stages.clear();
+    for (const QJsonValue& v : arr) {
+        if (!v.isObject()) continue;
+        m_stages.append(PresentationStage::fromJson(v.toObject(), this));
+    }
+    m_currentStage = -1;
+    emit stagesChanged();
+    emit currentStageChanged();
+}
+
 QString ViewPortWindow::historyText(int index) const {
     if (index <= 0 || index > m_undoStack->count()) return tr("Initial state");
     return m_undoStack->command(index - 1)->text();
@@ -217,6 +358,12 @@ void ViewPortWindow::clearBehaviours() {
     qDeleteAll(m_behaviours);
     m_behaviours.clear();
     m_connectionComments.clear();
+    // Clear any saved presentation stages too — they're per-workspace state.
+    qDeleteAll(m_stages);
+    m_stages.clear();
+    m_currentStage = -1;
+    emit stagesChanged();
+    emit currentStageChanged();
 }
 
 Behaviours* ViewPortWindow::searchBehaviourFromUUID(const QString& uuid) {
@@ -348,6 +495,7 @@ QVariantMap ViewPortWindow::getNodeData(const QString& uuid) const {
     map["width"]  = b->width();
     map["height"] = b->height();
     map["state"]  = b->saveState().toVariantMap();
+    map["hiddenInPresentation"] = b->hiddenInPresentation();
     return map;
 }
 
@@ -362,6 +510,10 @@ QString ViewPortWindow::pasteNode(const QVariantMap& data, double offsetX, doubl
     const double w = data.value("width").toDouble();
     const double h = data.value("height").toDouble();
     const bool ok = addBehaviourWithUuid(path, infos, newUuid, x, y, w, h, title, state);
+    if (ok && data.value("hiddenInPresentation").toBool()) {
+        if (Behaviours* beh = m_behaviours.value(newUuid))
+            beh->setHiddenInPresentation(true);
+    }
     return ok ? newUuid : QString();
 }
 
@@ -459,4 +611,23 @@ bool ViewPortWindow::isPortCompatible(const QString& srcSig, const QString& dstS
     const QByteArray srcP = TypeCoercions::extractParams(src);
     const QByteArray dstP = TypeCoercions::extractParams(dst);
     return TypeCoercions::isCoercible(srcP, dstP);
+}
+
+bool ViewPortWindow::isPortCompatibleFull(const QString& srcUuid, const QString& srcSig,
+                                          const QString& dstUuid, const QString& dstSig) const
+{
+    // ── PinType semantic check ────────────────────────────────────────────────
+    // Look up both nodes and compare their pin types before doing the heavier
+    // Qt signature coercion check.  AnyType on either side always passes.
+    const Behaviours* srcBeh = m_behaviours.value(srcUuid);
+    const Behaviours* dstBeh = m_behaviours.value(dstUuid);
+    if (srcBeh && dstBeh) {
+        const auto srcPinType = static_cast<Connections::PinType>(srcBeh->getPinType(srcSig));
+        const auto dstPinType = static_cast<Connections::PinType>(dstBeh->getPinType(dstSig));
+        if (!Connections::arePinTypesCompatible(srcPinType, dstPinType))
+            return false;
+    }
+
+    // ── Qt signature coercion check ───────────────────────────────────────────
+    return isPortCompatible(srcSig, dstSig);
 }

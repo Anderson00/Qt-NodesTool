@@ -20,6 +20,8 @@ public:
     explicit ProcessLauncher(QObject *parent = nullptr);
     ~ProcessLauncher();
 
+    void onPinsReady() override;
+
     virtual QMap<QString, QVariant> loadInfos() override;
     static  QMap<QString, QVariant> static_infos();
 

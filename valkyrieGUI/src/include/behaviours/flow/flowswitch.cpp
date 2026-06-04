@@ -10,6 +10,19 @@ FlowSwitch::FlowSwitch(QObject *parent) : Behaviours(parent)
     addInputOutputExclusion({"switchValueChanged()","lastCaseChanged()"});
 }
 
+void FlowSwitch::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("trigger()",     Connections::FlowType);
+    setPinTypeForSignature("setValue(int)", Connections::IntType);
+    // outputs
+    setPinTypeForSignature("case0()",       Connections::FlowType);
+    setPinTypeForSignature("case1()",       Connections::FlowType);
+    setPinTypeForSignature("case2()",       Connections::FlowType);
+    setPinTypeForSignature("case3()",       Connections::FlowType);
+    setPinTypeForSignature("caseDefault()", Connections::FlowType);
+}
+
 QMap<QString, QVariant> FlowSwitch::loadInfos() { return static_infos(); }
 QMap<QString, QVariant> FlowSwitch::static_infos() {
     return {{"name","Flow Switch"},{"type",Behaviours::CPP},{"className","FlowSwitch"},

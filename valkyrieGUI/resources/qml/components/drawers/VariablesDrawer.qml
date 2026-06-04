@@ -12,16 +12,16 @@ Item {
     id: root
 
     readonly property var typeConfig: ({
-        "STRING":  { color: "#3B82F6", symbol: "\"\"", label: "String"  },
-        "NUMBER":  { color: "#F59E0B", symbol: "#",    label: "Number"  },
-        "INT":     { color: "#EF4444", symbol: "\u2124",  label: "Int"     },
-        "BOOLEAN": { color: "#10B981", symbol: "✓",    label: "Boolean" },
-        "COLOR":   { color: "#8B5CF6", symbol: "◆",    label: "Color"   },
-        "ARRAY":   { color: "#F97316", symbol: "[ ]",  label: "Array"   },
-        "LIST":    { color: "#06B6D4", symbol: "⟨⟩", label: "List" },
-        "DICT":    { color: "#84CC16", symbol: "{}",    label: "Dict"    },
-        "VEC2":    { color: "#F43F5E", symbol: "↗",  label: "Vec2"    },
-        "VEC3":    { color: "#A855F7", symbol: "⊕",  label: "Vec3"    }
+        "STRING":  { color: "#3B82F6", symbol: "\"\"", label: qsTr("String")  },
+        "NUMBER":  { color: "#F59E0B", symbol: "#",    label: qsTr("Number")  },
+        "INT":     { color: "#EF4444", symbol: "\u2124",  label: qsTr("Int")     },
+        "BOOLEAN": { color: "#10B981", symbol: "✓",    label: qsTr("Boolean") },
+        "COLOR":   { color: "#8B5CF6", symbol: "◆",    label: qsTr("Color")   },
+        "ARRAY":   { color: "#F97316", symbol: "[ ]",  label: qsTr("Array")   },
+        "LIST":    { color: "#06B6D4", symbol: "⟨⟩", label: qsTr("List") },
+        "DICT":    { color: "#84CC16", symbol: "{}",    label: qsTr("Dict")    },
+        "VEC2":    { color: "#F43F5E", symbol: "↗",  label: qsTr("Vec2")    },
+        "VEC3":    { color: "#A855F7", symbol: "⊕",  label: qsTr("Vec3")    }
     })
 
     property string typeFilter:      "ALL"
@@ -104,7 +104,7 @@ Item {
                     Text {
                         anchors.left: parent.left; anchors.right: parent.right
                         anchors.leftMargin: 2; anchors.verticalCenter: parent.verticalCenter
-                        text: "Search variables…"; font.pixelSize: 12
+                        text: qsTr("Search variables…"); font.pixelSize: 12
                         color: ThemeManager.textColor; opacity: 0.3
                         visible: !varSearch.text.length && !varSearch.activeFocus
                     }
@@ -184,7 +184,7 @@ Item {
                         Text {
                             anchors.left: parent.left; anchors.leftMargin: 8
                             anchors.verticalCenter: parent.verticalCenter
-                            text: "name"; font.pixelSize: 9
+                            text: qsTr("name"); font.pixelSize: 9
                             color: ThemeManager.textColor; opacity: 0.35
                             visible: !newVarName.text.length && !newVarName.activeFocus
                         }
@@ -288,7 +288,7 @@ Item {
                                              ThemeManager.textColor.b, 0.06)
                             border.width: root._newVarBool ? 1 : 0; border.color: "#10B981"
                             Behavior on color { ColorAnimation { duration: 100 } }
-                            Text { anchors.centerIn: parent; text: "TRUE"; font.pixelSize: 11
+                            Text { anchors.centerIn: parent; text: qsTr("TRUE"); font.pixelSize: 11
                                    font.bold: root._newVarBool
                                    color: root._newVarBool ? "#10B981" : ThemeManager.textColor
                                    opacity: root._newVarBool ? 1.0 : 0.4 }
@@ -304,7 +304,7 @@ Item {
                                              ThemeManager.textColor.b, 0.06)
                             border.width: !root._newVarBool ? 1 : 0; border.color: "#EF4444"
                             Behavior on color { ColorAnimation { duration: 100 } }
-                            Text { anchors.centerIn: parent; text: "FALSE"; font.pixelSize: 11
+                            Text { anchors.centerIn: parent; text: qsTr("FALSE"); font.pixelSize: 11
                                    font.bold: !root._newVarBool
                                    color: !root._newVarBool ? "#EF4444" : ThemeManager.textColor
                                    opacity: !root._newVarBool ? 1.0 : 0.4 }
@@ -410,7 +410,7 @@ Item {
                     }
 
                     Text {
-                        text: "Read-only"; font.pixelSize: 11
+                        text: qsTr("Read-only"); font.pixelSize: 11
                         color: ThemeManager.textColor; opacity: 0.6
                     }
 
@@ -422,7 +422,7 @@ Item {
                                        ThemeManager.textColor.b, 0.08)
                         Text {
                             id: cancelLbl; anchors.centerIn: parent
-                            text: "Cancel"; font.pixelSize: 11
+                            text: qsTr("Cancel"); font.pixelSize: 11
                             color: ThemeManager.textColor; opacity: 0.6
                         }
                         MouseArea {
@@ -440,7 +440,7 @@ Item {
                         Behavior on color { ColorAnimation { duration: 120 } }
                         Text {
                             id: addLbl; anchors.centerIn: parent
-                            text: "Add Variable"; font.pixelSize: 11
+                            text: qsTr("Add Variable"); font.pixelSize: 11
                             color: ThemeManager.backgroundColor
                         }
                         MouseArea {
@@ -519,12 +519,12 @@ Item {
                     }
                 }
                 Text {
-                    text: "No variables yet"; font.pixelSize: 12
+                    text: qsTr("No variables yet"); font.pixelSize: 12
                     color: ThemeManager.textColor; opacity: 0.35
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
                 Text {
-                    text: "Click + to add a global variable"; font.pixelSize: 10
+                    text: qsTr("Click + to add a global variable"); font.pixelSize: 10
                     color: ThemeManager.textColor; opacity: 0.22
                     anchors.horizontalCenter: parent.horizontalCenter
                 }

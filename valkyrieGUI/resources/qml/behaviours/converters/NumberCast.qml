@@ -1,7 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
-import ThemeManager 1.0
+import App.Theme 1.0
 import "qrc:/components"
 
 ColumnLayout {
@@ -66,7 +66,7 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: 6
         Text {
-            text: "Auto-send"
+            text: qsTr("Auto-send")
             font.pixelSize: 11
             color: ThemeManager.textColor
             opacity: 0.6
@@ -83,7 +83,7 @@ ColumnLayout {
     NewButton {
         Layout.fillWidth: true
         Layout.preferredHeight: 36
-        text: "Cast"
+        text: qsTr("Cast")
         variant: "filled"
         iconSource: Icons.flash
         backgroundColor: ThemeManager.primaryColor

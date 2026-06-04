@@ -34,6 +34,27 @@ RandomGeneratorViewer::RandomGeneratorViewer(QObject *parent)
     }));
 }
 
+void RandomGeneratorViewer::onPinsReady()
+{
+    // inputs
+    setPinTypeForSignature("setValue(double)",      Connections::DoubleType);
+    setPinTypeForSignature("resetStats()",          Connections::FlowType);
+    setPinTypeForSignature("setMode(int)",          Connections::IntType);
+    setPinTypeForSignature("setRangeMin(double)",   Connections::DoubleType);
+    setPinTypeForSignature("setRangeMax(double)",   Connections::DoubleType);
+    setPinTypeForSignature("setMean(double)",       Connections::DoubleType);
+    setPinTypeForSignature("setStddev(double)",     Connections::DoubleType);
+    setPinTypeForSignature("setDiceSides(int)",     Connections::IntType);
+    setPinTypeForSignature("setDiceCount(int)",     Connections::IntType);
+    setPinTypeForSignature("setProbability(double)",Connections::DoubleType);
+    setPinTypeForSignature("setPrecision(int)",     Connections::IntType);
+    // outputs
+    setPinTypeForSignature("outputValue(double)",  Connections::DoubleType);
+    setPinTypeForSignature("outputInt(int)",        Connections::IntType);
+    setPinTypeForSignature("outputBool(bool)",      Connections::BoolType);
+    setPinTypeForSignature("outputString(QString)", Connections::StringType);
+}
+
 QMap<QString, QVariant> RandomGeneratorViewer::loadInfos()
 {
     return RandomGeneratorViewer::static_infos();

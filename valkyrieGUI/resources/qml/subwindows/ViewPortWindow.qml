@@ -38,6 +38,7 @@ Rectangle {
     // Broadcast to every ViewComponentRectV2 so incompatible ports can dim.
     property string draggingPortSig:      ""    // method signature of the port being dragged
     property bool   draggingPortIsOutput: false // true = dragging from an output (signal)
+    property int    draggingPortPinType:  0     // Connections::PinType of the dragging port (0 = AnyType)
 
     //Behaviours properties
     property var nodeOnFocus
@@ -75,6 +76,13 @@ Rectangle {
     property real cameraWorldY: 4775
     property real cameraWorldW: 800
     property real cameraWorldH: 800 / (Screen.width / Screen.height)
+
+    // Saved viewport (pan + zoom) captured just before entering Presentation
+    // Mode so we can smoothly restore it when the user exits the mode.
+    property real _prePresentCanvasX: 0
+    property real _prePresentCanvasY: 0
+    property real _prePresentZoom:    1.0
+    property bool _hasPrePresentView: false
 
     // World-space point kept at the center of the view.
     // Updated whenever the canvas is panned or zoomed.
@@ -381,6 +389,27 @@ Rectangle {
     readonly property int chromeTopHeight: topBarHeight + desktopBarHeight
     property string selectedPanel: ""
     property string currentProject: WorkspaceManager.currentWorkspace !== "" ? WorkspaceManager.currentWorkspace : "Untitled Project"
+
+    // ── Presentation Mode ───────────────────────────────────────────────────
+    readonly property bool isPresenting:   viewPort.presentationMode > 0
+    readonly property bool isCanvasLocked: viewPort.presentationMode >= 2
+
+    property bool _hudActive: true
+
+    Timer {
+        id: _hudTimer
+        interval: 4000
+        onTriggered: root._hudActive = false
+    }
+
+    HoverHandler {
+        id: _presHoverHandler
+        enabled: root.isPresenting
+        onPointChanged: {
+            root._hudActive = true
+            _hudTimer.restart()
+        }
+    }
 
 
     anchors.fill: parent
@@ -690,7 +719,7 @@ Rectangle {
         clipboard   = { nodes: cbNodes, conns: cbConns }
         pasteOffset = 0
         var n = cbNodes.length
-        ToastManager.show("Copied " + n + " node" + (n > 1 ? "s" : ""), "success")
+        ToastManager.show(qsTr("Copied %n node(s)", "", n), "success")
     }
 
     function _pasteClipboard() {
@@ -732,7 +761,7 @@ Rectangle {
 
     function _groupSelected() {
         if (selectedNodes.length < 2) {
-            ToastManager.show("Select at least 2 nodes to group", "warning")
+            ToastManager.show(qsTr("Select at least 2 nodes to group"), "warning")
             return
         }
         var minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9
@@ -749,7 +778,7 @@ Rectangle {
         var color = root._frameColors[root._frameColorIdx % root._frameColors.length]
         root._frameColorIdx++
         frameModel.append({
-            frameLabel:    "Group",
+            frameLabel:    qsTr("Group"),
             frameColorStr: color,
             fx: minX - pad,
             fy: minY - pad - 28,
@@ -765,6 +794,19 @@ Rectangle {
             (vx - mycanvas.x) / zoomScale,
             (vy - mycanvas.y) / zoomScale
         )
+    }
+
+    // Returns the ViewComponentRectV2 instance for a given node UUID, or null.
+    // Used to query the hiddenInPresentation flag on connection endpoints so
+    // wires whose source/target nodes are hidden in presentation mode can be
+    // hidden too.
+    function _findNodeItemByUuid(uuid) {
+        if (!uuid) return null
+        for (var i = 0; i < rectsArray.count; i++) {
+            var entry = rectsArray.get(i)
+            if (entry.uuid === uuid) return entry.rectObjTarget
+        }
+        return null
     }
 
     function detectNodeByMousePosition(x: double, y: double) {
@@ -786,6 +828,11 @@ Rectangle {
                 event.accepted = true
                 break
             case Qt.Key_Escape:
+                if (root.isPresenting) {
+                    viewPort.setPresentationMode(0)
+                    event.accepted = true
+                    break
+                }
                 if (isConnecting) {
                     isConnecting = false
                     mouseAreaGlobal.enabled = false
@@ -795,11 +842,17 @@ Rectangle {
                 }
                 root.draggingPortSig      = ""
                 root.draggingPortIsOutput = false
+                root.draggingPortPinType  = 0
                 _clearSelection()
                 event.accepted = true
                 break
             case Qt.Key_Delete:
             case Qt.Key_Backspace:
+                if (root.isCanvasLocked) {
+                    event.accepted = true
+                    lockBadgePulse.restart()
+                    break
+                }
                 _deleteSelected()
                 event.accepted = true
                 break
@@ -819,7 +872,7 @@ Rectangle {
 
     FabButton {
         id: fabRightMenu
-        visible: nodeOnFocus !== null && nodeOnFocus !== undefined
+        visible: nodeOnFocus !== null && nodeOnFocus !== undefined && !root.isPresenting
         anchors.right: parent.right
         anchors.rightMargin: 8
         anchors.top: desktopBar.bottom
@@ -936,6 +989,7 @@ Rectangle {
             shapeConn = undefined
             root.draggingPortSig      = ""
             root.draggingPortIsOutput = false
+            root.draggingPortPinType  = 0
             mouse.accepted = false
         }
 
@@ -953,6 +1007,9 @@ Rectangle {
 
     MouseArea {
         id: mouseZoom
+        // Disabled when canvas is locked (Presentation Layer B) — wheel zoom
+        // must be completely blocked in Locked mode.
+        enabled: !root.isCanvasLocked
         anchors.top: desktopBar.bottom
         anchors.left: parent.left
         anchors.right: parent.right
@@ -971,7 +1028,7 @@ Rectangle {
                 var cR = mycanvas.x + mycanvas.width  * zoomScale
                 var cB = mycanvas.y + mycanvas.height * zoomScale
                 if (mouse.x < cL || mouse.x > cR || mouse.y < cT || mouse.y > cB)
-                    ToastManager.show("Fora da área de trabalho", "warning")
+                    ToastManager.show(qsTr("Outside the workspace area"), "warning")
             }
         }
 
@@ -1027,11 +1084,16 @@ Rectangle {
 
     Rectangle {
         id: containerCanvas
-        anchors.top: desktopBar.bottom
+        anchors.top: parent.top
+        anchors.topMargin: root.isPresenting ? 0 : chromeTopHeight
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
+        anchors.bottomMargin: root.isPresenting ? 0 : (statusBar.height + bottomToolBar.height)
         color: "transparent"
+
+        Behavior on anchors.topMargin    { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+        Behavior on anchors.bottomMargin { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
 
         // Global hover tracker — HoverHandler propagates through all child items
         // without stealing events, so it works even when the mouse is over a node.
@@ -1297,8 +1359,8 @@ Rectangle {
                         connMenu.inMethod = isSrcOut ? connData.methodSignature2 : connData.methodSignature1;
                         
                         // Extract names if available
-                        connMenu.outNodeName = connData.node ? connData.node.title : "Nó Origem";
-                        connMenu.inNodeName = connData.node2 ? connData.node2.title : "Nó Destino";
+                        connMenu.outNodeName = connData.node ? connData.node.title : qsTr("Source Node");
+                        connMenu.inNodeName = connData.node2 ? connData.node2.title : qsTr("Target Node");
                         
                         connMenu.open();
                     }
@@ -1322,6 +1384,11 @@ Rectangle {
                     id: cameraFrame
                     visible: root.showCamera
                     z: Number.MAX_VALUE - 1
+
+                    // Hide the camera's visual chrome (border, header, handles,
+                    // corner marks) while the user is presenting — the camera
+                    // is just a framing tool at that point, not a UI control.
+                    presentationActive: root.isPresenting
 
                     // All geometry set imperatively to avoid binding conflicts with drag/resize.
                     Component.onCompleted: {
@@ -1461,9 +1528,53 @@ Rectangle {
                         function _endpointVisible(uuid) {
                             return !uuid || uuid === "" || DesktopManager.isNodeVisibleOnCurrentDesktop(uuid)
                         }
-                        visible: (_desktopRefresh >= 0)
+
+                        // ── Presentation hide-tracking ─────────────────────────
+                        // `_presRefresh` is bumped whenever presentation mode is
+                        // toggled or when either endpoint's hiddenInPresentation
+                        // flag changes, forcing the `visible` binding to
+                        // re-evaluate the imperative helper below.
+                        property int _presRefresh: 0
+                        // Re-evaluate when nodes are added/removed so endpoint
+                        // behaviour lookups stay accurate after a workspace load.
+                        property int _rectsTick: rectsArray.count
+                        property var _srcBeh: {
+                            _rectsTick // force dependency
+                            var it = root._findNodeItemByUuid(model.outputUuid)
+                            return it ? it.behaviourObject : null
+                        }
+                        property var _dstBeh: {
+                            _rectsTick // force dependency
+                            var it = root._findNodeItemByUuid(model.inputUuid)
+                            return it ? it.behaviourObject : null
+                        }
+                        Connections {
+                            target: root
+                            function onIsPresentingChanged() { shape._presRefresh++ }
+                        }
+                        Connections {
+                            target: shape._srcBeh
+                            ignoreUnknownSignals: true
+                            function onHiddenInPresentationChanged() { shape._presRefresh++ }
+                        }
+                        Connections {
+                            target: shape._dstBeh
+                            ignoreUnknownSignals: true
+                            function onHiddenInPresentationChanged() { shape._presRefresh++ }
+                        }
+                        // True when either endpoint is hidden in presentation mode.
+                        function _endpointHiddenInPresentation(uuid) {
+                            if (!root.isPresenting) return false
+                            if (!uuid || uuid === "") return false
+                            var item = root._findNodeItemByUuid(uuid)
+                            if (!item || !item.behaviourObject) return false
+                            return item.behaviourObject.hiddenInPresentation === true
+                        }
+                        visible: (_desktopRefresh >= 0) && (_presRefresh >= 0)
                                  && _endpointVisible(model.outputUuid)
                                  && _endpointVisible(model.inputUuid)
+                                 && !_endpointHiddenInPresentation(model.outputUuid)
+                                 && !_endpointHiddenInPresentation(model.inputUuid)
                         opacity: visible ? 1.0 : 0.0
                         Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
 
@@ -1626,6 +1737,13 @@ Rectangle {
                             (model.uuid === "" ||
                              DesktopManager.isNodeVisibleOnCurrentDesktop(model.uuid))
 
+                        // True when the user has marked this node "Hide in
+                        // presentation mode" AND presentation mode is active.
+                        readonly property bool _hiddenByPresentation:
+                            root.isPresenting
+                            && model.object
+                            && model.object.hiddenInPresentation
+
                         // Re-evaluate when current desktop or membership changes
                         Connections {
                             target: DesktopManager
@@ -1638,8 +1756,9 @@ Rectangle {
                         // Bumped via Connections above to force re-evaluation of _belongsToCurrentDesktop
                         property int opacityRefresh: 0
 
-                        visible:           !model.isVisualization && _belongsToCurrentDesktop && opacity > 0.01
-                        opacity:           _belongsToCurrentDesktop ? 1.0 : 0.0
+                        visible:           !model.isVisualization && _belongsToCurrentDesktop
+                                           && !_hiddenByPresentation && opacity > 0.01
+                        opacity:           (_belongsToCurrentDesktop && !_hiddenByPresentation) ? 1.0 : 0.0
                         Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
 
                         // nodePressed fires on every mouse-down — select the node immediately
@@ -1672,6 +1791,7 @@ Rectangle {
                             }
                             root.draggingPortSig      = conn.name
                             root.draggingPortIsOutput = isOut
+                            root.draggingPortPinType  = conn.pinType !== undefined ? conn.pinType : 0
 
                             nodeConnections.model.append({
                                 methodSignature1: conn.name, node: this,
@@ -1690,6 +1810,7 @@ Rectangle {
 
                         draggingPortSig:      root.draggingPortSig
                         draggingPortIsOutput: root.draggingPortIsOutput
+                        draggingPortPinType:  root.draggingPortPinType
 
                         Component.onCompleted: {
                             // New nodes appear on top of all existing ones.
@@ -1777,6 +1898,34 @@ Rectangle {
                         onBackTotalClicked:    root._sendToBack(viewComponentRectV2)
                     }
                 }
+            }
+        }
+
+        // ── Canvas Lock overlay (Presentation Layer B) ──────────────────────
+        // Fully freezes the canvas: intercepts clicks/drags so nodes cannot be
+        // moved, selected, or connected; blocks pan (no movement on drag) and
+        // blocks wheel zoom (w.accepted = true) so the view stays still.
+        MouseArea {
+            id: canvasLockOverlay
+            anchors.fill: parent
+            enabled: root.isCanvasLocked
+            visible: enabled
+            z: 5000
+            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+            hoverEnabled: true
+            preventStealing: true
+
+            cursorShape: Qt.ForbiddenCursor
+
+            onPressed: function(m) { m.accepted = true }
+            onPositionChanged: function(m) { m.accepted = true }
+            onReleased: function(m) { m.accepted = true }
+            // Swallow wheel events so zoom is fully blocked while locked
+            onWheel: function(w) { w.accepted = true }
+
+            onClicked: function(m) {
+                m.accepted = true
+                lockBadgePulse.restart()
             }
         }
     }
@@ -1995,6 +2144,9 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         z: 200
+        visible: !root.isPresenting
+        opacity: visible ? 1.0 : 0.0
+        Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
         barHeight:      topBarHeight
         currentProject: root.currentProject
         selectedPanel:  root.selectedPanel
@@ -2066,16 +2218,27 @@ Rectangle {
             const ok = WorkspaceManager.renameWorkspace(oldName, newName)
             if (ok) {
                 GlobalProperties.lastWorkspace = newName
-                ToastManager.show("Renamed to \"" + newName + "\"", "success")
+                ToastManager.show(qsTr("Renamed to \"%1\"").arg(newName), "success")
             } else {
-                ToastManager.show("Failed to rename (name may already exist)", "error")
+                ToastManager.show(qsTr("Failed to rename (name may already exist)"), "error")
             }
         }
         onScreenshotRequested: {
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
             const path = appDirPath + "/screenshots/screenshot_" + timestamp + ".png"
             viewPort.takeScreenshot(path)
-            ToastManager.show("Screenshot saved", "success")
+            ToastManager.show(qsTr("Screenshot saved"), "success")
+        }
+        onCaptureStageRequested: {
+            // Capture the current viewport in WORLD coordinates so the stage
+            // can be re-framed later regardless of the user's pan/zoom state.
+            var vw = containerCanvas.width  / zoomScale
+            var vh = containerCanvas.height / zoomScale
+            var cx = (containerCanvas.width  / 2 - mycanvas.x) / zoomScale
+            var cy = (containerCanvas.height / 2 - mycanvas.y) / zoomScale
+            var name = qsTr("Stage ") + (viewPort.stageCount + 1)
+            viewPort.addStage(name, cx - vw / 2, cy - vh / 2, vw, vh, zoomScale)
+            ToastManager.show(qsTr("Stage captured: ") + name, "success")
         }
     }
 
@@ -2087,7 +2250,9 @@ Rectangle {
         anchors.right:  parent.right
         height:         root.desktopBarHeight
         z: 199
-        visible: !splashScreen.visible
+        visible: !splashScreen.visible && !root.isPresenting
+        opacity: visible ? 1.0 : 0.0
+        Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
     }
 
     // ─── Desktop limit warning popup ────────────────────────────────────────────
@@ -2110,43 +2275,43 @@ Rectangle {
             var cmds = []
 
             // ── Workspace actions ────────────────────────────────────────────
-            cmds.push({ label: "Save Workspace",          shortcut: "Ctrl+S",
+            cmds.push({ label: qsTr("Save Workspace"),          shortcut: "Ctrl+S",
                         group: "Workspace",
                         action: function() {
                             if (WorkspaceManager.currentWorkspace !== "") {
                                 const ok = viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
                                 if (ok) WorkspaceManager.clearAutosave(WorkspaceManager.currentWorkspace)
-                                ToastManager.show(ok ? "Project saved" : "Save failed",
+                                ToastManager.show(ok ? qsTr("Project saved") : qsTr("Save failed"),
                                                   ok ? "success" : "error")
                             } else {
                                 saveNameField.text = ""
                                 saveWorkspaceDialog.open()
                             }
                         } })
-            cmds.push({ label: "Save Workspace As…",      shortcut: "Ctrl+Shift+S",
+            cmds.push({ label: qsTr("Save Workspace As…"),      shortcut: "Ctrl+Shift+S",
                         group: "Workspace",
                         action: function() {
                             saveNameField.text = WorkspaceManager.currentWorkspace
                             saveWorkspaceDialog.open()
                         } })
-            cmds.push({ label: "Open Workspace…",         shortcut: "",
+            cmds.push({ label: qsTr("Open Workspace…"),         shortcut: "",
                         group: "Workspace",
                         action: function() { openWorkspaceDialog.open() } })
-            cmds.push({ label: "New Project",             shortcut: "",
+            cmds.push({ label: qsTr("New Project"),             shortcut: "",
                         group: "Workspace",
                         action: function() {
                             if (!viewPort.isClean) confirmNewProjectDialog.open()
                             else                   doNewProject()
                         } })
-            cmds.push({ label: "Rename Workspace…",       shortcut: "",
+            cmds.push({ label: qsTr("Rename Workspace…"),       shortcut: "",
                         group: "Workspace",
                         action: function() {
                             if (WorkspaceManager.currentWorkspace !== "")
                                 renameWorkspaceDialog.openFor(WorkspaceManager.currentWorkspace)
                             else
-                                ToastManager.show("No workspace to rename", "warning")
+                                ToastManager.show(qsTr("No workspace to rename"), "warning")
                         } })
-            cmds.push({ label: "Back to Home",            shortcut: "",
+            cmds.push({ label: qsTr("Back to Home"),            shortcut: "",
                         group: "Workspace",
                         action: function() {
                             if (!viewPort.isClean) confirmHomeDialog.open()
@@ -2158,7 +2323,7 @@ Rectangle {
             for (var i = 0; i < wsList.length; i++) {
                 (function(name) {
                     cmds.push({
-                        label: "Switch to workspace: " + name,
+                        label: qsTr("Switch to workspace: ") + name,
                         group: "Open Workspace",
                         action: function() { root._openWorkspaceWithAutosave(name) }
                     })
@@ -2166,16 +2331,16 @@ Rectangle {
             }
 
             // ── Desktop actions ──────────────────────────────────────────────
-            cmds.push({ label: "New Desktop",             shortcut: "Ctrl+Shift+N",
+            cmds.push({ label: qsTr("New Desktop"),             shortcut: "Ctrl+Shift+N",
                         group: "Desktop",
                         action: function() { DesktopManager.addDesktop("") } })
-            cmds.push({ label: "Next Desktop",            shortcut: "Ctrl+→",
+            cmds.push({ label: qsTr("Next Desktop"),            shortcut: "Ctrl+→",
                         group: "Desktop",
                         action: function() { DesktopManager.nextDesktop() } })
-            cmds.push({ label: "Previous Desktop",        shortcut: "Ctrl+←",
+            cmds.push({ label: qsTr("Previous Desktop"),        shortcut: "Ctrl+←",
                         group: "Desktop",
                         action: function() { DesktopManager.previousDesktop() } })
-            cmds.push({ label: "Show Desktop Overview",   shortcut: "Ctrl+Tab",
+            cmds.push({ label: qsTr("Show Desktop Overview"),   shortcut: "Ctrl+Tab",
                         group: "Desktop",
                         action: function() { desktopOverview.open() } })
 
@@ -2184,7 +2349,7 @@ Rectangle {
             for (var j = 0; j < dlist.length; j++) {
                 (function(d) {
                     cmds.push({
-                        label: "Switch to desktop: " + d.name,
+                        label: qsTr("Switch to desktop: ") + d.name,
                         group: "Switch Desktop",
                         action: function() { DesktopManager.switchToDesktop(d.id) }
                     })
@@ -2192,10 +2357,10 @@ Rectangle {
             }
 
             // ── View / tools ─────────────────────────────────────────────────
-            cmds.push({ label: "Open Settings…",          shortcut: "",
+            cmds.push({ label: qsTr("Open Settings…"),          shortcut: "",
                         group: "View",
                         action: function() { settingsPopup.open() } })
-            cmds.push({ label: "Toggle Grid Snap",        shortcut: "G",
+            cmds.push({ label: qsTr("Toggle Grid Snap"),        shortcut: "G",
                         group: "View",
                         action: function() { GlobalProperties.snapEnabled = !GlobalProperties.snapEnabled } })
 
@@ -2214,6 +2379,47 @@ Rectangle {
         sequence: "Ctrl+Shift+P"
         context:  Qt.ApplicationShortcut
         onActivated: commandPalette.open()
+    }
+
+    // ── Presentation Mode shortcuts (always enabled) ────────────────────────
+    Shortcut {
+        sequence: "F10"
+        context:  Qt.ApplicationShortcut
+        onActivated: {
+            if (viewPort.presentationMode === 0)      viewPort.setPresentationMode(1)
+            else if (viewPort.presentationMode === 1) viewPort.setPresentationMode(2)
+            else                                       viewPort.setPresentationMode(0)
+        }
+    }
+    Shortcut {
+        sequence: "Shift+F10"
+        context:  Qt.ApplicationShortcut
+        onActivated: viewPort.setPresentationMode(0)
+    }
+
+    // ── Stage navigation (only meaningful while presenting + stages exist) ──
+    // When currentStage is -1 (camera virtual stage, or nothing chosen yet)
+    // the first press lands directly on stage 0 instead of skipping past it.
+    Shortcut {
+        sequence: "F5"
+        context:  Qt.ApplicationShortcut
+        enabled:  root.isPresenting && viewPort.hasStages
+        onActivated: {
+            var cur = viewPort.currentStage
+            var next = (cur < 0) ? 0 : ((cur + 1) % viewPort.stageCount)
+            viewPort.setCurrentStage(next)
+        }
+    }
+    Shortcut {
+        sequence: "Shift+F5"
+        context:  Qt.ApplicationShortcut
+        enabled:  root.isPresenting && viewPort.hasStages
+        onActivated: {
+            var cur = viewPort.currentStage
+            var prev = (cur < 0) ? 0
+                                 : ((cur - 1 + viewPort.stageCount) % viewPort.stageCount)
+            viewPort.setCurrentStage(prev)
+        }
     }
 
     Connections {
@@ -2254,6 +2460,146 @@ Rectangle {
         NumberAnimation { id: desktopCameraAnimY;    target: mycanvas; property: "y";         duration: 280; easing.type: Easing.OutCubic }
     }
 
+    // ── Presentation Mode camera framing ────────────────────────────────────
+    // When the user enters Presentation Mode (presentationMode > 0) and an
+    // active CameraFrameItem exists on the canvas, smoothly pan+zoom so the
+    // camera rectangle fills the viewport. On exit, restore the previous
+    // viewport so the user picks up where they left off.
+    ParallelAnimation {
+        id: cameraPresentAnim
+        NumberAnimation { id: cameraPresentAnimZoom; target: root;     property: "zoomScale"; duration: 700; easing.type: Easing.InOutCubic }
+        NumberAnimation { id: cameraPresentAnimX;    target: mycanvas; property: "x";         duration: 700; easing.type: Easing.InOutCubic }
+        NumberAnimation { id: cameraPresentAnimY;    target: mycanvas; property: "y";         duration: 700; easing.type: Easing.InOutCubic }
+    }
+
+    // Settle timer — containerCanvas margins animate over ~220ms when entering
+    // presentation mode, so we wait for the viewport to reach its final size
+    // before computing the fit. Otherwise the framing would use stale geometry.
+    Timer {
+        id: _presentationFitTimer
+        interval: 240
+        repeat:   false
+        onTriggered: root._animateCanvasToCamera()
+    }
+
+    function _animateCanvasToCamera() {
+        if (!root.showCamera) return
+        // Pixel-perfect framing of the camera rect — no breathing margin.
+        _animateCanvasToRegion(root.cameraWorldX, root.cameraWorldY,
+                               root.cameraWorldW, root.cameraWorldH,
+                               -1)
+    }
+
+    // Generalised version used by both the Camera framing and Presentation
+    // Stages. If targetZoom <= 0, computes a zoom that fits the rectangle
+    // exactly inside containerCanvas (preserving aspect ratio via Math.min).
+    function _animateCanvasToRegion(wx, wy, ww, wh, targetZoom) {
+        if (!mycanvas.initialized)        return
+        if (containerCanvas.width  <= 0)  return
+        if (containerCanvas.height <= 0)  return
+        if (ww <= 0 || wh <= 0)           return
+
+        var z
+        if (targetZoom && targetZoom > 0) {
+            z = targetZoom
+        } else {
+            // Math.min guarantees the region fits without being cropped, even
+            // when its aspect ratio differs from containerCanvas.
+            z = Math.min(containerCanvas.width  / ww,
+                         containerCanvas.height / wh)
+        }
+        z = Math.max(root.minZoom, Math.min(root.maxZoom, z))
+
+        // Pan so the region's centre maps to the viewport centre.
+        var cx = wx + ww / 2
+        var cy = wy + wh / 2
+        var targetX = containerCanvas.width  / 2 - cx * z
+        var targetY = containerCanvas.height / 2 - cy * z
+
+        cameraPresentAnim.stop()
+        cameraPresentAnimZoom.to = z
+        cameraPresentAnimX.to    = targetX
+        cameraPresentAnimY.to    = targetY
+        cameraPresentAnim.start()
+    }
+
+    function _restorePrePresentationView() {
+        if (!root._hasPrePresentView) return
+        if (!mycanvas.initialized)    return
+        cameraPresentAnim.stop()
+        cameraPresentAnimZoom.to = root._prePresentZoom
+        cameraPresentAnimX.to    = root._prePresentCanvasX
+        cameraPresentAnimY.to    = root._prePresentCanvasY
+        cameraPresentAnim.start()
+        root._hasPrePresentView = false
+    }
+
+    Connections {
+        target: viewPort
+        function onPresentationModeChanged() {
+            if (viewPort.presentationMode > 0) {
+                // Entering presentation: snapshot the current viewport once
+                // (only on the 0 -> N transition, not 1 -> 2) so a later exit
+                // can restore exactly what the user had before.
+                if (!root._hasPrePresentView) {
+                    root._prePresentCanvasX = mycanvas.x
+                    root._prePresentCanvasY = mycanvas.y
+                    root._prePresentZoom    = root.zoomScale
+                    root._hasPrePresentView = true
+                }
+                // The camera, when active, is treated as a virtual "stage 0"
+                // — the starting viewpoint of the presentation. It is NOT
+                // persisted, never appears in stagesData(), and doesn't
+                // count toward stageCount. F5 / Shift+F5 still navigate the
+                // real stages list (which begins at index 0) after the
+                // initial camera framing settles.
+                //
+                // Priority on entry:
+                //   1. showCamera   -> animate to camera (virtual stage 0)
+                //   2. hasStages    -> animate to real stage 0
+                //   3. neither      -> keep the current viewport untouched
+                leftPanelDrawer.close()
+                drawer.close()
+
+                if (root.showCamera) {
+                    // Wait for containerCanvas margins to settle (220ms anim)
+                    // before fitting, otherwise we'd frame to the wrong size.
+                    _presentationFitTimer.restart()
+                } else if (viewPort.hasStages) {
+                    _presentationStageTimer.restart()
+                }
+            } else {
+                // Exited presentation mode — cancel any pending fit and
+                // smoothly restore the previous viewport (if we have one).
+                _presentationFitTimer.stop()
+                _presentationStageTimer.stop()
+                root._restorePrePresentationView()
+            }
+        }
+
+        // Animate the canvas whenever C++ requests a stage transition
+        // (triggered by setCurrentStage / F5 / Shift+F5 / StageBar arrows).
+        function onStageTransitionRequested(wx, wy, ww, wh, targetZoom) {
+            root._animateCanvasToRegion(wx, wy, ww, wh, targetZoom)
+        }
+    }
+
+    // Same 240ms settle delay used for camera framing, applied to the very
+    // first stage transition on presentation entry. Uses replayCurrentStage()
+    // so the transition still fires when the index is already 0 (or when the
+    // workspace was loaded with currentStage == -1 and we jump to 0).
+    Timer {
+        id: _presentationStageTimer
+        interval: 240
+        repeat:   false
+        onTriggered: {
+            if (viewPort.currentStage < 0)
+                viewPort.setCurrentStage(0)
+            else
+                viewPort.replayCurrentStage()
+        }
+    }
+
     // ─── History Panel ──────────────────────────────────────────────────────────
     HistoryPanel {
         id: historyPanel
@@ -2276,6 +2622,7 @@ Rectangle {
     Shortcut {
         sequence: "Ctrl+S"
         context:  Qt.ApplicationShortcut
+        enabled: !root.isCanvasLocked
         onActivated: {
             if (WorkspaceManager.currentWorkspace !== "") {
                 const ok = viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
@@ -2290,6 +2637,7 @@ Rectangle {
     Shortcut {
         sequence: "Ctrl+Shift+S"
         context:  Qt.ApplicationShortcut
+        enabled: !root.isCanvasLocked
         onActivated: {
             saveNameField.text = WorkspaceManager.currentWorkspace
             saveWorkspaceDialog.open()
@@ -2310,6 +2658,7 @@ Rectangle {
     Shortcut {
         sequence: "Ctrl+Shift+N"
         context:  Qt.ApplicationShortcut
+        enabled: !root.isCanvasLocked
         onActivated: DesktopManager.addDesktop("")
     }
     Shortcut {
@@ -2334,6 +2683,7 @@ Rectangle {
     Shortcut {
         sequence: "Ctrl+H"
         context:  Qt.ApplicationShortcut
+        enabled: !root.isCanvasLocked
         onActivated: topBar.historyPanelOpen = !topBar.historyPanelOpen
     }
     Shortcut {
@@ -2344,6 +2694,7 @@ Rectangle {
     Shortcut {
         sequence: "Ctrl+A"
         context:  Qt.ApplicationShortcut
+        enabled: !root.isCanvasLocked
         onActivated: {
             var all = []
             for (var i = 0; i < nodes.model.count; i++) {
@@ -2356,21 +2707,25 @@ Rectangle {
     Shortcut {
         sequence: "Ctrl+C"
         context:  Qt.ApplicationShortcut
+        enabled: !root.isCanvasLocked
         onActivated: root._copySelected()
     }
     Shortcut {
         sequence: "Ctrl+V"
         context:  Qt.ApplicationShortcut
+        enabled: !root.isCanvasLocked
         onActivated: root._pasteClipboard()
     }
     Shortcut {
         sequence: "Ctrl+D"
         context:  Qt.ApplicationShortcut
+        enabled: !root.isCanvasLocked
         onActivated: { root._copySelected(); root._pasteClipboard() }
     }
     Shortcut {
         sequence: "Ctrl+G"
         context:  Qt.ApplicationShortcut
+        enabled: !root.isCanvasLocked
         onActivated: root._groupSelected()
     }
     Shortcut {
@@ -2525,9 +2880,9 @@ Rectangle {
             if (ok) {
                 if (GlobalProperties.lastWorkspace === renameWorkspaceDialog.oldName)
                     GlobalProperties.lastWorkspace = newName
-                ToastManager.show("Renamed to \"" + newName + "\"", "success")
+                ToastManager.show(qsTr("Renamed to \"%1\"").arg(newName), "success")
             } else {
-                ToastManager.show("Rename failed (name may already exist)", "error")
+                ToastManager.show(qsTr("Rename failed (name may already exist)"), "error")
             }
             renameWorkspaceDialog.close()
         }
@@ -2548,8 +2903,8 @@ Rectangle {
                     Column {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 2
-                        Text { text: "Rename Workspace"; font.pixelSize: 14; font.bold: true; color: ThemeManager.textColor }
-                        Text { text: "New name for \"" + renameWorkspaceDialog.oldName + "\""
+                        Text { text: qsTr("Rename Workspace"); font.pixelSize: 14; font.bold: true; color: ThemeManager.textColor }
+                        Text { text: qsTr("New name for \"%1\"").arg(renameWorkspaceDialog.oldName)
                                font.pixelSize: 11; color: ThemeManager.textSecondaryColor; elide: Text.ElideRight; width: 280 }
                     }
                 }
@@ -2593,7 +2948,7 @@ Rectangle {
                             width: 80; height: 36; radius: 6
                             color: "transparent"
                             border.color: ThemeManager.borderColor; border.width: 1
-                            Text { anchors.centerIn: parent; text: "Cancel"
+                            Text { anchors.centerIn: parent; text: qsTr("Cancel")
                                    color: ThemeManager.textSecondaryColor; font.pixelSize: 12 }
                             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
                                         hoverEnabled: true; onClicked: renameWorkspaceDialog.close() }
@@ -2601,7 +2956,7 @@ Rectangle {
                         Rectangle {
                             width: 90; height: 36; radius: 6
                             color: ThemeManager.primaryColor
-                            Text { anchors.centerIn: parent; text: "Rename"
+                            Text { anchors.centerIn: parent; text: qsTr("Rename")
                                    color: "white"; font.pixelSize: 12; font.bold: true }
                             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
                                         hoverEnabled: true; onClicked: renameWorkspaceDialog.doConfirm() }
@@ -2643,7 +2998,7 @@ Rectangle {
                     spacing: 14
                     ColorIcon { source: Icons.alertOutline; color: ThemeManager.dangerColor; width: 22; height: 22
                                 anchors.verticalCenter: parent.verticalCenter }
-                    Text { text: "Delete Workspace?"; font.pixelSize: 14; font.bold: true
+                    Text { text: qsTr("Delete Workspace?"); font.pixelSize: 14; font.bold: true
                            color: ThemeManager.textColor; anchors.verticalCenter: parent.verticalCenter }
                 }
             }
@@ -2656,7 +3011,7 @@ Rectangle {
                     spacing: 20
                     Text {
                         width: parent.width
-                        text: "Permanently delete \"" + confirmDeleteDialog.pendingName + "\"? This action cannot be undone."
+                        text: qsTr("Permanently delete \"%1\"? This action cannot be undone.").arg(confirmDeleteDialog.pendingName)
                         color: ThemeManager.textSecondaryColor
                         font.pixelSize: 13; lineHeight: 1.5; wrapMode: Text.WordWrap
                     }
@@ -2665,7 +3020,7 @@ Rectangle {
                         Rectangle {
                             width: 80; height: 36; radius: 6
                             color: "transparent"; border.color: ThemeManager.borderColor; border.width: 1
-                            Text { anchors.centerIn: parent; text: "Cancel"
+                            Text { anchors.centerIn: parent; text: qsTr("Cancel")
                                    color: ThemeManager.textSecondaryColor; font.pixelSize: 12 }
                             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
                                         hoverEnabled: true; onClicked: confirmDeleteDialog.close() }
@@ -2673,14 +3028,14 @@ Rectangle {
                         Rectangle {
                             width: 90; height: 36; radius: 6
                             color: ThemeManager.dangerColor
-                            Text { anchors.centerIn: parent; text: "Delete"
+                            Text { anchors.centerIn: parent; text: qsTr("Delete")
                                    color: "white"; font.pixelSize: 12; font.bold: true }
                             MouseArea {
                                 anchors.fill: parent; cursorShape: Qt.PointingHandCursor; hoverEnabled: true
                                 onClicked: {
                                     const name = confirmDeleteDialog.pendingName
                                     const ok = WorkspaceManager.deleteWorkspace(name)
-                                    ToastManager.show(ok ? "Deleted \"" + name + "\"" : "Delete failed",
+                                    ToastManager.show(ok ? qsTr("Deleted \"%1\"").arg(name) : qsTr("Delete failed"),
                                                       ok ? "warning" : "error")
                                     confirmDeleteDialog.close()
                                 }
@@ -2696,14 +3051,14 @@ Rectangle {
     FileDialog {
         id: exportWorkspaceDialog
         property string pendingName: ""
-        title: "Export Workspace"
+        title: qsTr("Export Workspace")
         fileMode: FileDialog.SaveFile
         nameFilters: ["Valkyrie Workspace (*.json)"]
         defaultSuffix: "json"
         currentFile: pendingName !== "" ? ("file:///" + pendingName + ".json") : ""
         onAccepted: {
             const ok = WorkspaceManager.exportWorkspace(pendingName, selectedFile.toString())
-            ToastManager.show(ok ? "Exported \"" + pendingName + "\"" : "Export failed",
+            ToastManager.show(ok ? qsTr("Exported \"%1\"").arg(pendingName) : qsTr("Export failed"),
                               ok ? "success" : "error")
         }
     }
@@ -2721,6 +3076,69 @@ Rectangle {
         z: 9900
     }
 
+    // ─── Stage navigation HUD (Presentation Mode) ───────────────────────────────
+    // Bumped whenever stagesChanged / currentStageChanged fire so the
+    // stageName binding below re-runs and picks up fresh stagesData().
+    property int _stageBarTick: 0
+    Connections {
+        target: viewPort
+        function onStagesChanged()       { root._stageBarTick++ }
+        function onCurrentStageChanged() { root._stageBarTick++ }
+    }
+
+    // Helper that pulls the current stage's name out of stagesData() without
+    // crashing when stagesData() is empty or currentStage is -1.
+    function _currentStageName() {
+        if (!viewPort.hasStages) return ""
+        var idx  = viewPort.currentStage
+        var data = viewPort.stagesData()
+        if (idx < 0 || idx >= data.length) return ""
+        return data[idx].name || ""
+    }
+
+    StageBar {
+        id: stageBar
+        visible: root.isPresenting && viewPort.hasStages
+        opacity: visible && root._hudActive ? 1.0 : 0.0
+        Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+
+        stageCount:   viewPort.stageCount
+        currentStage: Math.max(0, viewPort.currentStage)
+        // The `_stageBarTick` reference forces this binding to re-evaluate
+        // whenever stages are added/removed/renamed or the index changes.
+        stageName:    (root._stageBarTick >= 0) ? root._currentStageName() : ""
+
+        anchors.bottom:           parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottomMargin:     24
+        z: 9900
+
+        onPreviousRequested: {
+            var prev = Math.max(0, viewPort.currentStage - 1)
+            viewPort.setCurrentStage(prev)
+        }
+        onNextRequested: {
+            var next = Math.min(viewPort.stageCount - 1, viewPort.currentStage + 1)
+            viewPort.setCurrentStage(next)
+        }
+        // Delete the currently active stage. After removal we either jump to
+        // the nearest remaining stage (so the HUD keeps a sensible focus) or,
+        // when no stages are left, fall back to the camera framing if there
+        // is one — otherwise we simply stay where we are.
+        onDeleteCurrentStageRequested: {
+            if (!viewPort.hasStages) return
+            var idx = Math.max(0, viewPort.currentStage)
+            viewPort.removeStageAt(idx)
+            if (viewPort.hasStages) {
+                var newIdx = Math.min(idx, viewPort.stageCount - 1)
+                viewPort.setCurrentStage(newIdx)
+            } else if (root.isPresenting && root.showCamera) {
+                root._animateCanvasToCamera()
+            }
+            ToastManager.show(qsTr("Stage deleted"), "info")
+        }
+    }
+
     // ─── Connection Radial Menu ─────────────────────────────────────────────────
     ConnectionRadialMenu {
         id: connMenu
@@ -2730,6 +3148,7 @@ Rectangle {
     // ─── Nodes List ─────────────────────────────────────────────────────────────
     NodesList {
         id: nodesList
+        visible: !root.isPresenting
         nodesModel: nodes.model
         containerCanvas: containerCanvas
         mycanvas: mycanvas
@@ -2772,7 +3191,7 @@ Rectangle {
             const ok = viewPort.saveWorkspace(name)
             GlobalProperties.lastWorkspace = name
             saveWorkspaceDialog.close()
-            ToastManager.show(ok ? "Project \"" + name + "\" saved" : "Failed to save project",
+            ToastManager.show(ok ? qsTr("Project \"%1\" saved").arg(name) : qsTr("Failed to save project"),
                               ok ? "success" : "error")
         }
 
@@ -2803,13 +3222,13 @@ Rectangle {
                         spacing: 2
 
                         Text {
-                            text:           "Save Project"
+                            text: qsTr("Save Project")
                             font.pixelSize: 14
                             font.bold:      true
                             color:          ThemeManager.textColor
                         }
                         Text {
-                            text:           "Enter a name for this workspace"
+                            text: qsTr("Enter a name for this workspace")
                             font.pixelSize: 11
                             color:          ThemeManager.textSecondaryColor
                         }
@@ -2870,7 +3289,7 @@ Rectangle {
 
                             Text {
                                 visible:        parent.text === ""
-                                text:           "Project name..."
+                                text: qsTr("Project name...")
                                 color:          ThemeManager.textSecondaryColor
                                 font.pixelSize: 13
                                 anchors.verticalCenter: parent.verticalCenter
@@ -2896,7 +3315,7 @@ Rectangle {
 
                             Text {
                                 anchors.centerIn: parent
-                                text:           "Cancel"
+                                text: qsTr("Cancel")
                                 color:          ThemeManager.textSecondaryColor
                                 font.pixelSize: 12
                             }
@@ -2923,7 +3342,7 @@ Rectangle {
 
                             Text {
                                 anchors.centerIn: parent
-                                text:           "Save"
+                                text: qsTr("Save")
                                 color:          "white"
                                 font.pixelSize: 12
                                 font.bold:      true
@@ -3014,13 +3433,13 @@ Rectangle {
                         spacing: 2
 
                         Text {
-                            text:           "Open Project"
+                            text: qsTr("Open Project")
                             font.pixelSize: 14
                             font.bold:      true
                             color:          ThemeManager.textColor
                         }
                         Text {
-                            text:           "Select a saved workspace"
+                            text: qsTr("Select a saved workspace")
                             font.pixelSize: 11
                             color:          ThemeManager.textSecondaryColor
                         }
@@ -3083,7 +3502,7 @@ Rectangle {
 
                                 Text {
                                     visible: parent.text === ""
-                                    text: "Search workspaces…"
+                                    text: qsTr("Search workspaces…")
                                     color: ThemeManager.textSecondaryColor
                                     font.pixelSize: 12
                                     anchors.verticalCenter: parent.verticalCenter
@@ -3095,7 +3514,7 @@ Rectangle {
                     Row {
                         spacing: 4
                         Repeater {
-                            model: [{ id: "name", label: "Name" }, { id: "modified", label: "Modified" }]
+                            model: [{ id: "name", label: qsTr("Name") }, { id: "modified", label: qsTr("Modified") }]
                             delegate: Rectangle {
                                 readonly property bool active: openWorkspaceDialog.sortMode === modelData.id
                                 width: 70; height: 32; radius: 6
@@ -3154,7 +3573,7 @@ Rectangle {
                                 opacity: 0.4
                             }
                             Text {
-                                text:           "No saved projects yet"
+                                text: qsTr("No saved projects yet")
                                 color:          ThemeManager.textSecondaryColor
                                 font.pixelSize: 12
                                 anchors.horizontalCenter: parent.horizontalCenter
@@ -3333,7 +3752,7 @@ Rectangle {
 
                             Text {
                                 anchors.centerIn: parent
-                                text:           "Cancel"
+                                text: qsTr("Cancel")
                                 color:          ThemeManager.textSecondaryColor
                                 font.pixelSize: 12
                             }
@@ -3394,7 +3813,7 @@ Rectangle {
                     }
 
                     Text {
-                        text:           "New Project"
+                        text: qsTr("New Project")
                         font.pixelSize: 14
                         font.bold:      true
                         color:          ThemeManager.textColor
@@ -3427,7 +3846,7 @@ Rectangle {
 
                     Text {
                         width: parent.width
-                        text: "This project has unsaved changes. They will be permanently lost if you create a new project."
+                        text: qsTr("This project has unsaved changes. They will be permanently lost if you create a new project.")
                         color:          ThemeManager.textSecondaryColor
                         font.pixelSize: 13
                         lineHeight:     1.5
@@ -3451,7 +3870,7 @@ Rectangle {
 
                             Text {
                                 anchors.centerIn: parent
-                                text:           "Cancel"
+                                text: qsTr("Cancel")
                                 color:          ThemeManager.textSecondaryColor
                                 font.pixelSize: 12
                             }
@@ -3473,7 +3892,7 @@ Rectangle {
 
                             Text {
                                 anchors.centerIn: parent
-                                text:           "Discard & New"
+                                text: qsTr("Discard & New")
                                 color:          "white"
                                 font.pixelSize: 12
                                 font.bold:      true
@@ -3498,7 +3917,7 @@ Rectangle {
     function doNewProject() {
         splashScreen.dismissed = true
         WorkspaceManager.newWorkspace()
-        ToastManager.show("New project created", "success")
+        ToastManager.show(qsTr("New project created"), "success")
     }
 
     // Return to the SplashScreen: clear any active workspace and reveal the splash.
@@ -3549,7 +3968,7 @@ Rectangle {
                     }
 
                     Text {
-                        text:           "Back to Home"
+                        text: qsTr("Back to Home")
                         font.pixelSize: 14
                         font.bold:      true
                         color:          ThemeManager.textColor
@@ -3582,7 +4001,7 @@ Rectangle {
 
                     Text {
                         width: parent.width
-                        text: "This project has unsaved changes. They will be lost if you go back to the home screen."
+                        text: qsTr("This project has unsaved changes. They will be lost if you go back to the home screen.")
                         color:          ThemeManager.textSecondaryColor
                         font.pixelSize: 13
                         lineHeight:     1.5
@@ -3606,7 +4025,7 @@ Rectangle {
 
                             Text {
                                 anchors.centerIn: parent
-                                text:           "Cancel"
+                                text: qsTr("Cancel")
                                 color:          ThemeManager.textSecondaryColor
                                 font.pixelSize: 12
                             }
@@ -3628,7 +4047,7 @@ Rectangle {
 
                             Text {
                                 anchors.centerIn: parent
-                                text:           "Save & Exit"
+                                text: qsTr("Save & Exit")
                                 color:          "white"
                                 font.pixelSize: 12
                                 font.bold:      true
@@ -3659,7 +4078,7 @@ Rectangle {
 
                             Text {
                                 anchors.centerIn: parent
-                                text:           "Discard & Exit"
+                                text: qsTr("Discard & Exit")
                                 color:          "white"
                                 font.pixelSize: 12
                                 font.bold:      true
@@ -3729,13 +4148,13 @@ Rectangle {
                         spacing: 2
 
                         Text {
-                            text:           "Recover Autosave?"
+                            text: qsTr("Recover Autosave?")
                             font.pixelSize: 14
                             font.bold:      true
                             color:          ThemeManager.textColor
                         }
                         Text {
-                            text:           "A newer autosave was found for \"" + recoverAutosaveDialog.pendingName + "\""
+                            text:           qsTr("A newer autosave was found for \"%1\"").arg(recoverAutosaveDialog.pendingName)
                             font.pixelSize: 11
                             color:          ThemeManager.textSecondaryColor
                             elide:          Text.ElideRight
@@ -3770,7 +4189,7 @@ Rectangle {
 
                         Text {
                             anchors.centerIn: parent
-                            text:           "Discard"
+                            text: qsTr("Discard")
                             color:          ThemeManager.textSecondaryColor
                             font.pixelSize: 12
                         }
@@ -3801,7 +4220,7 @@ Rectangle {
 
                         Text {
                             anchors.centerIn: parent
-                            text:           "Recover"
+                            text: qsTr("Recover")
                             color:          "white"
                             font.pixelSize: 12
                             font.bold:      true
@@ -3817,7 +4236,7 @@ Rectangle {
                                 WorkspaceManager.loadAutosave(name)
                                 root.m_suppressConnectionDraw = false
                                 GlobalProperties.lastWorkspace = name
-                                ToastManager.show("Autosave recovered", "success")
+                                ToastManager.show(qsTr("Autosave recovered"), "success")
                                 recoverAutosaveDialog.close()
                             }
                         }
@@ -3868,7 +4287,7 @@ Rectangle {
         function onWorkspaceLoaded(name) {
             console.log("[ViewPort] Workspace loaded signal received:", name, "- scheduling connection restore")
             restoreConnectionsTimer.restart()
-            ToastManager.show("Opened \"" + name + "\"", "success")
+            ToastManager.show(qsTr("Opened \"%1\"").arg(name), "success")
         }
     }
 
@@ -4100,7 +4519,7 @@ Rectangle {
                 }
                 Row {
                     spacing: 3
-                    Text { text: "drop on canvas"; font.pixelSize: 9; color: "white"; opacity: 0.7 }
+                    Text { text: qsTr("drop on canvas"); font.pixelSize: 9; color: "white"; opacity: 0.7 }
                     SvgIcon { width: 9; height: 9; source: Icons.chevronRight; color: "white"; opacity: 0.7 }
                 }
             }
@@ -4109,6 +4528,7 @@ Rectangle {
 
     Rectangle {
         id: viewRect
+        visible: !root.isPresenting
         anchors.bottom: parent.bottom
         anchors.right: parent.right
         anchors.bottomMargin: 22 + 8
@@ -4157,7 +4577,9 @@ Rectangle {
     // ─── Bottom Floating Toolbar ────────────────────────────────────────────────
     ViewportBottomToolBar {
         id: bottomToolBar
-        visible: !splashScreen.visible
+        visible: !splashScreen.visible && !root.isPresenting
+        opacity: visible ? 1.0 : 0.0
+        Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 48 // Above status bar
         anchors.horizontalCenter: parent.horizontalCenter
@@ -4221,6 +4643,7 @@ Rectangle {
     // ─── Status Bar ─────────────────────────────────────────────────────────────
     ViewportStatusBar {
         id: statusBar
+        visible: !root.isPresenting
         anchors.bottom: parent.bottom
         anchors.left:   parent.left
         anchors.right:  parent.right
@@ -4292,10 +4715,67 @@ Rectangle {
                     }
                 }
                 Text {
-                    text: "Clonando Nós..."
+                    text: qsTr("Clonando Nós...")
                     color: "white"; font.pixelSize: 11; font.bold: true
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
+            }
+        }
+    }
+
+    // ── Presentation Mode HUD indicator ─────────────────────────────────────
+    Loader {
+        id: presIndicatorLoader
+        active: root.isPresenting
+        anchors.bottom: parent.bottom
+        anchors.right:  parent.right
+        anchors.margins: 20
+        z: 9800
+        sourceComponent: Component {
+            PresentationModeIndicator {
+                mode:   viewPort.presentationMode
+                active: root._hudActive
+                onExitRequested: viewPort.setPresentationMode(0)
+            }
+        }
+    }
+
+    // ── Canvas Lock badge (Presentation Layer B) ────────────────────────────
+    Rectangle {
+        id: lockBadge
+        visible: root.isCanvasLocked
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.margins: 16
+        width: 40; height: 40; radius: 20
+        color: Qt.rgba(0, 0, 0, 0.55)
+        border.width: 1
+        border.color: ThemeManager.warningColor
+        z: 9800
+
+        SvgIcon {
+            anchors.centerIn: parent
+            width: 18; height: 18
+            source: Icons.lock
+            color: ThemeManager.warningColor
+        }
+
+        SequentialAnimation {
+            id: lockBadgePulse
+            NumberAnimation { target: lockBadge; property: "scale"; from: 1.0;  to: 1.35; duration: 120; easing.type: Easing.OutQuad }
+            NumberAnimation { target: lockBadge; property: "scale"; from: 1.35; to: 1.0;  duration: 200; easing.type: Easing.InOutQuad }
+        }
+
+        MouseArea {
+            id: lockMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: viewPort.setPresentationMode(1)
+
+            AppToolTip {
+                text: qsTr("Canvas locked — press F10 to cycle modes or Shift+F10 to exit")
+                visible: lockMouse.containsMouse
             }
         }
     }
