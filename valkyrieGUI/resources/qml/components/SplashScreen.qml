@@ -124,7 +124,7 @@ Rectangle {
             ActionRow {
                 visible: GlobalProperties.lastWorkspace !== ""
                 icon:    Icons.restore
-                label:   "Continue  \"" + GlobalProperties.lastWorkspace + "\""
+                label:   qsTr("Continue  \"%1\"").arg(GlobalProperties.lastWorkspace)
                 onClicked: root.workspaceOpenRequested(GlobalProperties.lastWorkspace)
             }
         }
@@ -194,7 +194,7 @@ Rectangle {
             // Empty state
             Text {
                 visible: WorkspaceManager.workspaceList.length === 0
-                text: "No recent projects yet.\nCreate a project or open an existing one to get started."
+                text: qsTr("No recent projects yet.\nCreate a project or open an existing one to get started.")
                 color:       ThemeManager.textSecondaryColor
                 opacity:     0.6
                 font.pixelSize: 12

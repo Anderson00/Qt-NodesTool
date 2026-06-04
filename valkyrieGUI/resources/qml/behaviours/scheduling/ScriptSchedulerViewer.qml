@@ -42,7 +42,7 @@ Item {
             type: type,
             time: Qt.formatDateTime(new Date(), "HH:mm:ss"),
             event: evName,
-            text: (text && text.length > 0) ? text : "(sem saída)"
+            text: (text && text.length > 0) ? text : qsTr("(no output)")
         })
         if (logs.length > 300) logs.length = 300
         _consoleLogs = logs
@@ -472,7 +472,7 @@ Item {
                     SvgIcon { Layout.alignment: Qt.AlignHCenter; width: 36; height: 36; source: Icons.clipboardTextOutline; color: ThemeManager.textColor; opacity: 0.2 }
                     Text {
                         Layout.alignment: Qt.AlignHCenter
-                        text: "Selecione ou crie\num evento"
+                        text: qsTr("Select or create\nan event")
                         color: Qt.rgba(1,1,1,0.22); font.pixelSize: 12
                         horizontalAlignment: Text.AlignHCenter
                     }
@@ -548,7 +548,7 @@ Item {
                                                 text: root.selectedEvent ? root.selectedEvent.runCount : "0"
                                                 color: ThemeManager.textColor; font.pixelSize: 10; font.bold: true
                                             }
-                                            Text { text: qsTr("execuções"); color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
+                                            Text { text: qsTr("runs"); color: ThemeManager.textSecondaryColor; font.pixelSize: 9 }
                                         }
                                     }
                                 }
@@ -873,7 +873,7 @@ Item {
                                 RowLayout {
                                     anchors { fill: parent; margins: 3 } spacing: 3
                                     Repeater {
-                                        model: ["Inline", "Arquivo"]
+                                        model: [qsTr("Inline"), qsTr("File")]
                                         Rectangle {
                                             Layout.fillWidth: true; height: parent.height; radius: 5
                                             property bool isCurrent: {

@@ -70,7 +70,7 @@ Rectangle {
         }
 
         Text {
-            text: qsTr("Histórico")
+            text: qsTr("History")
             font.pixelSize: 12
             font.bold: true
             color: ThemeManager.textColor
@@ -222,7 +222,7 @@ Rectangle {
                     anchors.right: currentBadge.left
                     anchors.leftMargin:  56
                     anchors.rightMargin: 4
-                    text: entryText === "Initial state" ? "Estado inicial" : entryText
+                    text: entryText === "Initial state" ? qsTr("Initial state") : entryText
                     font.pixelSize: 11
                     font.bold: isCurrent
                     color: isCurrent
@@ -249,7 +249,7 @@ Rectangle {
                     Text {
                         id: badgeText
                         anchors.centerIn: parent
-                        text: "atual"
+                        text: qsTr("current")
                         font.pixelSize: 9
                         font.bold: true
                         font.letterSpacing: 0.4

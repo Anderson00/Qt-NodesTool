@@ -112,7 +112,7 @@ Rectangle {
                 ? ThemeManager.accentColor
                 : ThemeManager.textColor
             onClicked: root.toggleConnectionsMinimized()
-            AppToolTip { text: root.connectionsMinimized ? "Expandir todas as conexões" : "Recolher todas as conexões"; visible: parent.hovered }
+            AppToolTip { text: root.connectionsMinimized ? qsTr("Expand all connections") : qsTr("Collapse all connections"); visible: parent.hovered }
         }
 
         Rectangle { width: 1; height: 32; color: ThemeManager.borderColor; Layout.alignment: Qt.AlignVCenter }
@@ -231,7 +231,7 @@ Rectangle {
                 Item { width: 1; height: 4 }
 
                 AppMenuItem {
-                    label:      root.showGrid ? "Hide Grid" : "Show Grid"
+                    label:      root.showGrid ? qsTr("Hide Grid") : qsTr("Show Grid")
                     iconSource: Icons.viewGrid
                     onTriggered: root.toggleGrid()
                 }

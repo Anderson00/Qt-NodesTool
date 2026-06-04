@@ -348,7 +348,7 @@ Popup {
 
                         Text {
                             Layout.fillWidth: true
-                            text: ThemeManager.isDarkMode ? "Dark Mode" : "Light Mode"
+                            text: ThemeManager.isDarkMode ? qsTr("Dark Mode") : qsTr("Light Mode")
                             font.pixelSize: 12
                             color: ThemeManager.textColor
                             verticalAlignment: Text.AlignVCenter

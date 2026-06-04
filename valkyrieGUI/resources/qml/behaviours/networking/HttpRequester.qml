@@ -25,7 +25,7 @@ Item {
     Connections {
         target: behaviourObject
         function onInternalResponse(body)  { lastResponseBody = body }
-        function onInternalError(err)      { lastResponseBody = "Error: " + err }
+        function onInternalError(err)      { lastResponseBody = qsTr("Error: ") + err }
         function onInternalStatus(code)    { lastCode = code }
     }
 

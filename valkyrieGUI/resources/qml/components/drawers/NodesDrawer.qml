@@ -514,7 +514,7 @@ Item {
                                     Item { Layout.fillWidth: true }
                                     Row {
                                         spacing: 2
-                                        Text { text: "drag"; font.pixelSize: 8; color: ThemeManager.textColor; opacity: 0.22 }
+                                        Text { text: qsTr("drag"); font.pixelSize: 8; color: ThemeManager.textColor; opacity: 0.22 }
                                         SvgIcon { width: 8; height: 8; source: Icons.chevronRight; color: ThemeManager.textColor; opacity: 0.22 }
                                     }
                                 }
@@ -553,7 +553,7 @@ Item {
                                 }
                                 Row {
                                     spacing: 2
-                                    Text { text: "drag"; font.pixelSize: 9; color: ThemeManager.primaryColor; opacity: 0.35 }
+                                    Text { text: qsTr("drag"); font.pixelSize: 9; color: ThemeManager.primaryColor; opacity: 0.35 }
                                     SvgIcon { width: 9; height: 9; source: Icons.chevronRight; color: ThemeManager.primaryColor; opacity: 0.35 }
                                 }
                             }

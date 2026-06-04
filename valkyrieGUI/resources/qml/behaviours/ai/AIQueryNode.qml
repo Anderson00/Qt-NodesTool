@@ -22,7 +22,7 @@ Item {
         }
 
         function onInternalError(msg) {
-            responseArea.text = "Error: " + msg
+            responseArea.text = qsTr("Error: ") + msg
         }
 
         function onInternalTokens(inT, outT) {

@@ -184,7 +184,7 @@ Item {
                         Text {
                             anchors.left: parent.left; anchors.leftMargin: 8
                             anchors.verticalCenter: parent.verticalCenter
-                            text: "name"; font.pixelSize: 9
+                            text: qsTr("name"); font.pixelSize: 9
                             color: ThemeManager.textColor; opacity: 0.35
                             visible: !newVarName.text.length && !newVarName.activeFocus
                         }

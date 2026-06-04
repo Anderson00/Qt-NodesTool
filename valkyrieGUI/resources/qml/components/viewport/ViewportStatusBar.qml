@@ -135,7 +135,7 @@ Rectangle {
             Layout.alignment: Qt.AlignVCenter
             Layout.maximumWidth: 200
             elide: Text.ElideMiddle
-            text: (root.workspaceName === "" ? "Untitled" : root.workspaceName)
+            text: (root.workspaceName === "" ? qsTr("Untitled") : root.workspaceName)
                   + (root.workspaceDirty ? " *" : "")
         }
 
@@ -192,8 +192,8 @@ Rectangle {
             Layout.maximumWidth: 160
             visible: nodeOnFocus !== undefined && nodeOnFocus !== null
             text: selectedCount > 1
-                  ? selectedCount + " selected"
-                  : (nodeOnFocus ? (nodeOnFocus.behaviourObject ? nodeOnFocus.behaviourObject.title : "Node") : "")
+                  ? qsTr("%n selected", "", selectedCount)
+                  : (nodeOnFocus ? (nodeOnFocus.behaviourObject ? nodeOnFocus.behaviourObject.title : qsTr("Node")) : "")
             elide: Text.ElideRight
         }
 

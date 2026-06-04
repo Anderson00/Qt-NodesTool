@@ -207,7 +207,7 @@ Item {
                     }
                 }
                 Rectangle { width:52;height:24;radius:4;color:"#22c55e"
-                    Text{anchors.centerIn:parent;text:"Add";color:"white";font.pixelSize:10;font.bold:true}
+                    Text{anchors.centerIn:parent;text:qsTr("Add");color:"white";font.pixelSize:10;font.bold:true}
                     MouseArea{anchors.fill:parent;onClicked:markerPopup.confirm()} }
             }
         }
@@ -226,7 +226,7 @@ Item {
         Column {
             anchors { fill: parent; margins: 10 }
             spacing: 6
-            Text { text: qsTr("Novo círculo"); color: ThemeManager.textColor; font.pixelSize: 10; font.bold: true }
+            Text { text: qsTr("New circle"); color: ThemeManager.textColor; font.pixelSize: 10; font.bold: true }
 
             // Coord display
             Text {
@@ -301,10 +301,10 @@ Item {
             // Action buttons
             Row { spacing: 6; anchors.right: parent.right
                 Rectangle { width: 52; height: 24; radius: 4; color: ThemeManager.borderColor
-                    Text{anchors.centerIn:parent;text:"Cancelar";color:ThemeManager.textSecondaryColor;font.pixelSize:9}
+                    Text{anchors.centerIn:parent;text:qsTr("Cancel");color:ThemeManager.textSecondaryColor;font.pixelSize:9}
                     MouseArea{anchors.fill:parent;onClicked:circlePopup.visible=false} }
                 Rectangle { width: 64; height: 24; radius: 4; color: "#3b82f6"
-                    Text{anchors.centerIn:parent;text:"Adicionar";color:"white";font.pixelSize:9;font.bold:true}
+                    Text{anchors.centerIn:parent;text:qsTr("Add");color:"white";font.pixelSize:9;font.bold:true}
                     MouseArea{anchors.fill:parent;onClicked:circlePopup.confirm()} }
             }
         }
@@ -507,7 +507,7 @@ Item {
                 }
 
                 Rectangle { width: 52; height: 22; radius: 4; color: "#10b981"
-                    Text{anchors.centerIn:parent;text:"Atualizar";color:"white";font.pixelSize:9;font.bold:true}
+                    Text{anchors.centerIn:parent;text:qsTr("Update");color:"white";font.pixelSize:9;font.bold:true}
                     MouseArea{anchors.fill:parent;onClicked:{
                         if(behaviourObject){
                             var la=parseFloat(liveLat.text);var ln=parseFloat(liveLng.text)
@@ -516,7 +516,7 @@ Item {
                     }}
                 }
                 Rectangle { width: 40; height: 22; radius: 4; color: "transparent"; border.color: ThemeManager.borderColor; border.width: 1
-                    Text{anchors.centerIn:parent;text:"Limpar";color:ThemeManager.textSecondaryColor;font.pixelSize:9}
+                    Text{anchors.centerIn:parent;text:qsTr("Clear");color:ThemeManager.textSecondaryColor;font.pixelSize:9}
                     MouseArea{anchors.fill:parent;onClicked:{if(behaviourObject)behaviourObject.clearLiveMarker()}} }
                 Rectangle { width: 24; height: 22; radius: 4; color: "transparent"; border.color: ThemeManager.borderColor; border.width: 1
                     Text{anchors.centerIn:parent;text:"→";color:ThemeManager.textSecondaryColor;font.pixelSize:11}
@@ -807,14 +807,14 @@ Item {
 
             // Mode banners
             Rectangle { anchors{top:parent.top;horizontalCenter:parent.horizontalCenter;topMargin:8} visible:root.addMarkerMode;width:addBTxt.width+24;height:26;radius:13;color:"#22c55e"
-                Text{id:addBTxt;anchors.centerIn:parent;text:"Clique para posicionar marcador";color:"white";font.pixelSize:11;font.bold:true} }
+                Text{id:addBTxt;anchors.centerIn:parent;text:qsTr("Click to position marker");color:"white";font.pixelSize:11;font.bold:true} }
             Rectangle { anchors{top:parent.top;horizontalCenter:parent.horizontalCenter;topMargin:8} visible:root.addCircleMode;width:cBTxt.width+24;height:26;radius:13;color:"#3b82f6"
-                Text{id:cBTxt;anchors.centerIn:parent;text:"Clique para posicionar o centro do círculo";color:"white";font.pixelSize:11;font.bold:true} }
+                Text{id:cBTxt;anchors.centerIn:parent;text:qsTr("Click to position the circle center");color:"white";font.pixelSize:11;font.bold:true} }
             Rectangle { anchors{top:parent.top;horizontalCenter:parent.horizontalCenter;topMargin:8} visible:root.addTraceMode;width:tBTxt.width+24;height:26;radius:13;color:"#8b5cf6"
-                Text{id:tBTxt;anchors.centerIn:parent;text:"Clique para adicionar ponto de trace";color:"white";font.pixelSize:11;font.bold:true} }
+                Text{id:tBTxt;anchors.centerIn:parent;text:qsTr("Click to add trace point");color:"white";font.pixelSize:11;font.bold:true} }
             Rectangle { anchors{top:parent.top;horizontalCenter:parent.horizontalCenter;topMargin:8} visible:root.measureMode;width:mBTxt.width+24;height:26;radius:13;color:"#f59e0b"
                 Text{id:mBTxt;anchors.centerIn:parent;color:"white";font.pixelSize:11;font.bold:true
-                    text:root.measurePts.length===0?"Clique ponto A":root.measurePts.length===1?"Clique ponto B":"Clique para nova medição · ESC limpa"} }
+                    text:root.measurePts.length===0?qsTr("Click point A"):root.measurePts.length===1?qsTr("Click point B"):qsTr("Click for new measurement · ESC clears")} }
 
             // Trace mode undo/clear bar (floating, bottom right)
             Row {

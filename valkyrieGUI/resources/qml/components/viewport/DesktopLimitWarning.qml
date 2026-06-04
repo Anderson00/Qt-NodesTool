@@ -71,8 +71,7 @@ Popup {
 
                 Text {
                     width: parent.width
-                    text: qsTr("You are about to create more than ") + DesktopManager.softLimit
-                          + " virtual desktops. Having many desktops may impact performance and memory."
+                    text: qsTr("You are about to create more than %1 virtual desktops. Having many desktops may impact performance and memory.").arg(DesktopManager.softLimit)
                     color: ThemeManager.textSecondaryColor
                     font.pixelSize: 13
                     lineHeight: 1.5

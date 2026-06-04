@@ -93,7 +93,7 @@ Item {
             Text {
                 anchors.centerIn: parent
                 visible: root._text === ""
-                text: "No output yet.\nConnect a node to\nappendText or appendLine."
+                text: qsTr("No output yet.\nConnect a node to\nappendText or appendLine.")
                 horizontalAlignment: Text.AlignHCenter
                 font.pixelSize: 10
                 color: ThemeManager.textSecondaryColor

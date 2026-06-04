@@ -389,7 +389,7 @@ Rectangle {
                 width: 40; height: 40
                 onClicked: root.historyPanelOpen = !root.historyPanelOpen
                 Behavior on icon.color { ColorAnimation { duration: 150 } }
-                AppToolTip { text: qsTr("Histórico (Ctrl+H)"); visible: parent.hovered }
+                AppToolTip { text: qsTr("History (Ctrl+H)"); visible: parent.hovered }
             }
 
             AppBarButton {

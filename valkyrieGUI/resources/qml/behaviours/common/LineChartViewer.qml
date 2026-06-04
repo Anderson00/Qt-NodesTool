@@ -575,7 +575,7 @@ Item {
                                 source: Icons.close; color: ThemeManager.dangerColor
                                 width: 14; height: 14
                                 opacity: clrH.containsMouse?1.0:0.4; Layout.alignment:Qt.AlignVCenter
-                                AppToolTip { text:"Clear series"; visible: clrH.containsMouse; delay: 600 }
+                                AppToolTip { text:qsTr("Clear series"); visible: clrH.containsMouse; delay: 600 }
                                 MouseArea { id:clrH; anchors.fill:parent; hoverEnabled:true; cursorShape:Qt.PointingHandCursor
                                     onClicked:{ fastChart.clearSeries(index); resetStats(index) } }
                             }

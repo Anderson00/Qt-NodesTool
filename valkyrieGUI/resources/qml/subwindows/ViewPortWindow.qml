@@ -719,7 +719,7 @@ Rectangle {
         clipboard   = { nodes: cbNodes, conns: cbConns }
         pasteOffset = 0
         var n = cbNodes.length
-        ToastManager.show("Copied " + n + " node" + (n > 1 ? "s" : ""), "success")
+        ToastManager.show(qsTr("Copied %n node(s)", "", n), "success")
     }
 
     function _pasteClipboard() {
@@ -761,7 +761,7 @@ Rectangle {
 
     function _groupSelected() {
         if (selectedNodes.length < 2) {
-            ToastManager.show("Select at least 2 nodes to group", "warning")
+            ToastManager.show(qsTr("Select at least 2 nodes to group"), "warning")
             return
         }
         var minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9
@@ -778,7 +778,7 @@ Rectangle {
         var color = root._frameColors[root._frameColorIdx % root._frameColors.length]
         root._frameColorIdx++
         frameModel.append({
-            frameLabel:    "Group",
+            frameLabel:    qsTr("Group"),
             frameColorStr: color,
             fx: minX - pad,
             fy: minY - pad - 28,
@@ -1028,7 +1028,7 @@ Rectangle {
                 var cR = mycanvas.x + mycanvas.width  * zoomScale
                 var cB = mycanvas.y + mycanvas.height * zoomScale
                 if (mouse.x < cL || mouse.x > cR || mouse.y < cT || mouse.y > cB)
-                    ToastManager.show("Fora da área de trabalho", "warning")
+                    ToastManager.show(qsTr("Outside the workspace area"), "warning")
             }
         }
 
@@ -1359,8 +1359,8 @@ Rectangle {
                         connMenu.inMethod = isSrcOut ? connData.methodSignature2 : connData.methodSignature1;
                         
                         // Extract names if available
-                        connMenu.outNodeName = connData.node ? connData.node.title : "Nó Origem";
-                        connMenu.inNodeName = connData.node2 ? connData.node2.title : "Nó Destino";
+                        connMenu.outNodeName = connData.node ? connData.node.title : qsTr("Source Node");
+                        connMenu.inNodeName = connData.node2 ? connData.node2.title : qsTr("Target Node");
                         
                         connMenu.open();
                     }
@@ -2218,16 +2218,16 @@ Rectangle {
             const ok = WorkspaceManager.renameWorkspace(oldName, newName)
             if (ok) {
                 GlobalProperties.lastWorkspace = newName
-                ToastManager.show("Renamed to \"" + newName + "\"", "success")
+                ToastManager.show(qsTr("Renamed to \"%1\"").arg(newName), "success")
             } else {
-                ToastManager.show("Failed to rename (name may already exist)", "error")
+                ToastManager.show(qsTr("Failed to rename (name may already exist)"), "error")
             }
         }
         onScreenshotRequested: {
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
             const path = appDirPath + "/screenshots/screenshot_" + timestamp + ".png"
             viewPort.takeScreenshot(path)
-            ToastManager.show("Screenshot saved", "success")
+            ToastManager.show(qsTr("Screenshot saved"), "success")
         }
         onCaptureStageRequested: {
             // Capture the current viewport in WORLD coordinates so the stage
@@ -2281,7 +2281,7 @@ Rectangle {
                             if (WorkspaceManager.currentWorkspace !== "") {
                                 const ok = viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
                                 if (ok) WorkspaceManager.clearAutosave(WorkspaceManager.currentWorkspace)
-                                ToastManager.show(ok ? "Project saved" : "Save failed",
+                                ToastManager.show(ok ? qsTr("Project saved") : qsTr("Save failed"),
                                                   ok ? "success" : "error")
                             } else {
                                 saveNameField.text = ""
@@ -2309,7 +2309,7 @@ Rectangle {
                             if (WorkspaceManager.currentWorkspace !== "")
                                 renameWorkspaceDialog.openFor(WorkspaceManager.currentWorkspace)
                             else
-                                ToastManager.show("No workspace to rename", "warning")
+                                ToastManager.show(qsTr("No workspace to rename"), "warning")
                         } })
             cmds.push({ label: qsTr("Back to Home"),            shortcut: "",
                         group: "Workspace",
@@ -2398,12 +2398,15 @@ Rectangle {
     }
 
     // ── Stage navigation (only meaningful while presenting + stages exist) ──
+    // Normalise currentStage when it's -1 (no stage yet selected) so the
+    // very first F5 / Shift+F5 press lands on a valid index.
     Shortcut {
         sequence: "F5"
         context:  Qt.ApplicationShortcut
         enabled:  root.isPresenting && viewPort.hasStages
         onActivated: {
-            var next = (viewPort.currentStage + 1) % viewPort.stageCount
+            var cur  = Math.max(0, viewPort.currentStage)
+            var next = (cur + 1) % viewPort.stageCount
             viewPort.setCurrentStage(next)
         }
     }
@@ -2412,8 +2415,8 @@ Rectangle {
         context:  Qt.ApplicationShortcut
         enabled:  root.isPresenting && viewPort.hasStages
         onActivated: {
-            var prev = (viewPort.currentStage - 1 + viewPort.stageCount)
-                       % viewPort.stageCount
+            var cur  = Math.max(0, viewPort.currentStage)
+            var prev = (cur - 1 + viewPort.stageCount) % viewPort.stageCount
             viewPort.setCurrentStage(prev)
         }
     }
@@ -2570,12 +2573,19 @@ Rectangle {
     }
 
     // Same 240ms settle delay used for camera framing, applied to the very
-    // first stage transition on presentation entry.
+    // first stage transition on presentation entry. Uses replayCurrentStage()
+    // so the transition still fires when the index is already 0 (or when the
+    // workspace was loaded with currentStage == -1 and we jump to 0).
     Timer {
         id: _presentationStageTimer
         interval: 240
         repeat:   false
-        onTriggered: viewPort.setCurrentStage(0)
+        onTriggered: {
+            if (viewPort.currentStage < 0)
+                viewPort.setCurrentStage(0)
+            else
+                viewPort.replayCurrentStage()
+        }
     }
 
     // ─── History Panel ──────────────────────────────────────────────────────────
@@ -2858,9 +2868,9 @@ Rectangle {
             if (ok) {
                 if (GlobalProperties.lastWorkspace === renameWorkspaceDialog.oldName)
                     GlobalProperties.lastWorkspace = newName
-                ToastManager.show("Renamed to \"" + newName + "\"", "success")
+                ToastManager.show(qsTr("Renamed to \"%1\"").arg(newName), "success")
             } else {
-                ToastManager.show("Rename failed (name may already exist)", "error")
+                ToastManager.show(qsTr("Rename failed (name may already exist)"), "error")
             }
             renameWorkspaceDialog.close()
         }
@@ -2882,7 +2892,7 @@ Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 2
                         Text { text: qsTr("Rename Workspace"); font.pixelSize: 14; font.bold: true; color: ThemeManager.textColor }
-                        Text { text: "New name for \"" + renameWorkspaceDialog.oldName + "\""
+                        Text { text: qsTr("New name for \"%1\"").arg(renameWorkspaceDialog.oldName)
                                font.pixelSize: 11; color: ThemeManager.textSecondaryColor; elide: Text.ElideRight; width: 280 }
                     }
                 }
@@ -2989,7 +2999,7 @@ Rectangle {
                     spacing: 20
                     Text {
                         width: parent.width
-                        text: "Permanently delete \"" + confirmDeleteDialog.pendingName + "\"? This action cannot be undone."
+                        text: qsTr("Permanently delete \"%1\"? This action cannot be undone.").arg(confirmDeleteDialog.pendingName)
                         color: ThemeManager.textSecondaryColor
                         font.pixelSize: 13; lineHeight: 1.5; wrapMode: Text.WordWrap
                     }
@@ -3013,7 +3023,7 @@ Rectangle {
                                 onClicked: {
                                     const name = confirmDeleteDialog.pendingName
                                     const ok = WorkspaceManager.deleteWorkspace(name)
-                                    ToastManager.show(ok ? "Deleted \"" + name + "\"" : "Delete failed",
+                                    ToastManager.show(ok ? qsTr("Deleted \"%1\"").arg(name) : qsTr("Delete failed"),
                                                       ok ? "warning" : "error")
                                     confirmDeleteDialog.close()
                                 }
@@ -3036,7 +3046,7 @@ Rectangle {
         currentFile: pendingName !== "" ? ("file:///" + pendingName + ".json") : ""
         onAccepted: {
             const ok = WorkspaceManager.exportWorkspace(pendingName, selectedFile.toString())
-            ToastManager.show(ok ? "Exported \"" + pendingName + "\"" : "Export failed",
+            ToastManager.show(ok ? qsTr("Exported \"%1\"").arg(pendingName) : qsTr("Export failed"),
                               ok ? "success" : "error")
         }
     }
@@ -3152,7 +3162,7 @@ Rectangle {
             const ok = viewPort.saveWorkspace(name)
             GlobalProperties.lastWorkspace = name
             saveWorkspaceDialog.close()
-            ToastManager.show(ok ? "Project \"" + name + "\" saved" : "Failed to save project",
+            ToastManager.show(ok ? qsTr("Project \"%1\" saved").arg(name) : qsTr("Failed to save project"),
                               ok ? "success" : "error")
         }
 
@@ -3878,7 +3888,7 @@ Rectangle {
     function doNewProject() {
         splashScreen.dismissed = true
         WorkspaceManager.newWorkspace()
-        ToastManager.show("New project created", "success")
+        ToastManager.show(qsTr("New project created"), "success")
     }
 
     // Return to the SplashScreen: clear any active workspace and reveal the splash.
@@ -4115,7 +4125,7 @@ Rectangle {
                             color:          ThemeManager.textColor
                         }
                         Text {
-                            text:           "A newer autosave was found for \"" + recoverAutosaveDialog.pendingName + "\""
+                            text:           qsTr("A newer autosave was found for \"%1\"").arg(recoverAutosaveDialog.pendingName)
                             font.pixelSize: 11
                             color:          ThemeManager.textSecondaryColor
                             elide:          Text.ElideRight
@@ -4197,7 +4207,7 @@ Rectangle {
                                 WorkspaceManager.loadAutosave(name)
                                 root.m_suppressConnectionDraw = false
                                 GlobalProperties.lastWorkspace = name
-                                ToastManager.show("Autosave recovered", "success")
+                                ToastManager.show(qsTr("Autosave recovered"), "success")
                                 recoverAutosaveDialog.close()
                             }
                         }
@@ -4248,7 +4258,7 @@ Rectangle {
         function onWorkspaceLoaded(name) {
             console.log("[ViewPort] Workspace loaded signal received:", name, "- scheduling connection restore")
             restoreConnectionsTimer.restart()
-            ToastManager.show("Opened \"" + name + "\"", "success")
+            ToastManager.show(qsTr("Opened \"%1\"").arg(name), "success")
         }
     }
 

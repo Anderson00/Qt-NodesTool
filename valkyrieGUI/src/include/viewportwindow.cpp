@@ -89,11 +89,21 @@ bool ViewPortWindow::hasStages()    const { return !m_stages.isEmpty(); }
 void ViewPortWindow::setCurrentStage(int idx) {
     if (m_stages.isEmpty()) return;
     if (idx < 0 || idx >= m_stages.size()) return;
+    const bool changed = (m_currentStage != idx);
     m_currentStage = idx;
     PresentationStage* s = m_stages.at(idx);
-    emit currentStageChanged();
+    if (changed) emit currentStageChanged();
+    // Always emit the transition — re-clicking the same stage (or jumping
+    // back to it via F5 wrap-around) must still animate the canvas.
     emit stageTransitionRequested(s->worldX, s->worldY,
                                   s->worldW, s->worldH, s->zoom);
+}
+
+void ViewPortWindow::replayCurrentStage() {
+    if (m_stages.isEmpty()) return;
+    int idx = m_currentStage;
+    if (idx < 0 || idx >= m_stages.size()) idx = 0;
+    setCurrentStage(idx);
 }
 
 QString ViewPortWindow::addStage(const QString& name,

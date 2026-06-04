@@ -162,7 +162,7 @@ Item {
                 Text {
                     visible: !behaviourObject || behaviourObject.watchedIds.length === 0
                     width: parent ? parent.width : 0
-                    text: "Tap + to add variables\nto monitor"
+                    text: qsTr("Tap + to add variables\nto monitor")
                     horizontalAlignment: Text.AlignHCenter
                     font.pixelSize: 10; color: ThemeManager.textSecondaryColor; opacity: 0.4
                     topPadding: 12

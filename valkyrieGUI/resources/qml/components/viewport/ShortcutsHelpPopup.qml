@@ -132,58 +132,58 @@ Popup {
                 ShortcutSection {
                     title: qsTr("General")
                     items: [
-                        {key: "Ctrl + O", desc: "Open Workspace"},
-                        {key: "Ctrl + S", desc: "Save Workspace"},
-                        {key: "Ctrl + Shift + S", desc: "Save Workspace As"},
-                        {key: "Ctrl + H", desc: "Toggle History Panel"},
-                        {key: "Shift + ?", desc: "Show this help overlay"}
+                        {key: "Ctrl + O", desc: qsTr("Open Workspace")},
+                        {key: "Ctrl + S", desc: qsTr("Save Workspace")},
+                        {key: "Ctrl + Shift + S", desc: qsTr("Save Workspace As")},
+                        {key: "Ctrl + H", desc: qsTr("Toggle History Panel")},
+                        {key: "Shift + ?", desc: qsTr("Show this help overlay")}
                     ]
                 }
 
                 ShortcutSection {
                     title: qsTr("Nodes & Canvas")
                     items: [
-                        {key: "F", desc: "Focus camera on selected node"},
-                        {key: "G", desc: "Toggle Snap to Grid"},
-                        {key: "Ctrl + A", desc: "Select All Nodes"},
-                        {key: "Ctrl + C", desc: "Copy selected nodes"},
-                        {key: "Ctrl + V", desc: "Paste nodes"},
-                        {key: "Ctrl + D", desc: "Duplicate selected nodes"},
-                        {key: "Ctrl + G", desc: "Group selected nodes"},
-                        {key: "Ctrl + Shift + G", desc: "Ungroup selected nodes"},
-                        {key: "Del / Backspace", desc: "Delete selected nodes"},
-                        {key: "Shift + Drag", desc: "Marquee selection box"},
-                        {key: "Esc", desc: "Cancel action or clear selection"}
+                        {key: "F", desc: qsTr("Focus camera on selected node")},
+                        {key: "G", desc: qsTr("Toggle Snap to Grid")},
+                        {key: "Ctrl + A", desc: qsTr("Select All Nodes")},
+                        {key: "Ctrl + C", desc: qsTr("Copy selected nodes")},
+                        {key: "Ctrl + V", desc: qsTr("Paste nodes")},
+                        {key: "Ctrl + D", desc: qsTr("Duplicate selected nodes")},
+                        {key: "Ctrl + G", desc: qsTr("Group selected nodes")},
+                        {key: "Ctrl + Shift + G", desc: qsTr("Ungroup selected nodes")},
+                        {key: "Del / Backspace", desc: qsTr("Delete selected nodes")},
+                        {key: "Shift + Drag", desc: qsTr("Marquee selection box")},
+                        {key: "Esc", desc: qsTr("Cancel action or clear selection")}
                     ]
                 }
 
                 ShortcutSection {
                     title: qsTr("Virtual Desktops")
                     items: [
-                        {key: "Ctrl + Shift + N", desc: "Add new Virtual Desktop"},
-                        {key: "Ctrl + Right", desc: "Switch to next Desktop"},
-                        {key: "Ctrl + Left", desc: "Switch to previous Desktop"},
-                        {key: "Ctrl + Tab", desc: "Show Desktop Overview (Exposé)"},
-                        {key: "Ctrl + 1..9", desc: "Jump to Desktop 1 through 9"}
+                        {key: "Ctrl + Shift + N", desc: qsTr("Add new Virtual Desktop")},
+                        {key: "Ctrl + Right", desc: qsTr("Switch to next Desktop")},
+                        {key: "Ctrl + Left", desc: qsTr("Switch to previous Desktop")},
+                        {key: "Ctrl + Tab", desc: qsTr("Show Desktop Overview (Exposé)")},
+                        {key: "Ctrl + 1..9", desc: qsTr("Jump to Desktop 1 through 9")}
                     ]
                 }
 
                 ShortcutSection {
                     title: qsTr("Tools")
                     items: [
-                        {key: "Ctrl + Shift + C", desc: "Toggle Camera overlay"},
-                        {key: "Ctrl + Shift + V", desc: "Toggle Visualization window"}
+                        {key: "Ctrl + Shift + C", desc: qsTr("Toggle Camera overlay")},
+                        {key: "Ctrl + Shift + V", desc: qsTr("Toggle Visualization window")}
                     ]
                 }
 
                 ShortcutSection {
                     title: qsTr("Presentation Mode")
                     items: [
-                        {key: "F10",       desc: "Cycle Presentation Mode (Off → Quiet → Locked → Off)"},
-                        {key: "Shift+F10", desc: "Exit Presentation Mode immediately"},
-                        {key: "Esc",       desc: "Exit Presentation Mode"},
-                        {key: "F5",        desc: "Next Stage"},
-                        {key: "Shift+F5",  desc: "Previous Stage"}
+                        {key: "F10",       desc: qsTr("Cycle Presentation Mode (Off → Quiet → Locked → Off)")},
+                        {key: "Shift+F10", desc: qsTr("Exit Presentation Mode immediately")},
+                        {key: "Esc",       desc: qsTr("Exit Presentation Mode")},
+                        {key: "F5",        desc: qsTr("Next Stage")},
+                        {key: "Shift+F5",  desc: qsTr("Previous Stage")}
                     ]
                 }
             }

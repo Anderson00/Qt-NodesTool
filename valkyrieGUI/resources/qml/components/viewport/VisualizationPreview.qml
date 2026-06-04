@@ -82,7 +82,7 @@ Item {
 
     Text {
         anchors.centerIn: parent
-        text: "Câmera não definida\nou nenhum nó tem corpo visual"
+        text: qsTr("Camera not defined\nor no node has a visual body")
         horizontalAlignment: Text.AlignHCenter
         color: "#444444"; font.pixelSize: 10
         visible: {

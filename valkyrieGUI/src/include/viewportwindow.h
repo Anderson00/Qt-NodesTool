@@ -71,7 +71,14 @@ public:
     int  stageCount()   const;
     int  currentStage() const;
     bool hasStages()    const;
-    void setCurrentStage(int idx);
+    // Q_INVOKABLE so QML can call viewPort.setCurrentStage(n) as a method —
+    // being just the WRITE of a Q_PROPERTY only exposes assignment, not the
+    // function call form used by the F5/Shift+F5 shortcuts and StageBar.
+    Q_INVOKABLE void setCurrentStage(int idx);
+    // Re-emits stageTransitionRequested for the current stage. Used by the
+    // presentation entry timer so the very first F10 -> stage 0 transition
+    // still animates even when m_currentStage is already 0.
+    Q_INVOKABLE void replayCurrentStage();
 
     Q_INVOKABLE QString      addStage(const QString& name,
                                       qreal x, qreal y, qreal w, qreal h,

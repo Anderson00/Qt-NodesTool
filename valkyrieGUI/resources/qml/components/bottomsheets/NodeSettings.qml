@@ -500,7 +500,7 @@ Drawer {
                                             text: {
                                                 // Identify if we are the input or output of this connection
                                                 var isOutput = (modelData.outputUuid === root.currentNodeUuid);
-                                                var dir = isOutput ? "=> Destino" : "<= Origem";
+                                                var dir = isOutput ? qsTr("=> Destination") : qsTr("<= Origin");
                                                 return dir + " (" + (isOutput ? modelData.inputMethod : modelData.outputMethod) + ")"
                                             }
                                             font.pixelSize: 10
@@ -535,8 +535,8 @@ Drawer {
                                             cursorShape: Qt.PointingHandCursor
                                             onClicked: {
                                                 var cmt = viewPortWindow.getConnectionComment(modelData.outputUuid, modelData.outputMethod, modelData.inputUuid, modelData.inputMethod);
-                                                var msg = cmt ? cmt : "Sem anotação.";
-                                                ToastManager.show("Comentário: " + msg, "info");
+                                                var msg = cmt ? cmt : qsTr("No annotation.");
+                                                ToastManager.show(qsTr("Comment: ") + msg, "info");
                                             }
                                             onEntered: parent.color = Qt.rgba(1,1,1,0.1)
                                             onExited: parent.color = "transparent"
@@ -560,7 +560,7 @@ Drawer {
                                             anchors.fill: parent
                                             hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
-                                            onClicked: ToastManager.show("Intercepção de valores requer o nó Debugger (Em breve)", "warning")
+                                            onClicked: ToastManager.show(qsTr("Value interception requires the Debugger node (Coming soon)"), "warning")
                                             onEntered: parent.color = Qt.rgba(1,1,1,0.1)
                                             onExited: parent.color = "transparent"
                                         }
@@ -703,7 +703,7 @@ Drawer {
                 }
 
                 Text {
-                    text: qsTr("Deletar Nó")
+                    text: qsTr("Delete Node")
                     font.pixelSize: 12
                     font.bold: true
                     color: ThemeManager.dangerColor
