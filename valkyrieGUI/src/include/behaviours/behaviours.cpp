@@ -339,6 +339,13 @@ void Behaviours::setBehaviourInfos(const QJsonObject& i) { m_behaviourInfos = i;
 const QString &Behaviours::uuid() const { return m_uuid; }
 void Behaviours::setUuid(const QString &uuid) { m_uuid = uuid; }
 
+bool Behaviours::hiddenInPresentation() const { return m_hiddenInPresentation; }
+void Behaviours::setHiddenInPresentation(bool hidden) {
+    if (m_hiddenInPresentation == hidden) return;
+    m_hiddenInPresentation = hidden;
+    emit hiddenInPresentationChanged(hidden);
+}
+
 QJsonObject Behaviours::saveState() const {
     return {};
 }

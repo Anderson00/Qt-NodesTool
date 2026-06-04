@@ -115,6 +115,8 @@ QJsonObject WorkspaceManager::buildWorkspaceJson() const
         node["height"] = beh->height();
         node["title"]  = beh->title();
         node["state"]  = beh->saveState();
+        if (beh->hiddenInPresentation())
+            node["hiddenInPresentation"] = true;
         nodes.append(node);
     }
 
@@ -242,10 +244,11 @@ bool WorkspaceManager::loadWorkspace(const QString& name)
 
     for (const QJsonValue& v : nodeArr) {
         const QJsonObject n = v.toObject();
+        const QString uuid = n["uuid"].toString();
         m_viewPort->addBehaviourWithUuid(
             n["path"].toString(),
             n["infos"].toObject(),
-            n["uuid"].toString(),
+            uuid,
             n["x"].toDouble(),
             n["y"].toDouble(),
             n["width"].toDouble(),
@@ -253,6 +256,10 @@ bool WorkspaceManager::loadWorkspace(const QString& name)
             n["title"].toString(),
             n.contains("state") ? n["state"].toObject() : QJsonObject()
         );
+        if (n.value("hiddenInPresentation").toBool(false)) {
+            if (Behaviours* beh = m_viewPort->searchBehaviourFromUUID(uuid))
+                beh->setHiddenInPresentation(true);
+        }
     }
 
     for (const QJsonValue& v : connArr) {
@@ -263,7 +270,7 @@ bool WorkspaceManager::loadWorkspace(const QString& name)
             c["inputUuid"].toString(),
             c["inputMethod"].toString()
         );
-        
+
         if (c.contains("comment")) {
             m_viewPort->setConnectionComment(
                 c["outputUuid"].toString(),
@@ -503,10 +510,11 @@ bool WorkspaceManager::loadAutosave(const QString& name)
 
     for (const QJsonValue& v : nodeArr) {
         const QJsonObject n = v.toObject();
+        const QString uuid = n["uuid"].toString();
         m_viewPort->addBehaviourWithUuid(
             n["path"].toString(),
             n["infos"].toObject(),
-            n["uuid"].toString(),
+            uuid,
             n["x"].toDouble(),
             n["y"].toDouble(),
             n["width"].toDouble(),
@@ -514,6 +522,10 @@ bool WorkspaceManager::loadAutosave(const QString& name)
             n["title"].toString(),
             n.contains("state") ? n["state"].toObject() : QJsonObject()
         );
+        if (n.value("hiddenInPresentation").toBool(false)) {
+            if (Behaviours* beh = m_viewPort->searchBehaviourFromUUID(uuid))
+                beh->setHiddenInPresentation(true);
+        }
     }
 
     for (const QJsonValue& v : connArr) {

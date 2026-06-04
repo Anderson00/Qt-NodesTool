@@ -594,6 +594,83 @@ Drawer {
             }
         }
 
+        // Presentation section — toggle whether this node is hidden when
+        // the user enters Presentation Mode (F10). Persists with the workspace.
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 64
+            radius: 6
+            color: Qt.rgba(ThemeManager.backgroundColor.r,
+                          ThemeManager.backgroundColor.g,
+                          ThemeManager.backgroundColor.b, 0.4)
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 10
+                spacing: 6
+
+                Text {
+                    text: qsTr("Presentation")
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: ThemeManager.textSecondaryColor
+                    opacity: 0.7
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    Text {
+                        text: qsTr("Hide in presentation mode")
+                        font.pixelSize: 11
+                        color: ThemeManager.textColor
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                    }
+
+                    // Lightweight inline toggle — keeps NodeSettings free of
+                    // dependencies on CustomSwitch which lives outside this dir.
+                    Rectangle {
+                        id: hideToggle
+                        Layout.preferredWidth: 36
+                        Layout.preferredHeight: 18
+                        radius: 9
+                        readonly property bool active:
+                            selectedObjectView !== null && selectedObjectView !== undefined
+                            && selectedObjectView.behaviourObject
+                            && selectedObjectView.behaviourObject.hiddenInPresentation
+                        color: active
+                               ? Qt.rgba(ThemeManager.primaryColor.r,
+                                         ThemeManager.primaryColor.g,
+                                         ThemeManager.primaryColor.b, 0.8)
+                               : Qt.rgba(ThemeManager.borderColor.r,
+                                         ThemeManager.borderColor.g,
+                                         ThemeManager.borderColor.b, 0.5)
+                        Behavior on color { ColorAnimation { duration: 120 } }
+
+                        Rectangle {
+                            width: 14; height: 14; radius: 7
+                            color: "white"
+                            anchors.verticalCenter: parent.verticalCenter
+                            x: hideToggle.active ? parent.width - width - 2 : 2
+                            Behavior on x { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (!selectedObjectView || !selectedObjectView.behaviourObject) return
+                                selectedObjectView.behaviourObject.hiddenInPresentation =
+                                    !selectedObjectView.behaviourObject.hiddenInPresentation
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         Item { Layout.fillHeight: true }
 
         // Delete node button

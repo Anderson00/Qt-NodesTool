@@ -39,12 +39,18 @@ private slots:
 
     void on_actionShow_fps_toggled(bool arg1);
 
+    // Switches window to FullScreen when presentation mode is entered and
+    // restores the previous visibility (Maximized/Normal) when it is exited.
+    void onPresentationFullScreenRequested(bool active);
+
 private:
     Ui::MainWindow *ui;
     ViewPortWindow *m_viewPort = nullptr;
     TaskManagerWindow *m_taskManager = nullptr;
 
-
+    // Visibility saved before entering presentation mode — restored on exit.
+    Qt::WindowStates m_savedWindowState = Qt::WindowNoState;
+    bool m_wasFullScreenBeforePresentation = false;
 
 };
 #endif // MAINWINDOW_H

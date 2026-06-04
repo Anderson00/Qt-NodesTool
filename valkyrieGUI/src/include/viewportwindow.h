@@ -31,7 +31,16 @@ class ViewPortWindow : public QMLWindow
     Q_PROPERTY(int historyCount READ historyCount NOTIFY historyChanged)
     Q_PROPERTY(int historyIndex READ historyIndex NOTIFY historyChanged)
 
+    Q_PROPERTY(int presentationMode READ presentationMode WRITE setPresentationMode NOTIFY presentationModeChanged)
+
 public:
+    enum PresentationLayer {
+        PresentationOff    = 0,
+        PresentationQuiet  = 1,
+        PresentationLocked = 2
+    };
+    Q_ENUM(PresentationLayer)
+
     explicit ViewPortWindow(QWidget* parent = nullptr);
     ~ViewPortWindow();
 
@@ -46,6 +55,9 @@ public:
     bool  isClean()       const;
     int   historyCount()  const;
     int   historyIndex()  const;
+
+    int   presentationMode() const;
+    Q_INVOKABLE void setPresentationMode(int mode);
 
     QUndoStack* undoStack() const;
 
@@ -135,11 +147,16 @@ public slots:
 
 signals:
     void fullScreenToogle();
+    // Emitted whenever the presentation mode changes — MainWindow listens to
+    // toggle the OS-level window between fullscreen and the previous state.
+    // active=true → enter fullscreen; active=false → restore.
+    void presentationFullScreenRequested(bool active);
     void showFpsChanged();
     void fpsCountChanged();
     void viewportStateChanged();
     void undoStateChanged();
     void historyChanged();
+    void presentationModeChanged();
     void viewportRestoreRequested(qreal x, qreal y, qreal scale);
     void behaviourAdded(Behaviours* behaviour);
     void behaviourRemoved(Behaviours* obj, const QString& uuid);
@@ -166,6 +183,7 @@ private:
     qreal m_viewportX     = 0.0;
     qreal m_viewportY     = 0.0;
     qreal m_viewportScale = 1.0;
+    int   m_presentationMode = 0;
 };
 
 #endif // VIEWPORTWINDOW_H

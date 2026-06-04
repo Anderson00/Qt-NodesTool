@@ -66,6 +66,20 @@ bool  ViewPortWindow::isClean()       const { return m_undoStack->isClean(); }
 int   ViewPortWindow::historyCount()  const { return m_undoStack->count() + 1; }
 int   ViewPortWindow::historyIndex()  const { return m_undoStack->index(); }
 
+int   ViewPortWindow::presentationMode() const { return m_presentationMode; }
+
+void ViewPortWindow::setPresentationMode(int mode) {
+    if (m_presentationMode == mode) return;
+    const bool wasPresenting = (m_presentationMode > 0);
+    const bool nowPresenting = (mode > 0);
+    m_presentationMode = mode;
+    emit presentationModeChanged();
+    // Toggle OS fullscreen only on transitions between off ↔ on; switching
+    // between modes 1 ↔ 2 keeps the window in its current visibility state.
+    if (wasPresenting != nowPresenting)
+        emit presentationFullScreenRequested(nowPresenting);
+}
+
 QString ViewPortWindow::historyText(int index) const {
     if (index <= 0 || index > m_undoStack->count()) return tr("Initial state");
     return m_undoStack->command(index - 1)->text();
@@ -348,6 +362,7 @@ QVariantMap ViewPortWindow::getNodeData(const QString& uuid) const {
     map["width"]  = b->width();
     map["height"] = b->height();
     map["state"]  = b->saveState().toVariantMap();
+    map["hiddenInPresentation"] = b->hiddenInPresentation();
     return map;
 }
 
@@ -362,6 +377,10 @@ QString ViewPortWindow::pasteNode(const QVariantMap& data, double offsetX, doubl
     const double w = data.value("width").toDouble();
     const double h = data.value("height").toDouble();
     const bool ok = addBehaviourWithUuid(path, infos, newUuid, x, y, w, h, title, state);
+    if (ok && data.value("hiddenInPresentation").toBool()) {
+        if (Behaviours* beh = m_behaviours.value(newUuid))
+            beh->setHiddenInPresentation(true);
+    }
     return ok ? newUuid : QString();
 }
 

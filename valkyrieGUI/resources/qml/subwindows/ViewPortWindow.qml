@@ -383,6 +383,27 @@ Rectangle {
     property string selectedPanel: ""
     property string currentProject: WorkspaceManager.currentWorkspace !== "" ? WorkspaceManager.currentWorkspace : "Untitled Project"
 
+    // ── Presentation Mode ───────────────────────────────────────────────────
+    readonly property bool isPresenting:   viewPort.presentationMode > 0
+    readonly property bool isCanvasLocked: viewPort.presentationMode >= 2
+
+    property bool _hudActive: true
+
+    Timer {
+        id: _hudTimer
+        interval: 4000
+        onTriggered: root._hudActive = false
+    }
+
+    HoverHandler {
+        id: _presHoverHandler
+        enabled: root.isPresenting
+        onPointChanged: {
+            root._hudActive = true
+            _hudTimer.restart()
+        }
+    }
+
 
     anchors.fill: parent
     clip: true
@@ -768,6 +789,19 @@ Rectangle {
         )
     }
 
+    // Returns the ViewComponentRectV2 instance for a given node UUID, or null.
+    // Used to query the hiddenInPresentation flag on connection endpoints so
+    // wires whose source/target nodes are hidden in presentation mode can be
+    // hidden too.
+    function _findNodeItemByUuid(uuid) {
+        if (!uuid) return null
+        for (var i = 0; i < rectsArray.count; i++) {
+            var entry = rectsArray.get(i)
+            if (entry.uuid === uuid) return entry.rectObjTarget
+        }
+        return null
+    }
+
     function detectNodeByMousePosition(x: double, y: double) {
         for (let i = 0; i < nodes.model.count; i++) {
             let node = nodes.model.get(i)['object']
@@ -787,6 +821,11 @@ Rectangle {
                 event.accepted = true
                 break
             case Qt.Key_Escape:
+                if (root.isPresenting) {
+                    viewPort.setPresentationMode(0)
+                    event.accepted = true
+                    break
+                }
                 if (isConnecting) {
                     isConnecting = false
                     mouseAreaGlobal.enabled = false
@@ -802,6 +841,11 @@ Rectangle {
                 break
             case Qt.Key_Delete:
             case Qt.Key_Backspace:
+                if (root.isCanvasLocked) {
+                    event.accepted = true
+                    lockBadgePulse.restart()
+                    break
+                }
                 _deleteSelected()
                 event.accepted = true
                 break
@@ -821,7 +865,7 @@ Rectangle {
 
     FabButton {
         id: fabRightMenu
-        visible: nodeOnFocus !== null && nodeOnFocus !== undefined
+        visible: nodeOnFocus !== null && nodeOnFocus !== undefined && !root.isPresenting
         anchors.right: parent.right
         anchors.rightMargin: 8
         anchors.top: desktopBar.bottom
@@ -956,6 +1000,9 @@ Rectangle {
 
     MouseArea {
         id: mouseZoom
+        // Disabled when canvas is locked (Presentation Layer B) — wheel zoom
+        // must be completely blocked in Locked mode.
+        enabled: !root.isCanvasLocked
         anchors.top: desktopBar.bottom
         anchors.left: parent.left
         anchors.right: parent.right
@@ -1030,11 +1077,16 @@ Rectangle {
 
     Rectangle {
         id: containerCanvas
-        anchors.top: desktopBar.bottom
+        anchors.top: parent.top
+        anchors.topMargin: root.isPresenting ? 0 : chromeTopHeight
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
+        anchors.bottomMargin: root.isPresenting ? 0 : (statusBar.height + bottomToolBar.height)
         color: "transparent"
+
+        Behavior on anchors.topMargin    { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+        Behavior on anchors.bottomMargin { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
 
         // Global hover tracker — HoverHandler propagates through all child items
         // without stealing events, so it works even when the mouse is over a node.
@@ -1464,9 +1516,53 @@ Rectangle {
                         function _endpointVisible(uuid) {
                             return !uuid || uuid === "" || DesktopManager.isNodeVisibleOnCurrentDesktop(uuid)
                         }
-                        visible: (_desktopRefresh >= 0)
+
+                        // ── Presentation hide-tracking ─────────────────────────
+                        // `_presRefresh` is bumped whenever presentation mode is
+                        // toggled or when either endpoint's hiddenInPresentation
+                        // flag changes, forcing the `visible` binding to
+                        // re-evaluate the imperative helper below.
+                        property int _presRefresh: 0
+                        // Re-evaluate when nodes are added/removed so endpoint
+                        // behaviour lookups stay accurate after a workspace load.
+                        property int _rectsTick: rectsArray.count
+                        property var _srcBeh: {
+                            _rectsTick // force dependency
+                            var it = root._findNodeItemByUuid(model.outputUuid)
+                            return it ? it.behaviourObject : null
+                        }
+                        property var _dstBeh: {
+                            _rectsTick // force dependency
+                            var it = root._findNodeItemByUuid(model.inputUuid)
+                            return it ? it.behaviourObject : null
+                        }
+                        Connections {
+                            target: root
+                            function onIsPresentingChanged() { shape._presRefresh++ }
+                        }
+                        Connections {
+                            target: shape._srcBeh
+                            ignoreUnknownSignals: true
+                            function onHiddenInPresentationChanged() { shape._presRefresh++ }
+                        }
+                        Connections {
+                            target: shape._dstBeh
+                            ignoreUnknownSignals: true
+                            function onHiddenInPresentationChanged() { shape._presRefresh++ }
+                        }
+                        // True when either endpoint is hidden in presentation mode.
+                        function _endpointHiddenInPresentation(uuid) {
+                            if (!root.isPresenting) return false
+                            if (!uuid || uuid === "") return false
+                            var item = root._findNodeItemByUuid(uuid)
+                            if (!item || !item.behaviourObject) return false
+                            return item.behaviourObject.hiddenInPresentation === true
+                        }
+                        visible: (_desktopRefresh >= 0) && (_presRefresh >= 0)
                                  && _endpointVisible(model.outputUuid)
                                  && _endpointVisible(model.inputUuid)
+                                 && !_endpointHiddenInPresentation(model.outputUuid)
+                                 && !_endpointHiddenInPresentation(model.inputUuid)
                         opacity: visible ? 1.0 : 0.0
                         Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
 
@@ -1629,6 +1725,13 @@ Rectangle {
                             (model.uuid === "" ||
                              DesktopManager.isNodeVisibleOnCurrentDesktop(model.uuid))
 
+                        // True when the user has marked this node "Hide in
+                        // presentation mode" AND presentation mode is active.
+                        readonly property bool _hiddenByPresentation:
+                            root.isPresenting
+                            && model.object
+                            && model.object.hiddenInPresentation
+
                         // Re-evaluate when current desktop or membership changes
                         Connections {
                             target: DesktopManager
@@ -1641,8 +1744,9 @@ Rectangle {
                         // Bumped via Connections above to force re-evaluation of _belongsToCurrentDesktop
                         property int opacityRefresh: 0
 
-                        visible:           !model.isVisualization && _belongsToCurrentDesktop && opacity > 0.01
-                        opacity:           _belongsToCurrentDesktop ? 1.0 : 0.0
+                        visible:           !model.isVisualization && _belongsToCurrentDesktop
+                                           && !_hiddenByPresentation && opacity > 0.01
+                        opacity:           (_belongsToCurrentDesktop && !_hiddenByPresentation) ? 1.0 : 0.0
                         Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
 
                         // nodePressed fires on every mouse-down — select the node immediately
@@ -1782,6 +1886,34 @@ Rectangle {
                         onBackTotalClicked:    root._sendToBack(viewComponentRectV2)
                     }
                 }
+            }
+        }
+
+        // ── Canvas Lock overlay (Presentation Layer B) ──────────────────────
+        // Fully freezes the canvas: intercepts clicks/drags so nodes cannot be
+        // moved, selected, or connected; blocks pan (no movement on drag) and
+        // blocks wheel zoom (w.accepted = true) so the view stays still.
+        MouseArea {
+            id: canvasLockOverlay
+            anchors.fill: parent
+            enabled: root.isCanvasLocked
+            visible: enabled
+            z: 5000
+            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+            hoverEnabled: true
+            preventStealing: true
+
+            cursorShape: Qt.ForbiddenCursor
+
+            onPressed: function(m) { m.accepted = true }
+            onPositionChanged: function(m) { m.accepted = true }
+            onReleased: function(m) { m.accepted = true }
+            // Swallow wheel events so zoom is fully blocked while locked
+            onWheel: function(w) { w.accepted = true }
+
+            onClicked: function(m) {
+                m.accepted = true
+                lockBadgePulse.restart()
             }
         }
     }
@@ -2000,6 +2132,9 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         z: 200
+        visible: !root.isPresenting
+        opacity: visible ? 1.0 : 0.0
+        Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
         barHeight:      topBarHeight
         currentProject: root.currentProject
         selectedPanel:  root.selectedPanel
@@ -2092,7 +2227,9 @@ Rectangle {
         anchors.right:  parent.right
         height:         root.desktopBarHeight
         z: 199
-        visible: !splashScreen.visible
+        visible: !splashScreen.visible && !root.isPresenting
+        opacity: visible ? 1.0 : 0.0
+        Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
     }
 
     // ─── Desktop limit warning popup ────────────────────────────────────────────
@@ -2221,6 +2358,22 @@ Rectangle {
         onActivated: commandPalette.open()
     }
 
+    // ── Presentation Mode shortcuts (always enabled) ────────────────────────
+    Shortcut {
+        sequence: "F10"
+        context:  Qt.ApplicationShortcut
+        onActivated: {
+            if (viewPort.presentationMode === 0)      viewPort.setPresentationMode(1)
+            else if (viewPort.presentationMode === 1) viewPort.setPresentationMode(2)
+            else                                       viewPort.setPresentationMode(0)
+        }
+    }
+    Shortcut {
+        sequence: "Shift+F10"
+        context:  Qt.ApplicationShortcut
+        onActivated: viewPort.setPresentationMode(0)
+    }
+
     Connections {
         target: DesktopManager
         function onDesktopLimitWarning(pendingName) {
@@ -2281,6 +2434,7 @@ Rectangle {
     Shortcut {
         sequence: "Ctrl+S"
         context:  Qt.ApplicationShortcut
+        enabled: !root.isCanvasLocked
         onActivated: {
             if (WorkspaceManager.currentWorkspace !== "") {
                 const ok = viewPort.saveWorkspace(WorkspaceManager.currentWorkspace)
@@ -2295,6 +2449,7 @@ Rectangle {
     Shortcut {
         sequence: "Ctrl+Shift+S"
         context:  Qt.ApplicationShortcut
+        enabled: !root.isCanvasLocked
         onActivated: {
             saveNameField.text = WorkspaceManager.currentWorkspace
             saveWorkspaceDialog.open()
@@ -2315,6 +2470,7 @@ Rectangle {
     Shortcut {
         sequence: "Ctrl+Shift+N"
         context:  Qt.ApplicationShortcut
+        enabled: !root.isCanvasLocked
         onActivated: DesktopManager.addDesktop("")
     }
     Shortcut {
@@ -2339,6 +2495,7 @@ Rectangle {
     Shortcut {
         sequence: "Ctrl+H"
         context:  Qt.ApplicationShortcut
+        enabled: !root.isCanvasLocked
         onActivated: topBar.historyPanelOpen = !topBar.historyPanelOpen
     }
     Shortcut {
@@ -2349,6 +2506,7 @@ Rectangle {
     Shortcut {
         sequence: "Ctrl+A"
         context:  Qt.ApplicationShortcut
+        enabled: !root.isCanvasLocked
         onActivated: {
             var all = []
             for (var i = 0; i < nodes.model.count; i++) {
@@ -2361,21 +2519,25 @@ Rectangle {
     Shortcut {
         sequence: "Ctrl+C"
         context:  Qt.ApplicationShortcut
+        enabled: !root.isCanvasLocked
         onActivated: root._copySelected()
     }
     Shortcut {
         sequence: "Ctrl+V"
         context:  Qt.ApplicationShortcut
+        enabled: !root.isCanvasLocked
         onActivated: root._pasteClipboard()
     }
     Shortcut {
         sequence: "Ctrl+D"
         context:  Qt.ApplicationShortcut
+        enabled: !root.isCanvasLocked
         onActivated: { root._copySelected(); root._pasteClipboard() }
     }
     Shortcut {
         sequence: "Ctrl+G"
         context:  Qt.ApplicationShortcut
+        enabled: !root.isCanvasLocked
         onActivated: root._groupSelected()
     }
     Shortcut {
@@ -4114,6 +4276,7 @@ Rectangle {
 
     Rectangle {
         id: viewRect
+        visible: !root.isPresenting
         anchors.bottom: parent.bottom
         anchors.right: parent.right
         anchors.bottomMargin: 22 + 8
@@ -4162,7 +4325,9 @@ Rectangle {
     // ─── Bottom Floating Toolbar ────────────────────────────────────────────────
     ViewportBottomToolBar {
         id: bottomToolBar
-        visible: !splashScreen.visible
+        visible: !splashScreen.visible && !root.isPresenting
+        opacity: visible ? 1.0 : 0.0
+        Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 48 // Above status bar
         anchors.horizontalCenter: parent.horizontalCenter
@@ -4226,6 +4391,7 @@ Rectangle {
     // ─── Status Bar ─────────────────────────────────────────────────────────────
     ViewportStatusBar {
         id: statusBar
+        visible: !root.isPresenting
         anchors.bottom: parent.bottom
         anchors.left:   parent.left
         anchors.right:  parent.right
@@ -4301,6 +4467,63 @@ Rectangle {
                     color: "white"; font.pixelSize: 11; font.bold: true
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
+            }
+        }
+    }
+
+    // ── Presentation Mode HUD indicator ─────────────────────────────────────
+    Loader {
+        id: presIndicatorLoader
+        active: root.isPresenting
+        anchors.bottom: parent.bottom
+        anchors.right:  parent.right
+        anchors.margins: 20
+        z: 9800
+        sourceComponent: Component {
+            PresentationModeIndicator {
+                mode:   viewPort.presentationMode
+                active: root._hudActive
+                onExitRequested: viewPort.setPresentationMode(0)
+            }
+        }
+    }
+
+    // ── Canvas Lock badge (Presentation Layer B) ────────────────────────────
+    Rectangle {
+        id: lockBadge
+        visible: root.isCanvasLocked
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.margins: 16
+        width: 40; height: 40; radius: 20
+        color: Qt.rgba(0, 0, 0, 0.55)
+        border.width: 1
+        border.color: ThemeManager.warningColor
+        z: 9800
+
+        SvgIcon {
+            anchors.centerIn: parent
+            width: 18; height: 18
+            source: Icons.lock
+            color: ThemeManager.warningColor
+        }
+
+        SequentialAnimation {
+            id: lockBadgePulse
+            NumberAnimation { target: lockBadge; property: "scale"; from: 1.0;  to: 1.35; duration: 120; easing.type: Easing.OutQuad }
+            NumberAnimation { target: lockBadge; property: "scale"; from: 1.35; to: 1.0;  duration: 200; easing.type: Easing.InOutQuad }
+        }
+
+        MouseArea {
+            id: lockMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: viewPort.setPresentationMode(1)
+
+            AppToolTip {
+                text: qsTr("Canvas locked — press F10 to cycle modes or Shift+F10 to exit")
+                visible: lockMouse.containsMouse
             }
         }
     }

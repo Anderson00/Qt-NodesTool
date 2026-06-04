@@ -33,6 +33,8 @@ class Behaviours : public QObject
     Q_PROPERTY(QString      behaviourPath  READ behaviourPath  CONSTANT)
     Q_PROPERTY(QJsonObject  behaviourInfos READ behaviourInfos CONSTANT)
     Q_PROPERTY(QString      uuid           READ uuid           CONSTANT)
+    Q_PROPERTY(bool hiddenInPresentation READ hiddenInPresentation
+               WRITE setHiddenInPresentation NOTIFY hiddenInPresentationChanged)
 public:
     enum Type{
         CPP = 0, DLL, PYTHON
@@ -70,6 +72,9 @@ public:
 
     const QString &uuid() const;
     void setUuid(const QString &uuid);
+
+    bool hiddenInPresentation() const;
+    void setHiddenInPresentation(bool hidden);
 
     void setQmlBodyUrl(const QString &newQmlBodyUrl);
     void setTitle(QString title);
@@ -119,6 +124,7 @@ signals:
     void contentHeightChanged(double newHeight);
     void xChanged(double newX);
     void yChanged(double newY);
+    void hiddenInPresentationChanged(bool hidden);
     void inputConnected(ConnectionModel*);
     void outputConnected(ConnectionModel*);
     void inputDesconected(Behaviours* from);
@@ -181,6 +187,7 @@ private:
 
     QList<QString> m_listOfExclusions;
     QString m_uuid;
+    bool m_hiddenInPresentation = false;
 };
 
 #endif // BEHAVIOURS_H
