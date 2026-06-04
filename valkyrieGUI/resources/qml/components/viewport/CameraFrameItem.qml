@@ -25,9 +25,17 @@ Rectangle {
 
     readonly property color camColor: "#FF9800"
 
-    color:        Qt.rgba(camColor.r, camColor.g, camColor.b, 0.04)
+    // ── Presentation mode ────────────────────────────────────────────────────
+    // When true, hide all visual "chrome" (border, header, handles, corner
+    // marks) so the camera region is shown without any framing — the user is
+    // viewing the presentation, not editing it. Content inside the region
+    // (nodes drawn on the canvas) remains visible.
+    property bool presentationActive: false
+
+    color:        presentationActive ? "transparent"
+                                     : Qt.rgba(camColor.r, camColor.g, camColor.b, 0.04)
     border.color: camColor
-    border.width: 2
+    border.width: presentationActive ? 0 : 2
     radius: 4
 
     // Inner dashed highlight
@@ -37,6 +45,7 @@ Rectangle {
         border.color: Qt.rgba(root.camColor.r, root.camColor.g, root.camColor.b, 0.18)
         border.width: 1
         radius: root.radius
+        visible: !root.presentationActive
     }
 
     // ── Drag state ────────────────────────────────────────────────────────────
@@ -50,6 +59,7 @@ Rectangle {
         height: 24
         color: Qt.rgba(root.camColor.r, root.camColor.g, root.camColor.b, 0.28)
         radius: root.radius
+        visible: !root.presentationActive
 
         Rectangle {
             anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
@@ -155,6 +165,7 @@ Rectangle {
         width: 14; height: 14; radius: 2
         anchors { right: parent.right; bottom: parent.bottom; margins: 1 }
         color: Qt.rgba(root.camColor.r, root.camColor.g, root.camColor.b, 0.7)
+        visible: !root.presentationActive
 
         MouseArea {
             anchors.fill: parent; preventStealing: true
@@ -183,13 +194,13 @@ Rectangle {
     readonly property int _cornerThk: 2
 
     // top-left
-    Rectangle { x: 0; y: 0; width: _cornerLen; height: _cornerThk; color: camColor }
-    Rectangle { x: 0; y: 0; width: _cornerThk; height: _cornerLen; color: camColor }
+    Rectangle { visible: !root.presentationActive; x: 0; y: 0; width: _cornerLen; height: _cornerThk; color: camColor }
+    Rectangle { visible: !root.presentationActive; x: 0; y: 0; width: _cornerThk; height: _cornerLen; color: camColor }
     // top-right
-    Rectangle { x: parent.width - _cornerLen; y: 0; width: _cornerLen; height: _cornerThk; color: camColor }
-    Rectangle { x: parent.width - _cornerThk; y: 0; width: _cornerThk; height: _cornerLen; color: camColor }
+    Rectangle { visible: !root.presentationActive; x: parent.width - _cornerLen; y: 0; width: _cornerLen; height: _cornerThk; color: camColor }
+    Rectangle { visible: !root.presentationActive; x: parent.width - _cornerThk; y: 0; width: _cornerThk; height: _cornerLen; color: camColor }
     // bottom-left
-    Rectangle { x: 0; y: parent.height - _cornerThk; width: _cornerLen; height: _cornerThk; color: camColor }
-    Rectangle { x: 0; y: parent.height - _cornerLen; width: _cornerThk; height: _cornerLen; color: camColor }
+    Rectangle { visible: !root.presentationActive; x: 0; y: parent.height - _cornerThk; width: _cornerLen; height: _cornerThk; color: camColor }
+    Rectangle { visible: !root.presentationActive; x: 0; y: parent.height - _cornerLen; width: _cornerThk; height: _cornerLen; color: camColor }
 }
 

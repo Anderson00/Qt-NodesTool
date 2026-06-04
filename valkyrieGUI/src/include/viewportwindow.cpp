@@ -80,6 +80,110 @@ void ViewPortWindow::setPresentationMode(int mode) {
         emit presentationFullScreenRequested(nowPresenting);
 }
 
+// ── Presentation Stages ──────────────────────────────────────────────────────
+
+int  ViewPortWindow::stageCount()   const { return m_stages.size(); }
+int  ViewPortWindow::currentStage() const { return m_currentStage; }
+bool ViewPortWindow::hasStages()    const { return !m_stages.isEmpty(); }
+
+void ViewPortWindow::setCurrentStage(int idx) {
+    if (m_stages.isEmpty()) return;
+    if (idx < 0 || idx >= m_stages.size()) return;
+    m_currentStage = idx;
+    PresentationStage* s = m_stages.at(idx);
+    emit currentStageChanged();
+    emit stageTransitionRequested(s->worldX, s->worldY,
+                                  s->worldW, s->worldH, s->zoom);
+}
+
+QString ViewPortWindow::addStage(const QString& name,
+                                  qreal x, qreal y, qreal w, qreal h,
+                                  qreal zoom) {
+    auto* s = new PresentationStage(this);
+    s->id     = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    s->name   = name.isEmpty() ? tr("Stage %1").arg(m_stages.size() + 1) : name;
+    s->worldX = x;
+    s->worldY = y;
+    s->worldW = w;
+    s->worldH = h;
+    s->zoom   = zoom;
+    m_stages.append(s);
+    emit stagesChanged();
+    return s->id;
+}
+
+void ViewPortWindow::removeStage(const QString& id) {
+    for (int i = 0; i < m_stages.size(); ++i) {
+        if (m_stages.at(i)->id == id) {
+            delete m_stages.takeAt(i);
+            if (m_currentStage >= m_stages.size()) m_currentStage = m_stages.size() - 1;
+            emit stagesChanged();
+            emit currentStageChanged();
+            return;
+        }
+    }
+}
+
+void ViewPortWindow::updateStage(const QString& id,
+                                  const QString& name,
+                                  const QString& notes) {
+    for (PresentationStage* s : m_stages) {
+        if (s->id == id) {
+            s->name  = name;
+            s->notes = notes;
+            emit stagesChanged();
+            return;
+        }
+    }
+}
+
+void ViewPortWindow::moveStage(int from, int to) {
+    if (from < 0 || from >= m_stages.size()) return;
+    if (to   < 0 || to   >= m_stages.size()) return;
+    if (from == to) return;
+    m_stages.move(from, to);
+    if (m_currentStage == from)      m_currentStage = to;
+    else if (m_currentStage == to)   m_currentStage = from;
+    emit stagesChanged();
+    emit currentStageChanged();
+}
+
+QVariantList ViewPortWindow::stagesData() const {
+    QVariantList list;
+    for (PresentationStage* s : m_stages) {
+        QVariantMap m;
+        m["id"]     = s->id;
+        m["name"]   = s->name;
+        m["worldX"] = s->worldX;
+        m["worldY"] = s->worldY;
+        m["worldW"] = s->worldW;
+        m["worldH"] = s->worldH;
+        m["zoom"]   = s->zoom;
+        m["notes"]  = s->notes;
+        list.append(m);
+    }
+    return list;
+}
+
+QJsonArray ViewPortWindow::stagesToJson() const {
+    QJsonArray arr;
+    for (PresentationStage* s : m_stages)
+        arr.append(s->toJson());
+    return arr;
+}
+
+void ViewPortWindow::stagesFromJson(const QJsonArray& arr) {
+    qDeleteAll(m_stages);
+    m_stages.clear();
+    for (const QJsonValue& v : arr) {
+        if (!v.isObject()) continue;
+        m_stages.append(PresentationStage::fromJson(v.toObject(), this));
+    }
+    m_currentStage = -1;
+    emit stagesChanged();
+    emit currentStageChanged();
+}
+
 QString ViewPortWindow::historyText(int index) const {
     if (index <= 0 || index > m_undoStack->count()) return tr("Initial state");
     return m_undoStack->command(index - 1)->text();
@@ -231,6 +335,12 @@ void ViewPortWindow::clearBehaviours() {
     qDeleteAll(m_behaviours);
     m_behaviours.clear();
     m_connectionComments.clear();
+    // Clear any saved presentation stages too — they're per-workspace state.
+    qDeleteAll(m_stages);
+    m_stages.clear();
+    m_currentStage = -1;
+    emit stagesChanged();
+    emit currentStageChanged();
 }
 
 Behaviours* ViewPortWindow::searchBehaviourFromUUID(const QString& uuid) {

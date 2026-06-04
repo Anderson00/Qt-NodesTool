@@ -175,6 +175,17 @@ Popup {
                         {key: "Ctrl + Shift + V", desc: "Toggle Visualization window"}
                     ]
                 }
+
+                ShortcutSection {
+                    title: qsTr("Presentation Mode")
+                    items: [
+                        {key: "F10",       desc: "Cycle Presentation Mode (Off → Quiet → Locked → Off)"},
+                        {key: "Shift+F10", desc: "Exit Presentation Mode immediately"},
+                        {key: "Esc",       desc: "Exit Presentation Mode"},
+                        {key: "F5",        desc: "Next Stage"},
+                        {key: "Shift+F5",  desc: "Previous Stage"}
+                    ]
+                }
             }
         }
     }

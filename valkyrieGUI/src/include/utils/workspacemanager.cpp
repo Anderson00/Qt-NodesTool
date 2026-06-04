@@ -162,6 +162,7 @@ QJsonObject WorkspaceManager::buildWorkspaceJson() const
     root["desktops"]         = DesktopManager::instance()->serialize();
     root["pinnedNodes"]      = DesktopManager::instance()->serializePinned();
     root["currentDesktopId"] = DesktopManager::instance()->serializeCurrentDesktopId();
+    root["stages"]           = m_viewPort->stagesToJson();
     return root;
 }
 
@@ -301,6 +302,12 @@ bool WorkspaceManager::loadWorkspace(const QString& name)
                 DesktopManager::instance()->registerNewNode(uuid);
         }
     }
+
+    // Presentation stages (optional — only present in workspaces saved after
+    // the stages feature shipped). Restored after nodes/desktops so the QML
+    // layer can render the StageBar with up-to-date data.
+    if (root.contains("stages"))
+        m_viewPort->stagesFromJson(root.value("stages").toArray());
 
     qDebug() << "[WorkspaceManager] Workspace loaded successfully:" << name;
     emit workspaceLoaded(name);
@@ -554,6 +561,10 @@ bool WorkspaceManager::loadAutosave(const QString& name)
                 DesktopManager::instance()->registerNewNode(uuid);
         }
     }
+
+    // Restore presentation stages (same as loadWorkspace).
+    if (root.contains("stages"))
+        m_viewPort->stagesFromJson(root.value("stages").toArray());
 
     if (m_currentWorkspace != name) {
         m_currentWorkspace = name;

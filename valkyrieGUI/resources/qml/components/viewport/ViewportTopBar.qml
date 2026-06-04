@@ -26,6 +26,9 @@ Rectangle {
     signal newProjectRequested()
     signal cameraToggled()
     signal visualizationToggled()
+    // Emitted when the user clicks the "Capture Stage" button. The viewport
+    // listens and calls viewPort.addStage() with the current view rectangle.
+    signal captureStageRequested()
     signal saveRequested()
     signal saveAsRequested()
     signal openRequested()
@@ -473,6 +476,17 @@ Rectangle {
                 onClicked: root.visualizationToggled()
                 Behavior on icon.color { ColorAnimation { duration: 150 } }
                 AppToolTip { text: qsTr("Visualization window (Ctrl+Shift+V)"); visible: parent.hovered }
+            }
+
+            // Capture current view as a Presentation Stage
+            AppBarButton {
+                width: 40; height: 40
+                icon.source: Icons.plusCircleOutline
+                icon.color:  Qt.rgba(ThemeManager.textColor.r,
+                                     ThemeManager.textColor.g,
+                                     ThemeManager.textColor.b, 0.6)
+                onClicked: root.captureStageRequested()
+                AppToolTip { text: qsTr("Capture view as Stage"); visible: parent.hovered }
             }
 
             Rectangle {

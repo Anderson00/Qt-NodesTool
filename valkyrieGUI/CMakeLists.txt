@@ -41,6 +41,7 @@ set(PROJECT_SOURCES
     src/include/mainwindow.ui
     src/include/qmlwindow.h src/include/qmlwindow.cpp
     src/include/viewportwindow.h src/include/viewportwindow.cpp
+    src/include/presentation/PresentationStage.h src/include/presentation/PresentationStage.cpp
     src/include/behaviours/common/fileopener.h src/include/behaviours/common/fileopener.cpp
     src/include/behaviours/common/cameraviewer.h src/include/behaviours/common/cameraviewer.cpp
     src/include/behaviours/common/processesviewer.h src/include/behaviours/common/processesviewer.cpp

@@ -6,9 +6,12 @@
 #include <QHash>
 #include <QWidget>
 #include <QJsonObject>
+#include <QJsonArray>
+#include <QList>
 #include <QVariantList>
 #include <QUndoStack>
 #include "behaviours/behaviours.h"
+#include "presentation/PresentationStage.h"
 #include "qmlwindow.h"
 
 class ViewPortWindow : public QMLWindow
@@ -32,6 +35,11 @@ class ViewPortWindow : public QMLWindow
     Q_PROPERTY(int historyIndex READ historyIndex NOTIFY historyChanged)
 
     Q_PROPERTY(int presentationMode READ presentationMode WRITE setPresentationMode NOTIFY presentationModeChanged)
+
+    // Presentation stages — named camera framings the user can navigate to.
+    Q_PROPERTY(int  stageCount   READ stageCount   NOTIFY stagesChanged)
+    Q_PROPERTY(int  currentStage READ currentStage WRITE setCurrentStage NOTIFY currentStageChanged)
+    Q_PROPERTY(bool hasStages    READ hasStages    NOTIFY stagesChanged)
 
 public:
     enum PresentationLayer {
@@ -58,6 +66,26 @@ public:
 
     int   presentationMode() const;
     Q_INVOKABLE void setPresentationMode(int mode);
+
+    // ── Presentation stages ──────────────────────────────────────────────
+    int  stageCount()   const;
+    int  currentStage() const;
+    bool hasStages()    const;
+    void setCurrentStage(int idx);
+
+    Q_INVOKABLE QString      addStage(const QString& name,
+                                      qreal x, qreal y, qreal w, qreal h,
+                                      qreal zoom = -1);
+    Q_INVOKABLE void         removeStage(const QString& id);
+    Q_INVOKABLE void         updateStage(const QString& id,
+                                         const QString& name,
+                                         const QString& notes);
+    Q_INVOKABLE void         moveStage(int from, int to);
+    Q_INVOKABLE QVariantList stagesData() const;
+
+    // Serialization helpers used by WorkspaceManager (save / load).
+    QJsonArray stagesToJson() const;
+    void       stagesFromJson(const QJsonArray& arr);
 
     QUndoStack* undoStack() const;
 
@@ -157,6 +185,14 @@ signals:
     void undoStateChanged();
     void historyChanged();
     void presentationModeChanged();
+    void stagesChanged();
+    void currentStageChanged();
+    // Emitted when setCurrentStage() runs — the QML layer animates the
+    // canvas pan/zoom to frame the requested world rectangle. zoom < 0
+    // means "auto-fit the rectangle in the viewport".
+    void stageTransitionRequested(qreal worldX, qreal worldY,
+                                  qreal worldW, qreal worldH,
+                                  qreal zoom);
     void viewportRestoreRequested(qreal x, qreal y, qreal scale);
     void behaviourAdded(Behaviours* behaviour);
     void behaviourRemoved(Behaviours* obj, const QString& uuid);
@@ -184,6 +220,9 @@ private:
     qreal m_viewportY     = 0.0;
     qreal m_viewportScale = 1.0;
     int   m_presentationMode = 0;
+
+    QList<PresentationStage*> m_stages;
+    int  m_currentStage = -1;
 };
 
 #endif // VIEWPORTWINDOW_H

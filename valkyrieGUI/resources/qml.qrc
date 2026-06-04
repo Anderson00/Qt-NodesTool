@@ -157,6 +157,7 @@
         <file alias="DesktopOverview.qml">qml/components/viewport/DesktopOverview.qml</file>
         <file alias="ShortcutsHelpPopup.qml">qml/components/viewport/ShortcutsHelpPopup.qml</file>
         <file alias="PresentationModeIndicator.qml">qml/components/viewport/PresentationModeIndicator.qml</file>
+        <file alias="StageBar.qml">qml/components/viewport/StageBar.qml</file>
     </qresource>
     <qresource prefix="/components/drawers">
         <file alias="NodesDrawer.qml">qml/components/drawers/NodesDrawer.qml</file>

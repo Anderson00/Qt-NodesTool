@@ -77,6 +77,13 @@ Rectangle {
     property real cameraWorldW: 800
     property real cameraWorldH: 800 / (Screen.width / Screen.height)
 
+    // Saved viewport (pan + zoom) captured just before entering Presentation
+    // Mode so we can smoothly restore it when the user exits the mode.
+    property real _prePresentCanvasX: 0
+    property real _prePresentCanvasY: 0
+    property real _prePresentZoom:    1.0
+    property bool _hasPrePresentView: false
+
     // World-space point kept at the center of the view.
     // Updated whenever the canvas is panned or zoomed.
     // Initial value = (5000, 5000) = canvas center = "home" = display (0, 0).
@@ -1378,6 +1385,11 @@ Rectangle {
                     visible: root.showCamera
                     z: Number.MAX_VALUE - 1
 
+                    // Hide the camera's visual chrome (border, header, handles,
+                    // corner marks) while the user is presenting — the camera
+                    // is just a framing tool at that point, not a UI control.
+                    presentationActive: root.isPresenting
+
                     // All geometry set imperatively to avoid binding conflicts with drag/resize.
                     Component.onCompleted: {
                         x      = root.cameraWorldX
@@ -2217,6 +2229,17 @@ Rectangle {
             viewPort.takeScreenshot(path)
             ToastManager.show("Screenshot saved", "success")
         }
+        onCaptureStageRequested: {
+            // Capture the current viewport in WORLD coordinates so the stage
+            // can be re-framed later regardless of the user's pan/zoom state.
+            var vw = containerCanvas.width  / zoomScale
+            var vh = containerCanvas.height / zoomScale
+            var cx = (containerCanvas.width  / 2 - mycanvas.x) / zoomScale
+            var cy = (containerCanvas.height / 2 - mycanvas.y) / zoomScale
+            var name = qsTr("Stage ") + (viewPort.stageCount + 1)
+            viewPort.addStage(name, cx - vw / 2, cy - vh / 2, vw, vh, zoomScale)
+            ToastManager.show(qsTr("Stage captured: ") + name, "success")
+        }
     }
 
     // ─── Virtual Desktops Bar ───────────────────────────────────────────────────
@@ -2374,6 +2397,27 @@ Rectangle {
         onActivated: viewPort.setPresentationMode(0)
     }
 
+    // ── Stage navigation (only meaningful while presenting + stages exist) ──
+    Shortcut {
+        sequence: "F5"
+        context:  Qt.ApplicationShortcut
+        enabled:  root.isPresenting && viewPort.hasStages
+        onActivated: {
+            var next = (viewPort.currentStage + 1) % viewPort.stageCount
+            viewPort.setCurrentStage(next)
+        }
+    }
+    Shortcut {
+        sequence: "Shift+F5"
+        context:  Qt.ApplicationShortcut
+        enabled:  root.isPresenting && viewPort.hasStages
+        onActivated: {
+            var prev = (viewPort.currentStage - 1 + viewPort.stageCount)
+                       % viewPort.stageCount
+            viewPort.setCurrentStage(prev)
+        }
+    }
+
     Connections {
         target: DesktopManager
         function onDesktopLimitWarning(pendingName) {
@@ -2410,6 +2454,128 @@ Rectangle {
         NumberAnimation { id: desktopCameraAnimZoom; target: root;     property: "zoomScale"; duration: 280; easing.type: Easing.OutCubic }
         NumberAnimation { id: desktopCameraAnimX;    target: mycanvas; property: "x";         duration: 280; easing.type: Easing.OutCubic }
         NumberAnimation { id: desktopCameraAnimY;    target: mycanvas; property: "y";         duration: 280; easing.type: Easing.OutCubic }
+    }
+
+    // ── Presentation Mode camera framing ────────────────────────────────────
+    // When the user enters Presentation Mode (presentationMode > 0) and an
+    // active CameraFrameItem exists on the canvas, smoothly pan+zoom so the
+    // camera rectangle fills the viewport. On exit, restore the previous
+    // viewport so the user picks up where they left off.
+    ParallelAnimation {
+        id: cameraPresentAnim
+        NumberAnimation { id: cameraPresentAnimZoom; target: root;     property: "zoomScale"; duration: 700; easing.type: Easing.InOutCubic }
+        NumberAnimation { id: cameraPresentAnimX;    target: mycanvas; property: "x";         duration: 700; easing.type: Easing.InOutCubic }
+        NumberAnimation { id: cameraPresentAnimY;    target: mycanvas; property: "y";         duration: 700; easing.type: Easing.InOutCubic }
+    }
+
+    // Settle timer — containerCanvas margins animate over ~220ms when entering
+    // presentation mode, so we wait for the viewport to reach its final size
+    // before computing the fit. Otherwise the framing would use stale geometry.
+    Timer {
+        id: _presentationFitTimer
+        interval: 240
+        repeat:   false
+        onTriggered: root._animateCanvasToCamera()
+    }
+
+    function _animateCanvasToCamera() {
+        if (!root.showCamera) return
+        // Pixel-perfect framing of the camera rect — no breathing margin.
+        _animateCanvasToRegion(root.cameraWorldX, root.cameraWorldY,
+                               root.cameraWorldW, root.cameraWorldH,
+                               -1)
+    }
+
+    // Generalised version used by both the Camera framing and Presentation
+    // Stages. If targetZoom <= 0, computes a zoom that fits the rectangle
+    // exactly inside containerCanvas (preserving aspect ratio via Math.min).
+    function _animateCanvasToRegion(wx, wy, ww, wh, targetZoom) {
+        if (!mycanvas.initialized)        return
+        if (containerCanvas.width  <= 0)  return
+        if (containerCanvas.height <= 0)  return
+        if (ww <= 0 || wh <= 0)           return
+
+        var z
+        if (targetZoom && targetZoom > 0) {
+            z = targetZoom
+        } else {
+            // Math.min guarantees the region fits without being cropped, even
+            // when its aspect ratio differs from containerCanvas.
+            z = Math.min(containerCanvas.width  / ww,
+                         containerCanvas.height / wh)
+        }
+        z = Math.max(root.minZoom, Math.min(root.maxZoom, z))
+
+        // Pan so the region's centre maps to the viewport centre.
+        var cx = wx + ww / 2
+        var cy = wy + wh / 2
+        var targetX = containerCanvas.width  / 2 - cx * z
+        var targetY = containerCanvas.height / 2 - cy * z
+
+        cameraPresentAnim.stop()
+        cameraPresentAnimZoom.to = z
+        cameraPresentAnimX.to    = targetX
+        cameraPresentAnimY.to    = targetY
+        cameraPresentAnim.start()
+    }
+
+    function _restorePrePresentationView() {
+        if (!root._hasPrePresentView) return
+        if (!mycanvas.initialized)    return
+        cameraPresentAnim.stop()
+        cameraPresentAnimZoom.to = root._prePresentZoom
+        cameraPresentAnimX.to    = root._prePresentCanvasX
+        cameraPresentAnimY.to    = root._prePresentCanvasY
+        cameraPresentAnim.start()
+        root._hasPrePresentView = false
+    }
+
+    Connections {
+        target: viewPort
+        function onPresentationModeChanged() {
+            if (viewPort.presentationMode > 0) {
+                // Entering presentation: snapshot the current viewport once
+                // (only on the 0 -> N transition, not 1 -> 2) so a later exit
+                // can restore exactly what the user had before.
+                if (!root._hasPrePresentView) {
+                    root._prePresentCanvasX = mycanvas.x
+                    root._prePresentCanvasY = mycanvas.y
+                    root._prePresentZoom    = root.zoomScale
+                    root._hasPrePresentView = true
+                }
+                // Stages take priority over the camera: when the workspace has
+                // stages defined, jump straight to stage 0 and let StageBar
+                // drive navigation. Otherwise, fall back to the camera frame.
+                if (viewPort.hasStages) {
+                    _presentationStageTimer.restart()
+                } else if (root.showCamera) {
+                    // Wait for containerCanvas margins to settle (220ms anim)
+                    // before fitting, otherwise we'd frame to the wrong size.
+                    _presentationFitTimer.restart()
+                }
+            } else {
+                // Exited presentation mode — cancel any pending fit and
+                // smoothly restore the previous viewport (if we have one).
+                _presentationFitTimer.stop()
+                _presentationStageTimer.stop()
+                root._restorePrePresentationView()
+            }
+        }
+
+        // Animate the canvas whenever C++ requests a stage transition
+        // (triggered by setCurrentStage / F5 / Shift+F5 / StageBar arrows).
+        function onStageTransitionRequested(wx, wy, ww, wh, targetZoom) {
+            root._animateCanvasToRegion(wx, wy, ww, wh, targetZoom)
+        }
+    }
+
+    // Same 240ms settle delay used for camera framing, applied to the very
+    // first stage transition on presentation entry.
+    Timer {
+        id: _presentationStageTimer
+        interval: 240
+        repeat:   false
+        onTriggered: viewPort.setCurrentStage(0)
     }
 
     // ─── History Panel ──────────────────────────────────────────────────────────
@@ -2886,6 +3052,53 @@ Rectangle {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.topMargin:     16
         z: 9900
+    }
+
+    // ─── Stage navigation HUD (Presentation Mode) ───────────────────────────────
+    // Bumped whenever stagesChanged / currentStageChanged fire so the
+    // stageName binding below re-runs and picks up fresh stagesData().
+    property int _stageBarTick: 0
+    Connections {
+        target: viewPort
+        function onStagesChanged()       { root._stageBarTick++ }
+        function onCurrentStageChanged() { root._stageBarTick++ }
+    }
+
+    // Helper that pulls the current stage's name out of stagesData() without
+    // crashing when stagesData() is empty or currentStage is -1.
+    function _currentStageName() {
+        if (!viewPort.hasStages) return ""
+        var idx  = viewPort.currentStage
+        var data = viewPort.stagesData()
+        if (idx < 0 || idx >= data.length) return ""
+        return data[idx].name || ""
+    }
+
+    StageBar {
+        id: stageBar
+        visible: root.isPresenting && viewPort.hasStages
+        opacity: visible && root._hudActive ? 1.0 : 0.0
+        Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+
+        stageCount:   viewPort.stageCount
+        currentStage: Math.max(0, viewPort.currentStage)
+        // The `_stageBarTick` reference forces this binding to re-evaluate
+        // whenever stages are added/removed/renamed or the index changes.
+        stageName:    (root._stageBarTick >= 0) ? root._currentStageName() : ""
+
+        anchors.bottom:           parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottomMargin:     24
+        z: 9900
+
+        onPreviousRequested: {
+            var prev = Math.max(0, viewPort.currentStage - 1)
+            viewPort.setCurrentStage(prev)
+        }
+        onNextRequested: {
+            var next = Math.min(viewPort.stageCount - 1, viewPort.currentStage + 1)
+            viewPort.setCurrentStage(next)
+        }
     }
 
     // ─── Connection Radial Menu ─────────────────────────────────────────────────
