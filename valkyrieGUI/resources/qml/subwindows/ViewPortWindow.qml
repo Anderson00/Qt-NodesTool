@@ -2558,6 +2558,9 @@ Rectangle {
                 //   1. showCamera   -> animate to camera (virtual stage 0)
                 //   2. hasStages    -> animate to real stage 0
                 //   3. neither      -> keep the current viewport untouched
+                leftPanelDrawer.close()
+                drawer.close()
+
                 if (root.showCamera) {
                     // Wait for containerCanvas margins to settle (220ms anim)
                     // before fitting, otherwise we'd frame to the wrong size.
@@ -3145,6 +3148,7 @@ Rectangle {
     // ─── Nodes List ─────────────────────────────────────────────────────────────
     NodesList {
         id: nodesList
+        visible: !root.isPresenting
         nodesModel: nodes.model
         containerCanvas: containerCanvas
         mycanvas: mycanvas
