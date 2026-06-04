@@ -134,6 +134,19 @@ void ViewPortWindow::removeStage(const QString& id) {
     }
 }
 
+void ViewPortWindow::removeStageAt(int index) {
+    if (index < 0 || index >= m_stages.size()) return;
+    delete m_stages.takeAt(index);
+    if (m_currentStage >= m_stages.size()) m_currentStage = m_stages.size() - 1;
+    emit stagesChanged();
+    emit currentStageChanged();
+}
+
+QString ViewPortWindow::currentStageId() const {
+    if (m_currentStage < 0 || m_currentStage >= m_stages.size()) return QString();
+    return m_stages.at(m_currentStage)->id;
+}
+
 void ViewPortWindow::updateStage(const QString& id,
                                   const QString& name,
                                   const QString& notes) {

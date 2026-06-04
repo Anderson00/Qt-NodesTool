@@ -84,6 +84,12 @@ public:
                                       qreal x, qreal y, qreal w, qreal h,
                                       qreal zoom = -1);
     Q_INVOKABLE void         removeStage(const QString& id);
+    // Convenience overload — remove a stage by its index in the list.
+    // Used by the StageBar's in-presentation Delete button so the QML side
+    // doesn't have to resolve an id first.
+    Q_INVOKABLE void         removeStageAt(int index);
+    // Returns the id of the currently selected stage (empty if none).
+    Q_INVOKABLE QString      currentStageId() const;
     Q_INVOKABLE void         updateStage(const QString& id,
                                          const QString& name,
                                          const QString& notes);

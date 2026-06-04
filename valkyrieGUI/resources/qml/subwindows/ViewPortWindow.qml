@@ -2398,15 +2398,15 @@ Rectangle {
     }
 
     // ── Stage navigation (only meaningful while presenting + stages exist) ──
-    // Normalise currentStage when it's -1 (no stage yet selected) so the
-    // very first F5 / Shift+F5 press lands on a valid index.
+    // When currentStage is -1 (camera virtual stage, or nothing chosen yet)
+    // the first press lands directly on stage 0 instead of skipping past it.
     Shortcut {
         sequence: "F5"
         context:  Qt.ApplicationShortcut
         enabled:  root.isPresenting && viewPort.hasStages
         onActivated: {
-            var cur  = Math.max(0, viewPort.currentStage)
-            var next = (cur + 1) % viewPort.stageCount
+            var cur = viewPort.currentStage
+            var next = (cur < 0) ? 0 : ((cur + 1) % viewPort.stageCount)
             viewPort.setCurrentStage(next)
         }
     }
@@ -2415,8 +2415,9 @@ Rectangle {
         context:  Qt.ApplicationShortcut
         enabled:  root.isPresenting && viewPort.hasStages
         onActivated: {
-            var cur  = Math.max(0, viewPort.currentStage)
-            var prev = (cur - 1 + viewPort.stageCount) % viewPort.stageCount
+            var cur = viewPort.currentStage
+            var prev = (cur < 0) ? 0
+                                 : ((cur - 1 + viewPort.stageCount) % viewPort.stageCount)
             viewPort.setCurrentStage(prev)
         }
     }
@@ -2546,15 +2547,23 @@ Rectangle {
                     root._prePresentZoom    = root.zoomScale
                     root._hasPrePresentView = true
                 }
-                // Stages take priority over the camera: when the workspace has
-                // stages defined, jump straight to stage 0 and let StageBar
-                // drive navigation. Otherwise, fall back to the camera frame.
-                if (viewPort.hasStages) {
-                    _presentationStageTimer.restart()
-                } else if (root.showCamera) {
+                // The camera, when active, is treated as a virtual "stage 0"
+                // — the starting viewpoint of the presentation. It is NOT
+                // persisted, never appears in stagesData(), and doesn't
+                // count toward stageCount. F5 / Shift+F5 still navigate the
+                // real stages list (which begins at index 0) after the
+                // initial camera framing settles.
+                //
+                // Priority on entry:
+                //   1. showCamera   -> animate to camera (virtual stage 0)
+                //   2. hasStages    -> animate to real stage 0
+                //   3. neither      -> keep the current viewport untouched
+                if (root.showCamera) {
                     // Wait for containerCanvas margins to settle (220ms anim)
                     // before fitting, otherwise we'd frame to the wrong size.
                     _presentationFitTimer.restart()
+                } else if (viewPort.hasStages) {
+                    _presentationStageTimer.restart()
                 }
             } else {
                 // Exited presentation mode — cancel any pending fit and
@@ -3108,6 +3117,22 @@ Rectangle {
         onNextRequested: {
             var next = Math.min(viewPort.stageCount - 1, viewPort.currentStage + 1)
             viewPort.setCurrentStage(next)
+        }
+        // Delete the currently active stage. After removal we either jump to
+        // the nearest remaining stage (so the HUD keeps a sensible focus) or,
+        // when no stages are left, fall back to the camera framing if there
+        // is one — otherwise we simply stay where we are.
+        onDeleteCurrentStageRequested: {
+            if (!viewPort.hasStages) return
+            var idx = Math.max(0, viewPort.currentStage)
+            viewPort.removeStageAt(idx)
+            if (viewPort.hasStages) {
+                var newIdx = Math.min(idx, viewPort.stageCount - 1)
+                viewPort.setCurrentStage(newIdx)
+            } else if (root.isPresenting && root.showCamera) {
+                root._animateCanvasToCamera()
+            }
+            ToastManager.show(qsTr("Stage deleted"), "info")
         }
     }
 

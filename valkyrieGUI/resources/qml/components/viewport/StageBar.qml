@@ -14,6 +14,8 @@ Rectangle {
 
     signal previousRequested()
     signal nextRequested()
+    // Emitted when the user clicks the "x" button to delete the active stage.
+    signal deleteCurrentStageRequested()
 
     height: 48
     radius: 24
@@ -21,9 +23,9 @@ Rectangle {
     border.width: 1
     border.color: Qt.rgba(1, 1, 1, 0.15)
 
-    // Auto width based on content, capped at 400px so very long stage names
+    // Auto width based on content, capped at 420px so very long stage names
     // get elided instead of stretching the bar across the screen.
-    width: Math.min(stageRow.implicitWidth + 40, 400)
+    width: Math.min(stageRow.implicitWidth + 40, 420)
 
     Row {
         id: stageRow
@@ -102,6 +104,38 @@ Rectangle {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: root.nextRequested()
+            }
+        }
+
+        // ── Visual separator before the destructive action ───────────────
+        Rectangle {
+            width: 1
+            height: 18
+            color: Qt.rgba(1, 1, 1, 0.18)
+            anchors.verticalCenter: parent.verticalCenter
+            visible: root.stageCount > 0
+        }
+
+        // ── Delete-current-stage button ──────────────────────────────────
+        // Discrete "x" placed at the right of the pill. Stays dim by
+        // default; brightens on hover. Only meaningful when a stage exists.
+        Text {
+            id: deleteBtn
+            text: "×"   // multiplication sign, reads as a clean "x"
+            color: Qt.rgba(1, 1, 1, 0.45)
+            font.pixelSize: 18
+            font.bold: true
+            anchors.verticalCenter: parent.verticalCenter
+            visible: root.stageCount > 0
+
+            MouseArea {
+                id: deleteHover
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onEntered: deleteBtn.color = "#ff6b6b"
+                onExited:  deleteBtn.color = Qt.rgba(1, 1, 1, 0.45)
+                onClicked: root.deleteCurrentStageRequested()
             }
         }
     }
