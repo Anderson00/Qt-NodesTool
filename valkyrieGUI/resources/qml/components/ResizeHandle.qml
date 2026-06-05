@@ -155,12 +155,17 @@ Rectangle {
         return Qt.ArrowCursor
     }
 
+    // External code can set this to false to disable resizing (e.g. locked nodes)
+    property bool resizeEnabled: true
+    visible: resizeEnabled
+
     MouseArea {
         id: dragArea
         anchors.fill: parent
         anchors.margins: -handle.hitMargin
         hoverEnabled: true
-        cursorShape: handle._cursor
+        enabled: handle.resizeEnabled
+        cursorShape: handle.resizeEnabled ? handle._cursor : Qt.ArrowCursor
         preventStealing: true
 
         property real startGlobalX: 0

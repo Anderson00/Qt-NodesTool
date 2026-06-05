@@ -1757,8 +1757,9 @@ Rectangle {
                         property int opacityRefresh: 0
 
                         visible:           !model.isVisualization && _belongsToCurrentDesktop
-                                           && !_hiddenByPresentation && opacity > 0.01
-                        opacity:           (_belongsToCurrentDesktop && !_hiddenByPresentation) ? 1.0 : 0.0
+                                           && !_hiddenByPresentation && !userHidden && opacity > 0.01
+                        opacity:           ((_belongsToCurrentDesktop && !_hiddenByPresentation) ? 1.0 : 0.0)
+                                           * userOpacity
                         Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
 
                         // nodePressed fires on every mouse-down — select the node immediately
@@ -3159,6 +3160,7 @@ Rectangle {
         // hidden behind it.
         topLeftAnchor: desktopBar
         focusedNode: root.nodeOnFocus
+        selectedNodes: root.selectedNodes
         nodes: nodes
         onNodeSelected: function(nodeItem) {
             root._setSelection([nodeItem])

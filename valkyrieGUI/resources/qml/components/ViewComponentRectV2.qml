@@ -20,7 +20,15 @@ Rectangle {
     property var connectionsInput: []
     property var connectionsOutput: []
     property alias title: titleView.text
-    property color borderColor: ThemeManager.primaryColor
+    // Per-node theme overrides — drive border / header / body / title colors so
+    // changes from the NodeSettings color popup are applied in real time. The
+    // binding falls back to ThemeManager because NodeTheme itself returns the
+    // global value when no override has been recorded.
+    readonly property var _nodeTheme: behaviourObject ? behaviourObject.nodeTheme : null
+    property color borderColor: _nodeTheme ? _nodeTheme.borderColor : ThemeManager.primaryColor
+    readonly property color headerColor: _nodeTheme ? _nodeTheme.headerColor : ThemeManager.primaryColor
+    readonly property color bodyColor:   _nodeTheme ? _nodeTheme.bodyColor   : ThemeManager.surfaceColor
+    readonly property color titleColor:  _nodeTheme ? _nodeTheme.titleColor  : ThemeManager.textColor
     property alias rootBodyColor: rootBody.color
     property alias bodyComponent: rootBodyLoader.sourceComponent
     property alias bodySourceQML: rootBodyLoader.source
@@ -50,6 +58,14 @@ Rectangle {
 
     property bool isDragging:       false  // managed by manual drag handler
     property bool isGroupFollowing: false  // true while this node is a group-drag follower
+
+    // ── User-driven node state (controlled from NodeSettings panel) ─────────
+    // userLocked   : blocks dragging and resizing while still allowing selection
+    // userHidden   : hides the node on the canvas (separate from presentation mode)
+    // userOpacity  : 0..1 multiplier for the node's final opacity
+    property bool userLocked:  false
+    property bool userHidden:  false
+    property real userOpacity: 1.0
 
     property double minWidth: 150
     property double minHeight: 100
@@ -380,9 +396,11 @@ Rectangle {
         z: 1
         anchors.fill: root
         hoverEnabled: true
-        cursorShape: (area.containsMouse && !isResizing)
-                     ? (area.pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor)
-                     : Qt.ArrowCursor
+        cursorShape: root.userLocked
+                     ? Qt.ArrowCursor
+                     : ((area.containsMouse && !isResizing)
+                        ? (area.pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor)
+                        : Qt.ArrowCursor)
         acceptedButtons: Qt.AllButtons
 
         property real _pressParentX: 0   // mouse position in parent (canvas) space at press
@@ -398,12 +416,13 @@ Rectangle {
             _pressNodeY   = root.y
             root._pressX  = root.x
             root._pressY  = root.y
-            root.isDragging = true
+            // Locked nodes still report press (so selection works), but never enter drag.
+            if (!root.userLocked) root.isDragging = true
             root.nodePressed()
         }
 
         onPositionChanged: function(mouse) {
-            if (!root.isDragging) return
+            if (!root.isDragging || root.userLocked) return
 
             var pt   = mapToItem(root.parent, mouse.x, mouse.y)
             var newX = _pressNodeX + (pt.x - _pressParentX)
@@ -452,14 +471,14 @@ Rectangle {
     }
 
     // ============== Resize handles (extracted to ResizeHandle.qml) ==============
-    ResizeHandle { id: tlH; direction: "top-left";     handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
-    ResizeHandle { id: trH; direction: "top-right";    handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
-    ResizeHandle { id: blH; direction: "bottom-left";  handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
-    ResizeHandle { id: brH; direction: "bottom-right"; handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
-    ResizeHandle { id: tH;  direction: "top";          handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
-    ResizeHandle { id: bH;  direction: "bottom";       handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
-    ResizeHandle { id: lH;  direction: "left";         handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
-    ResizeHandle { id: rH;  direction: "right";        handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
+    ResizeHandle { id: tlH; direction: "top-left";     resizeEnabled: !root.userLocked; handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
+    ResizeHandle { id: trH; direction: "top-right";    resizeEnabled: !root.userLocked; handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
+    ResizeHandle { id: blH; direction: "bottom-left";  resizeEnabled: !root.userLocked; handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
+    ResizeHandle { id: brH; direction: "bottom-right"; resizeEnabled: !root.userLocked; handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
+    ResizeHandle { id: tH;  direction: "top";          resizeEnabled: !root.userLocked; handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
+    ResizeHandle { id: bH;  direction: "bottom";       resizeEnabled: !root.userLocked; handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
+    ResizeHandle { id: lH;  direction: "left";         resizeEnabled: !root.userLocked; handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
+    ResizeHandle { id: rH;  direction: "right";        resizeEnabled: !root.userLocked; handleSize: resizeHandleSize; minWidth: root.minWidth; minHeight: root.minHeight; highlightColor: root.borderColor; viewportEdgeSnap: root.viewportEdgeSnap; onResizeFinished: (ox,oy,ow,oh,nx,ny,nw,nh) => root._recordResize(ox,oy,ow,oh,nx,ny,nw,nh) }
 
     // ============== Header ==============
     // z: 5 lifts the entire header above the body `area` MouseArea (z:1) so
@@ -478,7 +497,7 @@ Rectangle {
         antialiasing: true
         clip: true
         z: 5
-        color: root.isSelected ? root.borderColor : root.color
+        color: root.isSelected ? root.borderColor : root.headerColor
 
         Rectangle {
             anchors.bottom: topHeaderRect.bottom
@@ -533,7 +552,7 @@ Rectangle {
                     text: ""
                     font.pixelSize: 12
                     color: root.isSelected ? ThemeManager.backgroundColor
-                                      : ThemeManager.textColor
+                                      : root.titleColor
                     verticalAlignment: Text.AlignVCenter
                     elide: Text.ElideRight
                 }

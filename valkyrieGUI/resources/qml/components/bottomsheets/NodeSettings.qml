@@ -1,9 +1,9 @@
 import QtQuick.Controls 2.15
 import QtQuick.Controls.Material 2.12
-import QtQuick.Layouts 1.14
-import QtQuick.Window 2.2
-import QtQuick 2.14
-import QtQml 2.14
+import QtQuick.Layouts 1.15
+import QtQuick.Window 2.15
+import QtQuick 2.15
+import QtQml 2.15
 
 
 
@@ -37,16 +37,17 @@ Drawer {
 
     property string currentNodeUuid: ""
 
+    // World-coordinate offset — nodes live in 0..10000 canvas space and the
+    // panel displays them relative to the canvas centre (5000, 5000).
+    readonly property real worldOrigin: 5000
+
     onSelectedObjectViewChanged: {
         if (selectedObjectView) {
-            name.text = selectedObjectView.behaviourObject.title
-            updateValues()
             updateConnectionsList()
         }
     }
 
     function updateConnectionsList() {
-        console.log(viewPortWindow)
         if (selectedObjectView && selectedObjectView.behaviourObject && viewPortWindow) {
             currentNodeUuid = selectedObjectView.behaviourObject.uuid;
             var conns = viewPortWindow.getNodeConnections(currentNodeUuid);
@@ -57,42 +58,40 @@ Drawer {
         }
     }
 
-    function updateValues() {
-        if (selectedObjectView && viewPortWindow) {
-            posXVal.text = Math.round(selectedObjectView.x - 5000)
-            posYVal.text = Math.round(selectedObjectView.y - 5000)
-            widthVal.text = Math.round(selectedObjectView.width)
-            heightVal.text = Math.round(selectedObjectView.height)
-            zVal.text = selectedObjectView.z
-        }
-    }
-
-    Connections {
-        target: selectedObjectView
-
-        function onXChanged() {
-            updateValues()
-        }
-
-        function onYChanged() {
-            updateValues()
-        }
-
-        function onWidthChanged() {
-            updateValues()
-        }
-
-        function onHeightChanged() {
-            updateValues()
-        }
-
-        function onZChanged() {
-            updateValues()
-        }
-    }
-
-        function clamp(value, min, max) {
+    function clamp(value, min, max) {
         return Math.max(min, Math.min(max, value))
+    }
+
+    // ── Geometry commit helpers ─────────────────────────────────────────────
+    // Both push a single QUndoCommand so the change is reversible from the
+    // history panel and via Ctrl+Z. Values entered in the panel are in the
+    // "relative-to-centre" world space the user sees on screen.
+    function commitPositionEdit(newRelX, newRelY) {
+        if (!selectedObjectView || !viewPortWindow || currentNodeUuid === "") return
+        var oldX = selectedObjectView.x
+        var oldY = selectedObjectView.y
+        var nx = newRelX + worldOrigin
+        var ny = newRelY + worldOrigin
+        if (Math.abs(nx - oldX) < 0.5 && Math.abs(ny - oldY) < 0.5) return
+        selectedObjectView.x = nx
+        selectedObjectView.y = ny
+        viewPortWindow.recordNodeMove(currentNodeUuid, oldX, oldY, nx, ny)
+    }
+
+    function commitSizeEdit(newW, newH) {
+        if (!selectedObjectView || !viewPortWindow || currentNodeUuid === "") return
+        var oldX = selectedObjectView.x
+        var oldY = selectedObjectView.y
+        var oldW = selectedObjectView.width
+        var oldH = selectedObjectView.height
+        var nw = Math.max(selectedObjectView.minWidth  || 50, newW)
+        var nh = Math.max(selectedObjectView.minHeight || 50, newH)
+        if (Math.abs(nw - oldW) < 0.5 && Math.abs(nh - oldH) < 0.5) return
+        selectedObjectView.width  = nw
+        selectedObjectView.height = nh
+        viewPortWindow.recordNodeResize(currentNodeUuid,
+                                        oldX, oldY, oldW, oldH,
+                                        oldX, oldY, nw,   nh)
     }
 
     Connections {
@@ -101,12 +100,285 @@ Drawer {
         function onConnectionRemoved(outU, outM, inU, inM) { updateConnectionsList() }
     }
 
-    ColumnLayout {
+    // ── Inline-editable numeric field ───────────────────────────────────────
+    // Click the value → it becomes a TextInput; Enter or focus-loss commits,
+    // Escape cancels. Used for x, y, width, height and opacity.
+    //
+    // CRITICAL: `field.value` is a one-way input bound by the caller to the
+    // node's live property. We MUST NEVER assign to it from inside this
+    // component or QML will tear down the caller's binding and freeze the
+    // displayed value (real bug that hit x/y/width/height during dragging).
+    // The display Text is bound directly to `field.value`; the TextInput
+    // keeps its own buffer and only mirrors `field.value` while editing.
+    component InlineNumberField : Item {
+        id: field
+
+        property string label: ""
+        property real   value: 0
+        property real   min:   -1e9
+        property real   max:    1e9
+        property int    decimals: 0
+        property color  accentColor: ThemeManager.primaryColor
+        property color  containerColor: Qt.rgba(accentColor.r, accentColor.g, accentColor.b, 0.08)
+        property color  containerBorder: Qt.rgba(accentColor.r, accentColor.g, accentColor.b, 0.2)
+
+        signal commit(real newValue)
+
+        implicitHeight: 50
+
+        Rectangle {
+            id: container
+            anchors.fill: parent
+            radius: 4
+            color: field.containerColor
+            border.width: 1
+            border.color: editor.activeFocus ? field.accentColor : field.containerBorder
+            Behavior on border.color { ColorAnimation { duration: 120 } }
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 8
+                spacing: 3
+
+                Text {
+                    text: field.label
+                    font.pixelSize: 9
+                    color: ThemeManager.textSecondaryColor
+                    opacity: 0.7
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    Text {
+                        id: display
+                        anchors.fill: parent
+                        verticalAlignment: Text.AlignVCenter
+                        // Bound directly to the source via field.value — keeps
+                        // updating in real-time while the node is dragged.
+                        text: field.value.toFixed(field.decimals)
+                        font.pixelSize: 16
+                        font.bold: true
+                        color: field.accentColor
+                        visible: !editor.activeFocus
+                        opacity: visible ? 1.0 : 0.0
+                        Behavior on opacity { NumberAnimation { duration: 100 } }
+                    }
+
+                    TextInput {
+                        id: editor
+                        anchors.fill: parent
+                        verticalAlignment: TextInput.AlignVCenter
+                        // No binding here: the buffer is seeded on focus-in
+                        // and cleared on focus-out. This prevents QML from
+                        // ever evaluating `text` as an expression that could
+                        // be lost when we assign to it during edit/commit.
+                        text: ""
+                        font.pixelSize: 16
+                        font.bold: true
+                        color: field.accentColor
+                        selectionColor: Qt.rgba(field.accentColor.r, field.accentColor.g, field.accentColor.b, 0.35)
+                        selectedTextColor: ThemeManager.textColor
+                        clip: true
+                        visible: activeFocus
+                        opacity: visible ? 1.0 : 0.0
+                        Behavior on opacity { NumberAnimation { duration: 100 } }
+
+                        validator: DoubleValidator {
+                            bottom: field.min
+                            top:    field.max
+                            notation: DoubleValidator.StandardNotation
+                            decimals: Math.max(0, field.decimals)
+                            locale: "C"
+                        }
+
+                        property bool _cancelling: false
+
+                        function _doCommit() {
+                            var v = parseFloat(text.replace(",", "."))
+                            if (isNaN(v)) { return }
+                            v = Math.max(field.min, Math.min(field.max, v))
+                            // IMPORTANT: do NOT assign to field.value here —
+                            // that would destroy the caller's binding to the
+                            // node's live property. Just emit commit() and
+                            // the display Text will refresh automatically.
+                            field.commit(v)
+                        }
+
+                        Keys.onPressed: function(ev) {
+                            if (ev.key === Qt.Key_Escape) {
+                                _cancelling = true
+                                focus = false
+                                ev.accepted = true
+                            } else if (ev.key === Qt.Key_Return || ev.key === Qt.Key_Enter) {
+                                _doCommit()
+                                focus = false
+                                ev.accepted = true
+                            }
+                        }
+
+                        onActiveFocusChanged: {
+                            if (activeFocus) {
+                                // Seed the editor buffer from the live value.
+                                text = field.value.toFixed(field.decimals)
+                                selectAll()
+                            } else {
+                                if (!_cancelling) _doCommit()
+                                _cancelling = false
+                                // Clear so the next focus-in always reseeds
+                                // from field.value (no stale buffer).
+                                text = ""
+                            }
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.IBeamCursor
+                        visible: !editor.activeFocus
+                        onClicked: { editor.forceActiveFocus(); editor.selectAll() }
+                    }
+                }
+            }
+        }
+    }
+
+    // ── Inline-editable text field (used for node title rename) ─────────────
+    // Same binding-safety contract as InlineNumberField: never assign to
+    // `tField.value` from inside this component.
+    component InlineTextField : Item {
+        id: tField
+
+        property string value: ""
+        property color  textColor: ThemeManager.primaryColor
+
+        signal commit(string newValue)
+
+        implicitHeight: 22
+
+        Text {
+            id: tDisplay
+            anchors.fill: parent
+            verticalAlignment: Text.AlignVCenter
+            text: tField.value
+            font.pixelSize: 14
+            font.bold: true
+            color: tField.textColor
+            elide: Text.ElideRight
+            visible: !tEditor.activeFocus
+        }
+
+        TextInput {
+            id: tEditor
+            anchors.fill: parent
+            verticalAlignment: TextInput.AlignVCenter
+            text: ""
+            font.pixelSize: 14
+            font.bold: true
+            color: tField.textColor
+            selectionColor: Qt.rgba(tField.textColor.r, tField.textColor.g, tField.textColor.b, 0.35)
+            clip: true
+            visible: activeFocus
+
+            property bool _cancelling: false
+
+            function _doCommit() {
+                var t = text.trim()
+                if (t === "" || t === tField.value) return
+                tField.commit(t)
+            }
+
+            Keys.onPressed: function(ev) {
+                if (ev.key === Qt.Key_Escape) {
+                    _cancelling = true
+                    focus = false
+                    ev.accepted = true
+                } else if (ev.key === Qt.Key_Return || ev.key === Qt.Key_Enter) {
+                    _doCommit()
+                    focus = false
+                    ev.accepted = true
+                }
+            }
+
+            onActiveFocusChanged: {
+                if (activeFocus) {
+                    text = tField.value
+                    selectAll()
+                } else {
+                    if (!_cancelling) _doCommit()
+                    _cancelling = false
+                    text = ""
+                }
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.IBeamCursor
+            visible: !tEditor.activeFocus
+            onClicked: { tEditor.forceActiveFocus(); tEditor.selectAll() }
+        }
+    }
+
+    // ── Small icon-button used in the action row ────────────────────────────
+    component IconActionButton : Rectangle {
+        id: btn
+        property url iconSource
+        property color accentColor: ThemeManager.primaryColor
+        property bool toggled: false
+        property string tip: ""
+
+        signal clicked()
+
+        implicitWidth: 36
+        implicitHeight: 32
+        radius: 4
+        color: toggled
+               ? Qt.rgba(accentColor.r, accentColor.g, accentColor.b, 0.25)
+               : (mouse.containsMouse
+                  ? Qt.rgba(accentColor.r, accentColor.g, accentColor.b, 0.12)
+                  : "transparent")
+        border.width: 1
+        border.color: toggled
+                      ? Qt.rgba(accentColor.r, accentColor.g, accentColor.b, 0.5)
+                      : Qt.rgba(accentColor.r, accentColor.g, accentColor.b, 0.2)
+        Behavior on color { ColorAnimation { duration: 120 } }
+
+        ColorIcon {
+            anchors.centerIn: parent
+            width: 16; height: 16
+            source: btn.iconSource
+            color: btn.accentColor
+        }
+
+        MouseArea {
+            id: mouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: btn.clicked()
+        }
+
+        AppToolTip {
+            visible: mouse.containsMouse && btn.tip !== ""
+            text: btn.tip
+            delay: 400
+        }
+    }
+
+    ScrollView {
         anchors.fill: parent
-        anchors.margins: 12
+        clip: true
+        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+
+    ColumnLayout {
+        width: root.width - 24
+        x: 12
+        y: 12
         spacing: 12
 
-        // Header with node title + UUID
+        // ── Header: node name (editable) + UUID ─────────────────────────────
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 80
@@ -124,22 +396,38 @@ Drawer {
                 anchors.margins: 10
                 spacing: 2
 
-                Text {
-                    text: qsTr("Selected Node")
-                    font.pixelSize: 10
-                    font.bold: true
-                    color: ThemeManager.textSecondaryColor
-                    opacity: 0.7
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+
+                    Text {
+                        text: qsTr("Selected Node")
+                        font.pixelSize: 10
+                        font.bold: true
+                        color: ThemeManager.textSecondaryColor
+                        opacity: 0.7
+                        Layout.fillWidth: true
+                    }
+
+                    ColorIcon {
+                        width: 11; height: 11
+                        source: Icons.pencilOutline
+                        color: ThemeManager.textSecondaryColor
+                        opacity: 0.5
+                    }
                 }
 
-                Text {
-                    id: name
-                    text: ""
-                    font.pixelSize: 14
-                    font.bold: true
-                    color: ThemeManager.primaryColor
-                    elide: Text.ElideRight
+                InlineTextField {
+                    id: nameField
                     Layout.fillWidth: true
+                    Layout.preferredHeight: 22
+                    value: selectedObjectView && selectedObjectView.behaviourObject
+                           ? selectedObjectView.behaviourObject.title
+                           : ""
+                    onCommit: function(newValue) {
+                        if (selectedObjectView && selectedObjectView.behaviourObject)
+                            selectedObjectView.behaviourObject.title = newValue
+                    }
                 }
 
                 Rectangle {
@@ -164,10 +452,78 @@ Drawer {
             }
         }
 
-        // Position section
+        // ── Quick actions row ───────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 120
+            Layout.preferredHeight: 42
+            radius: 6
+            color: Qt.rgba(ThemeManager.backgroundColor.r,
+                          ThemeManager.backgroundColor.g,
+                          ThemeManager.backgroundColor.b, 0.4)
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: 5
+                spacing: 4
+
+                IconActionButton {
+                    Layout.preferredWidth: 36
+                    Layout.preferredHeight: 32
+                    iconSource: (selectedObjectView && selectedObjectView.userLocked)
+                                ? Icons.lock : Icons.lockOpenOutline
+                    toggled: selectedObjectView && selectedObjectView.userLocked
+                    accentColor: ThemeManager.warningColor
+                    tip: qsTr("Lock position and size")
+                    onClicked: {
+                        if (!selectedObjectView) return
+                        selectedObjectView.userLocked = !selectedObjectView.userLocked
+                    }
+                }
+
+                IconActionButton {
+                    Layout.preferredWidth: 36
+                    Layout.preferredHeight: 32
+                    iconSource: (selectedObjectView && selectedObjectView.userHidden)
+                                ? Icons.eyeOffOutline : Icons.eye
+                    toggled: selectedObjectView && selectedObjectView.userHidden
+                    accentColor: ThemeManager.dangerColor
+                    tip: qsTr("Hide on canvas")
+                    onClicked: {
+                        if (!selectedObjectView) return
+                        selectedObjectView.userHidden = !selectedObjectView.userHidden
+                    }
+                }
+
+                IconActionButton {
+                    Layout.preferredWidth: 36
+                    Layout.preferredHeight: 32
+                    iconSource: Icons.palette
+                    accentColor: ThemeManager.secondaryColor
+                    tip: qsTr("Open color override")
+                    onClicked: colorPopup.open()
+                }
+
+                Item { Layout.fillWidth: true }
+
+                IconActionButton {
+                    Layout.preferredWidth: 36
+                    Layout.preferredHeight: 32
+                    iconSource: Icons.contentSaveOutline
+                    accentColor: ThemeManager.primaryColor
+                    tip: qsTr("Duplicate node")
+                    onClicked: {
+                        if (!viewPortWindow || currentNodeUuid === "") return
+                        var data = viewPortWindow.getNodeData(currentNodeUuid)
+                        if (data) viewPortWindow.pasteNode(data, 24, 24)
+                    }
+                }
+            }
+        }
+
+        // ── Position section (editable) ─────────────────────────────────────
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 90
             radius: 6
             color: Qt.rgba(ThemeManager.backgroundColor.r,
                           ThemeManager.backgroundColor.g,
@@ -176,7 +532,7 @@ Drawer {
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 12
-                spacing: 10
+                spacing: 8
 
                 Text {
                     text: qsTr("Position (relative to center)")
@@ -190,81 +546,37 @@ Drawer {
                     Layout.fillWidth: true
                     spacing: 10
 
-                    Rectangle {
+                    InlineNumberField {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 50
-                        radius: 4
-                        color: Qt.rgba(ThemeManager.primaryColor.r,
-                                      ThemeManager.primaryColor.g,
-                                      ThemeManager.primaryColor.b, 0.08)
-                        border.width: 1
-                        border.color: Qt.rgba(ThemeManager.primaryColor.r,
-                                             ThemeManager.primaryColor.g,
-                                             ThemeManager.primaryColor.b, 0.2)
-
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: 8
-                            spacing: 3
-
-                            Text {
-                                text: qsTr("X")
-                                font.pixelSize: 9
-                                color: ThemeManager.textSecondaryColor
-                                opacity: 0.7
-                            }
-
-                            Text {
-                                id: posXVal
-                                text: "0"
-                                font.pixelSize: 16
-                                font.bold: true
-                                color: ThemeManager.primaryColor
-                            }
+                        label: qsTr("X")
+                        decimals: 0
+                        accentColor: ThemeManager.primaryColor
+                        value: selectedObjectView ? selectedObjectView.x - worldOrigin : 0
+                        onCommit: function(v) {
+                            commitPositionEdit(v, selectedObjectView ? selectedObjectView.y - worldOrigin : 0)
                         }
                     }
 
-                    Rectangle {
+                    InlineNumberField {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 50
-                        radius: 4
-                        color: Qt.rgba(ThemeManager.primaryColor.r,
-                                      ThemeManager.primaryColor.g,
-                                      ThemeManager.primaryColor.b, 0.08)
-                        border.width: 1
-                        border.color: Qt.rgba(ThemeManager.primaryColor.r,
-                                             ThemeManager.primaryColor.g,
-                                             ThemeManager.primaryColor.b, 0.2)
-
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: 8
-                            spacing: 3
-
-                            Text {
-                                text: qsTr("Y")
-                                font.pixelSize: 9
-                                color: ThemeManager.textSecondaryColor
-                                opacity: 0.7
-                            }
-
-                            Text {
-                                id: posYVal
-                                text: "0"
-                                font.pixelSize: 16
-                                font.bold: true
-                                color: ThemeManager.primaryColor
-                            }
+                        label: qsTr("Y")
+                        decimals: 0
+                        accentColor: ThemeManager.primaryColor
+                        value: selectedObjectView ? selectedObjectView.y - worldOrigin : 0
+                        onCommit: function(v) {
+                            commitPositionEdit(selectedObjectView ? selectedObjectView.x - worldOrigin : 0, v)
                         }
                     }
                 }
             }
         }
 
-        // Size section
+        // ── Size section (editable) ─────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 120
+            Layout.preferredHeight: 90
             radius: 6
             color: Qt.rgba(ThemeManager.backgroundColor.r,
                           ThemeManager.backgroundColor.g,
@@ -273,7 +585,7 @@ Drawer {
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 12
-                spacing: 10
+                spacing: 8
 
                 Text {
                     text: qsTr("Size")
@@ -287,78 +599,85 @@ Drawer {
                     Layout.fillWidth: true
                     spacing: 10
 
-                    Rectangle {
+                    InlineNumberField {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 50
-                        radius: 4
-                        color: Qt.rgba(ThemeManager.successColor.r,
-                                      ThemeManager.successColor.g,
-                                      ThemeManager.successColor.b, 0.08)
-                        border.width: 1
-                        border.color: Qt.rgba(ThemeManager.successColor.r,
-                                             ThemeManager.successColor.g,
-                                             ThemeManager.successColor.b, 0.2)
-
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: 8
-                            spacing: 3
-
-                            Text {
-                                text: qsTr("Width")
-                                font.pixelSize: 9
-                                color: ThemeManager.textSecondaryColor
-                                opacity: 0.7
-                            }
-
-                            Text {
-                                id: widthVal
-                                text: "0"
-                                font.pixelSize: 16
-                                font.bold: true
-                                color: ThemeManager.successColor
-                            }
+                        label: qsTr("Width")
+                        decimals: 0
+                        min: 50
+                        max: 4000
+                        accentColor: ThemeManager.successColor
+                        value: selectedObjectView ? selectedObjectView.width : 0
+                        onCommit: function(v) {
+                            commitSizeEdit(v, selectedObjectView ? selectedObjectView.height : 0)
                         }
                     }
 
-                    Rectangle {
+                    InlineNumberField {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 50
-                        radius: 4
-                        color: Qt.rgba(ThemeManager.successColor.r,
-                                      ThemeManager.successColor.g,
-                                      ThemeManager.successColor.b, 0.08)
-                        border.width: 1
-                        border.color: Qt.rgba(ThemeManager.successColor.r,
-                                             ThemeManager.successColor.g,
-                                             ThemeManager.successColor.b, 0.2)
-
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: 8
-                            spacing: 3
-
-                            Text {
-                                text: qsTr("Height")
-                                font.pixelSize: 9
-                                color: ThemeManager.textSecondaryColor
-                                opacity: 0.7
-                            }
-
-                            Text {
-                                id: heightVal
-                                text: "0"
-                                font.pixelSize: 16
-                                font.bold: true
-                                color: ThemeManager.successColor
-                            }
+                        label: qsTr("Height")
+                        decimals: 0
+                        min: 50
+                        max: 4000
+                        accentColor: ThemeManager.successColor
+                        value: selectedObjectView ? selectedObjectView.height : 0
+                        onCommit: function(v) {
+                            commitSizeEdit(selectedObjectView ? selectedObjectView.width : 0, v)
                         }
                     }
                 }
             }
         }
 
-        // Z-index section
+        // ── Opacity slider ──────────────────────────────────────────────────
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 64
+            radius: 6
+            color: Qt.rgba(ThemeManager.backgroundColor.r,
+                          ThemeManager.backgroundColor.g,
+                          ThemeManager.backgroundColor.b, 0.4)
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 10
+                spacing: 4
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    Text {
+                        text: qsTr("Opacity")
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: ThemeManager.textSecondaryColor
+                        opacity: 0.7
+                        Layout.fillWidth: true
+                    }
+                    Text {
+                        text: selectedObjectView
+                              ? Math.round(selectedObjectView.userOpacity * 100) + "%"
+                              : "100%"
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: ThemeManager.primaryColor
+                    }
+                }
+
+                Slider {
+                    Layout.fillWidth: true
+                    from: 0.1
+                    to:   1.0
+                    stepSize: 0.01
+                    value: selectedObjectView ? selectedObjectView.userOpacity : 1.0
+                    onMoved: {
+                        if (selectedObjectView) selectedObjectView.userOpacity = value
+                    }
+                }
+            }
+        }
+
+        // ── Z-index section ─────────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 48
@@ -389,8 +708,7 @@ Drawer {
                     }
 
                     Text {
-                        id: zVal
-                        text: "0"
+                        text: selectedObjectView ? selectedObjectView.z : "0"
                         font.pixelSize: 12
                         font.bold: true
                         color: ThemeManager.warningColor
@@ -416,7 +734,7 @@ Drawer {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: selectedObjectView.z += 1
+                        onClicked: if (selectedObjectView) selectedObjectView.z += 1
                     }
                 }
 
@@ -439,13 +757,13 @@ Drawer {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: selectedObjectView.z = Math.max(0, selectedObjectView.z - 1)
+                        onClicked: if (selectedObjectView) selectedObjectView.z = Math.max(0, selectedObjectView.z - 1)
                     }
                 }
             }
         }
 
-        // Connections section
+        // ── Connections section ─────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 180
@@ -479,123 +797,118 @@ Drawer {
                     delegate: Rectangle {
                         width: connsListView.width
                         height: 46
-                                radius: 4
-                                color: Qt.rgba(ThemeManager.surfaceColor.r,
-                                              ThemeManager.surfaceColor.g,
-                                              ThemeManager.surfaceColor.b, 0.4)
-                                border.width: 1
-                                border.color: Qt.rgba(ThemeManager.primaryColor.r,
-                                                     ThemeManager.primaryColor.g,
-                                                     ThemeManager.primaryColor.b, 0.2)
+                        radius: 4
+                        color: Qt.rgba(ThemeManager.surfaceColor.r,
+                                      ThemeManager.surfaceColor.g,
+                                      ThemeManager.surfaceColor.b, 0.4)
+                        border.width: 1
+                        border.color: Qt.rgba(ThemeManager.primaryColor.r,
+                                             ThemeManager.primaryColor.g,
+                                             ThemeManager.primaryColor.b, 0.2)
 
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.margins: 6
-                                    spacing: 4
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: 6
+                            spacing: 4
 
-                                    ColumnLayout {
-                                        Layout.fillWidth: true
-                                        spacing: 2
-                                        Text {
-                                            text: {
-                                                // Identify if we are the input or output of this connection
-                                                var isOutput = (modelData.outputUuid === root.currentNodeUuid);
-                                                var dir = isOutput ? qsTr("=> Destination") : qsTr("<= Origin");
-                                                return dir + " (" + (isOutput ? modelData.inputMethod : modelData.outputMethod) + ")"
-                                            }
-                                            font.pixelSize: 10
-                                            color: ThemeManager.textColor
-                                            elide: Text.ElideRight
-                                            Layout.fillWidth: true
-                                        }
-                                        Text {
-                                            text: qsTr("M: ") + (modelData.outputUuid === root.currentNodeUuid ? modelData.outputMethod : modelData.inputMethod)
-                                            font.pixelSize: 9
-                                            color: ThemeManager.textSecondaryColor
-                                            opacity: 0.8
-                                        }
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 2
+                                Text {
+                                    text: {
+                                        var isOutput = (modelData.outputUuid === root.currentNodeUuid);
+                                        var dir = isOutput ? qsTr("=> Destination") : qsTr("<= Origin");
+                                        return dir + " (" + (isOutput ? modelData.inputMethod : modelData.outputMethod) + ")"
                                     }
-
-                                    // Comment Button
-                                    Rectangle {
-                                        Layout.preferredWidth: 26
-                                        Layout.preferredHeight: 26
-                                        radius: 4
-                                        color: "transparent"
-                                        Image {
-                                            anchors.centerIn: parent
-                                            width: 16
-                                            height: 16
-                                            source: Icons.fileDocumentEditOutline
-                                            sourceSize: Qt.size(16, 16)
-                                        }
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: {
-                                                var cmt = viewPortWindow.getConnectionComment(modelData.outputUuid, modelData.outputMethod, modelData.inputUuid, modelData.inputMethod);
-                                                var msg = cmt ? cmt : qsTr("No annotation.");
-                                                ToastManager.show(qsTr("Comment: ") + msg, "info");
-                                            }
-                                            onEntered: parent.color = Qt.rgba(1,1,1,0.1)
-                                            onExited: parent.color = "transparent"
-                                        }
-                                    }
-
-                                    // Values Button
-                                    Rectangle {
-                                        Layout.preferredWidth: 26
-                                        Layout.preferredHeight: 26
-                                        radius: 4
-                                        color: "transparent"
-                                        Image {
-                                            anchors.centerIn: parent
-                                            width: 16
-                                            height: 16
-                                            source: Icons.viewWeek
-                                            sourceSize: Qt.size(16, 16)
-                                        }
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: ToastManager.show(qsTr("Value interception requires the Debugger node (Coming soon)"), "warning")
-                                            onEntered: parent.color = Qt.rgba(1,1,1,0.1)
-                                            onExited: parent.color = "transparent"
-                                        }
-                                    }
-
-                                    // Remove Button
-                                    Rectangle {
-                                        Layout.preferredWidth: 26
-                                        Layout.preferredHeight: 26
-                                        radius: 4
-                                        color: "transparent"
-                                        Image {
-                                            anchors.centerIn: parent
-                                            width: 16
-                                            height: 16
-                                            source: Icons.close
-                                            sourceSize: Qt.size(16, 16)
-                                        }
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: viewPortWindow.removeConnectionWithUndo(modelData.outputUuid, modelData.outputMethod, modelData.inputUuid, modelData.inputMethod)
-                                            onEntered: parent.color = Qt.rgba(ThemeManager.errorColor.r, ThemeManager.errorColor.g, ThemeManager.errorColor.b, 0.2)
-                                            onExited: parent.color = "transparent"
-                                        }
-                                    }
+                                    font.pixelSize: 10
+                                    color: ThemeManager.textColor
+                                    elide: Text.ElideRight
+                                    Layout.fillWidth: true
+                                }
+                                Text {
+                                    text: qsTr("M: ") + (modelData.outputUuid === root.currentNodeUuid ? modelData.outputMethod : modelData.inputMethod)
+                                    font.pixelSize: 9
+                                    color: ThemeManager.textSecondaryColor
+                                    opacity: 0.8
                                 }
                             }
+
+                            Rectangle {
+                                Layout.preferredWidth: 26
+                                Layout.preferredHeight: 26
+                                radius: 4
+                                color: "transparent"
+                                ColorIcon {
+                                    anchors.centerIn: parent
+                                    width: 16
+                                    height: 16
+                                    source: Icons.fileDocumentEditOutline
+                                    color: ThemeManager.textColor
+                                }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        var cmt = viewPortWindow.getConnectionComment(modelData.outputUuid, modelData.outputMethod, modelData.inputUuid, modelData.inputMethod);
+                                        var msg = cmt ? cmt : qsTr("No annotation.");
+                                        ToastManager.show(qsTr("Comment: ") + msg, "info");
+                                    }
+                                    onEntered: parent.color = Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.15)
+                                    onExited: parent.color = "transparent"
+                                }
+                            }
+
+                            Rectangle {
+                                Layout.preferredWidth: 26
+                                Layout.preferredHeight: 26
+                                radius: 4
+                                color: "transparent"
+                                ColorIcon {
+                                    anchors.centerIn: parent
+                                    width: 16
+                                    height: 16
+                                    source: Icons.viewWeek
+                                    color: ThemeManager.textColor
+                                }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: ToastManager.show(qsTr("Value interception requires the Debugger node (Coming soon)"), "warning")
+                                    onEntered: parent.color = Qt.rgba(ThemeManager.primaryColor.r, ThemeManager.primaryColor.g, ThemeManager.primaryColor.b, 0.15)
+                                    onExited: parent.color = "transparent"
+                                }
+                            }
+
+                            Rectangle {
+                                Layout.preferredWidth: 26
+                                Layout.preferredHeight: 26
+                                radius: 4
+                                color: "transparent"
+                                ColorIcon {
+                                    anchors.centerIn: parent
+                                    width: 16
+                                    height: 16
+                                    source: Icons.close
+                                    color: ThemeManager.dangerColor
+                                }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: viewPortWindow.removeConnectionWithUndo(modelData.outputUuid, modelData.outputMethod, modelData.inputUuid, modelData.inputMethod)
+                                    onEntered: parent.color = Qt.rgba(ThemeManager.dangerColor.r, ThemeManager.dangerColor.g, ThemeManager.dangerColor.b, 0.2)
+                                    onExited: parent.color = "transparent"
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        // Presentation section — toggle whether this node is hidden when
-        // the user enters Presentation Mode (F10). Persists with the workspace.
+        // ── Presentation section ────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 64
@@ -629,8 +942,6 @@ Drawer {
                         elide: Text.ElideRight
                     }
 
-                    // Lightweight inline toggle — keeps NodeSettings free of
-                    // dependencies on CustomSwitch which lives outside this dir.
                     Rectangle {
                         id: hideToggle
                         Layout.preferredWidth: 36
@@ -671,9 +982,9 @@ Drawer {
             }
         }
 
-        Item { Layout.fillHeight: true }
+        Item { Layout.fillHeight: true; Layout.preferredHeight: 4 }
 
-        // Delete node button
+        // ── Delete node button ──────────────────────────────────────────────
         Rectangle {
             id: deleteBtn
             Layout.fillWidth: true
@@ -723,5 +1034,155 @@ Drawer {
             }
         }
     }
-}
+    } // end ScrollView
 
+    // ── Color override popup ────────────────────────────────────────────────
+    // Lets the user pick a custom header colour for the node. Falls back to
+    // the global theme value when reset. The popup is intentionally a child
+    // of the Drawer (root) so it overlays both the canvas and the panel.
+    Popup {
+        id: colorPopup
+        parent: Overlay.overlay
+        x: Overlay.overlay ? (Overlay.overlay.width - width) / 2 : 0
+        y: Overlay.overlay ? (Overlay.overlay.height - height) / 2 : 0
+        width: 320
+        height: 240
+        modal: true
+        focus: true
+        padding: 0
+        z: 10000
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+        background: Rectangle {
+            color: ThemeManager.backgroundColor
+            border.color: ThemeManager.borderColor
+            border.width: 1
+            radius: 8
+        }
+
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 16
+            spacing: 12
+
+            Text {
+                text: qsTr("Color Override")
+                font.pixelSize: 13
+                font.bold: true
+                color: ThemeManager.textColor
+            }
+
+            ColorPicker {
+                id: headerPicker
+                Layout.fillWidth: true
+                label: qsTr("Header")
+                value: (selectedObjectView && selectedObjectView.behaviourObject
+                        && selectedObjectView.behaviourObject.nodeTheme)
+                       ? selectedObjectView.behaviourObject.nodeTheme.headerColor
+                       : ThemeManager.primaryColor
+                onAccepted: function(c) {
+                    if (selectedObjectView && selectedObjectView.behaviourObject
+                            && selectedObjectView.behaviourObject.nodeTheme) {
+                        selectedObjectView.behaviourObject.nodeTheme.headerColor = c
+                    }
+                }
+            }
+
+            ColorPicker {
+                id: borderPicker
+                Layout.fillWidth: true
+                label: qsTr("Border")
+                value: (selectedObjectView && selectedObjectView.behaviourObject
+                        && selectedObjectView.behaviourObject.nodeTheme)
+                       ? selectedObjectView.behaviourObject.nodeTheme.borderColor
+                       : ThemeManager.primaryColor
+                onAccepted: function(c) {
+                    if (selectedObjectView && selectedObjectView.behaviourObject
+                            && selectedObjectView.behaviourObject.nodeTheme) {
+                        selectedObjectView.behaviourObject.nodeTheme.borderColor = c
+                    }
+                }
+            }
+
+            Item { Layout.fillHeight: true }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 32
+                    radius: 4
+                    color: resetMouse.containsMouse
+                           ? Qt.rgba(ThemeManager.warningColor.r,
+                                     ThemeManager.warningColor.g,
+                                     ThemeManager.warningColor.b, 0.18)
+                           : Qt.rgba(ThemeManager.warningColor.r,
+                                     ThemeManager.warningColor.g,
+                                     ThemeManager.warningColor.b, 0.08)
+                    border.width: 1
+                    border.color: Qt.rgba(ThemeManager.warningColor.r,
+                                          ThemeManager.warningColor.g,
+                                          ThemeManager.warningColor.b, 0.3)
+                    Behavior on color { ColorAnimation { duration: 120 } }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: qsTr("Reset to theme")
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: ThemeManager.warningColor
+                    }
+
+                    MouseArea {
+                        id: resetMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (selectedObjectView && selectedObjectView.behaviourObject
+                                    && selectedObjectView.behaviourObject.nodeTheme) {
+                                selectedObjectView.behaviourObject.nodeTheme.resetAllColors()
+                            }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 32
+                    radius: 4
+                    color: closeMouse.containsMouse
+                           ? Qt.rgba(ThemeManager.primaryColor.r,
+                                     ThemeManager.primaryColor.g,
+                                     ThemeManager.primaryColor.b, 0.25)
+                           : Qt.rgba(ThemeManager.primaryColor.r,
+                                     ThemeManager.primaryColor.g,
+                                     ThemeManager.primaryColor.b, 0.15)
+                    border.width: 1
+                    border.color: Qt.rgba(ThemeManager.primaryColor.r,
+                                          ThemeManager.primaryColor.g,
+                                          ThemeManager.primaryColor.b, 0.4)
+                    Behavior on color { ColorAnimation { duration: 120 } }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: qsTr("Close")
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: ThemeManager.primaryColor
+                    }
+
+                    MouseArea {
+                        id: closeMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: colorPopup.close()
+                    }
+                }
+            }
+        }
+    }
+}
