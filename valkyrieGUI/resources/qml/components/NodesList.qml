@@ -25,6 +25,10 @@ Rectangle {
     property var topLeftAnchor: topBar
     property var nodes
     property var focusedNode: null
+    // Full list of currently-selected node items in the viewport. The panel
+    // highlights every entry that appears here; `focusedNode` (the primary /
+    // last-clicked node) gets a slightly stronger emphasis.
+    property var selectedNodes: []
     property var onNodeSelected: null
     property string position: GlobalProperties.nodesListPosition || "bottom-left"
     property bool _animating: false
@@ -454,7 +458,10 @@ Rectangle {
             readonly property int idx: parent ? parent._nodeIndex : -1
             readonly property var nodeItem: (idx >= 0 && root.nodes) ? root.nodes.itemAt(idx) : null
             readonly property var nodeEntry: (idx >= 0 && nodesModel) ? nodesModel.get(idx) : null
-            readonly property bool isFocused: nodeItem === root.focusedNode
+            readonly property bool isFocused: nodeItem && nodeItem === root.focusedNode
+            readonly property bool isSelected: nodeItem && root.selectedNodes
+                                               && root.selectedNodes.indexOf(nodeItem) >= 0
+            readonly property bool isHighlighted: isFocused || isSelected
 
             width: parent ? parent.width : 0
             height: 22
@@ -462,15 +469,26 @@ Rectangle {
             color: isFocused
                    ? Qt.rgba(ThemeManager.primaryColor.r,
                              ThemeManager.primaryColor.g,
-                             ThemeManager.primaryColor.b, 0.22)
-                   : (rowHover.containsMouse
+                             ThemeManager.primaryColor.b, 0.28)
+                   : (isSelected
                       ? Qt.rgba(ThemeManager.primaryColor.r,
                                 ThemeManager.primaryColor.g,
-                                ThemeManager.primaryColor.b, 0.10)
-                      : "transparent")
-            border.width: isFocused ? 1 : 0
-            border.color: isFocused ? ThemeManager.primaryColor : "transparent"
-            Behavior on color { ColorAnimation { duration: 100 } }
+                                ThemeManager.primaryColor.b, 0.18)
+                      : (rowHover.containsMouse
+                         ? Qt.rgba(ThemeManager.primaryColor.r,
+                                   ThemeManager.primaryColor.g,
+                                   ThemeManager.primaryColor.b, 0.10)
+                         : "transparent"))
+            border.width: isHighlighted ? 1 : 0
+            border.color: isFocused
+                          ? ThemeManager.primaryColor
+                          : (isSelected
+                             ? Qt.rgba(ThemeManager.primaryColor.r,
+                                       ThemeManager.primaryColor.g,
+                                       ThemeManager.primaryColor.b, 0.55)
+                             : "transparent")
+            Behavior on color  { ColorAnimation { duration: 100 } }
+            Behavior on border.color { ColorAnimation { duration: 100 } }
 
             Row {
                 anchors.fill: parent
@@ -481,16 +499,16 @@ Rectangle {
                 // Connector indicator
                 Rectangle {
                     width: 2; height: 10; radius: 1
-                    color: isFocused ? ThemeManager.primaryColor : ThemeManager.textSecondaryColor
-                    opacity: isFocused ? 0.9 : 0.35
+                    color: row.isHighlighted ? ThemeManager.primaryColor : ThemeManager.textSecondaryColor
+                    opacity: row.isFocused ? 0.9 : (row.isSelected ? 0.7 : 0.35)
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
                 Text {
                     text: (nodeEntry && nodeEntry.object) ? (nodeEntry.object.title || "Node " + row.idx) : ("Node " + row.idx)
                     font.pixelSize: 10
-                    font.bold: row.isFocused
-                    color: row.isFocused ? ThemeManager.primaryColor : ThemeManager.textColor
+                    font.bold: row.isHighlighted
+                    color: row.isHighlighted ? ThemeManager.primaryColor : ThemeManager.textColor
                     elide: Text.ElideRight
                     anchors.verticalCenter: parent.verticalCenter
                     width: parent.width - 12
